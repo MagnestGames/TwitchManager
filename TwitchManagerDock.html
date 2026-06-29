@@ -32,6 +32,36 @@
             --ease-out: cubic-bezier(0.2, 0, 0, 1);
             --motion-fast: 120ms;
             --motion-normal: 180ms;
+
+            /* Theme specific base variables */
+            --bg-record: #000000;
+            --bg-input: #000000;
+            --border-input: #444444;
+            --bg-panel: rgba(255, 255, 255, 0.05);
+            --bg-item: rgba(255, 255, 255, 0.03);
+            --border-item: rgba(255, 255, 255, 0.07);
+            --bg-hover: rgba(255, 255, 255, 0.04);
+        }
+
+        body.light-mode {
+            --bg-base: #f0f0f5;
+            --bg-card: #ffffff;
+            --bg-header: #e4e4e9;
+            --border-color: #d1d1d6;
+            --border-hover: #a1a1aa;
+            --text-main: #1f1f23;
+            --text-muted: #53535f;
+            --command-accent: #772ce8;
+            --command-surface: var(--bg-card);
+            --command-hover-surface: rgba(145, 70, 255, 0.08);
+
+            --bg-record: #f5f5fa;
+            --bg-input: #ffffff;
+            --border-input: #c7c7cc;
+            --bg-panel: rgba(0, 0, 0, 0.05);
+            --bg-item: rgba(0, 0, 0, 0.03);
+            --border-item: rgba(0, 0, 0, 0.07);
+            --bg-hover: rgba(0, 0, 0, 0.04);
         }
 
         * {
@@ -252,8 +282,8 @@
             gap: 12px;
             min-height: 42px;
             padding: 8px 10px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: var(--bg-item);
+            border: 1px solid var(--border-item);
             border-radius: var(--radius-sm);
             cursor: pointer;
         }
@@ -429,9 +459,17 @@
             margin-top: 8px;
             padding-top: 8px;
             color: var(--text-muted);
-            border-top: 1px dashed var(--border-color);
             font-size: 11px;
             line-height: 1.6;
+            border-top: none !important;
+        }
+
+        details, summary, .tab-help, .tab-help-summary {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        details::-webkit-details-marker, summary::-webkit-details-marker {
+            display: none !important;
         }
 
         .tab-help-body p {
@@ -541,7 +579,7 @@
 
         .auth-status {
             color: var(--text-muted);
-            background: #000;
+            background: var(--bg-record);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             padding: 10px;
@@ -804,7 +842,7 @@
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            background: #000;
+            background: var(--bg-record);
             transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
         }
 
@@ -880,10 +918,10 @@
             height: 32px;
             margin: 0;
             padding: 4px 7px;
-            background: #000;
-            border: 1px solid #444;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
             border-radius: var(--radius-sm);
-            color: #fff;
+            color: var(--text-main);
             font-size: 11px;
         }
 
@@ -1187,8 +1225,9 @@
             min-height: 54px;
             margin: 0;
             padding: 6px 7px;
-            background: #09090b;
-            border-color: #35353c;
+            background: var(--bg-input);
+            border-color: var(--border-input);
+            color: var(--text-main);
             font-size: 11px;
         }
 
@@ -1485,7 +1524,7 @@
             width: fit-content;
             margin-top: 2px;
             padding: 4px 7px;
-            background: rgba(255, 255, 255, 0.045);
+            background: var(--bg-item);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
         }
@@ -1498,8 +1537,8 @@
             padding: 1px 4px;
             font-size: 11px;
             text-align: center;
-            background: #111115;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
             color: var(--text-main);
             border-radius: 4px;
             outline: none;
@@ -1796,7 +1835,7 @@
         .icon-btn:hover {
             border-color: var(--twitch-purple);
             color: #fff;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-hover);
         }
 
         .icon-btn:active {
@@ -1905,6 +1944,18 @@
             background: rgba(255, 255, 255, 0.035);
         }
 
+        .id-youtube-action {
+            color: #ffb3b3;
+            border-color: rgba(255, 74, 74, 0.5);
+            background: rgba(255, 74, 74, 0.12);
+        }
+
+        .id-reset-action {
+            color: #ffecc7;
+            border-color: rgba(255, 179, 64, 0.45);
+            background: rgba(255, 179, 64, 0.12);
+        }
+
         .id-edit-action {
             color: var(--text-muted);
             border-color: var(--border-color);
@@ -1914,7 +1965,7 @@
         .id-action-btn:hover {
             color: #fff;
             border-color: var(--twitch-purple);
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-hover);
         }
 
         .id-meta {
@@ -1925,7 +1976,7 @@
         }
 
         .record-card {
-            background: #000;
+            background: var(--bg-record);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             margin-bottom: 12px;
@@ -1967,9 +2018,9 @@
         input,
         textarea {
             width: 100%;
-            background: #000;
-            border: 1px solid #444;
-            color: #fff;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
             padding: 10px;
             border-radius: 8px;
             font-size: 13px;
@@ -1982,9 +2033,9 @@
             width: 100%;
             min-height: 40px;
             line-height: 1.4;
-            background: #000;
-            border: 1px solid #444;
-            color: #fff;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
             padding: 10px;
             border-radius: 8px;
             font-size: 13px;
@@ -2073,7 +2124,6 @@
             font-size: 11px;
             color: var(--text-muted);
             line-height: 1.6;
-            border-top: 1px dashed var(--border-color);
             padding-top: 8px;
         }
 
@@ -2126,7 +2176,7 @@
             font-size: 12px;
             color: var(--text-muted);
             line-height: 1.6;
-            background: #000;
+            background: var(--bg-record);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             padding: 10px;
@@ -2264,7 +2314,7 @@
             padding: 9px 10px;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
-            background: #000;
+            background: var(--bg-record);
             color: var(--text-main);
             font-size: 12px;
             cursor: pointer;
@@ -2361,7 +2411,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #000;
+            background: var(--bg-record);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             padding: 8px 10px;
@@ -2409,8 +2459,8 @@
         .raidso-template-row select {
             width: 100%;
             margin-bottom: 0;
-            background: #000;
-            border: 1px solid #444;
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
             color: var(--text-main);
             padding: 10px;
             border-radius: var(--radius-sm);
@@ -3334,6 +3384,249 @@ body {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* --- Light Mode hover & color overrides --- */
+body.light-mode .tab-btn:hover {
+    color: var(--text-main) !important;
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+body.light-mode .tab-btn.active {
+    background: var(--bg-header) !important;
+    color: var(--command-accent) !important;
+    box-shadow: inset 0 -2px 0 var(--command-accent) !important;
+}
+body.light-mode .btn-head-purple {
+    background: #ffffff !important;
+    border: 1px solid #d1d1d6 !important;
+    color: #1f1f23 !important;
+}
+body.light-mode .btn-head-purple:hover {
+    border-color: var(--twitch-purple-hover) !important;
+    background: rgba(145, 70, 255, 0.08) !important;
+    box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.08) !important;
+}
+body.light-mode .btn-head-purple.unlocked {
+    background: var(--success) !important;
+    border-color: var(--success) !important;
+    color: #ffffff !important;
+}
+body.light-mode .btn-secondary {
+    background: #e4e4e9 !important;
+    color: #1f1f23 !important;
+    border: 1px solid #d1d1d6 !important;
+}
+body.light-mode .btn-secondary:hover {
+    background: #d1d1d6 !important;
+}
+body.light-mode .icon-btn:hover {
+    border-color: var(--twitch-purple-hover) !important;
+    color: var(--text-main) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+body.light-mode .id-copy-action {
+    color: #0056b3 !important;
+    border-color: rgba(0, 86, 179, 0.3) !important;
+    background: rgba(0, 86, 179, 0.05) !important;
+}
+body.light-mode .id-twitch-action {
+    color: #5c16c5 !important;
+    border-color: rgba(92, 22, 197, 0.3) !important;
+    background: rgba(92, 22, 197, 0.05) !important;
+}
+body.light-mode .id-x-action {
+    color: #333333 !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+body.light-mode .id-youtube-action {
+    color: #cc0000 !important;
+    border-color: rgba(204, 0, 0, 0.3) !important;
+    background: rgba(204, 0, 0, 0.05) !important;
+}
+body.light-mode .id-reset-action {
+    color: #b35c00 !important;
+    border-color: rgba(179, 92, 0, 0.3) !important;
+    background: rgba(179, 92, 0, 0.05) !important;
+}
+body.light-mode .id-action-btn:hover {
+    color: #ffffff !important;
+}
+body.light-mode .id-copy-action:hover {
+    background: #0056b3 !important;
+    border-color: #0056b3 !important;
+}
+body.light-mode .id-twitch-action:hover {
+    background: #5c16c5 !important;
+    border-color: #5c16c5 !important;
+}
+body.light-mode .id-x-action:hover {
+    background: #333333 !important;
+    border-color: #333333 !important;
+}
+body.light-mode .id-youtube-action:hover {
+    background: #cc0000 !important;
+    border-color: #cc0000 !important;
+}
+body.light-mode .id-reset-action:hover {
+    background: #b35c00 !important;
+    border-color: #b35c00 !important;
+}
+body.light-mode .id-edit-action:hover {
+    background: var(--border-hover) !important;
+    border-color: var(--border-hover) !important;
+    color: var(--text-main) !important;
+}
+body.light-mode .category-box:hover {
+    border-color: var(--border-hover) !important;
+    background: #f8f9fa !important;
+}
+body.light-mode .category-name:hover span {
+    color: var(--command-accent) !important;
+}
+body.light-mode .language-option:hover {
+    background: rgba(145, 70, 255, 0.1) !important;
+    color: var(--command-accent) !important;
+}
+
+/* --- Additional Light Mode Color & Contrast Adjustments --- */
+body.light-mode .sync-action-btn {
+    border-color: #2b70e4 !important;
+    background: rgba(79, 140, 255, 0.15) !important;
+    color: #1a4da6 !important;
+}
+body.light-mode .sync-action-btn:hover {
+    border-color: #1a4da6 !important;
+    background: rgba(79, 140, 255, 0.25) !important;
+    color: #0d2f70 !important;
+}
+body.light-mode .push-action-btn {
+    border-color: #772ce8 !important;
+    background: rgba(145, 70, 255, 0.15) !important;
+    color: #5b1bb8 !important;
+}
+body.light-mode .push-action-btn:hover {
+    border-color: #5b1bb8 !important;
+    background: rgba(145, 70, 255, 0.25) !important;
+    color: #3b0f7d !important;
+}
+body.light-mode .btn-revoke {
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+body.light-mode .auth-status.is-warning {
+    color: #8f4f00 !important;
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.45) !important;
+}
+body.light-mode .auth-status.is-ready {
+    color: #116634 !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    border-color: rgba(34, 197, 94, 0.45) !important;
+}
+body.light-mode .ui-common-warning,
+body.light-mode .ui-backup-warning {
+    color: #8f4f00 !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    border-left: 4px solid #f59e0b !important;
+}
+body.light-mode #tw-btn-reset-post,
+body.light-mode button[onclick="deletePredPreset()"],
+body.light-mode button[onclick="deletePollPreset()"] {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+body.light-mode #tw-vip-slot-info {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* --- Birthday/Anniversary Indicator CSS --- */
+.birthday-indicator {
+    display: inline-block;
+    position: relative;
+}
+.birthday-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    width: 220px;
+    color: var(--text-main);
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
+}
+body.light-mode .birthday-tooltip {
+    background: #ffffff !important;
+    border-color: #d1d1d6 !important;
+    color: #1f1f23 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+body.light-mode #birthday-anniversary-indicator button {
+    background: rgba(217, 119, 6, 0.12) !important;
+    border-color: #d97706 !important;
+    color: #b45309 !important;
+}
+.birthday-tooltip-title {
+    font-weight: bold;
+    color: #ffb300;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+body.light-mode .birthday-tooltip-title {
+    color: #b45309 !important;
+}
+.birthday-tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+.birthday-tooltip-type {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+.birthday-tooltip-type.is-birthday {
+    background: rgba(255, 105, 180, 0.15);
+    color: #ff4a9a;
+}
+.birthday-tooltip-type.is-anniversary {
+    background: rgba(79, 140, 255, 0.15);
+    color: #1d9bf0;
+}
+body.light-mode .modal-close-top {
+    background: #e4e4e9 !important;
+    color: #1f1f23 !important;
+}
+body.light-mode .modal-close-top:hover {
+    background: #d1d1d6 !important;
+}
+body.light-mode .modal-content p[style*="background: #252529"] {
+    background: var(--bg-record) !important;
+    color: var(--text-muted) !important;
+}
+body.light-mode .modal-content a[style*="background: #252529"] {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
 </style>
 
 </head>
@@ -3349,6 +3642,16 @@ body {
                 <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: #bf94ff; border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
+                <!-- Birthday/Anniversary Indicator -->
+                <div id="birthday-anniversary-indicator" class="birthday-indicator" style="display: none; margin-right: 4px; vertical-align: middle;">
+                    <button class="btn-head-purple" style="background: rgba(255, 193, 7, 0.15); border-color: #ffc107; color: #ffc107; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;" onmouseover="showBirthdayTooltip(event)" onmouseout="hideBirthdayTooltip()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+                            <path d="M3 20h18" />
+                        </svg>
+                    </button>
+                    <div id="birthday-tooltip" class="birthday-tooltip"></div>
+                </div>
                 <button id="global-settings-btn" class="btn-head-purple" data-i18n-tooltip="extended.displaySettingsBtnTitle" data-i18n-aria="extended.displaySettingsBtnTitle"
                     onclick="openActiveCategorySettings()" aria-label="表示設定">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
@@ -3364,11 +3667,13 @@ body {
                     </div>
                 </div>
                 <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort"
-                    onclick="toggleSortLock()">🔒</button>
+                    onclick="toggleSortLock()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>
+                <button class="btn-head-purple" id="ui-btn-theme-toggle" data-i18n-tooltip="extended.themeToggle"
+                    onclick="toggleThemeQuick()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20a10 10 0 0 0 0-20z" fill="currentColor"></path><circle cx="12" cy="12" r="10"></circle></svg></button>
                 <button class="btn-head-purple" id="ui-btn-guide" data-i18n-tooltip="extended.guide"
-                    onclick="openModal('guideModal')">❔</button>
+                    onclick="openModal('guideModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
                 <button class="btn-head-purple" id="ui-btn-settings" data-i18n-tooltip="extended.settings"
-                    onclick="openModal('settingModal')">⚙</button>
+                    onclick="openModal('settingModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
             </div>
         </div>
         <div class="tab-nav" id="tab-navigation"></div>
@@ -3491,7 +3796,7 @@ body {
                                 <label class="tw-toggle"><input type="checkbox" id="supporter-honorific-enabled" onchange="saveSupporterHonorificSetting(this.checked)"><span class="tw-slider"></span></label>
                             </div>
                         </div>
-                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:#060608; border:1px solid #222; color:#efeff1;" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
+                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:var(--bg-record); border:1px solid var(--border-color); color:var(--text-main);" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
                         <div class="post-output-actions">
                             <button class="btn-primary" style="flex:2;padding:10px 0;font-size:12px;" onclick="copyPostText()" id="tw-btn-copy-post" data-i18n="extended.copySupporterList">リストをコピー</button>
                             <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,0.05);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
@@ -3629,11 +3934,11 @@ body {
                 <div class="tw-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
                     <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
                         <button class="btn-secondary" style="flex:1;font-size:11px;padding:6px 0;" onclick="fetchClips(this)" id="tw-btn-clip-list" data-i18n="extended.fetchListBtn">>一覧を取得</button>
-                        <select id="tw-clip-sort" style="flex:1;background:#000;border:1px solid #444;color:#fff;padding:4px;border-radius:4px;font-size:11px;">
+                        <select id="tw-clip-sort" style="flex:1;background:var(--bg-input);border:1px solid var(--border-input);color:var(--text-main);padding:4px;border-radius:4px;font-size:11px;">
                             <option value="views" data-i18n="extended.clipSortViews">再生数順</option>
                             <option value="recent" data-i18n="extended.clipSortRecent">新着順</option>
                         </select>
-                        <select id="tw-clip-count" style="width:58px;background:#000;border:1px solid #444;color:#fff;padding:4px;border-radius:4px;font-size:11px;">
+                        <select id="tw-clip-count" style="width:58px;background:var(--bg-input);border:1px solid var(--border-input);color:var(--text-main);padding:4px;border-radius:4px;font-size:11px;">
                             <option value="5" data-i18n="extended.clipCount5">5件</option>
                             <option value="10" selected data-i18n="extended.clipCount10">10件</option>
                             <option value="20" data-i18n="extended.clipCount20">20件</option>
@@ -3641,7 +3946,7 @@ body {
                         <button class="btn-primary" style="font-size:10px;padding:5px 8px;white-space:nowrap;" onclick="createClip(this)" id="tw-btn-clip-create" data-i18n="extended.clipCreateBtn">作成</button>
                     </div>
                     <div style="display:flex;gap:4px;margin-bottom:6px;align-items:center;">
-                        <button class="btn-secondary" style="font-size:10px;padding:4px 8px;flex:1;background:rgba(255,255,255,0.05);" onclick="loadFavClips()" id="tw-btn-fav-clips" data-i18n="extended.favClips">お気に入り一覧</button>
+                        <button class="btn-secondary" style="font-size:10px;padding:4px 8px;flex:1;background:var(--bg-panel);" onclick="loadFavClips()" id="tw-btn-fav-clips" data-i18n="extended.favClips">お気に入り一覧</button>
                     </div>
                     <div style="display:flex;gap:4px;margin-bottom:10px;align-items:center;">
                         <input type="text" id="tw-fav-clip-url" data-i18n-placeholder="extended.clipUrlPlaceholder" placeholder="クリップURL" style="flex:1;margin:0;font-size:10px;padding:4px;">
@@ -3822,7 +4127,7 @@ body {
             <button class="modal-close-top" onclick="closeModal('settingModal')">×</button>
             <h3 id="ui-settings-title" style="color:#bf94ff; font-size:18px; margin-bottom:20px;" data-i18n="settingsUi.title">⚙ 設定</h3>
             <div
-                style="background:rgba(255,255,255,0.05); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-auth-title" style="margin-bottom:8px;" data-i18n="settingsUi.authTitle">>Twitch認証</div>
                 <p class="settings-help" id="ui-settings-auth-help" data-i18n="settingsUi.authHelp">Twitch Token Generatorでアクセストークンを取得し、ここに貼り付けて保存します。Client IDと連携先チャンネルは自動で確認します。詳しい手順がわからない場合は、右上のヘルプから画像付きガイドを確認してください。</p>
                 <input type="hidden" id="user_id">
@@ -3838,16 +4143,16 @@ body {
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
                     <button type="button" class="btn-outline" id="ui-settings-auth-btn" onclick="openOfficialAuth()" data-i18n="settingsUi.openAuth">Twitch Token GeneratorのURLをコピー</button>
-                    <button type="button" class="btn-outline" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth" style="border-color: rgba(255,74,74,0.55); color: #ff8a8a; background: rgba(255,74,74,0.06);">Twitch認証を解除</button>
+                    <button type="button" class="btn-outline btn-revoke" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth">Twitch認証を解除</button>
                 </div>
             </div>
             <div
-                style="background:rgba(255,255,255,0.05); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
                 <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">>表示設定</div>
                 <span class="field-label" id="ui-settings-date-format-label" data-i18n="settingsUi.dateFormatLabelExtended">日付の表示形式 ({date}用) ※自由にカスタマイズできます</span>
                 <input type="text" id="date_format" list="date_format_presets" 
                     oninput="handleDateFormatPreview(this.value)" onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}"
-                    style="width: 100%; background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 5px; transition: border-color var(--transition-fast);" 
+                    style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 5px; transition: border-color var(--transition-fast);" 
                     placeholder="YYYY/MM/DD" />
                 <div style="font-size: 12px; color: #4CAF50; margin-bottom: 5px;" id="date_format_live_preview"></div>
                 <datalist id="date_format_presets">
@@ -3860,9 +4165,14 @@ body {
                     <option value="YY年MM月DD日"></option>
                     <option value="M-D-W"></option>
                 </datalist>
-                <div style="font-size: 10px; color: #aaa; margin-top: 4px;" data-i18n="settingsUi.dateVarsHint">
+                <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
                     利用可能な変数: YYYY(年), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)
                 </div>
+                <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">テーマ</span>
+                <select id="ui_theme" onchange="applyThemeSetting(this.value)" style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
+                    <option value="dark" data-i18n="settingsUi.themeDark">ダークモード</option>
+                    <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
+                </select>
             </div>
             <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">>保存</button>
         </div>
@@ -3914,6 +4224,7 @@ const I18N_DATA ={
                 "copyId": "IDをコピー",
                 "openTwitch": "Twitchを開く",
                 "openX": "Xを開く",
+                "openYoutube": "YouTubeを開く",
                 "guide": "ヘルプ",
                 "settings": "設定"
             },
@@ -3977,8 +4288,18 @@ const I18N_DATA ={
                 "memo": "メモ",
                 "streamer": "配信者名",
                 "twitchId": "Twitch ID またはURL",
-                "xUrl": "X URL"
+                "xUrl": "X URL",
+                "nickname": "あだ名",
+                "twitchName": "Twitch表示名",
+                "youtubeUrl": "YouTubeリンク",
+                "birthday": "誕生日",
+                "anniversary": "記念日",
+                "nicknamePlaceholder": "あだ名を入力",
+                "youtubeUrlPlaceholder": "YouTubeのURLまたはチャンネルID"
             },
+            "birthdayTitle": "今日の主役！",
+            "birthdayLabel": "誕生日",
+            "anniversaryLabel": "記念日",
             "idList": {
                 "autoCategory": "紹介履歴",
                 "shoutoutMeta": "紹介 {count}回 / 最終: {date}",
@@ -4028,7 +4349,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "ローカル認証情報を削除しました。",
                 "save": "保存",
                 "dateVarsHint": "利用可能な変数: YYYY(年4桁), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)",
-                "dateFormatLabelExtended": "日付の表示形式 ({date}用) ※自由にカスタマイズできます"
+                "dateFormatLabelExtended": "日付の表示形式 ({date}用) ※自由にカスタマイズできます",
+                "themeLabel": "テーマ",
+                "themeDark": "ダークモード",
+                "themeLight": "ライトモード"
             },
             "raidSo": {
                 "notice": "ヘルプ",
@@ -4130,6 +4454,9 @@ const I18N_DATA ={
             "extended": {
                 "language": "言語",
                 "languageMenuLabel": "言語を選択",
+                "themeToggle": "テーマ切り替え",
+                "themeChanged": "テーマを変更しました",
+                "openYoutube": "YouTubeを開く",
                 "guide": "ヘルプ",
                 "twitchHelpText": "Twitch連携を使うサポーター集計、予測・投票、チャット設定などをまとめています。各API操作には認証と必要な権限が必要です。",
                 "miscHelpText": "バックアップ・復元、イベントログを管理します。ブラウザの保存データに備えて、バックアップは定期的に保管してください。",
@@ -4394,6 +4721,9 @@ const I18N_DATA ={
                 "idRecordRename": { "title": "配信者名を変更", "input": "IDリストに表示する配信者名", "output": "Twitch IDは変更されません。表示名だけを変更します。", "placeholder": "例: 配信者名" },
                 "memoAdd": { "title": "メモを追加", "input": "メモの見出し", "output": "メモ一覧に新しい項目を作成します。", "placeholder": "例: 配信メモ" },
                 "customTemplateSave": { "title": "カスタムテンプレートを保存", "input": "テンプレート一覧に表示する名前", "output": "現在のレイド時の紹介文と手動紹介の文面をセットで保存します。同じ名前で保存すると上書きします。", "placeholder": "例: いつもの紹介文" },
+                "titleCategoryRename": { "title": "タイトル項目名を変更", "input": "新しい項目名", "output": "タイトルタブの折りたたみ項目名を変更します。", "placeholder": "例: 新しい項目名" },
+                "idCategoryRename": { "title": "IDリスト項目名を変更", "input": "新しい項目名", "output": "IDリストの折りたたみ項目名を変更します。", "placeholder": "例: 新しい項目名" },
+                "memoRename": { "title": "メモの見出しを変更", "input": "新しい見出し", "output": "メモ一覧の折りたたみ見出しを変更します。", "placeholder": "例: 新しい見出し" },
                 "deleteTitleCategory": { "title": "タイトル項目を削除", "output": "この項目と、中にあるタイトルカードを削除します。", "note": "この操作は元に戻せません。" },
                 "deleteTitleRecord": { "title": "タイトルカードを削除", "output": "このタイトルカードを削除します。Twitch側の現在の配信情報は変更しません。", "note": "この操作は元に戻せません。" },
                 "deleteIdCategory": { "title": "IDリスト項目を削除", "output": "この項目と、中にあるIDカードを削除します。", "note": "この操作は元に戻せません。" },
@@ -4717,6 +5047,7 @@ const I18N_DATA ={
                 "copyId": "Copy ID only",
                 "openTwitch": "Open Twitch",
                 "openX": "Open X",
+                "openYoutube": "Open YouTube",
                 "guide": "Help",
                 "settings": "Settings"
             },
@@ -4780,8 +5111,18 @@ const I18N_DATA ={
                 "memo": "Memo",
                 "streamer": "Streamer Name",
                 "twitchId": "Twitch ID or URL",
-                "xUrl": "X URL"
+                "xUrl": "X URL",
+                "nickname": "Nickname",
+                "twitchName": "Twitch Name",
+                "youtubeUrl": "YouTube Link",
+                "birthday": "Birthday",
+                "anniversary": "Anniversary",
+                "nicknamePlaceholder": "Enter nickname",
+                "youtubeUrlPlaceholder": "YouTube URL or ID"
             },
+            "birthdayTitle": "Today's Celebrants!",
+            "birthdayLabel": "Birthday",
+            "anniversaryLabel": "Anniversary",
             "idList": {
                 "autoCategory": "Shoutout History",
                 "shoutoutMeta": "Shoutouts: {count} / Last: {date}",
@@ -4831,7 +5172,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "Local auth data has been deleted.",
                 "save": "Save",
                 "dateVarsHint": "Variables: YYYY(Year 4), YY(Year 2), MM(Month 2), M(Month), DD(Day 2), D(Day), WW(Weekday), W(Weekday short)",
-                "dateFormatLabelExtended": "Date Format (for {date}) *Freely customizable"
+                "dateFormatLabelExtended": "Date Format (for {date}) *Freely customizable",
+                "themeLabel": "Theme",
+                "themeDark": "Dark Mode",
+                "themeLight": "Light Mode"
             },
             "raidSo": {
                 "notice": "Help",
@@ -4933,6 +5277,9 @@ const I18N_DATA ={
             "extended": {
                 "language": "Language",
                 "languageMenuLabel": "Select Language",
+                "themeToggle": "Toggle Theme",
+                "themeChanged": "Theme changed",
+                "openYoutube": "Open YouTube",
                 "guide": "Help",
                 "twitchHelpText": "Twitch-connected supporter tracking, predictions, polls, chat settings, and related tools are collected here. API actions require authentication and the appropriate permissions.",
                 "miscHelpText": "Manage backups, restoration, and event logs here. Keep regular backups in case browser storage is cleared.",
@@ -5197,6 +5544,9 @@ const I18N_DATA ={
                 "idRecordRename": { "title": "Rename Streamer", "input": "Display name shown in the ID List", "output": "The Twitch ID will not change. Only the display name is updated.", "placeholder": "e.g. Streamer name" },
                 "memoAdd": { "title": "Add Memo", "input": "Memo heading", "output": "Creates a new memo item.", "placeholder": "e.g. Stream memo" },
                 "customTemplateSave": { "title": "Save Custom Template", "input": "Name shown in the template list", "output": "Saves the current raid message and manual shoutout message as a set. Saving with the same name overwrites it.", "placeholder": "e.g. My usual shoutout" },
+                "titleCategoryRename": { "title": "Rename Title Section", "input": "New Section Name", "output": "Renames the collapsible section in the Title tab.", "placeholder": "e.g. Chatting" },
+                "idCategoryRename": { "title": "Rename ID List Section", "input": "New Section Name", "output": "Renames the collapsible section in the ID List tab.", "placeholder": "e.g. Streamers" },
+                "memoRename": { "title": "Rename Memo Heading", "input": "New Heading", "output": "Renames the collapsible heading in the Memo list.", "placeholder": "e.g. Memo" },
                 "deleteTitleCategory": { "title": "Delete Title Section", "output": "Deletes this section and all title cards inside it.", "note": "This cannot be undone." },
                 "deleteTitleRecord": { "title": "Delete Title Card", "output": "Deletes this title card. Current Twitch stream info will not be changed.", "note": "This cannot be undone." },
                 "deleteIdCategory": { "title": "Delete ID List Section", "output": "Deletes this section and all ID cards inside it.", "note": "This cannot be undone." },
@@ -5520,6 +5870,7 @@ const I18N_DATA ={
                 "copyId": "仅复制ID",
                 "openTwitch": "打开Twitch",
                 "openX": "打开X",
+                "openYoutube": "打开 YouTube",
                 "guide": "帮助",
                 "settings": "设置"
             },
@@ -5583,8 +5934,18 @@ const I18N_DATA ={
                 "memo": "备注",
                 "streamer": "主播名",
                 "twitchId": "Twitch ID 或 URL",
-                "xUrl": "X URL"
+                "xUrl": "X URL",
+                "nickname": "昵称",
+                "twitchName": "Twitch名称",
+                "youtubeUrl": "YouTube链接",
+                "birthday": "生日",
+                "anniversary": "纪念日",
+                "nicknamePlaceholder": "输入昵称",
+                "youtubeUrlPlaceholder": "YouTube URL 或 ID"
             },
+            "birthdayTitle": "今天的寿星！",
+            "birthdayLabel": "生日",
+            "anniversaryLabel": "纪念日",
             "idList": {
                 "autoCategory": "介绍记录",
                 "shoutoutMeta": "介绍 {count} 次 / 最后: {date}",
@@ -5634,7 +5995,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "已删除本地认证信息。",
                 "save": "保存",
                 "dateVarsHint": "可用变量: YYYY(4位年), YY(2位年), MM(2位月), M(月), DD(2位日), D(日), WW(星期), W(星期简写)",
-                "dateFormatLabelExtended": "日期格式 (用于 {date}) *可自由自定义"
+                "dateFormatLabelExtended": "日期格式 (用于 {date}) *可自由自定义",
+                "themeLabel": "主题",
+                "themeDark": "深色模式",
+                "themeLight": "浅色模式"
             },
             "raidSo": {
                 "notice": "帮助",
@@ -5736,6 +6100,9 @@ const I18N_DATA ={
             "extended": {
                 "language": "语言",
                 "languageMenuLabel": "选择语言",
+                "themeToggle": "切换主题",
+                "themeChanged": "主题已更改",
+                "openYoutube": "打开 YouTube",
                 "guide": "帮助",
                 "twitchHelpText": "这里汇集了需要 Twitch 连接的支持者统计、预测、投票和聊天设置等功能。API 操作需要认证及相应权限。",
                 "miscHelpText": "这里可以管理备份、恢复和事件日志。为防止浏览器保存数据被清除，请定期保管备份。",
@@ -6000,6 +6367,9 @@ const I18N_DATA ={
                 "idRecordRename": { "title": "修改主播名称", "input": "ID 列表中显示的主播名", "output": "Twitch ID 不会改变，只修改显示名。", "placeholder": "例如：主播名" },
                 "memoAdd": { "title": "添加备忘录", "input": "备忘录标题", "output": "创建新的备忘录项目。", "placeholder": "例如：直播备忘录" },
                 "customTemplateSave": { "title": "保存自定义模板", "input": "模板列表中显示的名称", "output": "将当前 Raid 介绍文和手动介绍文作为一组保存。同名保存会覆盖。", "placeholder": "例如：常用介绍文" },
+                "titleCategoryRename": { "title": "修改标题项目名称", "input": "新项目名称", "output": "修改标题标签下的折叠项目名称。", "placeholder": "例如：聊天" },
+                "idCategoryRename": { "title": "修改 ID 列表项目名称", "input": "新项目名称", "output": "修改 ID 列表下的折叠项目名称。", "placeholder": "例如：主播" },
+                "memoRename": { "title": "修改备忘录标题", "input": "新标题", "output": "修改备忘录列表下的折叠项目标题。", "placeholder": "例如：备忘录" },
                 "deleteTitleCategory": { "title": "删除标题项目", "output": "删除此项目以及其中的标题卡片。", "note": "此操作无法撤销。" },
                 "deleteTitleRecord": { "title": "删除标题卡片", "output": "删除此标题卡片。Twitch 当前直播信息不会改变。", "note": "此操作无法撤销。" },
                 "deleteIdCategory": { "title": "删除 ID 列表项目", "output": "删除此项目以及其中的 ID 卡片。", "note": "此操作无法撤销。" },
@@ -6376,11 +6746,11 @@ const cmdSets = {
                     <span><span style="color: #bf94ff;">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-stream" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-stream')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.stream}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-stream')" style="padding: 6px 10px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.stream}</span></div>
                     <div class="tw-body">${renderGrid([b.title, b.game, b.marker, b.raid, b.unraid, b.ads30, b.ads60, b.ads180])}</div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-chat" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-chat')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.chat}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-chat')" style="padding: 6px 10px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.chat}</span></div>
                     <div class="tw-body">
                         ${renderGrid([b.announce, b.clear, b.color, b.me, b.disconnect])}
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 6px;">
@@ -6393,11 +6763,11 @@ const cmdSets = {
                     </div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-user" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-user')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.user}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-user')" style="padding: 6px 10px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.user}</span></div>
                     <div class="tw-body">${renderGrid([b.ban, b.unban, b.timeout, b.mod, b.unmod, b.vip, b.unvip, b.mods, b.vips, b.user, b.monitor, b.unmonitor, b.restrict, b.unrestrict, b.block, b.unblock, b.w])}</div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-interact" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-interact')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.interact}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-interact')" style="padding: 6px 10px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.interact}</span></div>
                     <div class="tw-body">${renderGrid([b.poll, b.predict, b.pin, b.unpin, b.shoutout])}</div>
                 </div>
             </div>`;
@@ -6630,13 +7000,26 @@ const langMap = {
             const tn = document.getElementById('tab-navigation');
             if (tn) {
                 tn.innerHTML = '';
-                const tids = ['main-tab', 'raid-tab', 'twitch-tab', 'cmd-tab', 'friends-tab', 'memo-tab', 'misc-tab'];
-                L.tabs.forEach((n, i) => {
+                const defaultTids = ['main-tab', 'raid-tab', 'twitch-tab', 'cmd-tab', 'friends-tab', 'memo-tab', 'misc-tab'];
+                let tids = settings.tabOrder;
+                if (!Array.isArray(tids) || tids.length !== defaultTids.length || !tids.every(id => defaultTids.includes(id))) {
+                    tids = defaultTids;
+                }
+                const tabLabelMap = {
+                    'main-tab': L.tabs[0] || '配信情報',
+                    'raid-tab': L.tabs[1] || '自動紹介',
+                    'twitch-tab': L.tabs[2] || 'Twitch連携',
+                    'cmd-tab': L.tabs[3] || 'コマンド',
+                    'friends-tab': L.tabs[4] || 'IDリスト',
+                    'memo-tab': L.tabs[5] || 'メモ帳',
+                    'misc-tab': L.tabs[6] || 'その他'
+                };
+                tids.forEach((tid) => {
                     const b = document.createElement('button');
-                    b.className = "tab-btn" + (tids[i] === at ? " active" : "");
-                    b.innerText = n;
-                    b.dataset.tabTarget = tids[i];
-                    b.onclick = () => switchTab(tids[i], b);
+                    b.className = "tab-btn" + (tid === at ? " active" : "");
+                    b.innerText = tabLabelMap[tid] || tid;
+                    b.dataset.tabTarget = tid;
+                    b.onclick = () => switchTab(tid, b);
                     tn.appendChild(b);
                 });
             }
@@ -6833,6 +7216,7 @@ const langMap = {
             let startScrollLeft = 0;
 
             nav.addEventListener('pointerdown', event => {
+                if (!isSortLocked) return; // Disable scrolling drag when sorting is unlocked!
                 if (event.pointerType !== 'mouse' || event.button !== 0) return;
                 dragging = true;
                 moved = false;
@@ -7067,7 +7451,9 @@ const langMap = {
         function toggleSortLock() {
             isSortLocked = !isSortLocked;
             const b = document.getElementById('lock-btn');
-            b.innerText = isSortLocked ? "🔒" : "🔓";
+            b.innerHTML = isSortLocked 
+                ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+                : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
             b.className = "btn-head-purple" + (isSortLocked ? "" : " unlocked");
 
             // 既存のSortableインスタンスのdisabledだけ更新
@@ -7110,7 +7496,18 @@ const langMap = {
             }
             config.forEach((cat, ci) => {
                 const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${cat.name}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>${raidSoEscape(cat.name)}</span>
+                        <button class="icon-btn edit-cat-btn" title="${raidSoEscape(T.inputDialogs?.titleCategoryRename?.title || 'カテゴリ名変更')}" style="width:20px; height:20px; padding:2px !important; display:inline-flex; align-items:center; justify-content:center; opacity:0.6; border:none; background:transparent;" onclick="event.stopPropagation(); renameCategoryPrompt(${ci})">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button>
+                        <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
+                    </div>
+                </div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
                 const records = cat.records || [];
                 if (!records.length) {
                     d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
@@ -7327,7 +7724,12 @@ const langMap = {
                 const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
                 d.innerHTML = `
                 <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
-                    <span>${raidSoEscape(cat.name)}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>${raidSoEscape(cat.name)}</span>
+                        <button class="icon-btn edit-cat-btn" title="${raidSoEscape(L.inputDialogs?.idCategoryRename?.title || 'カテゴリ名変更')}" style="width:20px; height:20px; padding:2px !important; display:inline-flex; align-items:center; justify-content:center; opacity:0.6; border:none; background:transparent;" onclick="event.stopPropagation(); renameFriendCategoryPrompt(${ci})">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
                     <div style="display:flex; gap:8px; align-items:center;">
                         <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteFriendCategory(${ci})">${raidSoEscape(L.delete)}</button>
                         <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
@@ -7343,17 +7745,51 @@ const langMap = {
                     const card = document.createElement('div');
                     card.className = "record-card" + (f.isOpen ? " open" : "");
                     card.setAttribute('data-idx', fi);
-                    const displayName = f.name || f.displayName || f.twitch || I.emptyName;
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const twitchNameOrId = String(f.displayName || cleanTwitch || f.twitch || '').trim();
+                    let displayTitle = '';
+                    if (nickname) {
+                        if (twitchNameOrId) {
+                            displayTitle = `${nickname} (${twitchNameOrId})`;
+                        } else {
+                            displayTitle = nickname;
+                        }
+                    } else {
+                        displayTitle = twitchNameOrId || I.emptyName;
+                    }
+
+                    // Check if today is birthday or anniversary
+                    const today = new Date();
+                    const tM = today.getMonth() + 1;
+                    const tD = today.getDate();
+                    let isBday = false;
+                    let isAnniv = false;
+                    const bday = parseMdDate(f.birthday);
+                    if (bday && bday.month === tM && bday.day === tD) isBday = true;
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv && anniv.month === tM && anniv.day === tD) isAnniv = true;
+
+                    if (isBday || isAnniv) {
+                        displayTitle += ' ★';
+                    }
+
                     const shoutoutCount = Number(f.shoutoutCount || 0);
                     const lastDate = f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '';
                     const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
+                    const hasYoutube = Boolean(String(f.youtube || '').trim());
+                    const hasX = Boolean(String(f.x || '').trim());
+                    const hasHistory = Boolean(shoutoutCount || f.lastShoutoutAt);
 
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(displayName)}</span>
+                        <span>● ${raidSoEscape(displayTitle)}</span>
                         <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="icon-btn id-action-btn id-reset-action" title="${raidSoEscape(I.resetShoutout || '紹介履歴リセット')}" onclick="event.stopPropagation(); resetFriendShoutoutHistory(${ci}, ${fi})" ${hasHistory ? '' : 'disabled style="opacity: 0.35;"'}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg>
                         </button>
                     </div>
                     <div style="display:flex; gap:5px;">
@@ -7363,22 +7799,41 @@ const langMap = {
                         <button class="icon-btn id-action-btn id-twitch-action" title="${raidSoEscape(L.tips.openTwitch)}" onclick="event.stopPropagation(); openTwitchLink(${ci}, ${fi})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"></path></svg>
                         </button>
-                        <button class="icon-btn id-action-btn id-x-action" title="${raidSoEscape(L.tips.openX)}" onclick="event.stopPropagation(); openXLink(${ci}, ${fi})">
+                        <button class="icon-btn id-action-btn id-x-action" title="${raidSoEscape(L.tips.openX)}" onclick="event.stopPropagation(); openXLink(${ci}, ${fi})" ${hasX ? '' : 'style="opacity: 0.35;"'}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>
+                        </button>
+                        <button class="icon-btn id-action-btn id-youtube-action" title="${raidSoEscape(L.tips.openYoutube || 'YouTubeを開く')}" onclick="event.stopPropagation(); openYoutubeLink(${ci}, ${fi})" ${hasYoutube ? '' : 'style="opacity: 0.35;"'}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
                         </button>
                         <button class="btn-delete-item" onclick="event.stopPropagation(); deleteFriendRecord(${ci}, ${fi})">✕</button>
                     </div>
                 </div>
                 <div class="record-body">
                     ${meta ? `<div class="id-meta">${raidSoEscape(meta)}</div>` : ''}
-                    <span class="field-label">${raidSoEscape(L.labels.streamer || langMap.ja.labels.streamer)}</span>
-                    <input type="text" value="${raidSoEscape(displayName === I.emptyName ? '' : displayName)}" oninput="friendsConfig[${ci}].friends[${fi}].name=this.value; saveFriendsLocal(false)">
-
-                    <span class="field-label">${raidSoEscape(L.labels.twitchId || langMap.ja.labels.twitchId)}</span>
-                    <input type="text" value="${raidSoEscape(f.twitch || '')}" oninput="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false)" onchange="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false); autoFillFriendXFromTwitch(ci, fi)">
+                    <span class="field-label">${raidSoEscape(L.labels.twitchId || 'Twitch ID')}</span>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" value="${raidSoEscape(f.twitch || '')}" oninput="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false)" onchange="const clean = normalizeFriendTwitch(this.value); this.value = clean; friendsConfig[${ci}].friends[${fi}].twitch = clean; saveFriendsLocal(false); autoFillFriendXFromTwitch(${ci}, ${fi}, '', true).then(() => renderFriends());" style="margin-bottom:0; flex:1;">
+                        <button class="icon-btn" title="Twitchからプロフィール情報を同期" onclick="event.stopPropagation(); autoFillFriendXFromTwitch(${ci}, ${fi}, '', true).then(changed => { if(changed) { showToast('同期しました'); } else { showToast('更新情報はありません'); } renderFriends(); })" style="padding: 6px; display: flex; align-items: center; justify-content: center; height: 32px; width: 32px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-record); color: var(--text-main); cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        </button>
+                    </div>
                     
-                    <span class="field-label">${raidSoEscape(L.labels.xUrl || langMap.ja.labels.xUrl)}</span>
+                    <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || 'YouTubeリンク')}</span>
+                    <input type="text" value="${raidSoEscape(f.youtube || '')}" placeholder="${raidSoEscape(L.labels.youtubeUrlPlaceholder || 'YouTubeのURLまたはチャンネルID')}" oninput="friendsConfig[${ci}].friends[${fi}].youtube=this.value; saveFriendsLocal(false)">
+
+                    <span class="field-label">${raidSoEscape(L.labels.xUrl || 'X URL')}</span>
                     <input type="text" value="${raidSoEscape(f.x || '')}" oninput="friendsConfig[${ci}].friends[${fi}].x=this.value; saveFriendsLocal(false)">
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.birthday || '誕生日')}</span>
+                            <input type="text" value="${raidSoEscape(f.birthday || '')}" placeholder="MM/DD (例: 04/25)" oninput="friendsConfig[${ci}].friends[${fi}].birthday=this.value; saveFriendsLocal(false); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input);">
+                        </div>
+                        <div style="flex: 1;">
+                            <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.anniversary || '記念日')}</span>
+                            <input type="text" value="${raidSoEscape(f.anniversary || '')}" placeholder="MM/DD (例: 10/01)" oninput="friendsConfig[${ci}].friends[${fi}].anniversary=this.value; saveFriendsLocal(false); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input);">
+                        </div>
+                    </div>
                     
                     <span class="field-label">${raidSoEscape(L.labels.memo)}</span>
                     <textarea onchange="friendsConfig[${ci}].friends[${fi}].memo=this.value; saveFriendsLocal(false)">${raidSoEscape(f.memo || '')}</textarea>
@@ -7389,6 +7844,92 @@ const langMap = {
             });
             initSortable();
             renderShoutoutSuggestions();
+            checkBirthdaysAndAnniversaries();
+        }
+
+        // --- Birthday/Anniversary check functions ---
+        function parseMdDate(str) {
+            const val = String(str || '').trim();
+            if (!val) return null;
+            const m = val.match(/(\d{1,2})\D+(\d{1,2})/);
+            if (m) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            if (/^\d{4}$/.test(val)) {
+                const month = parseInt(val.slice(0, 2), 10);
+                const day = parseInt(val.slice(2), 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            return null;
+        }
+
+        function checkBirthdaysAndAnniversaries() {
+            const today = new Date();
+            const tM = today.getMonth() + 1;
+            const tD = today.getDate();
+            
+            const matches = [];
+
+            (friendsConfig || []).forEach(cat => {
+                const friends = cat.friends || [];
+                friends.forEach(f => {
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+
+                    const bday = parseMdDate(f.birthday);
+                    if (bday && bday.month === tM && bday.day === tD) {
+                        matches.push({ name, type: 'birthday' });
+                    }
+
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv && anniv.month === tM && anniv.day === tD) {
+                        matches.push({ name, type: 'anniversary' });
+                    }
+                });
+            });
+
+            const indicator = document.getElementById('birthday-anniversary-indicator');
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (indicator && tooltip) {
+                if (matches.length > 0) {
+                    indicator.style.display = 'inline-block';
+                    const L = langMap[currentLang] || langMap.ja;
+                    const titleText = L.birthdayTitle || '今日の主役！';
+                    const birthdayLabel = L.birthdayLabel || '誕生日';
+                    const anniversaryLabel = L.anniversaryLabel || '記念日';
+
+                    let html = `<div class="birthday-tooltip-title">${raidSoEscape(titleText)}</div>`;
+                    matches.forEach(m => {
+                        const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                        const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
+                        html += `
+                        <div class="birthday-tooltip-item">
+                            <span style="font-weight: 500;">${raidSoEscape(m.name)}</span>
+                            <span class="birthday-tooltip-type ${typeClass}">${raidSoEscape(typeLabel)}</span>
+                        </div>`;
+                    });
+                    tooltip.innerHTML = html;
+                } else {
+                    indicator.style.display = 'none';
+                }
+            }
+        }
+
+        function showBirthdayTooltip(event) {
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (tooltip) tooltip.style.display = 'block';
+        }
+
+        function hideBirthdayTooltip() {
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (tooltip) tooltip.style.display = 'none';
         }
 
         // --- IDリスト専用の追加関数 ---
@@ -7400,8 +7941,7 @@ const langMap = {
 
         function addFriendRecord(i) {
             if (!friendsConfig[i].friends) friendsConfig[i].friends = [];
-            const I = langMap[currentLang]?.idList || langMap.ja.idList;
-            friendsConfig[i].friends.push({ name: I.emptyName || langMap.ja.idList.emptyName, twitch: "", x: "", memo: "", isOpen: true });
+            friendsConfig[i].friends.push({ name: "", twitch: "", displayName: "", youtube: "", x: "", memo: "", isOpen: true });
             renderFriends();
             saveFriendsLocal(false);
         }
@@ -7428,6 +7968,22 @@ const langMap = {
             if (!val) return;
             const url = normalizeXProfileUrl(val);
             if (!url) return;
+            window.open(url, '_blank');
+        }
+
+        function openYoutubeLink(ci, fi) {
+            let val = friendsConfig[ci].friends[fi].youtube || "";
+            if (!val) return;
+            let url = val.trim();
+            if (!/^https?:\/\//i.test(url)) {
+                if (url.startsWith('@')) {
+                    url = `https://www.youtube.com/${url}`;
+                } else if (/^[a-zA-Z0-9_-]{24}$/.test(url)) {
+                    url = `https://www.youtube.com/channel/${url}`;
+                } else {
+                    url = `https://www.youtube.com/${url.startsWith('@') ? '' : '@'}${url}`;
+                }
+            }
             window.open(url, '_blank');
         }
 
@@ -7458,6 +8014,9 @@ const langMap = {
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
                         <span style="white-space:nowrap;">${m.title}</span>
+                        <button class="icon-btn edit-cat-btn" title="${raidSoEscape(langMap[currentLang]?.alerts?.renameMemo || 'メモの編集')}" style="width:20px; height:20px; padding:2px !important; display:inline-flex; align-items:center; justify-content:center; opacity:0.6; border:none; background:transparent;" onclick="event.stopPropagation(); renameMemoCategoryPrompt(${i})">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
                         <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${previewText}</small>
                     </div>
                     <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
@@ -7471,8 +8030,20 @@ const langMap = {
         function initSortable() {
             if (typeof Sortable === 'undefined') return;
             sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
-            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
-                animation: 150, handle: '.record-header', disabled: isSortLocked, group: groupName,
+            const opts = {
+                animation: 150,
+                handle: '.category-name',
+                disabled: isSortLocked,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false
+            };
+            const itemOpts = (list, save, renderFunc, groupName) => ({
+                animation: 150,
+                handle: '.record-header',
+                disabled: isSortLocked,
+                group: groupName,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false,
                 onEnd: (evt) => {
                     const fromIdx = parseInt(evt.from.getAttribute('data-cat-idx')), toIdx = parseInt(evt.to.getAttribute('data-cat-idx'));
                     const item = list[fromIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.oldIndex, 1)[0];
@@ -7491,6 +8062,20 @@ const langMap = {
             }
             const memc = document.getElementById('memo-container'); if (memc) {
                 sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => { const i = memoConfig.splice(e.oldIndex, 1)[0]; memoConfig.splice(e.newIndex, 0, i); saveMemoLocal(); renderMemo(); } }));
+            }
+            const tn = document.getElementById('tab-navigation');
+            if (tn) {
+                sortableInstances.push(new Sortable(tn, {
+                    animation: 150,
+                    disabled: isSortLocked,
+                    filter: '', // Override default filter to allow dragging tab <button> elements!
+                    preventOnFilter: false,
+                    onEnd: (e) => {
+                        const newOrder = Array.from(tn.children).map(child => child.dataset.tabTarget);
+                        settings.tabOrder = newOrder;
+                        localStorage.setItem('stream_settings_v16', JSON.stringify(settings));
+                    }
+                }));
             }
         }
 
@@ -7663,6 +8248,7 @@ const langMap = {
 
         async function saveSettings() {
             const normalizedToken = extractTwitchAccessToken(document.getElementById('token').value);
+            const newTheme = document.getElementById('ui_theme')?.value || 'dark';
             settings = {
                 ...settings,
                 userId: document.getElementById('user_id')?.value.trim() || settings.userId || '',
@@ -7670,8 +8256,10 @@ const langMap = {
                 clientId: getClientIdFromInputOrDefault(),
                 redirectUri: getOAuthRedirectUri(),
                 token: normalizedToken,
-                dateFormat: document.getElementById('date_format').value
+                dateFormat: document.getElementById('date_format').value,
+                theme: newTheme
             };
+            applyThemeSetting(newTheme);
             document.getElementById('client_id').value = settings.clientId || '';
             document.getElementById('token').value = normalizedToken;
             if (normalizedToken) await refreshTwitchAuthFromToken(false);
@@ -8751,7 +9339,7 @@ const langMap = {
         function normalizeXProfileUrl(value) {
             const raw = String(value || '').trim();
             if (!raw) return '';
-            const urlMatch = raw.match(/(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})(?:[\/?#].*)?$/i);
+            const urlMatch = raw.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})(?:[\/?#].*)?$/i);
             const id = urlMatch ? urlMatch[1] : raw.replace(/^@/, '').match(/^[A-Za-z0-9_]{1,15}$/)?.[0];
             return id ? `https://x.com/${id}` : '';
         }
@@ -8759,44 +9347,160 @@ const langMap = {
         function extractXProfileFromTwitchDescription(description) {
             const text = String(description || '').trim();
             if (!text) return '';
-            const urlMatch = text.match(/(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})(?:[\/?#\s,，。.)]|$)/i);
-            if (urlMatch) return normalizeXProfileUrl(urlMatch[1]);
-            const nearAfter = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏)(?:\s|:|：|ID|id|アカウント|垢|@|\.|／|-|－){0,20}@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])/i);
-            if (nearAfter) return normalizeXProfileUrl(nearAfter[1]);
-            const nearBefore = text.match(/(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])[^\n]{0,24}(?:x|twitter|Ｘ|𝕏)/i);
-            if (nearBefore) return normalizeXProfileUrl(nearBefore[1]);
+            
+            // 1. Matches x.com or twitter.com URLs (supporting mobile.x.com etc.)
+            const urlMatch = text.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})/i);
+            if (urlMatch) return normalizeXProfileUrl(urlMatch[0]);
+            
+            // 2. Matches @username near X/Twitter/𝕏 keyword
+            const nearAfterAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)[^@]{0,50}@([A-Za-z0-9_]{1,15})/i);
+            if (nearAfterAt) return normalizeXProfileUrl(nearAfterAt[1]);
+            
+            const nearBeforeAt = text.match(/(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})[^@]{0,50}(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)/i);
+            if (nearBeforeAt) return normalizeXProfileUrl(nearBeforeAt[1]);
+            
+            // 3. Matches keyword followed by username without @
+            const nearAfterNoAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)(?:\s*(?::|：|id|アカウント|垢|／|-|－)\s*){1,3}([A-Za-z0-9_]{1,15})/i);
+            if (nearAfterNoAt) return normalizeXProfileUrl(nearAfterNoAt[1]);
+
+            // 4. Fallback: if there is only one @username in the text
+            const mentions = [];
+            const mentionRegex = /(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])/g;
+            let match;
+            while ((match = mentionRegex.exec(text)) !== null) {
+                mentions.push(match[1]);
+            }
+            if (mentions.length === 1) {
+                return normalizeXProfileUrl(mentions[0]);
+            }
+            
             return '';
         }
 
-        async function autoFillFriendXFromTwitch(ci, fi, knownDescription = '') {
+        function extractYoutubeFromTwitchDescription(description) {
+            const text = String(description || '').trim();
+            if (!text) return '';
+
+            // 1. YouTube.com URLs (handles, c, channel, user)
+            const ytMatch = text.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?youtube\.com\/(?:@|channel\/|user\/|c\/)?([A-Za-z0-9_.-]{3,30})/i);
+            if (ytMatch) {
+                const id = ytMatch[1];
+                if (id.startsWith('UC') && id.length === 24) {
+                    return `https://www.youtube.com/channel/${id}`;
+                }
+                return `https://www.youtube.com/@${id.replace(/^@/, '')}`;
+            }
+
+            // 2. youtu.be short URLs
+            const ytbMatch = text.match(/(?:https?:\/\/)?youtu\.be\/([A-Za-z0-9_.-]{3,30})/i);
+            if (ytbMatch) {
+                return `https://www.youtube.com/@${ytbMatch[1]}`;
+            }
+
+            // 3. YouTube keyword followed by @username
+            const nearAfterAt = text.match(/(?:^|[^A-Za-z0-9_])(?:youtube|yt|ユーチューブ)[^@]{0,50}@([a-zA-Z0-9_.-]{3,20})(?![a-zA-Z0-9_.-])/i);
+            if (nearAfterAt) return `https://www.youtube.com/@${nearAfterAt[1]}`;
+
+            // 4. YouTube keyword followed by username without @
+            const nearAfterNoAt = text.match(/(?:^|[^A-Za-z0-9_])(?:youtube|yt|ユーチューブ)(?:\s*(?::|：|id|アカウント|垢|／|-|－)\s*){1,3}([a-zA-Z0-9_.-]{3,20})(?![a-zA-Z0-9_.-])/i);
+            if (nearAfterNoAt) return `https://www.youtube.com/@${nearAfterNoAt[1]}`;
+
+            return '';
+        }
+
+        async function autoFillFriendXFromTwitch(ci, fi, knownDescription = '', forceFetch = false) {
             const friend = friendsConfig?.[ci]?.friends?.[fi];
-            if (!friend || String(friend.x || '').trim()) return false;
+            if (!friend) return false;
             const login = normalizeFriendTwitch(friend.twitch || friend.username || friend.url || '');
             if (!login) return false;
             const hasAuthForLookup = Boolean(cleanRaidSoToken() && getEffectiveTwitchClientId());
-            if (!knownDescription && !hasAuthForLookup) return false;
+            if (!knownDescription && !hasAuthForLookup) {
+                if (forceFetch) {
+                    await customAlert('Twitch連携の設定（アクセストークン等）が不足しているため、情報を取得できません。「設定」画面から連携情報を入力してください。');
+                }
+                return false;
+            }
+            
             const lastChecked = Date.parse(friend.xAutoCheckedAt || '');
-            if (!knownDescription && lastChecked && Date.now() - lastChecked < 24 * 60 * 60 * 1000) return false;
-            friend.xAutoCheckedAt = new Date().toISOString();
+            const needsXFill = !String(friend.x || '').trim();
+            const needsYoutubeFill = !String(friend.youtube || '').trim();
+            const shouldFetchTwitch = forceFetch || !friend.displayName || ((needsXFill || needsYoutubeFill) && (!lastChecked || Date.now() - lastChecked > 24 * 60 * 60 * 1000));
+            
+            if (!knownDescription && !shouldFetchTwitch) return false;
+            if (!knownDescription && (needsXFill || needsYoutubeFill)) {
+                friend.xAutoCheckedAt = new Date().toISOString();
+            }
+
             let description = knownDescription || '';
+            let fetchedTwitchName = '';
             try {
                 if (!description && hasAuthForLookup) {
                     const user = await getRaidSoUser(login);
                     description = user?.description || '';
-                    if (isPlaceholderFriendName(friend.name) && (user?.display_name || user?.login)) {
-                        friend.name = user.display_name || user.login;
+                    if (user?.display_name) {
+                        fetchedTwitchName = user.display_name;
                     }
                 }
-                const xUrl = extractXProfileFromTwitchDescription(description);
-                if (xUrl && !String(friend.x || '').trim()) {
-                    friend.x = xUrl;
-                    saveFriendsLocal(false);
-                    renderFriends();
-                    return true;
+                
+                let didChange = false;
+                if (fetchedTwitchName) {
+                    if (friend.displayName !== fetchedTwitchName) {
+                        friend.displayName = fetchedTwitchName;
+                        didChange = true;
+                    }
                 }
+
+                if (needsXFill || forceFetch) {
+                    const xUrl = extractXProfileFromTwitchDescription(description);
+                    if (xUrl && friend.x !== xUrl) {
+                        const currentX = String(friend.x || '').trim();
+                        if (currentX === '') {
+                            friend.x = xUrl;
+                            didChange = true;
+                        } else {
+                            const confirmX = await customConfirm({
+                                title: 'X URLの上書き確認',
+                                message: `Xのアカウント情報がすでに手動で記載されています。\n現在の値: ${currentX}\n新しく取得した値: ${xUrl}\n\n新しく取得した情報で上書きしますか？`
+                            });
+                            if (confirmX) {
+                                friend.x = xUrl;
+                                didChange = true;
+                            }
+                        }
+                    }
+                }
+
+                if (needsYoutubeFill || forceFetch) {
+                    const ytUrl = extractYoutubeFromTwitchDescription(description);
+                    if (ytUrl && friend.youtube !== ytUrl) {
+                        const currentYt = String(friend.youtube || '').trim();
+                        const normCurrentYt = currentYt.replace(/^https?:\/\/(?:www\.)?/, '').toLowerCase();
+                        const normNewYt = ytUrl.replace(/^https?:\/\/(?:www\.)?/, '').toLowerCase();
+                        
+                        if (currentYt === '') {
+                            friend.youtube = ytUrl;
+                            didChange = true;
+                        } else if (normCurrentYt !== normNewYt) {
+                            const confirmYt = await customConfirm({
+                                title: 'YouTubeリンクの上書き確認',
+                                message: `YouTubeのリンクがすでに手動で記載されています。\n現在の値: ${currentYt}\n新しく取得した値: ${ytUrl}\n\n新しく取得した情報で上書きしますか？`
+                            });
+                            if (confirmYt) {
+                                friend.youtube = ytUrl;
+                                didChange = true;
+                            }
+                        }
+                    }
+                }
+                
                 saveFriendsLocal(false);
+                renderFriends();
+                return didChange;
             } catch (e) {
-                console.warn('X profile auto-fill failed:', e);
+                console.warn('X/YouTube profile / Twitch Name auto-fill failed:', e);
+                if (forceFetch) {
+                    showToast('プロフィールの取得に失敗しました。IDが正しいか、連携トークンが有効か確認してください。', 'error');
+                }
             }
             return false;
         }
@@ -8843,10 +9547,11 @@ const langMap = {
             category.isClosed = Boolean(category.isClosed);
             let friend = category.friends.find(item => normalizeFriendTwitch(item.twitch) === login);
             if (!friend) {
-                friend = { name: settings.userLogin || login, twitch: login, x: '', memo: '', isOpen: false };
+                friend = { name: '', twitch: login, displayName: settings.userLogin || login, x: '', memo: '', isOpen: false };
                 category.friends.unshift(friend);
+            } else {
+                if (!friend.displayName) friend.displayName = settings.userLogin || login;
             }
-            if (isPlaceholderFriendName(friend.name)) friend.name = settings.userLogin || login;
             friend.twitch = login;
             if (!String(friend.memo || '').trim()) {
                 friend.memo = uiText('idList.selfMemo', { userId: settings.userId }, `Twitch User ID: ${settings.userId}`);
@@ -8874,10 +9579,11 @@ const langMap = {
             }
             if (!found) {
                 const category = ensureFriendCategory(idListText().autoCategory || (I18N_DATA[currentLang]?.ui?.jsMsgs?.shoutoutHistory || langMap.ja.jsMsgs.shoutoutHistory), 'shoutout-history');
-                found = { name: displayName, twitch: login, x: '', memo: '', isOpen: false, shoutoutCount: 0, lastShoutoutAt: '' };
+                found = { name: '', twitch: login, displayName: displayName, x: '', memo: '', isOpen: false, shoutoutCount: 0, lastShoutoutAt: '' };
                 category.friends.unshift(found);
+            } else {
+                if (!found.displayName) found.displayName = displayName;
             }
-            if (isPlaceholderFriendName(found.name)) found.name = displayName;
             found.twitch = login;
             if (incrementCount) {
                 found.shoutoutCount = Number(found.shoutoutCount || 0) + 1;
@@ -9236,6 +9942,65 @@ const langMap = {
         }
         async function copyBackupToClipboard() { collectRaidSoSettings(); const d = { config, friends: friendsConfig, settings, memoList: memoConfig, raidShoutOut: raidSoSettings, raidShoutOutTemplates: customRaidSoTemplates, supporterArchives: readSupporterArchives() }; await copyTextToClipboard(JSON.stringify(d, null, 2)); }
 
+        function applyThemeSetting(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+                document.documentElement.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+                document.documentElement.classList.remove('light-mode');
+            }
+            const select = document.getElementById('ui_theme');
+            if (select) {
+                select.value = theme;
+            }
+        }
+
+        function toggleThemeQuick() {
+            const currentTheme = settings.theme === 'light' ? 'light' : 'dark';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            settings.theme = newTheme;
+            applyThemeSetting(newTheme);
+            localStorage.setItem('stream_settings_v16', JSON.stringify(settings));
+            showToast(uiText('extended.themeChanged') || 'Theme changed');
+        }
+
+        async function renameCategoryPrompt(ci) {
+            const newName = await customPrompt({
+                ...dialogCopy('titleCategoryRename'),
+                defaultValue: config[ci].name || ''
+            });
+            if (newName !== null) {
+                config[ci].name = newName;
+                saveAllLocal(false);
+                render();
+            }
+        }
+
+        async function renameFriendCategoryPrompt(ci) {
+            const newName = await customPrompt({
+                ...dialogCopy('idCategoryRename'),
+                defaultValue: friendsConfig[ci].name || ''
+            });
+            if (newName !== null) {
+                friendsConfig[ci].name = newName;
+                saveFriendsLocal(false);
+                renderFriends();
+            }
+        }
+
+        async function renameMemoCategoryPrompt(mi) {
+            const newName = await customPrompt({
+                ...dialogCopy('memoRename'),
+                defaultValue: memoConfig[mi].title || ''
+            });
+            if (newName !== null) {
+                memoConfig[mi].title = newName;
+                saveMemoLocal();
+                renderMemo();
+            }
+        }
+
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
             friendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
@@ -9249,6 +10014,7 @@ const langMap = {
             ensureSupporterSettings();
             settings.token = extractTwitchAccessToken(settings.token);
             scrubSavedClientId();
+            applyThemeSetting(settings.theme || 'dark');
 
             // ★追加：保存されている設定(IDやToken)を設定画面の入力欄にセットして表示する
             if (settings) {
@@ -9258,6 +10024,10 @@ const langMap = {
                 document.getElementById('oauth_redirect_uri').value = settings.redirectUri || 'http://localhost';
                 if (settings.token) document.getElementById('token').value = settings.token;
                 if (settings.dateFormat) document.getElementById('date_format').value = settings.dateFormat;
+                if (settings.theme) {
+                    const themeSelect = document.getElementById('ui_theme');
+                    if (themeSelect) themeSelect.value = settings.theme;
+                }
                 const livePreview = document.getElementById('date_format_live_preview');
                 if (livePreview) livePreview.innerText = uiText('runtime.datePreview', { date: formatDateToken(new Date(), settings.dateFormat) });
             }
@@ -10463,7 +11233,7 @@ function safeSetLocal(key, value) {
                     </div>
                     <div class="tw-clip-actions">
                         <button class="btn-secondary" data-url="${safeUrl}" onclick="copyClipFromButton(this)">${raidSoEscape(twExt('copyShort'))}</button>
-                        <button class="btn-secondary" style="background:rgba(255,255,255,0.05);" data-url="${safeUrl}" data-title="${safeTitle}" onclick="saveFavClipFromButton(this)">★${raidSoEscape(uiText('runtime.saveShort'))}</button>
+                        <button class="btn-secondary" style="background:var(--bg-panel);" data-url="${safeUrl}" data-title="${safeTitle}" onclick="saveFavClipFromButton(this)">★${raidSoEscape(uiText('runtime.saveShort'))}</button>
                     </div>
                 </article>`;
             }).join('')}</div>`;
@@ -10991,21 +11761,22 @@ function safeSetLocal(key, value) {
         }
 
         function formatSupporterDetailBlock(value) {
-            const clean = stripAutomaticSupporterHonorifics(value);
-            if (!settings.supporterHonorificEnabled) return clean;
-            const suffix = uiText('runtime.supporter.honorificSuffix');
-            if (!suffix) return clean;
-            return clean.split('\n').map(line => {
+            if (!settings.supporterHonorificEnabled) return value;
+            const suffix = uiText('runtime.supporter.honorificSuffix') || 'さん';
+            return String(value || '').split('\n').map(line => {
                 if (!line.trim()) return line;
-                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, `$1$2${suffix}`);
+                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, (match, p1, p2) => {
+                    if (p2.endsWith(suffix)) {
+                        return match; // Keep as is, do not append double suffix
+                    }
+                    return p1 + p2 + suffix;
+                });
             }).join('\n');
         }
 
         function readSupporterDetail(id) {
             const el = document.getElementById(id);
-            const clean = stripAutomaticSupporterHonorifics(el?.value.trim() || '');
-            if (el && el.value.trim() !== clean) el.value = clean;
-            return clean;
+            return el?.value.trim() || '';
         }
 
         function _updatePostPreviewInner() {
@@ -11291,7 +12062,7 @@ function raidSoSoundControlsHtml(kind, title, file, volume) {
             return `<div>
                 <div style="font-weight:bold; color:#bf94ff; margin-bottom:8px;">${raidSoEscape(title)}</div>
                 <span class="field-label">${raidSoEscape(r.soundSource)}</span>
-                <select id="raidso-${id}-sound-file" style="width:100%; background:#000; border:1px solid #444; color:#fff; padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
+                <select id="raidso-${id}-sound-file" style="width:100%; background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-main); padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
                     ${soundOptions.map(src => `<option value="${raidSoEscape(src)}"${raidSoSelected(file, src)}>${raidSoEscape(raidSoSoundFileLabel(src))}</option>`).join('')}
                 </select>
                 <span class="field-label">${raidSoEscape(r.volume)}</span>
@@ -11322,6 +12093,7 @@ function getStoredRaidSoSoundFiles() {
 function replaceRaidSoSoundFilesFromFolder(input) {
             try {
                 collectRaidSoSettings();
+                const oldSoundFiles = Array.isArray(raidSoSettings.soundFiles) ? [...raidSoSettings.soundFiles] : [];
                 const sources = Array.from(input?.files || [])
                     .filter(file => isRaidSoAudioSource(file.name))
                     .map(file => {
@@ -11336,6 +12108,14 @@ function replaceRaidSoSoundFilesFromFolder(input) {
                     showToast(raidSoText().soundFilesEmpty, 'error');
                     return;
                 }
+
+                // Check for removed files
+                const removedFiles = oldSoundFiles.filter(f => !available.includes(normalizeRaidSoSoundSource(f)));
+                if (removedFiles.length > 0) {
+                    const removedList = removedFiles.map(f => raidSoSoundFileLabel(f)).join(', ');
+                    customAlert(`古い音声ファイルがリストから削除されました:\n${removedList}`);
+                }
+
                 showToast(raidSoText().soundFilesUpdated.replace('{count}', available.length));
             } catch (error) {
                 raidSoLog(raidSoText().soundFilesReadFailed, 'warn');
@@ -11523,7 +12303,11 @@ function initDynamicCategories(skipWrapperRemoval = false) {
         
         if (typeof Sortable !== 'undefined') {
             dynamicCategorySortables.push(Sortable.create(target, {
-                animation: 150, handle: '.category-name', disabled: isSortLocked,
+                animation: 150,
+                handle: '.category-name',
+                disabled: isSortLocked,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false,
                 onEnd: () => saveCategoryOrder(tabId)
             }));
         }
@@ -11728,9 +12512,9 @@ window.addEventListener('DOMContentLoaded', () => {
             select.id = 'date_format_preset';
             select.setAttribute('aria-label', '日付形式プリセット');
             select.style.width = '100%';
-            select.style.background = '#000';
-            select.style.border = '1px solid #444';
-            select.style.color = '#fff';
+            select.style.background = 'var(--bg-input)';
+            select.style.border = '1px solid var(--border-input)';
+            select.style.color = 'var(--text-main)';
             select.style.padding = '10px';
             select.style.borderRadius = '8px';
             select.style.fontSize = '13px';
@@ -12045,29 +12829,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const originalRenderFriends = renderFriends;
     renderFriends = function renderFriendsV5() {
         if (typeof originalRenderFriends === 'function') originalRenderFriends.apply(this, arguments);
-        document.querySelectorAll('#friends-container .category-box').forEach(catEl => {
-            const ci = Number(catEl.getAttribute('data-idx'));
-            catEl.querySelectorAll('.record-card').forEach(card => {
-                const fi = Number(card.getAttribute('data-idx'));
-                const body = card.querySelector('.record-body');
-                const friend = friendsConfig?.[ci]?.friends?.[fi];
-                if (!body || !friend || body.querySelector('.id-history-actions')) return;
-                const hasHistory = Boolean(Number(friend.shoutoutCount || 0) || friend.lastShoutoutAt);
-                const wrap = document.createElement('div');
-                wrap.className = 'id-history-actions';
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn-outline id-history-reset-btn';
-                btn.innerText = getIdText().resetShoutout || '紹介履歴リセット';
-                btn.disabled = !hasHistory;
-                btn.onclick = event => {
-                    event.stopPropagation();
-                    resetFriendShoutoutHistory(ci, fi);
-                };
-                wrap.appendChild(btn);
-                body.insertBefore(wrap, body.firstChild);
-            });
-        });
     };
 
     function updateDockLayoutMetrics() {
