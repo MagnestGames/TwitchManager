@@ -1,1 +1,73 @@
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2004/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%239146FF%22/><text x=%2250%22 y=%2245%22 font-size=%2245%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>🦊</text><text x=%2230%22 y=%2275%22 font-size=%2225%22 text-anchor=%22middle%22>🔰</text><text x=%2270%22 y=%2275%22 font-size=%2225%22 text-anchor=%22middle%22>🍁</text></svg>">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Favicon デザイン確認</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #18181b; /* Twitch風ダーク背景 */
+            color: #efeff1;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            padding: 50px;
+        }
+        .icon-container {
+            text-align: center;
+        }
+        .icon-box {
+            background-color: #0e0e10;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #303032;
+            margin-bottom: 15px;
+        }
+        /* ページ上で見やすいように120pxに拡大して表示 */
+        .preview svg { 
+            width: 120px; 
+            height: 120px; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="icon-container">
+        <h3>案1：シンプル<br>（絵文字）</h3>
+        <div class="icon-box preview">
+            <svg xmlns="http://www.w3.org/2004/svg" viewBox="0 0 100 100">
+                <text x="50" y="45" font-size="55" text-anchor="middle" dominant-baseline="central">🦊</text>
+                <text x="10" y="85" font-size="35">🔰</text>
+                <text x="90" y="85" font-size="35" text-anchor="end">🍁</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="icon-container">
+        <h3>案2：ロゴ風<br>（図形描画）</h3>
+        <div class="icon-box preview">
+            <svg xmlns="http://www.w3.org/2004/svg" viewBox="0 0 100 100">
+                <polygon points="50,85 15,40 30,15 50,40 70,15 85,40" fill="#ff7f00"/>
+                <circle cx="35" cy="50" r="5" fill="white"/>
+                <circle cx="65" cy="50" r="5" fill="white"/>
+                <circle cx="50" cy="70" r="4" fill="black"/>
+                <text x="5" y="95" font-size="35">🔰</text>
+                <text x="95" y="95" font-size="35" text-anchor="end">🍁</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="icon-container">
+        <h3>案3：ツール風<br>（バッジ）</h3>
+        <div class="icon-box preview">
+            <svg xmlns="http://www.w3.org/2004/svg" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="#9146FF"/>
+                <text x="50" y="45" font-size="45" text-anchor="middle" dominant-baseline="central">🦊</text>
+                <text x="30" y="75" font-size="25" text-anchor="middle">🔰</text>
+                <text x="70" y="75" font-size="25" text-anchor="middle">🍁</text>
+            </svg>
+        </div>
+    </div>
+
+</body>
+</html>
