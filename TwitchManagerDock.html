@@ -21,6 +21,16 @@
                 <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: #bf94ff; border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
+                <!-- Birthday/Anniversary Indicator -->
+                <div id="birthday-anniversary-indicator" class="birthday-indicator" style="position: relative; display: inline-block; margin-right: 4px; vertical-align: middle;">
+                    <button id="birthday-indicator-btn" class="btn-head-purple inactive" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;" onclick="toggleBirthdayPopover(event)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+                            <path d="M3 20h18" />
+                        </svg>
+                    </button>
+                    <div id="birthday-popover" class="birthday-popover" style="display: none;"></div>
+                </div>
                 <button id="global-settings-btn" class="btn-head-purple" data-i18n-tooltip="extended.displaySettingsBtnTitle" data-i18n-aria="extended.displaySettingsBtnTitle"
                     onclick="openActiveCategorySettings()" aria-label="表示設定">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
@@ -40,9 +50,9 @@
                 <button id="theme-btn" class="btn-head-purple" data-i18n-tooltip="extended.themeToggle"
                     onclick="toggleTheme()">🌙</button>
                 <button class="btn-head-purple" id="ui-btn-guide" data-i18n-tooltip="extended.guide"
-                    onclick="openModal('guideModal')">❔</button>
+                    onclick="openModal('guideModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
                 <button class="btn-head-purple" id="ui-btn-settings" data-i18n-tooltip="extended.settings"
-                    onclick="openModal('settingModal')">⚙</button>
+                    onclick="openModal('settingModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
             </div>
         </div>
         <div class="tab-nav" id="tab-navigation"></div>
@@ -165,7 +175,7 @@
                                 <label class="tw-toggle"><input type="checkbox" id="supporter-honorific-enabled" onchange="saveSupporterHonorificSetting(this.checked)"><span class="tw-slider"></span></label>
                             </div>
                         </div>
-                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:#060608; border:1px solid #222; color:#efeff1;" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
+                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:var(--bg-record); border:1px solid var(--border-color); color:var(--text-main);" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
                         <div class="post-output-actions">
                             <button class="btn-primary" style="flex:2;padding:10px 0;font-size:12px;" onclick="copyPostText()" id="tw-btn-copy-post" data-i18n="extended.copySupporterList">リストをコピー</button>
                             <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,0.05);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
@@ -315,7 +325,7 @@
                         <button class="btn-primary" style="font-size:10px;padding:5px 8px;white-space:nowrap;" onclick="createClip(this)" id="tw-btn-clip-create" data-i18n="extended.clipCreateBtn">作成</button>
                     </div>
                     <div style="display:flex;gap:4px;margin-bottom:6px;align-items:center;">
-                        <button class="btn-secondary" style="font-size:10px;padding:4px 8px;flex:1;background:rgba(255,255,255,0.05);" onclick="loadFavClips()" id="tw-btn-fav-clips" data-i18n="extended.favClips">お気に入り一覧</button>
+                        <button class="btn-secondary" style="font-size:10px;padding:4px 8px;flex:1;background:var(--bg-panel);" onclick="loadFavClips()" id="tw-btn-fav-clips" data-i18n="extended.favClips">お気に入り一覧</button>
                     </div>
                     <div style="display:flex;gap:4px;margin-bottom:10px;align-items:center;">
                         <input type="text" id="tw-fav-clip-url" data-i18n-placeholder="extended.clipUrlPlaceholder" placeholder="クリップURL" style="flex:1;margin:0;font-size:10px;padding:4px;">
@@ -492,7 +502,7 @@
             <button class="modal-close-top" onclick="closeModal('settingModal')">×</button>
             <h3 id="ui-settings-title" style="color:#bf94ff; font-size:18px; margin-bottom:20px;" data-i18n="settingsUi.title">⚙ 設定</h3>
             <div
-                style="background:rgba(255,255,255,0.05); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-auth-title" style="margin-bottom:8px;" data-i18n="settingsUi.authTitle">>Twitch認証</div>
                 <p class="settings-help" id="ui-settings-auth-help" data-i18n="settingsUi.authHelp">Twitch Token Generatorでアクセストークンを取得し、ここに貼り付けて保存します。Client IDと連携先チャンネルは自動で確認します。詳しい手順がわからない場合は、右上のヘルプから画像付きガイドを確認してください。</p>
                 <input type="hidden" id="user_id">
@@ -508,11 +518,11 @@
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
                     <button type="button" class="btn-outline" id="ui-settings-auth-btn" onclick="openOfficialAuth()" data-i18n="settingsUi.openAuth">Twitch Token GeneratorのURLをコピー</button>
-                    <button type="button" class="btn-outline" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth" style="border-color: rgba(255,74,74,0.55); color: #ff8a8a; background: rgba(255,74,74,0.06);">Twitch認証を解除</button>
+                    <button type="button" class="btn-outline btn-revoke" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth">Twitch認証を解除</button>
                 </div>
             </div>
             <div
-                style="background:rgba(255,255,255,0.05); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
                 <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">>表示設定</div>
                 <span class="field-label" id="ui-settings-date-format-label" data-i18n="settingsUi.dateFormatLabelExtended">日付の表示形式 ({date}用) ※自由にカスタマイズできます</span>
                 <input type="text" id="date_format" list="date_format_presets" 
@@ -530,9 +540,14 @@
                     <option value="YY年MM月DD日"></option>
                     <option value="M-D-W"></option>
                 </datalist>
-                <div style="font-size: 10px; color: #aaa; margin-top: 4px;" data-i18n="settingsUi.dateVarsHint">
+                <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
                     利用可能な変数: YYYY(年), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)
                 </div>
+                <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">テーマ</span>
+                <select id="ui_theme" onchange="applyThemeSetting(this.value)" style="width: 100%; background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
+                    <option value="dark" data-i18n="settingsUi.themeDark">ダークモード</option>
+                    <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
+                </select>
             </div>
             <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">>保存</button>
         </div>
