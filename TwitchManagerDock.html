@@ -461,6 +461,15 @@
             color: var(--text-muted);
             font-size: 11px;
             line-height: 1.6;
+            border-top: none !important;
+        }
+
+        details, summary, .tab-help, .tab-help-summary {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        details::-webkit-details-marker, summary::-webkit-details-marker {
+            display: none !important;
         }
 
         .tab-help-body p {
@@ -1216,8 +1225,9 @@
             min-height: 54px;
             margin: 0;
             padding: 6px 7px;
-            background: #09090b;
-            border-color: #35353c;
+            background: var(--bg-input);
+            border-color: var(--border-input);
+            color: var(--text-main);
             font-size: 11px;
         }
 
@@ -3636,7 +3646,7 @@ body.light-mode .language-option:hover {
                                 <label class="tw-toggle"><input type="checkbox" id="supporter-honorific-enabled" onchange="saveSupporterHonorificSetting(this.checked)"><span class="tw-slider"></span></label>
                             </div>
                         </div>
-                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:#060608; border:1px solid #222; color:#efeff1;" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
+                        <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:var(--bg-record); border:1px solid var(--border-color); color:var(--text-main);" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
                         <div class="post-output-actions">
                             <button class="btn-primary" style="flex:2;padding:10px 0;font-size:12px;" onclick="copyPostText()" id="tw-btn-copy-post" data-i18n="extended.copySupporterList">リストをコピー</button>
                             <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,0.05);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
@@ -7617,7 +7627,12 @@ const langMap = {
                 <div class="record-body">
                     ${meta ? `<div class="id-meta">${raidSoEscape(meta)}</div>` : ''}
                     <span class="field-label">${raidSoEscape(L.labels.twitchId || 'Twitch ID')}</span>
-                    <input type="text" value="${raidSoEscape(f.twitch || '')}" oninput="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false)" onchange="const clean = normalizeFriendTwitch(this.value); this.value = clean; friendsConfig[${ci}].friends[${fi}].twitch = clean; saveFriendsLocal(false); autoFillFriendXFromTwitch(${ci}, ${fi}).then(() => renderFriends());">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" value="${raidSoEscape(f.twitch || '')}" oninput="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false)" onchange="const clean = normalizeFriendTwitch(this.value); this.value = clean; friendsConfig[${ci}].friends[${fi}].twitch = clean; saveFriendsLocal(false); autoFillFriendXFromTwitch(${ci}, ${fi}, '', true).then(() => renderFriends());" style="margin-bottom:0; flex:1;">
+                        <button class="icon-btn" title="Twitchからプロフィール情報を同期" onclick="event.stopPropagation(); autoFillFriendXFromTwitch(${ci}, ${fi}, '', true).then(changed => { if(changed) { showToast('同期しました'); } else { showToast('更新情報はありません'); } renderFriends(); })" style="padding: 6px; display: flex; align-items: center; justify-content: center; height: 32px; width: 32px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-record); color: var(--text-main); cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        </button>
+                    </div>
                     
                     <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || 'YouTubeリンク')}</span>
                     <input type="text" value="${raidSoEscape(f.youtube || '')}" placeholder="${raidSoEscape(L.labels.youtubeUrlPlaceholder || 'YouTubeのURLまたはチャンネルID')}" oninput="friendsConfig[${ci}].friends[${fi}].youtube=this.value; saveFriendsLocal(false)">
@@ -7734,8 +7749,20 @@ const langMap = {
         function initSortable() {
             if (typeof Sortable === 'undefined') return;
             sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
-            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
-                animation: 150, handle: '.record-header', disabled: isSortLocked, group: groupName,
+            const opts = {
+                animation: 150,
+                handle: '.category-name',
+                disabled: isSortLocked,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false
+            };
+            const itemOpts = (list, save, renderFunc, groupName) => ({
+                animation: 150,
+                handle: '.record-header',
+                disabled: isSortLocked,
+                group: groupName,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false,
                 onEnd: (evt) => {
                     const fromIdx = parseInt(evt.from.getAttribute('data-cat-idx')), toIdx = parseInt(evt.to.getAttribute('data-cat-idx'));
                     const item = list[fromIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.oldIndex, 1)[0];
@@ -9029,7 +9056,7 @@ const langMap = {
         function normalizeXProfileUrl(value) {
             const raw = String(value || '').trim();
             if (!raw) return '';
-            const urlMatch = raw.match(/(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})(?:[\/?#].*)?$/i);
+            const urlMatch = raw.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})(?:[\/?#].*)?$/i);
             const id = urlMatch ? urlMatch[1] : raw.replace(/^@/, '').match(/^[A-Za-z0-9_]{1,15}$/)?.[0];
             return id ? `https://x.com/${id}` : '';
         }
@@ -9038,43 +9065,86 @@ const langMap = {
             const text = String(description || '').trim();
             if (!text) return '';
             
-            // 1. Matches x.com or twitter.com URLs
-            const urlMatch = text.match(/(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})/i);
-            if (urlMatch) return normalizeXProfileUrl(urlMatch[0]); // pass the whole url to normalize
+            // 1. Matches x.com or twitter.com URLs (supporting mobile.x.com etc.)
+            const urlMatch = text.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?(?:x|twitter)\.com\/(?!share(?:\/|$)|intent(?:\/|$)|home(?:\/|$)|search(?:\/|$)|i\/)([A-Za-z0-9_]{1,15})/i);
+            if (urlMatch) return normalizeXProfileUrl(urlMatch[0]);
             
-            // 2. Matches @username near X/Twitter/𝕏 keyword (keyword followed by @username)
-            // Allows up to 50 characters of non-@ text in between
-            const nearAfterAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏)[^@]{0,50}@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])/i);
+            // 2. Matches @username near X/Twitter/𝕏 keyword
+            const nearAfterAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)[^@]{0,50}@([A-Za-z0-9_]{1,15})/i);
             if (nearAfterAt) return normalizeXProfileUrl(nearAfterAt[1]);
             
-            // 3. Matches @username before X/Twitter/𝕏 keyword (@username followed by keyword)
-            // Allows up to 50 characters of non-@ text in between
-            const nearBeforeAt = text.match(/(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])[^@]{0,50}(?:x|twitter|Ｘ|𝕏)/i);
+            const nearBeforeAt = text.match(/(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})[^@]{0,50}(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)/i);
             if (nearBeforeAt) return normalizeXProfileUrl(nearBeforeAt[1]);
             
-            // 4. Matches keyword followed by username without @ (requires strict separator to avoid false positives)
-            // e.g. "X ID: username", "Twitter: username", "X: username"
-            const nearAfterNoAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏)(?:\s*(?::|：|id|アカウント|垢|／|-|－)\s*){1,3}([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])/i);
+            // 3. Matches keyword followed by username without @
+            const nearAfterNoAt = text.match(/(?:^|[^A-Za-z0-9_])(?:x|twitter|Ｘ|𝕏|ｔｗｉｔｔｅｒ)(?:\s*(?::|：|id|アカウント|垢|／|-|－)\s*){1,3}([A-Za-z0-9_]{1,15})/i);
             if (nearAfterNoAt) return normalizeXProfileUrl(nearAfterNoAt[1]);
+
+            // 4. Fallback: if there is only one @username in the text
+            const mentions = [];
+            const mentionRegex = /(?:^|[^A-Za-z0-9_])@([A-Za-z0-9_]{1,15})(?![A-Za-z0-9_])/g;
+            let match;
+            while ((match = mentionRegex.exec(text)) !== null) {
+                mentions.push(match[1]);
+            }
+            if (mentions.length === 1) {
+                return normalizeXProfileUrl(mentions[0]);
+            }
+            
+            return '';
+        }
+
+        function extractYoutubeFromTwitchDescription(description) {
+            const text = String(description || '').trim();
+            if (!text) return '';
+
+            // 1. YouTube.com URLs (handles, c, channel, user)
+            const ytMatch = text.match(/(?:https?:\/\/)?(?:[a-z0-9_-]+\.)?youtube\.com\/(?:@|channel\/|user\/|c\/)?([A-Za-z0-9_.-]{3,30})/i);
+            if (ytMatch) {
+                const id = ytMatch[1];
+                if (id.startsWith('UC') && id.length === 24) {
+                    return `https://www.youtube.com/channel/${id}`;
+                }
+                return `https://www.youtube.com/@${id.replace(/^@/, '')}`;
+            }
+
+            // 2. youtu.be short URLs
+            const ytbMatch = text.match(/(?:https?:\/\/)?youtu\.be\/([A-Za-z0-9_.-]{3,30})/i);
+            if (ytbMatch) {
+                return `https://www.youtube.com/@${ytbMatch[1]}`;
+            }
+
+            // 3. YouTube keyword followed by @username
+            const nearAfterAt = text.match(/(?:^|[^A-Za-z0-9_])(?:youtube|yt|ユーチューブ)[^@]{0,50}@([a-zA-Z0-9_.-]{3,20})(?![a-zA-Z0-9_.-])/i);
+            if (nearAfterAt) return `https://www.youtube.com/@${nearAfterAt[1]}`;
+
+            // 4. YouTube keyword followed by username without @
+            const nearAfterNoAt = text.match(/(?:^|[^A-Za-z0-9_])(?:youtube|yt|ユーチューブ)(?:\s*(?::|：|id|アカウント|垢|／|-|－)\s*){1,3}([a-zA-Z0-9_.-]{3,20})(?![a-zA-Z0-9_.-])/i);
+            if (nearAfterNoAt) return `https://www.youtube.com/@${nearAfterNoAt[1]}`;
 
             return '';
         }
 
-        async function autoFillFriendXFromTwitch(ci, fi, knownDescription = '') {
+        async function autoFillFriendXFromTwitch(ci, fi, knownDescription = '', forceFetch = false) {
             const friend = friendsConfig?.[ci]?.friends?.[fi];
             if (!friend) return false;
             const login = normalizeFriendTwitch(friend.twitch || friend.username || friend.url || '');
             if (!login) return false;
             const hasAuthForLookup = Boolean(cleanRaidSoToken() && getEffectiveTwitchClientId());
-            if (!knownDescription && !hasAuthForLookup) return false;
+            if (!knownDescription && !hasAuthForLookup) {
+                if (forceFetch) {
+                    await customAlert('Twitch連携の設定（アクセストークン等）が不足しているため、情報を取得できません。「設定」画面から連携情報を入力してください。');
+                }
+                return false;
+            }
             
-            // Limit checking frequency for X autofill, but still check if we can fetch user profile
             const lastChecked = Date.parse(friend.xAutoCheckedAt || '');
             const needsXFill = !String(friend.x || '').trim();
-            const shouldFetchTwitch = !friend.displayName || (needsXFill && (!lastChecked || Date.now() - lastChecked > 24 * 60 * 60 * 1000));
+            const needsYoutubeFill = !String(friend.youtube || '').trim();
+            const shouldFetchTwitch = forceFetch || !friend.displayName || ((needsXFill || needsYoutubeFill) && (!lastChecked || Date.now() - lastChecked > 24 * 60 * 60 * 1000));
             
             if (!knownDescription && !shouldFetchTwitch) return false;
-            if (!knownDescription && needsXFill) {
+            if (!knownDescription && (needsXFill || needsYoutubeFill)) {
                 friend.xAutoCheckedAt = new Date().toISOString();
             }
 
@@ -9097,11 +9167,46 @@ const langMap = {
                     }
                 }
 
-                if (needsXFill) {
+                if (needsXFill || forceFetch) {
                     const xUrl = extractXProfileFromTwitchDescription(description);
-                    if (xUrl) {
-                        friend.x = xUrl;
-                        didChange = true;
+                    if (xUrl && friend.x !== xUrl) {
+                        const currentX = String(friend.x || '').trim();
+                        if (currentX === '') {
+                            friend.x = xUrl;
+                            didChange = true;
+                        } else {
+                            const confirmX = await customConfirm({
+                                title: 'X URLの上書き確認',
+                                message: `Xのアカウント情報がすでに手動で記載されています。\n現在の値: ${currentX}\n新しく取得した値: ${xUrl}\n\n新しく取得した情報で上書きしますか？`
+                            });
+                            if (confirmX) {
+                                friend.x = xUrl;
+                                didChange = true;
+                            }
+                        }
+                    }
+                }
+
+                if (needsYoutubeFill || forceFetch) {
+                    const ytUrl = extractYoutubeFromTwitchDescription(description);
+                    if (ytUrl && friend.youtube !== ytUrl) {
+                        const currentYt = String(friend.youtube || '').trim();
+                        const normCurrentYt = currentYt.replace(/^https?:\/\/(?:www\.)?/, '').toLowerCase();
+                        const normNewYt = ytUrl.replace(/^https?:\/\/(?:www\.)?/, '').toLowerCase();
+                        
+                        if (currentYt === '') {
+                            friend.youtube = ytUrl;
+                            didChange = true;
+                        } else if (normCurrentYt !== normNewYt) {
+                            const confirmYt = await customConfirm({
+                                title: 'YouTubeリンクの上書き確認',
+                                message: `YouTubeのリンクがすでに手動で記載されています。\n現在の値: ${currentYt}\n新しく取得した値: ${ytUrl}\n\n新しく取得した情報で上書きしますか？`
+                            });
+                            if (confirmYt) {
+                                friend.youtube = ytUrl;
+                                didChange = true;
+                            }
+                        }
                     }
                 }
                 
@@ -9109,7 +9214,10 @@ const langMap = {
                 renderFriends();
                 return didChange;
             } catch (e) {
-                console.warn('X profile / Twitch Name auto-fill failed:', e);
+                console.warn('X/YouTube profile / Twitch Name auto-fill failed:', e);
+                if (forceFetch) {
+                    showToast('プロフィールの取得に失敗しました。IDが正しいか、連携トークンが有効か確認してください。', 'error');
+                }
             }
             return false;
         }
@@ -11371,24 +11479,21 @@ function safeSetLocal(key, value) {
 
         function formatSupporterDetailBlock(value) {
             if (!settings.supporterHonorificEnabled) return value;
-            const clean = stripAutomaticSupporterHonorifics(value);
-            const suffix = uiText('runtime.supporter.honorificSuffix');
-            if (!suffix) return clean;
-            return clean.split('\n').map(line => {
+            const suffix = uiText('runtime.supporter.honorificSuffix') || 'さん';
+            return String(value || '').split('\n').map(line => {
                 if (!line.trim()) return line;
-                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, `$1$2${suffix}`);
+                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, (match, p1, p2) => {
+                    if (p2.endsWith(suffix)) {
+                        return match; // Keep as is, do not append double suffix
+                    }
+                    return p1 + p2 + suffix;
+                });
             }).join('\n');
         }
 
         function readSupporterDetail(id) {
             const el = document.getElementById(id);
-            const raw = el?.value.trim() || '';
-            if (!settings.supporterHonorificEnabled) {
-                return raw;
-            }
-            const clean = stripAutomaticSupporterHonorifics(raw);
-            if (el && el.value.trim() !== clean) el.value = clean;
-            return clean;
+            return el?.value.trim() || '';
         }
 
         function _updatePostPreviewInner() {
@@ -11705,6 +11810,7 @@ function getStoredRaidSoSoundFiles() {
 function replaceRaidSoSoundFilesFromFolder(input) {
             try {
                 collectRaidSoSettings();
+                const oldSoundFiles = Array.isArray(raidSoSettings.soundFiles) ? [...raidSoSettings.soundFiles] : [];
                 const sources = Array.from(input?.files || [])
                     .filter(file => isRaidSoAudioSource(file.name))
                     .map(file => {
@@ -11719,6 +11825,14 @@ function replaceRaidSoSoundFilesFromFolder(input) {
                     showToast(raidSoText().soundFilesEmpty, 'error');
                     return;
                 }
+
+                // Check for removed files
+                const removedFiles = oldSoundFiles.filter(f => !available.includes(normalizeRaidSoSoundSource(f)));
+                if (removedFiles.length > 0) {
+                    const removedList = removedFiles.map(f => raidSoSoundFileLabel(f)).join(', ');
+                    customAlert(`古い音声ファイルがリストから削除されました:\n${removedList}`);
+                }
+
                 showToast(raidSoText().soundFilesUpdated.replace('{count}', available.length));
             } catch (error) {
                 raidSoLog(raidSoText().soundFilesReadFailed, 'warn');
@@ -11906,7 +12020,11 @@ function initDynamicCategories(skipWrapperRemoval = false) {
         
         if (typeof Sortable !== 'undefined') {
             dynamicCategorySortables.push(Sortable.create(target, {
-                animation: 150, handle: '.category-name', disabled: isSortLocked,
+                animation: 150,
+                handle: '.category-name',
+                disabled: isSortLocked,
+                filter: 'button, input, select, textarea, svg, path, a',
+                preventOnFilter: false,
                 onEnd: () => saveCategoryOrder(tabId)
             }));
         }
