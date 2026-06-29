@@ -1226,7 +1226,8 @@
             margin: 0;
             padding: 6px 7px;
             background: var(--bg-input);
-            border-color: var(--border-input);
+            border: 1px solid var(--border-input);
+            border-radius: var(--radius-sm);
             color: var(--text-main);
             font-size: 11px;
         }
@@ -3798,6 +3799,79 @@ body.light-mode .calendar-day-cell.has-event {
 }
 body.light-mode .calendar-day-cell-badge {
     color: #d97706;
+}
+
+/* ============================================
+   ライトモード: ハードコードカラー一括上書き
+   ============================================ */
+
+/* サポーターオプションカード */
+body.light-mode .supporter-option {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+body.light-mode .supporter-option .field-label {
+    color: var(--command-accent) !important;
+}
+body.light-mode .supporter-options-panel {
+    background: var(--bg-panel) !important;
+}
+body.light-mode .supporter-output-options {
+    background: var(--bg-panel) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* カテゴリボックス */
+body.light-mode .category-box:hover {
+    background: var(--bg-hover) !important;
+}
+body.light-mode .category-name {
+    color: var(--command-accent) !important;
+}
+
+/* コピー用読み取り専用フィールド */
+body.light-mode .copy-field-row input {
+    background: var(--bg-record) !important;
+}
+
+/* クリップURLボックス */
+body.light-mode .tw-clip-url-box {
+    background: var(--bg-record) !important;
+    border-color: var(--border-color) !important;
+}
+body.light-mode .tw-clip-url {
+    color: var(--command-accent) !important;
+}
+
+/* オートコンプリートサジェストパネル */
+body.light-mode .so-suggest-panel {
+    background: var(--bg-card) !important;
+    border-color: var(--border-input) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
+}
+
+/* ツールチップ（ホバー時ポップアップ） */
+body.light-mode .has-tooltip::after {
+    background: #3f3f4a !important;
+    color: #ffffff !important;
+}
+body.light-mode .btn-head-purple[data-tooltip]::after {
+    background: #3f3f4a !important;
+    color: #ffffff !important;
+}
+
+/* VIPスロット情報バー */
+body.light-mode #tw-vip-slot-info {
+    background: var(--bg-panel) !important;
+    color: var(--text-muted) !important;
+}
+
+/* supporter-details / raidso-child-settings */
+body.light-mode .supporter-details,
+body.light-mode .raidso-child-settings,
+body.light-mode .raidso-excluded-settings {
+    background: var(--bg-panel) !important;
+    border-color: var(--border-color) !important;
 }
 </style>
 
