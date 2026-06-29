@@ -516,6 +516,51 @@
             background: #1d1d22;
         }
 
+        /* 自分のTwitchアカウント（認証済み）は、通常時は枠を隠しヘッダーを非表示にする */
+        .category-box.auth-user-box {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-bottom: 10px !important;
+            transition: none !important;
+        }
+        .category-box.auth-user-box:hover {
+            background: transparent !important;
+            border: none !important;
+        }
+        .category-box.auth-user-box > .category-name {
+            display: none !important;
+        }
+        .category-box.auth-user-box > .category-records {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+
+        /* 並べ替えロック解除中のときだけ、枠とヘッダーを一時的に表示してドラッグ可能にする */
+        body.sort-unlocked .category-box.auth-user-box {
+            background: var(--bg-card) !important;
+            border: 1px dashed var(--twitch-purple) !important;
+            box-shadow: var(--shadow-sm) !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            border-radius: var(--radius-lg);
+        }
+        body.sort-unlocked .category-box.auth-user-box:hover {
+            background: #1d1d22 !important;
+            border-color: var(--twitch-purple) !important;
+        }
+        body.light-mode.sort-unlocked .category-box.auth-user-box:hover {
+            background: #f8f9fa !important;
+        }
+        body.sort-unlocked .category-box.auth-user-box > .category-name {
+            display: flex !important;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
         .category-box:focus-within {
             border-color: rgba(145, 70, 255, 0.65);
         }
@@ -2804,20 +2849,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.75);
             z-index: 9999;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s, visibility 0.2s;
         }
 
         .custom-dialog-overlay.show {
-            opacity: 1;
-            visibility: visible;
+            display: flex !important;
         }
 
         .custom-dialog {
@@ -2828,14 +2868,11 @@
             width: 90%;
             max-width: 420px;
             box-shadow: var(--shadow-md);
-            transform: translateY(20px);
-            transition: transform var(--motion-normal) var(--ease-out), opacity var(--motion-normal) var(--ease-out);
-            opacity: 0;
         }
 
         .custom-dialog-overlay.show .custom-dialog {
-            transform: translateY(0);
-            opacity: 1;
+            transform: none !important;
+            opacity: 1 !important;
         }
 
         .custom-dialog-actions {
@@ -4446,16 +4483,56 @@ body.light-mode .raidso-excluded-settings {
             <div id="calendar-modal-grid-view" style="display: none; flex: 1; flex-direction: column;">
                 <!-- Monthly Calendar header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <button class="icon-btn" onclick="navigateCalendarMonth(-1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer;">&lt;</button>
-                    <span id="calendar-month-title" style="font-weight: bold; font-size: 14px; color: var(--text-main);"></span>
-                    <button class="icon-btn" onclick="navigateCalendarMonth(1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer;">&gt;</button>
+                    <button class="icon-btn" onclick="navigateCalendarMonth(-1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&lt;</button>
+                    <!-- 年月タイトル: クリックで年月ピッカー表示 -->
+                    <button id="calendar-month-title" onclick="toggleCalendarYMPicker()" style="font-weight: bold; font-size: 14px; color: var(--twitch-purple); background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: 0.15s; flex: 1; text-align: center;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='transparent'"></button>
+                    <button class="icon-btn" onclick="navigateCalendarMonth(1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&gt;</button>
                 </div>
+
+                <!-- 年月ピッカー (Googleカレンダー風) -->
+                <div id="cal-ym-picker" class="cal-ym-picker" style="display:none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <button onclick="shiftCalendarYear(-1)" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8249;</button>
+                        <span id="cal-ym-year-label" style="font-weight:bold;color:var(--text-main);font-size:13px;"></span>
+                        <button onclick="shiftCalendarYear(1)" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8250;</button>
+                    </div>
+                    <div id="cal-ym-months" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;"></div>
+                </div>
+
                 <!-- Calendar grid -->
                 <div class="calendar-grid-header" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; margin-bottom: 4px;">
                     <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
                 </div>
-                <div id="calendar-grid-body" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+                <!-- 高さ固定: grid-template-rows で6行固定 -->
+                <div id="calendar-grid-body" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; min-height: 220px;">
                     <!-- Calendar days generated dynamically -->
+                </div>
+
+                <!-- 日付クリックで開く追加ポップアップ -->
+                <div id="cal-day-popup" style="display:none;margin-top:12px;padding:12px;background:var(--bg-card);border:1px solid var(--twitch-purple);border-radius:10px;box-shadow:var(--shadow-md);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid var(--border-color);padding-bottom:4px;">
+                        <strong id="cal-day-popup-title" style="color:var(--twitch-purple);font-size:13px;"></strong>
+                        <button onclick="document.getElementById('cal-day-popup').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;">×</button>
+                    </div>
+                    <!-- 既存イベント表示 -->
+                    <div id="cal-day-existing" style="margin-bottom:8px;max-height:80px;overflow-y:auto;"></div>
+                    <!-- 追加フォーム -->
+                    <div id="cal-day-add-form">
+                        <div style="margin-bottom:6px;">
+                            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">配信者を選択</label>
+                            <select id="cal-day-person-select" onchange="handleCalPersonSelectChange()" style="width:100%;padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;"></select>
+                            <input type="text" id="cal-day-new-name" placeholder="ニックネームを入力してください" style="width:100%;padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;margin-top:4px;display:none;">
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">お祝い種別</label>
+                            <input type="hidden" id="cal-day-type-value" value="birthday">
+                            <div style="display:flex;gap:6px;">
+                                <button id="cal-type-btn-birthday" onclick="selectCalDayType('birthday')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--twitch-purple);background:var(--twitch-purple);color:#fff;font-size:11px;font-weight:bold;cursor:pointer;">誕生日</button>
+                                <button id="cal-type-btn-anniversary" onclick="selectCalDayType('anniversary')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-muted);font-size:11px;font-weight:bold;cursor:pointer;">記念日</button>
+                            </div>
+                        </div>
+                        <button onclick="confirmCalDayAdd()" style="width:100%;padding:6px;background:var(--twitch-purple);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;">保存</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4572,12 +4649,12 @@ const I18N_DATA ={
                 "streamer": "配信者名",
                 "twitchId": "Twitch ID またはURL",
                 "xUrl": "X URL",
-                "nickname": "あだ名",
+                "nickname": "ニックネーム",
                 "twitchName": "Twitch表示名",
                 "youtubeUrl": "YouTubeリンク",
                 "birthday": "誕生日",
                 "anniversary": "記念日",
-                "nicknamePlaceholder": "あだ名を入力",
+                "nicknamePlaceholder": "ニックネームを入力",
                 "youtubeUrlPlaceholder": "YouTubeのURLまたはチャンネルID"
             },
             "birthdayTitle": "今日の主役！",
@@ -4733,7 +4810,7 @@ const I18N_DATA ={
                 "logsTitle": "ログ",
                 "noLogs": "ログはありません。"
             },
-            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ ヘルプ</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch連携の設定</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 「Custom Scope Token」を選び、必要な権限を入れてACCESS TOKENを生成します。</li>\n                            <li><strong>アクセストークン:</strong> 生成されたACCESS TOKENを設定画面に貼り付けて保存します。Client IDとチャンネルIDは保存時に自動で確認します。</li>\n                            <li><strong>更新:</strong> 反映や同期で認証エラーが出た場合は、同じ手順でアクセストークンを再取得して保存します。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">セキュリティについて（！）</strong><br>\n                            アクセストークンは配信権限に関わる重要な情報です。第三者へ共有したり、配信画面に映したりしないでください。万が一流出した場合は、Twitchの接続設定から権限を取り消し、新しいアクセストークンを取得してください。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 「保存」と「反映」について</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自動保存:</strong> 内容をブラウザ内に保存します。ツールを閉じても保持されます。</li>\n                            <li><strong>反映:</strong> 編集内容をTwitchへ送信し、配信タイトルとカテゴリを更新します。</li>\n                            <li><strong>同期:</strong> 現在のTwitch配信情報を、このツールへ読み込みます。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">※タグと通知文は、現在のTwitch APIの仕様上、このツールから直接変更できません。メモ欄として利用できます。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. バックアップ（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>ブラウザのキャッシュ削除に備え、「バックアップ」タブから定期的にテキスト保存しておくと安心です。</li>\n                            <li>OBSドックからは直接ファイル保存ができないため、コピーした内容をメモ帳などに保管します。</li>\n                            <li>PCの買い替えやデータ復旧時は、保存したテキストを読み込めます。</li>\n                            <li>データ量が多いと、バックアップデータのコピーに失敗する場合があります。不要なデータは定期的に整理すると安心です。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/n533d100fd0d3\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 画像付きの詳細説明書（note）を開く</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>【免責事項】</strong><br>\n                        本ツールは個人制作です。動作確認は行っていますが、予期せぬ不具合やブラウザ側の変更により、データが消える可能性があります。大切な設定やデータを守るため、自己責任での利用と、こまめなバックアップをお願いします。不明点があれば、DiscordのDM（XのDMは見逃す可能性が高いです）、Xのリプライ、配信コメントなどでご相談ください。\n                    </div>\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px;\">\n                        <div style=\"display: flex; flex-direction: column; gap: 8px;\">\n                            <div style=\"display: flex; align-items: center; gap: 8px;\">\n                                <strong style=\"color: #bf94ff; min-width: 70px;\">初狐羽鹿</strong>\n                                <a href=\"https://www.twitch.tv/uikouka\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"Twitch\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7\"></path></svg></a>\n                                <a href=\"https://x.com/uikouka\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"X\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4\"></path></svg></a>\n                                <a href=\"https://toumei2suisai.booth.pm/\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"Booth\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"></path><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><path d=\"M16 10a4 4 0 0 1-8 0\"></path></svg></a>\n                            </div>\n                            <div style=\"display: flex; align-items: center; gap: 8px;\">\n                                <strong style=\"color: #bf94ff; min-width: 70px;\">古隅フユセ</strong>\n                                <a href=\"https://www.twitch.tv/frusumi\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"Twitch\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7\"></path></svg></a>\n                                <a href=\"https://x.com/FruEnji\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"X\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4\"></path></svg></a>\n                                <a href=\"https://frusumi.booth.pm/\" target=\"_blank\" style=\"color: #adadb8; text-decoration: none;\" title=\"Booth\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align: middle;\"><path d=\"M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z\"></path><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><path d=\"M16 10a4 4 0 0 1-8 0\"></path></svg></a>\n                            </div>\n                        </div>\n                    </div>\n                </div>",
+            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ ヘルプ</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch連携の設定</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 「Custom Scope Token」を選び、必要な権限を入れてACCESS TOKENを生成します。</li>\n                            <li><strong>アクセストークン:</strong> 生成されたACCESS TOKENを設定画面に貼り付けて保存します。Client IDとチャンネルIDは保存時に自動で確認します。</li>\n                            <li><strong>更新:</strong> 反映や同期で認証エラーが出た場合は、同じ手順でアクセストークンを再取得して保存します。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">セキュリティについて（！）</strong><br>\n                            アクセストークンは配信権限に関わる重要な情報です。第三者へ共有したり、配信画面に映したりしないでください。万が一流出した場合は、Twitchの接続設定から権限を取り消し、新しいアクセストークンを取得してください。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 「保存」と「反映」について</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自動保存:</strong> 内容をブラウザ内に保存します。ツールを閉じても保持されます。</li>\n                            <li><strong>反映:</strong> 編集内容をTwitchへ送信し、配信タイトルとカテゴリを更新します。</li>\n                            <li><strong>同期:</strong> 現在のTwitch配信情報を、このツールへ読み込みます。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">※タグと通知文は、現在のTwitch APIの仕様上、このツールから直接変更できません。メモ欄として利用できます。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. バックアップ（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>ブラウザのキャッシュ削除に備え、「バックアップ」タブから定期的にテキスト保存しておくと安心です。</li>\n                            <li>OBSドックからは直接ファイル保存ができないため、コピーした内容をメモ帳などに保管します。</li>\n                            <li>PCの買い替えやデータ復旧時は、保存したテキストを読み込めます。</li>\n                            <li>データ量が多いと、バックアップデータのコピーに失敗する場合があります。不要なデータは定期的に整理すると安心です。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/n533d100fd0d3\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 画像付きの詳細説明書（note）を開く</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>【免責事項】</strong><br>\n                        本ツールは個人制作です。動作確認は行っていますが、予期せぬ不具合やブラウザ側の変更により、データが消える可能性があります。大切な設定やデータを守るため、自己責任での利用と、こまめなバックアップをお願いします。不明点があれば、DiscordのDM（XのDMは見逃す可能性が高いです）、Xのリプライ、配信コメントなどでご相談ください。\n                    </div>\n                    <div id=\"help-creators-container\"></div>\n                    </div>",
             "extended": {
                 "language": "言語",
                 "languageMenuLabel": "言語を選択",
@@ -5002,6 +5079,7 @@ const I18N_DATA ={
                 "idCategoryAdd": { "title": "IDリスト項目を追加", "input": "項目名（例: よく紹介する配信者、コラボ相手）", "output": "IDリストに配信者をまとめる項目を作成します。作成後、右上の「＋」からTwitch IDを追加できます。", "placeholder": "例: よく紹介する配信者" },
                 "titleRecordRename": { "title": "タイトル名を変更", "input": "カード上部に表示する名前", "output": "Twitchへ反映される配信タイトルではなく、このドック内で見分けるための名前です。", "placeholder": "例: 通常配信" },
                 "idRecordRename": { "title": "配信者名を変更", "input": "IDリストに表示する配信者名", "output": "Twitch IDは変更されません。表示名だけを変更します。", "placeholder": "例: 配信者名" },
+                "idRecordAdd": { "title": "配信者を追加", "input": "ニックネームを入力してください", "output": "IDリストに新しく配信者を追加します。ニックネームは後からいつでも変更できます。", "placeholder": "ニックネームを入力" },
                 "memoAdd": { "title": "メモを追加", "input": "メモの見出し", "output": "メモ一覧に新しい項目を作成します。", "placeholder": "例: 配信メモ" },
                 "customTemplateSave": { "title": "カスタムテンプレートを保存", "input": "テンプレート一覧に表示する名前", "output": "現在のレイド時の紹介文と手動紹介の文面をセットで保存します。同じ名前で保存すると上書きします。", "placeholder": "例: いつもの紹介文" },
                 "titleCategoryRename": { "title": "タイトル項目名を変更", "input": "新しい項目名", "output": "タイトルタブの折りたたみ項目名を変更します。", "placeholder": "例: 新しい項目名" },
@@ -5556,7 +5634,7 @@ const I18N_DATA ={
                 "logsTitle": "Logs",
                 "noLogs": "No logs yet."
             },
-            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ Help</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Setup Twitch Integration</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> Choose Custom Scope Token, select the required scopes, and generate an ACCESS TOKEN.</li>\n                            <li><strong>Access Token:</strong> Paste the generated ACCESS TOKEN into Settings and save it. The Client ID and channel ID are detected automatically.</li>\n                            <li><strong>Renewal:</strong> If Apply or Sync shows an auth error, generate a new Access Token with the same steps and save it again.</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ Security Warning (!)</strong><br>\n                            Your Access Token represents your actual streaming permissions. Do not share it with third parties or show it on stream. If leaked, revoke the connection in Twitch and generate a new token.\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. About \"Save\" and \"Apply\"</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>Save / Auto-Save:</strong> Records content in your browser (cache). Kept even if you close the tool.</li>\n                            <li><strong>Apply (PUSH):</strong> Sends your edits to actual Twitch stream info, directly overwriting Title and Category.</li>\n                            <li><strong>Sync:</strong> Loads the current actual Twitch stream info into this tool.</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">* Note: Due to current Twitch API specs, Tags and Notifications cannot be directly overwritten from the tool. Please use them as a \"Memo\" feature here.</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. Backup (!)</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>To prepare for browser cache deletion, regularly save your data as text from the \"Backup\" tab.</li>\n                            <li>Since direct file saving isn't possible from an OBS dock, please copy & paste to a notepad, etc.</li>\n                            <li>When changing PCs or restoring data, load the saved text.</li>\n                            <li>If you have a lot of data, copying to the clipboard might fail, so please organize/delete data regularly.</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 Open Detailed Manual (note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[Disclaimer]</strong><br>\n                        This is a personal tool. While checked thoroughly, there's always a non-zero chance of unexpected bugs causing data loss. To protect your data, use at your own risk and back up frequently. Contact via DM/X reply for questions.\n                    </div>\n                </div>",
+            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ Help</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Setup Twitch Integration</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> Choose Custom Scope Token, select the required scopes, and generate an ACCESS TOKEN.</li>\n                            <li><strong>Access Token:</strong> Paste the generated ACCESS TOKEN into Settings and save it. The Client ID and channel ID are detected automatically.</li>\n                            <li><strong>Renewal:</strong> If Apply or Sync shows an auth error, generate a new Access Token with the same steps and save it again.</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ Security Warning (!)</strong><br>\n                            Your Access Token represents your actual streaming permissions. Do not share it with third parties or show it on stream. If leaked, revoke the connection in Twitch and generate a new token.\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. About \"Save\" and \"Apply\"</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>Save / Auto-Save:</strong> Records content in your browser (cache). Kept even if you close the tool.</li>\n                            <li><strong>Apply (PUSH):</strong> Sends your edits to actual Twitch stream info, directly overwriting Title and Category.</li>\n                            <li><strong>Sync:</strong> Loads the current actual Twitch stream info into this tool.</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">* Note: Due to current Twitch API specs, Tags and Notifications cannot be directly overwritten from the tool. Please use them as a \"Memo\" feature here.</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. Backup (!)</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>To prepare for browser cache deletion, regularly save your data as text from the \"Backup\" tab.</li>\n                            <li>Since direct file saving isn't possible from an OBS dock, please copy & paste to a notepad, etc.</li>\n                            <li>When changing PCs or restoring data, load the saved text.</li>\n                            <li>If you have a lot of data, copying to the clipboard might fail, so please organize/delete data regularly.</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 Open Detailed Manual (note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[Disclaimer]</strong><br>\n                        This is a personal tool. While checked thoroughly, there's always a non-zero chance of unexpected bugs causing data loss. To protect your data, use at your own risk and back up frequently. Contact via DM/X reply for questions.\n                    <div id=\"help-creators-container\"></div>\n                </div>",
             "extended": {
                 "language": "Language",
                 "languageMenuLabel": "Select Language",
@@ -5825,6 +5903,7 @@ const I18N_DATA ={
                 "idCategoryAdd": { "title": "Add ID List Section", "input": "Section name, such as Frequent shoutouts or Collab partners", "output": "Creates a section for grouping streamers in the ID List. After creating it, use the + button to add Twitch IDs.", "placeholder": "e.g. Frequent shoutouts" },
                 "titleRecordRename": { "title": "Rename Title Card", "input": "Name shown at the top of the card", "output": "This is only a local label in the dock. It is not the stream title sent to Twitch.", "placeholder": "e.g. Default stream" },
                 "idRecordRename": { "title": "Rename Streamer", "input": "Display name shown in the ID List", "output": "The Twitch ID will not change. Only the display name is updated.", "placeholder": "e.g. Streamer name" },
+                "idRecordAdd": { "title": "Add Streamer", "input": "Enter nickname", "output": "Adds a new streamer to the ID List. You can rename them later.", "placeholder": "Enter nickname" },
                 "memoAdd": { "title": "Add Memo", "input": "Memo heading", "output": "Creates a new memo item.", "placeholder": "e.g. Stream memo" },
                 "customTemplateSave": { "title": "Save Custom Template", "input": "Name shown in the template list", "output": "Saves the current raid message and manual shoutout message as a set. Saving with the same name overwrites it.", "placeholder": "e.g. My usual shoutout" },
                 "titleCategoryRename": { "title": "Rename Title Section", "input": "New Section Name", "output": "Renames the collapsible section in the Title tab.", "placeholder": "e.g. Chatting" },
@@ -6379,7 +6458,7 @@ const I18N_DATA ={
                 "logsTitle": "日志",
                 "noLogs": "暂无日志。"
             },
-            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ 帮助</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch 绑定设置</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 选择 Custom Scope Token，勾选所需权限，然后生成 ACCESS TOKEN。</li>\n                            <li><strong>Access Token:</strong> 将生成的 ACCESS TOKEN 粘贴到设置并保存。Client ID 和频道 ID 会自动确认。</li>\n                            <li><strong>更新:</strong> 如果应用或同步时出现认证错误，请用相同步骤重新生成 Access Token 并保存。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ 关于安全（！）</strong><br>\n                            Access Token 关系到您的直播权限。请勿告诉第三方或在直播画面中展示。万一泄露，请在 Twitch 连接设置中撤销权限，并生成新的 Token。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 关于“保存”与“应用”</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自动保存:</strong> 将内容记录在浏览器（缓存）中。关闭工具也会保留。</li>\n                            <li><strong>应用 (PUSH):</strong> 将编辑内容发送至实际的 Twitch 直播信息，直接修改标题和分类。</li>\n                            <li><strong>同步 (SYNC):</strong> 将当前实际的 Twitch 直播信息读取到此工具中。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">※ 由于当前 Twitch API 的限制，工具无法直接修改标签和通知。请将此作为“备忘录”功能使用。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. 备份（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>为防止浏览器缓存被清除，请定期从“备份”选项卡将数据保存为文本。</li>\n                            <li>由于无法从 OBS 停靠栏直接保存文件，请复制并粘贴到记事本等处保管。</li>\n                            <li>更换电脑或恢复数据时，请读取保存的文本。</li>\n                            <li>如果要保存的信息过多，复制到剪贴板可能会失败，请定期整理和删除数据。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 打开详细手册 (英文版 note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[免责声明]</strong><br>\n                        本工具为个人制作。已尽力测试，但意外导致数据丢失的可能性并非为零。请自行承担风险，并勤做备份。如有疑问，请联系作者。\n                    </div>\n                </div>",
+            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ 帮助</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch 绑定设置</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 选择 Custom Scope Token，勾选所需权限，然后生成 ACCESS TOKEN。</li>\n                            <li><strong>Access Token:</strong> 将生成的 ACCESS TOKEN 粘贴到设置并保存。Client ID 和频道 ID 会自动确认。</li>\n                            <li><strong>更新:</strong> 如果应用或同步时出现认证错误，请用相同步骤重新生成 Access Token 并保存。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ 关于安全（！）</strong><br>\n                            Access Token 关系到您的直播权限。请勿告诉第三方或在直播画面中展示。万一泄露，请在 Twitch 连接设置中撤销权限，并生成新的 Token。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 关于“保存”与“应用”</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自动保存:</strong> 将内容记录在浏览器（缓存）中。关闭工具也会保留。</li>\n                            <li><strong>应用 (PUSH):</strong> 将编辑内容发送至实际的 Twitch 直播信息，直接修改标题和分类。</li>\n                            <li><strong>同步 (SYNC):</strong> 将当前实际的 Twitch 直播信息读取到此工具中。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: #adadb8; background: #252529; padding: 8px; border-radius: 6px;\">※ 由于当前 Twitch API 的限制，工具无法直接修改标签和通知。请将此作为“备忘录”功能使用。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. 备份（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>为防止浏览器缓存被清除，请定期从“备份”选项卡将数据保存为文本。</li>\n                            <li>由于无法从 OBS 停靠栏直接保存文件，请复制并粘贴到记事本等处保管。</li>\n                            <li>更换电脑或恢复数据时，请读取保存的文本。</li>\n                            <li>如果要保存的信息过多，复制到剪贴板可能会失败，请定期整理和删除数据。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: #252529; border: 1px solid var(--border-color); color: #fff; text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 打开详细手册 (英文版 note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[免责声明]</strong><br>\n                        本工具为个人制作。已尽力测试，但意外导致数据丢失的可能性并非为零。请自行承担风险，并勤做备份。如有疑问，请联系作者。\n                    <div id=\"help-creators-container\"></div>\n                </div>",
             "extended": {
                 "language": "语言",
                 "languageMenuLabel": "选择语言",
@@ -6648,6 +6727,7 @@ const I18N_DATA ={
                 "idCategoryAdd": { "title": "添加 ID 列表项目", "input": "项目名称，例如常用推荐、联动对象", "output": "在 ID 列表中创建用于整理主播的项目。创建后可用右上角的 + 添加 Twitch ID。", "placeholder": "例如：常用推荐" },
                 "titleRecordRename": { "title": "修改标题卡片名称", "input": "显示在卡片上方的名称", "output": "这是 Dock 内用于识别的名称，不是发送到 Twitch 的直播标题。", "placeholder": "例如：通常直播" },
                 "idRecordRename": { "title": "修改主播名称", "input": "ID 列表中显示的主播名", "output": "Twitch ID 不会改变，只修改显示名。", "placeholder": "例如：主播名" },
+                "idRecordAdd": { "title": "添加主播", "input": "请输入主播名（昵称）", "output": "在 ID 列表中添加新主播。昵称以后可以随时修改。", "placeholder": "输入昵称" },
                 "memoAdd": { "title": "添加备忘录", "input": "备忘录标题", "output": "创建新的备忘录项目。", "placeholder": "例如：直播备忘录" },
                 "customTemplateSave": { "title": "保存自定义模板", "input": "模板列表中显示的名称", "output": "将当前 Raid 介绍文和手动介绍文作为一组保存。同名保存会覆盖。", "placeholder": "例如：常用介绍文" },
                 "titleCategoryRename": { "title": "修改标题项目名称", "input": "新项目名称", "output": "修改标题标签下的折叠项目名称。", "placeholder": "例如：聊天" },
@@ -7142,13 +7222,13 @@ const langMap = {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const keys = el.getAttribute('data-i18n').split('.');
                 let val = L;
-                keys.forEach(k => { if(val) val = val[k]; });
+                keys.forEach(k => { if (val) val = val[k]; });
                 if (val) el.innerText = val;
             });
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const keys = el.getAttribute('data-i18n-placeholder').split('.');
                 let val = L;
-                keys.forEach(k => { if(val) val = val[k]; });
+                keys.forEach(k => { if (val) val = val[k]; });
                 if (val) el.placeholder = val;
             });
             document.querySelectorAll('[data-i18n-tooltip]').forEach(el => {
@@ -7270,7 +7350,10 @@ const langMap = {
 
             // モーダルとコマンドの更新
             const guideEl = document.getElementById('ui-guide-content');
-            if (guideEl) guideEl.innerHTML = L.guideHtml;
+            if (guideEl) {
+                guideEl.innerHTML = L.guideHtml;
+                updateCreatorsDOM();
+            }
             const cmdEl = document.getElementById('cmd-container');
             if (cmdEl) cmdEl.innerHTML = L.cmdHtml;
             refreshTwitchChoicePlaceholders();
@@ -7321,20 +7404,21 @@ const langMap = {
 
         const SPINNER_SVG = `<svg class="spinner" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20"></circle></svg>`;
 
-        const dialogCopyMap = Object.fromEntries(Object.entries(I18N_DATA).map(([lang, data]) => [lang, data.ui.inputDialogs]));
+        const dialogCopyMap = Object.fromEntries(Object.entries(I18N_DATA).map(([lang, data]) => [lang, data.ui?.inputDialogs || data.inputDialogs || {}]));
 
         function dialogCopy(key, vars = {}) {
-            const lang = dialogCopyMap[currentLang] || dialogCopyMap.ja;
-            const base = lang[key] || dialogCopyMap.ja[key] || {};
+            const lang = dialogCopyMap[currentLang] || dialogCopyMap.ja || {};
+            const base = lang[key] || (dialogCopyMap.ja ? dialogCopyMap.ja[key] : {}) || {};
             const format = value => String(value || '').replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
             return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, format(v)]));
         }
 
         function dialogGuideHtml(options = {}) {
-            const lang = dialogCopyMap[currentLang] || dialogCopyMap.ja;
+            console.log("dialogGuideHtml calling with options:", options);
+            const lang = dialogCopyMap[currentLang] || dialogCopyMap.ja || {};
             const rows = [];
-            if (options.input) rows.push([lang.inputLabel, options.input]);
-            if (options.output) rows.push([lang.outputLabel, options.output]);
+            if (options.input) rows.push([lang.inputLabel || "入力内容", options.input]);
+            if (options.output) rows.push([lang.outputLabel || "作成・変更されるもの", options.output]);
             if (!rows.length && !options.note) return "";
             const body = rows.map(([label, text]) => `<div class="dialog-guide-row"><span class="dialog-guide-label">${raidSoEscape(label)}</span><span class="dialog-guide-text">${raidSoEscape(text)}</span></div>`).join('');
             const note = options.note ? `<div class="dialog-guide-note">${raidSoEscape(options.note)}</div>` : '';
@@ -7342,6 +7426,7 @@ const langMap = {
         }
 
         function showCustomDialog(options) {
+            console.log("showCustomDialog called. Options:", options);
             return new Promise((resolve) => {
                 const overlay = document.getElementById('custom-dialog-overlay');
                 const titleEl = document.getElementById('cd-title');
@@ -7351,20 +7436,24 @@ const langMap = {
                 const btnOk = document.getElementById('cd-btn-ok');
                 const actionsEl = document.getElementById('cd-actions');
 
-                titleEl.innerText = options.title || langMap[currentLang].alerts.notice;
+                const alertNode = langMap[currentLang]?.alerts || langMap.ja?.alerts || {};
+
+                titleEl.innerText = options.title || alertNode.notice || "Notice";
                 msgEl.innerHTML = options.messageHtml || options.message || "";
                 msgEl.scrollTop = 0;
 
                 inputEl.style.display = options.type === 'prompt' ? 'block' : 'none';
                 inputEl.placeholder = options.placeholder || "";
                 btnCancel.style.display = (options.type === 'confirm' || options.type === 'prompt') ? 'block' : 'none';
-                actionsEl?.classList.toggle('single-action', options.type !== 'confirm' && options.type !== 'prompt');
-                btnCancel.innerText = langMap[currentLang]?.cancel || langMap.ja.cancel;
+                if (actionsEl) {
+                    actionsEl.classList.toggle('single-action', options.type !== 'confirm' && options.type !== 'prompt');
+                }
+                btnCancel.innerText = (langMap[currentLang] || langMap.ja || {}).cancel || "Cancel";
                 btnOk.innerText = options.okText || "OK";
 
                 if (options.type === 'prompt') {
                     inputEl.value = options.defaultValue || "";
-                    inputEl.setAttribute('aria-label', options.placeholder || options.title || langMap[currentLang].alerts.input);
+                    inputEl.setAttribute('aria-label', options.placeholder || options.title || alertNode.input || "Input");
                     setTimeout(() => inputEl.focus(), 100);
                 }
 
@@ -7733,6 +7822,7 @@ const langMap = {
         
         function toggleSortLock() {
             isSortLocked = !isSortLocked;
+            document.body.classList.toggle('sort-unlocked', !isSortLocked);
             const b = document.getElementById('lock-btn');
             b.innerHTML = isSortLocked 
                 ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
@@ -8004,7 +8094,10 @@ const langMap = {
             }
 
             (friendsConfig || []).forEach((cat, ci) => {
-                const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
+                const isAuthUser = cat.kind === 'authenticated-user';
+                const d = document.createElement('div');
+                d.className = "category-box" + (cat.isClosed && !isAuthUser ? " closed" : "") + (isAuthUser ? " auth-user-box" : "");
+                d.setAttribute('data-idx', ci);
                 d.innerHTML = `
                 <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -8529,9 +8622,19 @@ const langMap = {
         }
 
 
-        function addFriendRecord(i) {
+        async function addFriendRecord(i) {
             if (!friendsConfig[i].friends) friendsConfig[i].friends = [];
-            friendsConfig[i].friends.push({ name: "", twitch: "", displayName: "", youtube: "", x: "", memo: "", isOpen: true });
+            
+            const newName = await customPrompt(dialogCopy('idRecordAdd'));
+            if (newName === null) return;
+            
+            const trimmedName = newName.trim();
+            if (!trimmedName) {
+                showToast(langMap[currentLang].ui.labels.nicknamePlaceholder || 'ニックネームを入力してください');
+                return;
+            }
+
+            friendsConfig[i].friends.push({ name: trimmedName, twitch: "", displayName: "", youtube: "", x: "", memo: "", isOpen: true });
             renderFriends();
             saveFriendsLocal(false);
         }
@@ -13512,7 +13615,536 @@ window.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.sticky-footer-wrapper').forEach(el => observer.observe(el));
         }
         document.addEventListener('click', () => requestAnimationFrame(updateDockLayoutMetrics));
+        fetchDynamicCreatorInfo();
     });
+
+    // --- カレンダーおよび記念日ピッカー機能 ---
+    let calendarCurrentYear = new Date().getFullYear();
+    let calendarCurrentMonth = new Date().getMonth() + 1;
+
+    function renderCalendarGrid(year, month) {
+        const titleEl = document.getElementById('calendar-month-title');
+        const gridBody = document.getElementById('calendar-grid-body');
+        if (!titleEl || !gridBody) return;
+
+        const monthNamesJA = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        const monthNamesEN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const titleStr = currentLang === 'en'
+            ? `${monthNamesEN[month - 1]} ${year}`
+            : `${year}年 ${monthNamesJA[month - 1]}`;
+        titleEl.innerText = titleStr;
+
+        // 年月ピッカーの年ラベルも同期
+        const ymYearLabel = document.getElementById('cal-ym-year-label');
+        if (ymYearLabel) ymYearLabel.innerText = `${year}年`;
+        renderCalYMMonths(year, month);
+
+        gridBody.innerHTML = '';
+
+        const monthEvents = {};
+        (friendsConfig || []).forEach(cat => {
+            const friends = cat.friends || [];
+            friends.forEach(f => {
+                const nickname = String(f.name || '').trim();
+                const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+
+                const bday = parseMdDate(f.birthday);
+                if (bday && bday.month === month) {
+                    if (!monthEvents[bday.day]) monthEvents[bday.day] = [];
+                    monthEvents[bday.day].push({ name, type: 'birthday' });
+                }
+
+                const anniv = parseMdDate(f.anniversary);
+                if (anniv && anniv.month === month) {
+                    if (!monthEvents[anniv.day]) monthEvents[anniv.day] = [];
+                    monthEvents[anniv.day].push({ name, type: 'anniversary' });
+                }
+            });
+        });
+
+        const firstDayIndex = new Date(year, month - 1, 1).getDay();
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        const today = new Date();
+        const isCurrentYearMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
+        const todayDay = today.getDate();
+
+        // 前月の空セル
+        for (let i = 0; i < firstDayIndex; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day-cell empty';
+            gridBody.appendChild(cell);
+        }
+
+        // 日付セル
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day-cell';
+            cell.style.cursor = 'pointer';
+
+            const dayEvents = monthEvents[day] || [];
+            if (dayEvents.length > 0) {
+                cell.classList.add('has-event');
+                const L = langMap[currentLang] || langMap.ja;
+                const bLabel = L.birthdayLabel || '誕生日';
+                const aLabel = L.anniversaryLabel || '記念日';
+                const titleText = dayEvents.map(e => `${e.name} (${e.type === 'birthday' ? bLabel : aLabel})`).join('\n');
+                cell.title = titleText;
+
+                const badge = document.createElement('span');
+                badge.className = 'calendar-day-cell-badge';
+                badge.innerText = '★';
+                cell.appendChild(badge);
+            }
+
+            if (isCurrentYearMonth && day === todayDay) {
+                cell.classList.add('today');
+            }
+
+            const numSpan = document.createElement('span');
+            numSpan.innerText = day;
+            numSpan.style.zIndex = '2';
+            cell.appendChild(numSpan);
+
+            // セルクリック → 追加ポップアップ
+            const _day = day, _month = month;
+            cell.addEventListener('click', () => openCalDayPopup(_month, _day, dayEvents));
+
+            gridBody.appendChild(cell);
+        }
+
+        // 6行固定: 後ろの空セルで42セル（6×7）まで埋める
+        const totalCells = firstDayIndex + daysInMonth;
+        const paddingCells = 42 - totalCells;
+        for (let i = 0; i < paddingCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day-cell empty';
+            gridBody.appendChild(cell);
+        }
+
+        // 既存のポップアップを閉じる
+        const popup = document.getElementById('cal-day-popup');
+        if (popup) popup.style.display = 'none';
+    }
+    window.renderCalendarGrid = renderCalendarGrid;
+
+    function navigateCalendarMonth(dir) {
+        calendarCurrentMonth += dir;
+        if (calendarCurrentMonth > 12) {
+            calendarCurrentMonth = 1;
+            calendarCurrentYear += 1;
+        } else if (calendarCurrentMonth < 1) {
+            calendarCurrentMonth = 12;
+            calendarCurrentYear -= 1;
+        }
+        renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+    }
+    window.navigateCalendarMonth = navigateCalendarMonth;
+
+    // --- 年月ピッカー ---
+    function renderCalYMMonths(year, currentMonth) {
+        const container = document.getElementById('cal-ym-months');
+        if (!container) return;
+        const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+        container.innerHTML = '';
+        monthNamesJA.forEach((name, idx) => {
+            const m = idx + 1;
+            const btn = document.createElement('button');
+            btn.className = 'ym-month-btn';
+            btn.innerText = name;
+            btn.style.cssText = `padding:5px 2px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);cursor:pointer;font-size:11px;transition:0.15s;`;
+            if (m === currentMonth) {
+                btn.style.background = 'var(--twitch-purple)';
+                btn.style.color = '#fff';
+                btn.style.borderColor = 'var(--twitch-purple)';
+                btn.classList.add('selected');
+            }
+            btn.onclick = () => {
+                calendarCurrentMonth = m;
+                renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+                document.getElementById('cal-ym-picker').style.display = 'none';
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function toggleCalendarYMPicker() {
+        const picker = document.getElementById('cal-ym-picker');
+        if (!picker) return;
+        const isVisible = picker.style.display !== 'none';
+        picker.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) renderCalYMMonths(calendarCurrentYear, calendarCurrentMonth);
+    }
+    window.toggleCalendarYMPicker = toggleCalendarYMPicker;
+
+    function shiftCalendarYear(dir) {
+        calendarCurrentYear += dir;
+        const label = document.getElementById('cal-ym-year-label');
+        if (label) label.innerText = `${calendarCurrentYear}年`;
+        renderCalYMMonths(calendarCurrentYear, calendarCurrentMonth);
+    }
+    window.shiftCalendarYear = shiftCalendarYear;
+
+    // --- カレンダー日付クリック → 追加ポップアップ ---
+    let calDayPopupMonth = 0, calDayPopupDay = 0;
+
+    function openCalDayPopup(month, day, events) {
+        const popup = document.getElementById('cal-day-popup');
+        const titleEl = document.getElementById('cal-day-popup-title');
+        const existingEl = document.getElementById('cal-day-existing');
+        const personSelect = document.getElementById('cal-day-person-select');
+        if (!popup || !titleEl || !existingEl || !personSelect) return;
+
+        calDayPopupMonth = month;
+        calDayPopupDay = day;
+
+        titleEl.innerText = `${month}月${day}日`;
+
+        // 既存イベント
+        if (events.length > 0) {
+            const L = langMap[currentLang] || langMap.ja;
+            const bLabel = L.birthdayLabel || '誕生日';
+            const aLabel = L.anniversaryLabel || '記念日';
+            existingEl.innerHTML = events.map(e =>
+                `<div style="padding:3px 0;display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:${e.type==='birthday'?'#ff4a9a':'#1d9bf0'};display:inline-block;flex-shrink:0;"></span>
+                    <span style="font-size:12px;">${raidSoEscape(e.name)}</span>
+                    <span style="font-size:10px;color:var(--text-muted);​">${e.type==='birthday'?bLabel:aLabel}</span>
+                </div>`
+            ).join('');
+        } else {
+            existingEl.innerHTML = '';
+        }
+
+        // ドロップダウン: IDリストから全員
+        personSelect.innerHTML = '';
+        (friendsConfig || []).forEach((cat, ci) => {
+            (cat.friends || []).forEach((f, fi) => {
+                const nickname = String(f.name || '').trim();
+                const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                const label = nickname || f.displayName || cleanTwitch || f.twitch || `(&nbsp;${ci}-${fi})`;
+                const opt = document.createElement('option');
+                opt.value = `${ci}:${fi}`;
+                opt.innerText = label;
+                personSelect.appendChild(opt);
+            });
+        });
+
+        // 「新規ID作成」を末尾に追加
+        const optNew = document.createElement('option');
+        optNew.value = 'new_person';
+        optNew.innerText = '＋ 新規ID作成';
+        personSelect.appendChild(optNew);
+
+        // ニックネーム入力フィールドの表示を初期化
+        const newNameInput = document.getElementById('cal-day-new-name');
+        if (newNameInput) {
+            newNameInput.value = '';
+            newNameInput.style.display = 'none';
+        }
+
+        const addForm = document.getElementById('cal-day-add-form');
+        if (addForm) addForm.style.display = 'block';
+
+        popup.style.display = 'block';
+        // 種別ボタンを誕生日にリセット
+        selectCalDayType('birthday');
+        popup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    window.openCalDayPopup = openCalDayPopup;
+
+    function handleCalPersonSelectChange() {
+        const select = document.getElementById('cal-day-person-select');
+        const input = document.getElementById('cal-day-new-name');
+        if (select && input) {
+            if (select.value === 'new_person') {
+                input.style.display = 'block';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+            }
+        }
+    }
+    window.handleCalPersonSelectChange = handleCalPersonSelectChange;
+
+    function selectCalDayType(type) {
+        document.getElementById('cal-day-type-value').value = type;
+        const btnB = document.getElementById('cal-type-btn-birthday');
+        const btnA = document.getElementById('cal-type-btn-anniversary');
+        if (!btnB || !btnA) return;
+        if (type === 'birthday') {
+            btnB.style.background = 'var(--twitch-purple)';
+            btnB.style.borderColor = 'var(--twitch-purple)';
+            btnB.style.color = '#fff';
+            btnA.style.background = 'var(--bg-item)';
+            btnA.style.borderColor = 'var(--border-color)';
+            btnA.style.color = 'var(--text-muted)';
+        } else {
+            btnA.style.background = 'var(--twitch-purple)';
+            btnA.style.borderColor = 'var(--twitch-purple)';
+            btnA.style.color = '#fff';
+            btnB.style.background = 'var(--bg-item)';
+            btnB.style.borderColor = 'var(--border-color)';
+            btnB.style.color = 'var(--text-muted)';
+        }
+    }
+    window.selectCalDayType = selectCalDayType;
+
+    function confirmCalDayAdd() {
+        const personSelect = document.getElementById('cal-day-person-select');
+        const typeInput = document.getElementById('cal-day-type-value');
+        if (!personSelect || !typeInput) return;
+
+        const selectedVal = personSelect.value;
+        const type = typeInput.value; // 'birthday' or 'anniversary'
+        const mm = String(calDayPopupMonth).padStart(2, '0');
+        const dd = String(calDayPopupDay).padStart(2, '0');
+        const dateStr = `${mm}/dots`; // ダミー用
+        const dateStrReal = `${mm}/${dd}`;
+
+        if (selectedVal === 'new_person') {
+            const nameInput = document.getElementById('cal-day-new-name');
+            const newName = nameInput ? nameInput.value.trim() : '';
+            if (!newName) {
+                showToast('ニックネームを入力してください');
+                return;
+            }
+
+            // 「未分類」カテゴリを探す、なければ追加
+            let targetCat = (friendsConfig || []).find(cat => cat.name === '未分類');
+            if (!targetCat) {
+                targetCat = { name: '未分類', friends: [], isClosed: false };
+                if (!friendsConfig) friendsConfig = [];
+                friendsConfig.push(targetCat);
+            }
+
+            const newFriend = { name: newName, twitch: "", displayName: "", youtube: "", x: "", memo: "", isOpen: true };
+            newFriend[type] = dateStrReal;
+            targetCat.friends.push(newFriend);
+
+            saveFriendsLocal(false);
+            renderFriends();
+            checkBirthdaysAndAnniversaries();
+        } else {
+            const [ci, fi] = selectedVal.split(':').map(Number);
+            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
+
+            friendsConfig[ci].friends[fi][type] = dateStrReal;
+            saveFriendsLocal(false);
+            renderFriends();
+            checkBirthdaysAndAnniversaries();
+        }
+
+        // カレンダーを再描画
+        renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+        showToast('保存しました ✓');
+    }
+    window.confirmCalDayAdd = confirmCalDayAdd;
+
+    // --- IDリスト向け ミニ日付ピッカー ---
+    let miniPickerCi = 0, miniPickerFi = 0, miniPickerType = '';
+    let miniPickerYear = new Date().getFullYear(), miniPickerMonth = new Date().getMonth() + 1;
+
+    function openMiniDatePicker(ci, fi, type) {
+        miniPickerCi = ci; miniPickerFi = fi; miniPickerType = type;
+        miniPickerYear = new Date().getFullYear();
+        miniPickerMonth = new Date().getMonth() + 1;
+
+        // 既存値があればその月から開始
+        const currentVal = friendsConfig[ci]?.friends[fi]?.[type] || '';
+        const parsed = parseMdDate(currentVal);
+        if (parsed) miniPickerMonth = parsed.month;
+
+        let overlay = document.getElementById('mini-date-picker-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mini-date-picker-overlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;';
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+            document.body.appendChild(overlay);
+        }
+        renderMiniDatePicker(overlay);
+    }
+    window.openMiniDatePicker = openMiniDatePicker;
+
+    function renderMiniDatePicker(overlay) {
+        const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+        const firstDayIndex = new Date(miniPickerYear, miniPickerMonth - 1, 1).getDay();
+        const daysInMonth = new Date(miniPickerYear, miniPickerMonth, 0).getDate();
+
+        const typeLabel = miniPickerType === 'birthday' ? '誕生日' : '記念日';
+
+        let cellsHtml = '';
+        for (let i = 0; i < firstDayIndex; i++) cellsHtml += `<div></div>`;
+        for (let day = 1; day <= daysInMonth; day++) {
+            cellsHtml += `<button onclick="selectMiniDate(${day})" style="aspect-ratio:1;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);cursor:pointer;font-size:12px;font-weight:bold;transition:0.15s;" onmouseover="this.style.background='var(--twitch-purple)';this.style.color='#fff'" onmouseout="this.style.background='var(--bg-item)';this.style.color='var(--text-main)'">${day}</button>`;
+        }
+        // 6行固定埋め
+        const total = firstDayIndex + daysInMonth;
+        for (let i = 0; i < 42 - total; i++) cellsHtml += `<div></div>`;
+
+        overlay.innerHTML = `
+        <div style="background:var(--bg-card);border:1px solid var(--twitch-purple);border-radius:12px;padding:16px;width:290px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong style="color:var(--twitch-purple);font-size:13px;">${typeLabel}を選択</strong>
+                <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;">×</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:3px 10px;cursor:pointer;font-weight:bold;">&lt;</button>
+                <span style="font-weight:bold;color:var(--text-main);font-size:13px;">${monthNamesJA[miniPickerMonth-1]}</span>
+                <button onclick="miniPickerMonth++;if(miniPickerMonth>12){miniPickerMonth=1;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:3px 10px;cursor:pointer;font-weight:bold;">&gt;</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:10px;color:var(--text-muted);margin-bottom:3px;">
+                <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);gap:3px;min-height:150px;">
+                ${cellsHtml}
+            </div>
+            <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-muted);">日付をクリックで選択</div>
+            <div style="margin-top:3px;text-align:center;font-size:9px;color:var(--text-muted);opacity:0.6;">※曜日は今年を参照しています</div>
+        </div>`;
+    }
+    window.renderMiniDatePicker = renderMiniDatePicker;
+
+    function selectMiniDate(day) {
+        const mm = String(miniPickerMonth).padStart(2, '0');
+        const dd = String(day).padStart(2, '0');
+        const dateStrReal = `${mm}/${dd}`;
+
+        if (!friendsConfig[miniPickerCi] || !friendsConfig[miniPickerCi].friends[miniPickerFi]) return;
+
+        friendsConfig[miniPickerCi].friends[miniPickerFi][miniPickerType] = dateStrReal;
+        saveFriendsLocal(false);
+        checkBirthdaysAndAnniversaries();
+
+        // 入力欄も更新
+        const inputId = miniPickerType === 'birthday'
+            ? `f-bday-${miniPickerCi}-${miniPickerFi}`
+            : `f-anniv-${miniPickerCi}-${miniPickerFi}`;
+        const inputEl = document.getElementById(inputId);
+        if (inputEl) inputEl.value = dateStrReal;
+
+        document.getElementById('mini-date-picker-overlay')?.remove();
+        showToast('保存しました ✓');
+    }
+    window.selectMiniDate = selectMiniDate;
+
+    // --- 制作者および外部リンクの動的読み込み機能 ---
+    const DYNAMIC_CREATOR_INFO_URL = 'https://raw.githubusercontent.com/uikouka/OBS_title_save/main/creators.json';
+
+    const fallbackCreators = [
+        {
+            name: "初狐羽鹿",
+            color: "#bf94ff",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/uikouka.png",
+            links: [
+                { type: "twitch", url: "https://www.twitch.tv/uikouka", title: "Twitch" },
+                { type: "x", url: "https://x.com/uikouka", title: "X" },
+                { type: "booth", url: "https://toumei2suisai.booth.pm/", title: "Booth" }
+            ]
+        },
+        {
+            name: "古隅フユセ",
+            color: "#bf94ff",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/frusumi.png",
+            links: [
+                { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
+                { type: "x", url: "https://x.com/FruEnji", title: "X" },
+                { type: "booth", url: "https://frusumi.booth.pm/", title: "Booth" }
+            ]
+        }
+    ];
+
+    let cachedCreatorInfo = null;
+
+    function getCreatorIconSvg(type) {
+        switch(type) {
+            case 'twitch':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"></path></svg>';
+            case 'x':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>';
+            case 'booth':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>';
+            case 'youtube':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>';
+            default:
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        }
+    }
+
+    async function fetchDynamicCreatorInfo() {
+        try {
+            const response = await fetch(DYNAMIC_CREATOR_INFO_URL);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && Array.isArray(data.creators)) {
+                    cachedCreatorInfo = data;
+                    updateCreatorsDOM();
+                }
+            }
+        } catch (e) {
+            console.warn("Could not fetch remote creator info, using fallback:", e);
+        }
+    }
+    window.fetchDynamicCreatorInfo = fetchDynamicCreatorInfo;
+
+    function updateCreatorsDOM() {
+        const container = document.getElementById('help-creators-container');
+        if (!container) return;
+
+        const data = cachedCreatorInfo || { creators: fallbackCreators };
+        const creators = data.creators || [];
+
+        if (creators.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `
+        <div style="font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">`;
+
+        creators.forEach(c => {
+            const name = c.name || '';
+            const color = c.color || '#bf94ff';
+            const links = c.links || [];
+            const avatarUrl = c.avatar || '';
+
+            let linksHtml = '';
+            links.forEach(l => {
+                const icon = getCreatorIconSvg(l.type);
+                const title = l.title || l.type || 'Link';
+                linksHtml += `
+                <a href="${l.url}" target="_blank" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
+                    ${icon}
+                </a>`;
+            });
+
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" onerror="this.style.display='none'" />`
+                : '';
+
+            html += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center;">
+                    ${avatarHtml}
+                    <strong style="color: ${color}; min-width: 70px;">${name}</strong>
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    ${linksHtml}
+                </div>
+            </div>`;
+        });
+
+        html += `
+            </div>
+        </div>`;
+
+        container.innerHTML = html;
+    }
+    window.updateCreatorsDOM = updateCreatorsDOM;
+
 })();
 </script>
 
