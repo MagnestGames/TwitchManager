@@ -1524,7 +1524,7 @@
             width: fit-content;
             margin-top: 2px;
             padding: 4px 7px;
-            background: rgba(255, 255, 255, 0.045);
+            background: var(--bg-item);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
         }
@@ -1537,8 +1537,8 @@
             padding: 1px 4px;
             font-size: 11px;
             text-align: center;
-            background: #111115;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
             color: var(--text-main);
             border-radius: 4px;
             outline: none;
@@ -3487,6 +3487,146 @@ body.light-mode .language-option:hover {
     background: rgba(145, 70, 255, 0.1) !important;
     color: var(--command-accent) !important;
 }
+
+/* --- Additional Light Mode Color & Contrast Adjustments --- */
+body.light-mode .sync-action-btn {
+    border-color: #2b70e4 !important;
+    background: rgba(79, 140, 255, 0.15) !important;
+    color: #1a4da6 !important;
+}
+body.light-mode .sync-action-btn:hover {
+    border-color: #1a4da6 !important;
+    background: rgba(79, 140, 255, 0.25) !important;
+    color: #0d2f70 !important;
+}
+body.light-mode .push-action-btn {
+    border-color: #772ce8 !important;
+    background: rgba(145, 70, 255, 0.15) !important;
+    color: #5b1bb8 !important;
+}
+body.light-mode .push-action-btn:hover {
+    border-color: #5b1bb8 !important;
+    background: rgba(145, 70, 255, 0.25) !important;
+    color: #3b0f7d !important;
+}
+body.light-mode .btn-revoke {
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+body.light-mode .auth-status.is-warning {
+    color: #8f4f00 !important;
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.45) !important;
+}
+body.light-mode .auth-status.is-ready {
+    color: #116634 !important;
+    background: rgba(34, 197, 94, 0.12) !important;
+    border-color: rgba(34, 197, 94, 0.45) !important;
+}
+body.light-mode .ui-common-warning,
+body.light-mode .ui-backup-warning {
+    color: #8f4f00 !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    border-left: 4px solid #f59e0b !important;
+}
+body.light-mode #tw-btn-reset-post,
+body.light-mode button[onclick="deletePredPreset()"],
+body.light-mode button[onclick="deletePollPreset()"] {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+body.light-mode #tw-vip-slot-info {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* --- Birthday/Anniversary Indicator CSS --- */
+.birthday-indicator {
+    display: inline-block;
+    position: relative;
+}
+.birthday-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    width: 220px;
+    color: var(--text-main);
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
+}
+body.light-mode .birthday-tooltip {
+    background: #ffffff !important;
+    border-color: #d1d1d6 !important;
+    color: #1f1f23 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+body.light-mode #birthday-anniversary-indicator button {
+    background: rgba(217, 119, 6, 0.12) !important;
+    border-color: #d97706 !important;
+    color: #b45309 !important;
+}
+.birthday-tooltip-title {
+    font-weight: bold;
+    color: #ffb300;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+body.light-mode .birthday-tooltip-title {
+    color: #b45309 !important;
+}
+.birthday-tooltip-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+.birthday-tooltip-type {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+.birthday-tooltip-type.is-birthday {
+    background: rgba(255, 105, 180, 0.15);
+    color: #ff4a9a;
+}
+.birthday-tooltip-type.is-anniversary {
+    background: rgba(79, 140, 255, 0.15);
+    color: #1d9bf0;
+}
+body.light-mode .modal-close-top {
+    background: #e4e4e9 !important;
+    color: #1f1f23 !important;
+}
+body.light-mode .modal-close-top:hover {
+    background: #d1d1d6 !important;
+}
+body.light-mode .modal-content p[style*="background: #252529"] {
+    background: var(--bg-record) !important;
+    color: var(--text-muted) !important;
+}
+body.light-mode .modal-content a[style*="background: #252529"] {
+    background: var(--bg-record) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
 </style>
 
 </head>
@@ -3502,6 +3642,16 @@ body.light-mode .language-option:hover {
                 <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: #bf94ff; border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
+                <!-- Birthday/Anniversary Indicator -->
+                <div id="birthday-anniversary-indicator" class="birthday-indicator" style="display: none; margin-right: 4px; vertical-align: middle;">
+                    <button class="btn-head-purple" style="background: rgba(255, 193, 7, 0.15); border-color: #ffc107; color: #ffc107; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;" onmouseover="showBirthdayTooltip(event)" onmouseout="hideBirthdayTooltip()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
+                            <path d="M3 20h18" />
+                        </svg>
+                    </button>
+                    <div id="birthday-tooltip" class="birthday-tooltip"></div>
+                </div>
                 <button id="global-settings-btn" class="btn-head-purple" data-i18n-tooltip="extended.displaySettingsBtnTitle" data-i18n-aria="extended.displaySettingsBtnTitle"
                     onclick="openActiveCategorySettings()" aria-label="表示設定">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
@@ -3784,11 +3934,11 @@ body.light-mode .language-option:hover {
                 <div class="tw-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
                     <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
                         <button class="btn-secondary" style="flex:1;font-size:11px;padding:6px 0;" onclick="fetchClips(this)" id="tw-btn-clip-list" data-i18n="extended.fetchListBtn">>一覧を取得</button>
-                        <select id="tw-clip-sort" style="flex:1;background:#000;border:1px solid #444;color:#fff;padding:4px;border-radius:4px;font-size:11px;">
+                        <select id="tw-clip-sort" style="flex:1;background:var(--bg-input);border:1px solid var(--border-input);color:var(--text-main);padding:4px;border-radius:4px;font-size:11px;">
                             <option value="views" data-i18n="extended.clipSortViews">再生数順</option>
                             <option value="recent" data-i18n="extended.clipSortRecent">新着順</option>
                         </select>
-                        <select id="tw-clip-count" style="width:58px;background:#000;border:1px solid #444;color:#fff;padding:4px;border-radius:4px;font-size:11px;">
+                        <select id="tw-clip-count" style="width:58px;background:var(--bg-input);border:1px solid var(--border-input);color:var(--text-main);padding:4px;border-radius:4px;font-size:11px;">
                             <option value="5" data-i18n="extended.clipCount5">5件</option>
                             <option value="10" selected data-i18n="extended.clipCount10">10件</option>
                             <option value="20" data-i18n="extended.clipCount20">20件</option>
@@ -3993,7 +4143,7 @@ body.light-mode .language-option:hover {
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
                     <button type="button" class="btn-outline" id="ui-settings-auth-btn" onclick="openOfficialAuth()" data-i18n="settingsUi.openAuth">Twitch Token GeneratorのURLをコピー</button>
-                    <button type="button" class="btn-outline" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth" style="border-color: rgba(255,74,74,0.55); color: #ff8a8a; background: rgba(255,74,74,0.06);">Twitch認証を解除</button>
+                    <button type="button" class="btn-outline btn-revoke" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth">Twitch認証を解除</button>
                 </div>
             </div>
             <div
@@ -4015,7 +4165,7 @@ body.light-mode .language-option:hover {
                     <option value="YY年MM月DD日"></option>
                     <option value="M-D-W"></option>
                 </datalist>
-                <div style="font-size: 10px; color: #aaa; margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
+                <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
                     利用可能な変数: YYYY(年), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)
                 </div>
                 <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">テーマ</span>
@@ -4142,9 +4292,14 @@ const I18N_DATA ={
                 "nickname": "あだ名",
                 "twitchName": "Twitch表示名",
                 "youtubeUrl": "YouTubeリンク",
+                "birthday": "誕生日",
+                "anniversary": "記念日",
                 "nicknamePlaceholder": "あだ名を入力",
                 "youtubeUrlPlaceholder": "YouTubeのURLまたはチャンネルID"
             },
+            "birthdayTitle": "今日の主役！",
+            "birthdayLabel": "誕生日",
+            "anniversaryLabel": "記念日",
             "idList": {
                 "autoCategory": "紹介履歴",
                 "shoutoutMeta": "紹介 {count}回 / 最終: {date}",
@@ -4960,9 +5115,14 @@ const I18N_DATA ={
                 "nickname": "Nickname",
                 "twitchName": "Twitch Name",
                 "youtubeUrl": "YouTube Link",
+                "birthday": "Birthday",
+                "anniversary": "Anniversary",
                 "nicknamePlaceholder": "Enter nickname",
                 "youtubeUrlPlaceholder": "YouTube URL or ID"
             },
+            "birthdayTitle": "Today's Celebrants!",
+            "birthdayLabel": "Birthday",
+            "anniversaryLabel": "Anniversary",
             "idList": {
                 "autoCategory": "Shoutout History",
                 "shoutoutMeta": "Shoutouts: {count} / Last: {date}",
@@ -5778,9 +5938,14 @@ const I18N_DATA ={
                 "nickname": "昵称",
                 "twitchName": "Twitch名称",
                 "youtubeUrl": "YouTube链接",
+                "birthday": "生日",
+                "anniversary": "纪念日",
                 "nicknamePlaceholder": "输入昵称",
                 "youtubeUrlPlaceholder": "YouTube URL 或 ID"
             },
+            "birthdayTitle": "今天的寿星！",
+            "birthdayLabel": "生日",
+            "anniversaryLabel": "纪念日",
             "idList": {
                 "autoCategory": "介绍记录",
                 "shoutoutMeta": "介绍 {count} 次 / 最后: {date}",
@@ -7286,7 +7451,9 @@ const langMap = {
         function toggleSortLock() {
             isSortLocked = !isSortLocked;
             const b = document.getElementById('lock-btn');
-            b.innerText = isSortLocked ? "🔒" : "🔓";
+            b.innerHTML = isSortLocked 
+                ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+                : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
             b.className = "btn-head-purple" + (isSortLocked ? "" : " unlocked");
 
             // 既存のSortableインスタンスのdisabledだけ更新
@@ -7591,6 +7758,22 @@ const langMap = {
                     } else {
                         displayTitle = twitchNameOrId || I.emptyName;
                     }
+
+                    // Check if today is birthday or anniversary
+                    const today = new Date();
+                    const tM = today.getMonth() + 1;
+                    const tD = today.getDate();
+                    let isBday = false;
+                    let isAnniv = false;
+                    const bday = parseMdDate(f.birthday);
+                    if (bday && bday.month === tM && bday.day === tD) isBday = true;
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv && anniv.month === tM && anniv.day === tD) isAnniv = true;
+
+                    if (isBday || isAnniv) {
+                        displayTitle += ' ★';
+                    }
+
                     const shoutoutCount = Number(f.shoutoutCount || 0);
                     const lastDate = f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '';
                     const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
@@ -7640,6 +7823,17 @@ const langMap = {
 
                     <span class="field-label">${raidSoEscape(L.labels.xUrl || 'X URL')}</span>
                     <input type="text" value="${raidSoEscape(f.x || '')}" oninput="friendsConfig[${ci}].friends[${fi}].x=this.value; saveFriendsLocal(false)">
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.birthday || '誕生日')}</span>
+                            <input type="text" value="${raidSoEscape(f.birthday || '')}" placeholder="MM/DD (例: 04/25)" oninput="friendsConfig[${ci}].friends[${fi}].birthday=this.value; saveFriendsLocal(false); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input);">
+                        </div>
+                        <div style="flex: 1;">
+                            <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.anniversary || '記念日')}</span>
+                            <input type="text" value="${raidSoEscape(f.anniversary || '')}" placeholder="MM/DD (例: 10/01)" oninput="friendsConfig[${ci}].friends[${fi}].anniversary=this.value; saveFriendsLocal(false); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-input);">
+                        </div>
+                    </div>
                     
                     <span class="field-label">${raidSoEscape(L.labels.memo)}</span>
                     <textarea onchange="friendsConfig[${ci}].friends[${fi}].memo=this.value; saveFriendsLocal(false)">${raidSoEscape(f.memo || '')}</textarea>
@@ -7650,6 +7844,92 @@ const langMap = {
             });
             initSortable();
             renderShoutoutSuggestions();
+            checkBirthdaysAndAnniversaries();
+        }
+
+        // --- Birthday/Anniversary check functions ---
+        function parseMdDate(str) {
+            const val = String(str || '').trim();
+            if (!val) return null;
+            const m = val.match(/(\d{1,2})\D+(\d{1,2})/);
+            if (m) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            if (/^\d{4}$/.test(val)) {
+                const month = parseInt(val.slice(0, 2), 10);
+                const day = parseInt(val.slice(2), 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            return null;
+        }
+
+        function checkBirthdaysAndAnniversaries() {
+            const today = new Date();
+            const tM = today.getMonth() + 1;
+            const tD = today.getDate();
+            
+            const matches = [];
+
+            (friendsConfig || []).forEach(cat => {
+                const friends = cat.friends || [];
+                friends.forEach(f => {
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+
+                    const bday = parseMdDate(f.birthday);
+                    if (bday && bday.month === tM && bday.day === tD) {
+                        matches.push({ name, type: 'birthday' });
+                    }
+
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv && anniv.month === tM && anniv.day === tD) {
+                        matches.push({ name, type: 'anniversary' });
+                    }
+                });
+            });
+
+            const indicator = document.getElementById('birthday-anniversary-indicator');
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (indicator && tooltip) {
+                if (matches.length > 0) {
+                    indicator.style.display = 'inline-block';
+                    const L = langMap[currentLang] || langMap.ja;
+                    const titleText = L.birthdayTitle || '今日の主役！';
+                    const birthdayLabel = L.birthdayLabel || '誕生日';
+                    const anniversaryLabel = L.anniversaryLabel || '記念日';
+
+                    let html = `<div class="birthday-tooltip-title">${raidSoEscape(titleText)}</div>`;
+                    matches.forEach(m => {
+                        const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                        const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
+                        html += `
+                        <div class="birthday-tooltip-item">
+                            <span style="font-weight: 500;">${raidSoEscape(m.name)}</span>
+                            <span class="birthday-tooltip-type ${typeClass}">${raidSoEscape(typeLabel)}</span>
+                        </div>`;
+                    });
+                    tooltip.innerHTML = html;
+                } else {
+                    indicator.style.display = 'none';
+                }
+            }
+        }
+
+        function showBirthdayTooltip(event) {
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (tooltip) tooltip.style.display = 'block';
+        }
+
+        function hideBirthdayTooltip() {
+            const tooltip = document.getElementById('birthday-tooltip');
+            if (tooltip) tooltip.style.display = 'none';
         }
 
         // --- IDリスト専用の追加関数 ---
@@ -11782,7 +12062,7 @@ function raidSoSoundControlsHtml(kind, title, file, volume) {
             return `<div>
                 <div style="font-weight:bold; color:#bf94ff; margin-bottom:8px;">${raidSoEscape(title)}</div>
                 <span class="field-label">${raidSoEscape(r.soundSource)}</span>
-                <select id="raidso-${id}-sound-file" style="width:100%; background:#000; border:1px solid #444; color:#fff; padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
+                <select id="raidso-${id}-sound-file" style="width:100%; background:var(--bg-input); border:1px solid var(--border-input); color:var(--text-main); padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
                     ${soundOptions.map(src => `<option value="${raidSoEscape(src)}"${raidSoSelected(file, src)}>${raidSoEscape(raidSoSoundFileLabel(src))}</option>`).join('')}
                 </select>
                 <span class="field-label">${raidSoEscape(r.volume)}</span>
@@ -12232,9 +12512,9 @@ window.addEventListener('DOMContentLoaded', () => {
             select.id = 'date_format_preset';
             select.setAttribute('aria-label', '日付形式プリセット');
             select.style.width = '100%';
-            select.style.background = '#000';
-            select.style.border = '1px solid #444';
-            select.style.color = '#fff';
+            select.style.background = 'var(--bg-input)';
+            select.style.border = '1px solid var(--border-input)';
+            select.style.color = 'var(--text-main)';
             select.style.padding = '10px';
             select.style.borderRadius = '8px';
             select.style.fontSize = '13px';
