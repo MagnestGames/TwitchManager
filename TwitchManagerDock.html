@@ -7051,6 +7051,7 @@ const langMap = {
             let startScrollLeft = 0;
 
             nav.addEventListener('pointerdown', event => {
+                if (!isSortLocked) return; // Disable scrolling drag when sorting is unlocked!
                 if (event.pointerType !== 'mouse' || event.button !== 0) return;
                 dragging = true;
                 moved = false;
@@ -7787,6 +7788,8 @@ const langMap = {
                 sortableInstances.push(new Sortable(tn, {
                     animation: 150,
                     disabled: isSortLocked,
+                    filter: '', // Override default filter to allow dragging tab <button> elements!
+                    preventOnFilter: false,
                     onEnd: (e) => {
                         const newOrder = Array.from(tn.children).map(child => child.dataset.tabTarget);
                         settings.tabOrder = newOrder;
