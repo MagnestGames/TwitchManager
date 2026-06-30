@@ -290,7 +290,10 @@ const langMap = {
             const settingsLabelMap = {
                 'ui-settings-redirect-uri': settingsUi.redirectUri,
                 'ui-settings-client-id': settingsUi.clientId,
-                'ui-settings-access-token': settingsUi.accessToken
+                'ui-settings-access-token': settingsUi.accessToken,
+                'ui-settings-stream-title': settingsUi.streamSettingsTitle,
+                'ui-settings-auto-ad-label': settingsUi.autoAdLabel,
+                'ui-settings-auto-pin-label': settingsUi.autoPinLabel
             };
             Object.entries(settingsLabelMap).forEach(([id, text]) => {
                 const el = document.getElementById(id);
@@ -1439,7 +1442,9 @@ const langMap = {
                 clientId: getClientIdFromInputOrDefault(),
                 redirectUri: getOAuthRedirectUri(),
                 token: normalizedToken,
-                dateFormat: document.getElementById('date_format').value
+                dateFormat: document.getElementById('date_format').value,
+                autoAdEnabled: !!document.getElementById('settings_auto_ad')?.checked,
+                autoPinEnabled: !!document.getElementById('settings_auto_pin')?.checked
             };
             document.getElementById('client_id').value = settings.clientId || '';
             document.getElementById('token').value = normalizedToken;
@@ -2684,7 +2689,16 @@ const langMap = {
                     raidSoLog(`${fail}: ${localizeRaidSoError(e)}`, 'warn');
                 }
             }
-            if (options.sendChat) await sendRaidSoChat(renderRaidSoTemplate(options.template, data));
+            if (options.sendChat) {
+                try {
+                    const msgId = await sendRaidSoChat(renderRaidSoTemplate(options.template, data));
+                    if (msgId && settings.autoPinEnabled) {
+                        await pinRaidSoChatMessage(msgId, 1200);
+                    }
+                } catch (e) {
+                    raidSoLog(`紹介メッセージ送信失敗: ${e.message || e}`, 'warn');
+                }
+            }
             raidSoLog(`${langMap[currentLang].logs.logIntroDone} ${data.displayName}`);
         }
 
@@ -2715,6 +2729,19 @@ const langMap = {
                 throw new Error(reason);
             }
             raidSoLog(successLog || langMap[currentLang].logs.logChatSent);
+            return sent?.message_id;
+        }
+
+        async function pinRaidSoChatMessage(messageId, durationSeconds = 1200) {
+            try {
+                ensureRaidSoBaseSettings();
+                await raidSoHelix(`/chat/pins?broadcaster_id=${settings.userId}&moderator_id=${settings.userId}&message_id=${messageId}&duration=${durationSeconds}`, {
+                    method: 'POST'
+                });
+                raidSoLog(`紹介・応援メッセージをピン留めしました（${Math.floor(durationSeconds / 60)}分間）`);
+            } catch (err) {
+                raidSoLog(`ピン留め失敗: ${err.message || err}`, 'warn');
+            }
         }
 
         // チャット消去APIの直接実行 (DELETE /moderation/chat)
@@ -3035,6 +3062,10 @@ const langMap = {
                 if (settings.dateFormat) document.getElementById('date_format').value = settings.dateFormat;
                 const livePreview = document.getElementById('date_format_live_preview');
                 if (livePreview) livePreview.innerText = uiText('runtime.datePreview', { date: formatDateToken(new Date(), settings.dateFormat) });
+                const autoAdCheck = document.getElementById('settings_auto_ad');
+                if (autoAdCheck) autoAdCheck.checked = !!settings.autoAdEnabled;
+                const autoPinCheck = document.getElementById('settings_auto_pin');
+                if (autoPinCheck) autoPinCheck.checked = !!settings.autoPinEnabled;
             }
 
             initLanguage();
@@ -4388,6 +4419,30 @@ function safeSetLocal(key, value) {
             raidSoLog(uiText(checked ? 'runtime.operationLog.resetSettingOn' : 'runtime.operationLog.resetSettingOff'));
         }
 
+        async function triggerStreamStartAd() {
+            if (!settings.autoAdEnabled) return;
+            const bId = settings.userId;
+            if (!bId) {
+                raidSoLog('自動広告エラー: 配信者が未設定です', 'warn');
+                return;
+            }
+            raidSoLog('配信開始を検知しました。自動広告（3分間）を実行します...');
+            try {
+                const r = await apiRequest('/channels/commercials', 'POST', {
+                    broadcaster_id: bId,
+                    length: 180
+                });
+                if (r?.data?.[0]) {
+                    const sec = r.data[0].length || 180;
+                    raidSoLog(`自動広告を開始しました: ${sec}秒`);
+                } else {
+                    raidSoLog('自動広告の開始に失敗しました。クールダウン中などの可能性があります。', 'warn');
+                }
+            } catch (err) {
+                raidSoLog(`自動広告エラー: ${err.message || err}`, 'warn');
+            }
+        }
+
         function handleSupporterStreamStart(streamId = '') {
             const marker = String(streamId || '').trim();
             if (marker && marker === _lastObservedStreamId) return false;
@@ -4395,6 +4450,10 @@ function safeSetLocal(key, value) {
                 _lastObservedStreamId = marker;
                 safeSetLocal(SUPPORTER_LAST_STREAM_ID_KEY, marker);
             }
+            
+            // 配信開始に伴う自動広告の実行
+            triggerStreamStartAd();
+
             if (settings.supporterResetOnStreamStart === false) return false;
             archivePastLog();
             return true;

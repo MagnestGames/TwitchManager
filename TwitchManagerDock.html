@@ -549,6 +549,20 @@
                     <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
                 </select>
             </div>
+            <div
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
+                <div class="category-subtitle" id="ui-settings-stream-title" style="margin-bottom:12px;" data-i18n="settingsUi.streamSettingsTitle">>配信管理設定</div>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; user-select:none;">
+                        <input type="checkbox" id="settings_auto_ad" style="width:16px; height:16px; margin:0; cursor:pointer;" />
+                        <span id="ui-settings-auto-ad-label" data-i18n="settingsUi.autoAdLabel">配信開始時に自動で広告（3分）を実行する</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; user-select:none;">
+                        <input type="checkbox" id="settings_auto_pin" style="width:16px; height:16px; margin:0; cursor:pointer;" />
+                        <span id="ui-settings-auto-pin-label" data-i18n="settingsUi.autoPinLabel">紹介・レイドメッセージを自動でピン留め（20分）</span>
+                    </label>
+                </div>
+            </div>
             <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">>保存</button>
         </div>
     </div>

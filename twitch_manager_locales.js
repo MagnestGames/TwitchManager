@@ -133,7 +133,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "ローカル認証情報を削除しました。",
                 "save": "保存",
                 "dateVarsHint": "利用可能な変数: YYYY(年4桁), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)",
-                "dateFormatLabelExtended": "日付の表示形式 ({date}用) ※自由にカスタマイズできます"
+                "dateFormatLabelExtended": "日付の表示形式 ({date}用) ※自由にカスタマイズできます",
+                "streamSettingsTitle": "配信管理設定",
+                "autoAdLabel": "配信開始時に自動で広告（3分）を実行する",
+                "autoPinLabel": "紹介・レイドメッセージを自動でピン留め（20分）"
             },
             "raidSo": {
                 "notice": "ヘルプ",
@@ -939,7 +942,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "Local auth data has been deleted.",
                 "save": "Save",
                 "dateVarsHint": "Variables: YYYY(Year 4), YY(Year 2), MM(Month 2), M(Month), DD(Day 2), D(Day), WW(Weekday), W(Weekday short)",
-                "dateFormatLabelExtended": "Date Format (for {date}) *Freely customizable"
+                "dateFormatLabelExtended": "Date Format (for {date}) *Freely customizable",
+                "streamSettingsTitle": "Stream Settings",
+                "autoAdLabel": "Run a 3-minute ad automatically when stream starts",
+                "autoPinLabel": "Auto-pin shoutout/raid messages for 20 minutes"
             },
             "raidSo": {
                 "notice": "Help",
@@ -1745,7 +1751,10 @@ const I18N_DATA ={
                 "revokeAuthMissing": "已删除本地认证信息。",
                 "save": "保存",
                 "dateVarsHint": "可用变量: YYYY(4位年), YY(2位年), MM(2位月), M(月), DD(2位日), D(日), WW(星期), W(星期简写)",
-                "dateFormatLabelExtended": "日期格式 (用于 {date}) *可自由自定义"
+                "dateFormatLabelExtended": "日期格式 (用于 {date}) *可自由自定义",
+                "streamSettingsTitle": "直播管理设置",
+                "autoAdLabel": "直播开始时自动播放3分钟广告",
+                "autoPinLabel": "自动置顶介绍/Raid消息（20分钟）"
             },
             "raidSo": {
                 "notice": "帮助",
