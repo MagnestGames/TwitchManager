@@ -108,7 +108,7 @@ const I18N_DATA ={
                 "memos": "メモは未登録です。「メモ帳」の右にある＋から作成できます。"
             },
             "settingsUi": {
-                "title": "⚙ 設定",
+                "title": "設定",
                 "authTitle": "Twitch認証",
                 "authHelp": "Twitch Token Generatorでアクセストークンを取得し、ここに貼り付けて保存します。Client IDと連携先チャンネルは自動で確認します。詳しい手順がわからない場合は、右上のヘルプから画像付きガイドを確認してください。",
                 "authStatusEmpty": "Twitchとはまだ連携していません。",
@@ -917,7 +917,7 @@ const I18N_DATA ={
                 "memos": "No memos yet. Use the + button beside Memo Pad to create one."
             },
             "settingsUi": {
-                "title": "⚙ Settings",
+                "title": "Settings",
                 "authTitle": "Twitch Auth",
                 "authHelp": "Get an Access Token with Twitch Token Generator, paste it here, and save. The Client ID and channel are detected automatically. If the steps are unclear, open Help in the top right and read the illustrated guide.",
                 "authStatusEmpty": "Auth has not been verified yet.",
@@ -1726,7 +1726,7 @@ const I18N_DATA ={
                 "memos": "还没有备忘录。请点击“备忘录”右侧的＋创建。"
             },
             "settingsUi": {
-                "title": "⚙ 设置",
+                "title": "设置",
                 "authTitle": "Twitch 认证",
                 "authHelp": "使用 Twitch Token Generator 获取 Access Token，粘贴到这里并保存。Client ID 和频道会自动确认。如果不清楚详细步骤，请从右上角的帮助查看带图片的指南。",
                 "authStatusEmpty": "认证信息尚未确认。",

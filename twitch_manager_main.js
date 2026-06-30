@@ -280,7 +280,9 @@ const langMap = {
 
             const settingsUi = L.settingsUi || {};
             const settingsTitle = document.getElementById('ui-settings-title');
-            if (settingsTitle && settingsUi.title) settingsTitle.innerText = settingsUi.title;
+            if (settingsTitle && settingsUi.title) {
+                settingsTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>${settingsUi.title}</span>`;
+            }
             const authTitle = document.getElementById('ui-settings-auth-title');
             if (authTitle && settingsUi.authTitle) authTitle.innerText = settingsUi.authTitle;
             const authHelp = document.getElementById('ui-settings-auth-help');
@@ -790,8 +792,12 @@ const langMap = {
         function toggleSortLock() {
             isSortLocked = !isSortLocked;
             const b = document.getElementById('lock-btn');
-            b.innerText = isSortLocked ? "🔒" : "🔓";
-            b.className = "btn-head-purple" + (isSortLocked ? "" : " unlocked");
+            if (b) {
+                b.innerHTML = isSortLocked ? 
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>` : 
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+                b.className = "btn-head-purple" + (isSortLocked ? "" : " unlocked");
+            }
 
             // 既存のSortableインスタンスのdisabledだけ更新
             // （destroy/recreateしないのでDOM順序が絶対に変わらない）
@@ -816,7 +822,9 @@ const langMap = {
             document.body.classList.toggle('light-theme', isLight);
             const btn = document.getElementById('theme-btn');
             if (btn) {
-                btn.innerText = isLight ? '☀' : '🌙';
+                btn.innerHTML = isLight ? 
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>` : 
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
             }
             localStorage.setItem('stream_theme', theme);
         }

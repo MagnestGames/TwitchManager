@@ -46,9 +46,9 @@
                     </div>
                 </div>
                 <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort"
-                    onclick="toggleSortLock()">🔒</button>
+                    onclick="toggleSortLock()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>
                 <button id="theme-btn" class="btn-head-purple" data-i18n-tooltip="extended.themeToggle"
-                    onclick="toggleTheme()">🌙</button>
+                    onclick="toggleTheme()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
                 <button class="btn-head-purple" id="ui-btn-guide" data-i18n-tooltip="extended.guide"
                     onclick="openModal('guideModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
                 <button class="btn-head-purple" id="ui-btn-settings" data-i18n-tooltip="extended.settings"
@@ -500,7 +500,7 @@
     <div id="settingModal" class="modal-overlay" onclick="if(event.target===this)closeModal('settingModal')">
         <div class="modal-content">
             <button class="modal-close-top" onclick="closeModal('settingModal')">×</button>
-            <h3 id="ui-settings-title" style="color:#bf94ff; font-size:18px; margin-bottom:20px;" data-i18n="settingsUi.title">⚙ 設定</h3>
+            <h3 id="ui-settings-title" style="color:#bf94ff; font-size:18px; margin-bottom:20px; display:flex; align-items:center;" data-i18n="settingsUi.title">設定</h3>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-auth-title" style="margin-bottom:8px;" data-i18n="settingsUi.authTitle">>Twitch認証</div>
