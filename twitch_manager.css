@@ -3736,4 +3736,19 @@ body.light-theme textarea::placeholder {
     color: #8b8b98 !important;
 }
 
+body.light-theme .ui-common-warning {
+    color: #8c4f00 !important;
+    background: rgba(255, 183, 77, 0.15) !important;
+    border-color: rgba(255, 183, 77, 0.45) !important;
+    border-left-color: #ff9800 !important;
+}
+
+body.light-theme .ui-backup-warning {
+    color: #900018 !important;
+    background: rgba(255, 74, 101, 0.12) !important;
+    border-color: rgba(255, 74, 101, 0.4) !important;
+    border-left-color: #ff4a65 !important;
+}
+
+
 
