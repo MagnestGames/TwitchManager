@@ -3688,4 +3688,52 @@ body.light-theme .calendar-day-cell-badge {
     right: 0 !important;
     transform: none !important;
 }
+
+/* ========================================
+   ライトモード用 テキスト・UIの視認性補正
+   ======================================== */
+body.light-theme .id-meta {
+    color: #53535f !important;
+    background: #e8eaee !important;
+    border: 1px solid #cfd6df !important;
+}
+
+body.light-theme .id-history-reset-btn {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.05) !important;
+}
+
+body.light-theme .id-history-reset-btn:hover:not(:disabled) {
+    background: #ef4444 !important;
+    color: #fff !important;
+}
+
+body.light-theme .id-history-reset-btn:disabled {
+    border-color: #cfd6df !important;
+    color: #adadb8 !important;
+    background: transparent !important;
+}
+
+body.light-theme textarea {
+    background: #ffffff !important;
+    color: #1f1f23 !important;
+    border-color: #cfd6df !important;
+}
+
+body.light-theme textarea:focus {
+    border-color: var(--twitch-purple) !important;
+}
+
+body.light-theme .raidso-log-list {
+    background: #ffffff !important;
+    color: #1f1f23 !important;
+    border-color: #cfd6df !important;
+}
+
+body.light-theme input::placeholder,
+body.light-theme textarea::placeholder {
+    color: #8b8b98 !important;
+}
+
 

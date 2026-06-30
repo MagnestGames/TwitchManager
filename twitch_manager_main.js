@@ -7067,28 +7067,29 @@ window.addEventListener('DOMContentLoaded', () => {
     const originalRenderFriends = renderFriends;
     renderFriends = function renderFriendsV5() {
         if (typeof originalRenderFriends === 'function') originalRenderFriends.apply(this, arguments);
-        document.querySelectorAll('#friends-container .category-box').forEach(catEl => {
-            const ci = Number(catEl.getAttribute('data-idx'));
-            catEl.querySelectorAll('.record-card').forEach(card => {
-                const fi = Number(card.getAttribute('data-idx'));
-                const body = card.querySelector('.record-body');
-                const friend = friendsConfig?.[ci]?.friends?.[fi];
-                if (!body || !friend || body.querySelector('.id-history-actions')) return;
-                const hasHistory = Boolean(Number(friend.shoutoutCount || 0) || friend.lastShoutoutAt);
-                const wrap = document.createElement('div');
-                wrap.className = 'id-history-actions';
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn-outline id-history-reset-btn';
-                btn.innerText = getIdText().resetShoutout || '紹介履歴リセット';
-                btn.disabled = !hasHistory;
-                btn.onclick = event => {
-                    event.stopPropagation();
-                    resetFriendShoutoutHistory(ci, fi);
-                };
-                wrap.appendChild(btn);
-                body.insertBefore(wrap, body.firstChild);
-            });
+        document.querySelectorAll('#friends-container .record-card').forEach(card => {
+            const idAttr = card.getAttribute('id') || '';
+            const match = idAttr.match(/^friend-card-(\d+)-(\d+)$/);
+            if (!match) return;
+            const ci = Number(match[1]);
+            const fi = Number(match[2]);
+            const body = card.querySelector('.record-body');
+            const friend = friendsConfig?.[ci]?.friends?.[fi];
+            if (!body || !friend || body.querySelector('.id-history-actions')) return;
+            const hasHistory = Boolean(Number(friend.shoutoutCount || 0) || friend.lastShoutoutAt);
+            const wrap = document.createElement('div');
+            wrap.className = 'id-history-actions';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-outline id-history-reset-btn';
+            btn.innerText = getIdText().resetShoutout || '紹介履歴リセット';
+            btn.disabled = !hasHistory;
+            btn.onclick = event => {
+                event.stopPropagation();
+                resetFriendShoutoutHistory(ci, fi);
+            };
+            wrap.appendChild(btn);
+            body.insertBefore(wrap, body.firstChild);
         });
     };
 
