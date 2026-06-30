@@ -72,7 +72,7 @@
         <div id="main-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
-            <button id="del-mode-main" class="btn-secondary" style="flex: 2; background: #444;"
+            <button id="del-mode-main" class="btn-secondary" style="flex: 2;"
                 onclick="toggleDeleteMode('main-tab')" data-i18n="extended.deleteBtn">>削除</button>
             <button class="btn-secondary btn-add-item" id="ui-add-template-main" style="flex: 5;"
                 onclick="addFriendCategory('main-container')" data-i18n="extended.addTemplateTitle">>＋ テンプレートを追加</button>
@@ -414,15 +414,27 @@
             </div>
         </details>
 
+        <!-- Sort & Filter Toolbar -->
+        <div class="friends-toolbar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
+            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" style="flex: 1; font-size: 12px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; cursor: pointer; outline: none;">
+                <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
+                <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
+                <option value="recent-so" data-i18n="idList.sortRecentSo">直近の応援順</option>
+                <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
+                <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
+            </select>
+        </div>
+
         <div id="friends-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
-            <button id="del-mode-friends" class="btn-secondary" style="flex: 2; background: #444;"
-                onclick="toggleDeleteMode('friends-tab')" data-i18n="extended.deleteBtn">>削除</button>
+            <button id="del-mode-friends" class="btn-secondary" style="flex: 2;"
+                onclick="toggleDeleteMode('friends-tab')" data-i18n="extended.deleteBtn">削除</button>
             <button class="btn-secondary btn-add-item" id="ui-add-template-friends" style="flex: 5;"
-                onclick="addFriendCategory('friends-container')" data-i18n="extended.addTemplateTitle">>＋ テンプレートを追加</button>
+                onclick="addFriendCategory('friends-container')" data-i18n="extended.addTemplateTitle">＋ テンプレートを追加</button>
             <button class="btn-primary" id="ui-save-friends" style="flex: 3;"
-                onclick="saveFriendsLocal(true)" data-i18n="extended.saveBtn">>保存</button>
+                onclick="saveFriendsLocal(true)" data-i18n="extended.saveBtn">保存</button>
         </div>
     </div>
 
@@ -435,7 +447,7 @@
             <div class="tw-body">
                 <div id="memo-container" class="sortable-container"></div>
                 <div class="sticky-footer-wrapper" style="z-index: 1000;">
-                    <button id="del-mode-memo" class="btn-secondary" style="flex: 2; background: #444; color: #fff;" onclick="toggleDeleteMode('memo-tab')" data-i18n="extended.deleteBtn">>削除</button>
+                    <button id="del-mode-memo" class="btn-secondary" style="flex: 2;" onclick="toggleDeleteMode('memo-tab')" data-i18n="extended.deleteBtn">>削除</button>
                     <button class="btn-primary" id="ui-save-memo" style="flex: 3;" onclick="saveMemoLocal(true)" data-i18n="extended.saveBtn">>保存</button>
                 </div>
             </div>
@@ -564,6 +576,88 @@
                 </div>
             </div>
             <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">>保存</button>
+        </div>
+    </div>
+
+    <!-- Birthday Calendar & Full List Modal -->
+    <div id="birthdayCalendarModal" class="modal-overlay" onclick="if(event.target===this)closeModal('birthdayCalendarModal')">
+        <div class="modal-content" style="max-width: 480px; display: flex; flex-direction: column; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
+                <h2 id="ui-calendar-modal-title" style="color: var(--twitch-purple); font-size: 18px; margin: 0;">◆ 記念日カレンダー</h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button id="btn-calendar-today" class="btn-secondary" style="padding: 4px 10px; font-size: 11px; font-weight: bold; height: 26px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;" onclick="goCalendarToday()">今日</button>
+                    <button class="modal-close-top" onclick="closeModal('birthdayCalendarModal')" style="position: static; font-size: 20px; line-height: 1; padding: 0 4px; background: none; border: none; color: var(--text-muted); cursor: pointer;">✕</button>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button id="btn-calendar-tab-list" class="btn-primary" style="flex: 1; padding: 8px; font-weight: bold;" onclick="switchCalendarModalTab('list')">一覧表示</button>
+                <button id="btn-calendar-tab-grid" class="btn-secondary" style="flex: 1; padding: 8px; font-weight: bold;" onclick="switchCalendarModalTab('calendar')">カレンダー表示</button>
+            </div>
+
+            <!-- List view container -->
+            <div id="calendar-modal-list-view" style="flex: 1; overflow-y: auto; max-height: 350px;">
+                <!-- Full list of events generated dynamically -->
+            </div>
+
+            <!-- Calendar view container -->
+            <div id="calendar-modal-grid-view" style="display: none; flex: 1; flex-direction: column;">
+                <!-- Monthly Calendar header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <button class="icon-btn" onclick="navigateCalendarMonth(-1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&lt;</button>
+                    <!-- 年月タイトル: クリックで年月ピッカー表示 -->
+                    <button id="calendar-month-title" onclick="toggleCalendarYMPicker()" style="font-weight: bold; font-size: 14px; color: var(--twitch-purple); background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: 0.15s; flex: 1; text-align: center;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='transparent'"></button>
+                    <button class="icon-btn" onclick="navigateCalendarMonth(1)" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&gt;</button>
+                </div>
+
+                <!-- 年月ピッカー (Googleカレンダー風) -->
+                <div id="cal-ym-picker" class="cal-ym-picker" style="display:none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <button onclick="shiftCalendarYear(-1)" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8249;</button>
+                        <span id="cal-ym-year-label" style="font-weight:bold;color:var(--text-main);font-size:13px;"></span>
+                        <button onclick="shiftCalendarYear(1)" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8250;</button>
+                    </div>
+                    <div id="cal-ym-months" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;"></div>
+                </div>
+
+                <!-- Calendar grid -->
+                <div class="calendar-grid-header" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; margin-bottom: 4px;">
+                    <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+                </div>
+                <!-- 高さ固定: grid-template-rows で6行固定 -->
+                <div id="calendar-grid-body" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; min-height: 220px;">
+                    <!-- Calendar days generated dynamically -->
+                </div>
+
+                <!-- 日付クリックで開く追加ポップアップ -->
+                <div id="cal-day-popup" style="display:none;margin-top:12px;padding:12px;background:var(--bg-card);border:1px solid var(--twitch-purple);border-radius:10px;box-shadow:var(--shadow-md);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid var(--border-color);padding-bottom:4px;">
+                        <strong id="cal-day-popup-title" style="color:var(--twitch-purple);font-size:13px;"></strong>
+                        <button onclick="document.getElementById('cal-day-popup').style.display='none'" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;">×</button>
+                    </div>
+                    <!-- 既存イベント表示 -->
+                    <div id="cal-day-existing" style="margin-bottom:8px;max-height:80px;overflow-y:auto;"></div>
+                    <!-- 追加フォーム -->
+                    <div id="cal-day-add-form">
+                        <div style="margin-bottom:6px;">
+                            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">配信者を選択</label>
+                            <select id="cal-day-person-select" onchange="handleCalPersonSelectChange()" style="width: 100%;padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;"></select>
+                            <input type="text" id="cal-day-new-name" placeholder="ニックネームを入力してください" style="width:100%; padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;margin-top:4px;display:none;">
+                            <input type="text" id="cal-day-new-twitch" placeholder="Twitch IDを入力してください (任意)" style="width:100%; padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;margin-top:4px;display:none;">
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">お祝い種別</label>
+                            <input type="hidden" id="cal-day-type-value" value="birthday">
+                            <div style="display:flex;gap:6px;">
+                                <button id="cal-type-btn-birthday" onclick="selectCalDayType('birthday')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--twitch-purple);background:var(--twitch-purple);color:#fff;font-size:11px;font-weight:bold;cursor:pointer;">誕生日</button>
+                                <button id="cal-type-btn-anniversary" onclick="selectCalDayType('anniversary')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-muted);font-size:11px;font-weight:bold;cursor:pointer;">記念日</button>
+                            </div>
+                        </div>
+                        <button onclick="confirmCalDayAdd()" style="width:100%;padding:6px;background:var(--twitch-purple);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;">保存</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

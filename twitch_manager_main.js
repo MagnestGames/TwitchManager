@@ -324,6 +324,7 @@ const langMap = {
             // モーダルとコマンドの更新
             const guideEl = document.getElementById('ui-guide-content');
             if (guideEl) guideEl.innerHTML = L.guideHtml;
+            try { if (typeof updateCreatorsDOM === 'function') updateCreatorsDOM(); } catch(e) {}
             const cmdEl = document.getElementById('cmd-container');
             if (cmdEl) cmdEl.innerHTML = L.cmdHtml;
             refreshTwitchChoicePlaceholders();
@@ -938,7 +939,7 @@ const langMap = {
         // --- 追加機能：Twitch API通信ロジック ---
         const TWITCH_API_BASE = 'https://api.twitch.tv/helix';
 
-        async function apiRequest(endpoint, method = 'GET', body = null) {
+        async function apiRequest(endpoint, method = 'GET', body = null, silent = false) {
             const token = extractTwitchAccessToken(settings.token);
             const clientId = getEffectiveTwitchClientId();
             if (!clientId || !token) {
@@ -956,12 +957,18 @@ const langMap = {
                 const requestMethod = String(method).toUpperCase();
                 const requestEndpoint = String(endpoint || '').split('?')[0];
                 if (!res.ok) {
-                    console.error("API Error:", await res.text());
+                    const errText = await res.text();
+                    if (!silent) {
+                        console.error("API Error:", errText);
+                    }
                     raidSoLog(uiText('runtime.operationLog.apiFailed', {
                         method: requestMethod,
                         endpoint: requestEndpoint,
                         status: res.status
                     }), 'warn');
+                    if (silent) {
+                        throw { status: res.status, message: errText };
+                    }
                     return null;
                 }
                 const result = res.status === 204 ? true : await res.json();
@@ -975,7 +982,9 @@ const langMap = {
                 }
                 return result;
             } catch (error) {
-                console.error("Network Error:", error);
+                if (!silent) {
+                    console.error("Network Error:", error);
+                }
                 raidSoLog(uiText('runtime.operationLog.apiFailed', {
                     method: String(method).toUpperCase(),
                     endpoint: String(endpoint || '').split('?')[0],
@@ -1068,6 +1077,169 @@ const langMap = {
             btnEl.style.opacity = '1';
         }
 
+
+        // ソート状態管理
+        let friendsSortOrder = 'name';
+        function changeFriendsSortOrder(val) {
+            friendsSortOrder = val;
+            const sel = document.getElementById('friends-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderFriends();
+        }
+        window.changeFriendsSortOrder = changeFriendsSortOrder;
+
+        // カード生成ヘルパー
+        // 遅延保存用のタイマー
+        let saveFriendsTimeout = null;
+
+        // 同一 Twitch ID を持つ他グループのカードへリアルタイム同期する共通関数
+        function updateFriendField(ci, fi, field, value) {
+            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
+            
+            const targetFriend = friendsConfig[ci].friends[fi];
+            const targetTwitch = (normalizeFriendTwitch(targetFriend.twitch || targetFriend.name || '') || '').toLowerCase();
+            
+            // フィールド値を更新
+            targetFriend[field] = value;
+
+            // 同一 Twitch ID を持つ他カテゴリの配信者カードを走査し同期
+            if (targetTwitch) {
+                (friendsConfig || []).forEach((cat, cIdx) => {
+                    (cat.friends || []).forEach((f, fIdx) => {
+                        if (cIdx === ci && fIdx === fi) return; // 自分自身はスキップ
+                        const key = (normalizeFriendTwitch(f.twitch || f.name || '') || '').toLowerCase();
+                        if (key === targetTwitch) {
+                            f[field] = value;
+                            
+                            // 画面上の開いている入力欄があれば同期
+                            let inputId = '';
+                            if (field === 'twitch') inputId = `f-twitch-${cIdx}-${fIdx}`;
+                            else if (field === 'x') inputId = `f-x-${cIdx}-${fIdx}`;
+                            else if (field === 'youtube') inputId = `f-yt-${cIdx}-${fIdx}`;
+                            else if (field === 'birthday') inputId = `f-bday-${cIdx}-${fIdx}`;
+                            else if (field === 'anniversary') inputId = `f-anniv-${cIdx}-${fIdx}`;
+                            
+                            const el = document.getElementById(inputId);
+                            if (el && el.value !== value) {
+                                el.value = value;
+                            }
+                        }
+                    });
+                });
+            }
+
+            // バッチ保存をトリガー
+            saveFriendsLocalDebounced();
+        }
+        window.updateFriendField = updateFriendField;
+
+        function saveFriendsLocalDebounced() {
+            if (saveFriendsTimeout) clearTimeout(saveFriendsTimeout);
+            saveFriendsTimeout = setTimeout(() => {
+                saveFriendsLocal(false);
+            }, 300);
+        }
+
+        function _buildFriendCard(f, ci, fi, L, I, groupTags, sortMeta) {
+            const card = document.createElement('div');
+            card.id = `friend-card-${ci}-${fi}`;
+            card.className = "record-card" + (f.isOpen ? " open" : "");
+            card.setAttribute('data-idx', fi);
+            
+            // あだな・呼び名 (ツイッチ表示名) の表示ロジック
+            const nickname = f.name || '';
+            const twitchName = f.displayName || '';
+            let displayName = nickname || f.twitch || I.emptyName;
+            
+            if (twitchName && twitchName.toLowerCase() !== nickname.toLowerCase()) {
+                displayName = `${displayName} (${twitchName})`;
+            }
+
+            const shoutoutCount = Number(f.shoutoutCount || 0);
+            const lastDate = f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '';
+            const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
+
+            // グループタグ HTML
+            const groupTagsHtml = groupTags && groupTags.length
+                ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;">
+                    ${groupTags.map(g => `<span style="font-size:9px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border:1px solid rgba(145,70,255,0.3);border-radius:4px;padding:1px 5px;">${raidSoEscape(g)}</span>`).join('')}
+                   </div>`
+                : '';
+
+            // ソートメタ表示
+            const sortMetaHtml = sortMeta
+                ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">${raidSoEscape(sortMeta)}</span>`
+                : '';
+
+            card.innerHTML = `
+            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
+                <div style="display:flex; flex-direction:column; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>● ${raidSoEscape(displayName)}</span>
+                        ${sortMetaHtml}
+                        <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                    </div>
+                    ${groupTagsHtml}
+                </div>
+                <div style="display:flex; gap:5px; flex-shrink:0;">
+                    <button class="icon-btn id-action-btn id-refresh-action" title="情報を更新" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    </button>
+                    <button class="icon-btn id-action-btn id-copy-action" title="${raidSoEscape(L.tips.copyId)}" onclick="event.stopPropagation(); copyTwitchId(${ci}, ${fi})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <button class="icon-btn id-action-btn id-twitch-action" title="${raidSoEscape(L.tips.openTwitch)}" onclick="event.stopPropagation(); openTwitchLink(${ci}, ${fi})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"></path></svg>
+                    </button>
+                    <button class="icon-btn id-action-btn id-x-action" title="${raidSoEscape(L.tips.openX)}" onclick="event.stopPropagation(); openXLink(${ci}, ${fi})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>
+                    </button>
+                    <button class="icon-btn id-action-btn id-youtube-action" title="${raidSoEscape(L.tips.openYoutube || 'YouTubeを開く')}" onclick="event.stopPropagation(); openYoutubeLink(${ci}, ${fi})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                    </button>
+                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteFriendRecord(${ci}, ${fi})">✕</button>
+                </div>
+            </div>
+            <div class="record-body">
+                ${meta ? `<div class="id-meta">${raidSoEscape(meta)}</div>` : ''}
+                <span class="field-label">${raidSoEscape(L.labels.twitchId || langMap.ja.labels.twitchId)}</span>
+                <input type="text" id="f-twitch-${ci}-${fi}" value="${raidSoEscape(f.twitch || '')}" oninput="updateFriendField(${ci}, ${fi}, 'twitch', this.value)" onchange="autoFillFriendXFromTwitch(${ci}, ${fi})">
+                
+                <span class="field-label">${raidSoEscape(L.labels.xUrl || langMap.ja.labels.xUrl)}</span>
+                <input type="text" id="f-x-${ci}-${fi}" value="${raidSoEscape(f.x || '')}" oninput="updateFriendField(${ci}, ${fi}, 'x', this.value)">
+
+                <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || 'YouTube リンク')}</span>
+                <input type="text" id="f-yt-${ci}-${fi}" value="${raidSoEscape(f.youtube || '')}" oninput="updateFriendField(${ci}, ${fi}, 'youtube', this.value)">
+
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <div style="flex: 1;">
+                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.birthday || '誕生日')}</span>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <input type="text" id="f-bday-${ci}-${fi}" value="${raidSoEscape(f.birthday || '')}" placeholder="MM/DD (例: 04/25)" oninput="updateFriendField(${ci}, ${fi}, 'birthday', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
+                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'birthday')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="カレンダーから選択">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.anniversary || '記念日')}</span>
+                        <div style="display: flex; gap: 4px; align-items: center;">
+                            <input type="text" id="f-anniv-${ci}-${fi}" value="${raidSoEscape(f.anniversary || '')}" placeholder="MM/DD (例: 10/01)" oninput="updateFriendField(${ci}, ${fi}, 'anniversary', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
+                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'anniversary')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="カレンダーから選択">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <span class="field-label">${raidSoEscape(L.labels.memo)}</span>
+                <textarea onchange="updateFriendField(${ci}, ${fi}, 'memo', this.value)">${raidSoEscape(f.memo || '')}</textarea>
+            </div>`;
+            return card;
+        }
+
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
             const L = langMap[currentLang];
@@ -1084,76 +1256,970 @@ const langMap = {
                 return;
             }
 
-            (friendsConfig || []).forEach((cat, ci) => {
-                const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `
-                <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
-                    <span>${raidSoEscape(cat.name)}</span>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteFriendCategory(${ci})">${raidSoEscape(L.delete)}</button>
-                        <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
+            // ----- グループ別表示（手動ソート・ドラッグ可能） -----
+            if (friendsSortOrder === 'group') {
+                (friendsConfig || []).forEach((cat, ci) => {
+                    const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
+                    d.innerHTML = `
+                    <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
+                        <span>${raidSoEscape(cat.name)}</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteFriendCategory(${ci})">${raidSoEscape(L.delete)}</button>
+                            <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
+                        </div>
                     </div>
-                </div>
-                <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
 
-                const friends = cat.friends || [];
-                if (!friends.length) {
-                    d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
-                }
-                friends.forEach((f, fi) => {
-                    const card = document.createElement('div');
-                    card.className = "record-card" + (f.isOpen ? " open" : "");
-                    card.setAttribute('data-idx', fi);
-                    const displayName = f.name || f.displayName || f.twitch || I.emptyName;
-                    const shoutoutCount = Number(f.shoutoutCount || 0);
-                    const lastDate = f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '';
-                    const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
-
-                    card.innerHTML = `
-                <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(displayName)}</span>
-                        <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="icon-btn id-action-btn id-copy-action" title="${raidSoEscape(L.tips.copyId)}" onclick="event.stopPropagation(); copyTwitchId(${ci}, ${fi})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        </button>
-                        <button class="icon-btn id-action-btn id-twitch-action" title="${raidSoEscape(L.tips.openTwitch)}" onclick="event.stopPropagation(); openTwitchLink(${ci}, ${fi})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"></path></svg>
-                        </button>
-                        <button class="icon-btn id-action-btn id-x-action" title="${raidSoEscape(L.tips.openX)}" onclick="event.stopPropagation(); openXLink(${ci}, ${fi})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>
-                        </button>
-                        <button class="icon-btn id-action-btn id-youtube-action" title="${raidSoEscape(L.tips.openYoutube || 'YouTubeを開く')}" onclick="event.stopPropagation(); openYoutubeLink(${ci}, ${fi})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
-                        </button>
-                        <button class="btn-delete-item" onclick="event.stopPropagation(); deleteFriendRecord(${ci}, ${fi})">✕</button>
-                    </div>
-                </div>
-                <div class="record-body">
-                    ${meta ? `<div class="id-meta">${raidSoEscape(meta)}</div>` : ''}
-                    <span class="field-label">${raidSoEscape(L.labels.twitchId || langMap.ja.labels.twitchId)}</span>
-                    <input type="text" value="${raidSoEscape(f.twitch || '')}" oninput="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false)" onchange="friendsConfig[${ci}].friends[${fi}].twitch=this.value; saveFriendsLocal(false); autoFillFriendXFromTwitch(ci, fi)">
-                    
-                    <span class="field-label">${raidSoEscape(L.labels.xUrl || langMap.ja.labels.xUrl)}</span>
-                    <input type="text" value="${raidSoEscape(f.x || '')}" oninput="friendsConfig[${ci}].friends[${fi}].x=this.value; saveFriendsLocal(false)">
-
-                    <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || 'YouTube リンク')}</span>
-                    <input type="text" value="${raidSoEscape(f.youtube || '')}" oninput="friendsConfig[${ci}].friends[${fi}].youtube=this.value; saveFriendsLocal(false)">
-                    
-                    <span class="field-label">${raidSoEscape(L.labels.memo)}</span>
-                    <textarea onchange="friendsConfig[${ci}].friends[${fi}].memo=this.value; saveFriendsLocal(false)">${raidSoEscape(f.memo || '')}</textarea>
-                </div>`;
-                    d.querySelector('.category-records').appendChild(card);
+                    const friends = cat.friends || [];
+                    if (!friends.length) {
+                        d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
+                    }
+                    friends.forEach((f, fi) => {
+                        d.querySelector('.category-records').appendChild(_buildFriendCard(f, ci, fi, L, I, null));
+                    });
+                    c.appendChild(d);
                 });
-                c.appendChild(d);
-            });
-            initSortable();
+                initSortable();
+
+            // ----- フラット表示（ソート順表示、名前abc順・応援回数順など） -----
+            } else {
+                // 全配信者を1フラット配列に統合
+                const allFriends = [];
+                (friendsConfig || []).forEach((cat, ci) => {
+                    (cat.friends || []).forEach((f, fi) => {
+                        allFriends.push({ f, ci, fi, catName: cat.name });
+                    });
+                });
+
+                // ソート処理用：誕生日/記念日の残り日数算出
+                const today = new Date();
+                const tM = today.getMonth() + 1, tD = today.getDate();
+                function daysUntil(mmdd) {
+                    if (!mmdd) return 9999;
+                    const parts = String(mmdd).match(/(\d{1,2})\D+(\d{1,2})/);
+                    if (!parts) return 9999;
+                    const m = parseInt(parts[1], 10), d = parseInt(parts[2], 10);
+                    let diff = (m - tM) * 31 + (d - tD);
+                    if (diff < 0) diff += 366;
+                    return diff;
+                }
+
+                allFriends.sort((a, b) => {
+                    const fa = a.f, fb = b.f;
+                    if (friendsSortOrder === 'name') {
+                        const na = (fa.name || fa.twitch || '').toLowerCase();
+                        const nb = (fb.name || fb.twitch || '').toLowerCase();
+                        return na.localeCompare(nb, 'ja');
+                    }
+                    if (friendsSortOrder === 'recent-so') {
+                        const da = fa.lastShoutoutAt ? new Date(fa.lastShoutoutAt).getTime() : 0;
+                        const db = fb.lastShoutoutAt ? new Date(fb.lastShoutoutAt).getTime() : 0;
+                        return db - da;
+                    }
+                    if (friendsSortOrder === 'so-count') {
+                        return Number(fb.shoutoutCount || 0) - Number(fa.shoutoutCount || 0);
+                    }
+                    if (friendsSortOrder === 'birthday') {
+                        return daysUntil(fa.birthday) - daysUntil(fb.birthday);
+                    }
+                    return 0;
+                });
+
+                // 重複タグ・グループ名の収集
+                const twitchToGroups = {};
+                (friendsConfig || []).forEach(cat => {
+                    (cat.friends || []).forEach(f => {
+                        const key = (normalizeFriendTwitch(f.twitch || f.name || '') || '').toLowerCase();
+                        if (!key) return;
+                        if (!twitchToGroups[key]) twitchToGroups[key] = [];
+                        if (!twitchToGroups[key].includes(cat.name)) twitchToGroups[key].push(cat.name);
+                    });
+                });
+
+                // ソート付随情報表示
+                function getSortMeta(f) {
+                    if (friendsSortOrder === 'recent-so' && f.lastShoutoutAt) {
+                        return new Date(f.lastShoutoutAt).toLocaleDateString();
+                    }
+                    if (friendsSortOrder === 'so-count' && f.shoutoutCount) {
+                        return `${f.shoutoutCount}回応援`;
+                    }
+                    if (friendsSortOrder === 'birthday' && f.birthday) {
+                        const d = daysUntil(f.birthday);
+                        return d === 0 ? '🎂 今日！' : `誕生日まで${d}日`;
+                    }
+                    return '';
+                }
+
+                allFriends.forEach(({ f, ci, fi, catName }) => {
+                    const key = (normalizeFriendTwitch(f.twitch || f.name || '') || '').toLowerCase();
+                    const groups = twitchToGroups[key] || [catName];
+                    const sortMeta = getSortMeta(f);
+                    c.appendChild(_buildFriendCard(f, ci, fi, L, I, groups, sortMeta));
+                });
+            }
+
             renderShoutoutSuggestions();
         }
+
+
+        // --- Twitch ID 重複チェック共通関数 ---
+
+        // --- 記念日・誕生日解析ユーティリティ ---
+        function parseMdDate(str) {
+            const val = String(str || '').trim();
+            if (!val) return null;
+            const m = val.match(/(\d{1,2})\D+(\d{1,2})/);
+            if (m) {
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            if (/^\d{4}$/.test(val)) {
+                const month = parseInt(val.slice(0, 2), 10);
+                const day = parseInt(val.slice(2), 10);
+                if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                    return { month, day };
+                }
+            }
+            return null;
+        }
+        window.parseMdDate = parseMdDate;
+
+        function getDaysUntil(month, day) {
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const todayZero = new Date(currentYear, today.getMonth(), today.getDate());
+            let target = new Date(currentYear, month - 1, day);
+            if (target < todayZero) {
+                target = new Date(currentYear + 1, month - 1, day);
+            }
+            const diffTime = target - todayZero;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+        window.getDaysUntil = getDaysUntil;
+
+        function checkBirthdaysAndAnniversaries() {
+            const today = new Date();
+            const tM = today.getMonth() + 1;
+            const tD = today.getDate();
+            
+            let hasTodayEvent = false;
+
+            (friendsConfig || []).forEach(cat => {
+                const friends = cat.friends || [];
+                friends.forEach(f => {
+                    const bday = parseMdDate(f.birthday);
+                    if (bday && bday.month === tM && bday.day === tD) {
+                        hasTodayEvent = true;
+                    }
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv && anniv.month === tM && anniv.day === tD) {
+                        hasTodayEvent = true;
+                    }
+                });
+            });
+
+            const btn = document.getElementById('birthday-indicator-btn');
+            if (btn) {
+                if (hasTodayEvent) {
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
+                }
+            }
+        }
+        window.checkBirthdaysAndAnniversaries = checkBirthdaysAndAnniversaries;
+
+        function toggleBirthdayPopover(event) {
+            if (event) event.stopPropagation();
+            const popover = document.getElementById('birthday-popover');
+            if (!popover) return;
+            const isVisible = popover.style.display === 'block';
+            
+            const langMenu = document.getElementById('language-menu');
+            if (langMenu) langMenu.style.display = 'none';
+
+            if (isVisible) {
+                popover.style.display = 'none';
+            } else {
+                renderBirthdayPopoverContent();
+                popover.style.display = 'block';
+            }
+        }
+        window.toggleBirthdayPopover = toggleBirthdayPopover;
+
+        function renderBirthdayPopoverContent() {
+            const popover = document.getElementById('birthday-popover');
+            if (!popover) return;
+
+            const L = langMap[currentLang] || langMap.ja;
+            const titleText = L.birthdayTitle || '今日の主役！';
+            const birthdayLabel = L.birthdayLabel || '誕生日';
+            const anniversaryLabel = L.anniversaryLabel || '記念日';
+            const unitDay = currentLang === 'en' ? 'd' : '日';
+            
+            const today = new Date();
+            const tM = today.getMonth() + 1;
+            const tD = today.getDate();
+
+            const todayMatches = [];
+            const allEvents = [];
+
+            (friendsConfig || []).forEach((cat, ci) => {
+                const friends = cat.friends || [];
+                friends.forEach((f, fi) => {
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+
+                    const bday = parseMdDate(f.birthday);
+                    if (bday) {
+                        const daysLeft = getDaysUntil(bday.month, bday.day);
+                        const eventObj = { name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi };
+                        allEvents.push(eventObj);
+                        if (bday.month === tM && bday.day === tD) {
+                            todayMatches.push(eventObj);
+                        }
+                    }
+
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv) {
+                        const daysLeft = getDaysUntil(anniv.month, anniv.day);
+                        const eventObj = { name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi };
+                        allEvents.push(eventObj);
+                        if (anniv.month === tM && anniv.day === tD) {
+                            todayMatches.push(eventObj);
+                        }
+                    }
+                });
+            });
+
+            allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
+
+            let html = `<div class="birthday-popover-title" style="font-weight:bold;font-size:13px;border-bottom:1px solid var(--border-color);padding-bottom:6px;margin-bottom:8px;color:var(--twitch-purple);">${titleText}</div>`;
+
+            if (todayMatches.length > 0) {
+                todayMatches.forEach(m => {
+                    const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                    const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
+                    html += `
+                    <div class="birthday-popover-item today-event" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:4px;transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
+                        <span style="font-weight:bold;color:var(--twitch-purple);font-size:12px;">🎂 ${raidSoEscape(m.name)}</span>
+                        <span style="font-size:10px;padding:1px 5px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border-radius:4px;">${raidSoEscape(label)}</span>
+                    </div>`;
+                });
+            } else {
+                html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-align:center;">今日がお祝いの配信者はいません</div>`;
+            }
+
+            html += `<div style="font-weight:bold;font-size:11px;margin:12px 0 6px 0;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:8px;">近日のスケジュール</div>`;
+
+            const upcoming = allEvents.filter(e => e.daysLeft > 0).slice(0, 3);
+            if (upcoming.length > 0) {
+                upcoming.forEach(m => {
+                    const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                    const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
+                    html += `
+                    <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;cursor:pointer;border-radius:4px;transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
+                        <div style="display:flex;flex-direction:column;">
+                            <span style="font-weight:bold;color:var(--text-main);">${raidSoEscape(m.name)}</span>
+                            <span style="color:var(--text-muted);font-size:9px;">${m.month}/${m.day}</span>
+                        </div>
+                        <div style="display:flex;gap:4px;align-items:center;">
+                            <span style="color:var(--twitch-purple);font-weight:bold;">あと${m.daysLeft}${unitDay}</span>
+                            <span style="font-size:8px;padding:1px 4px;border-radius:3px;background:${m.type==='birthday'?'rgba(255,74,154,0.1)':'rgba(29,155,240,0.1)'};color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};">${raidSoEscape(label)}</span>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                html += `<div style="font-size:10px;color:var(--text-muted);text-align:center;">予定はありません</div>`;
+            }
+
+            // 下部ナビゲーションボタンエリア
+            html += `
+            <div style="display:flex; gap:6px; border-top:1px solid var(--border-color); padding-top:8px; margin-top:8px;">
+                <button onclick="openCalendarWithTab('list')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">一覧表示</button>
+                <button onclick="openCalendarWithTab('calendar')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">カレンダー</button>
+            </div>`;
+
+            popover.innerHTML = html;
+        }
+        window.renderBirthdayPopoverContent = renderBirthdayPopoverContent;
+
+        function openCalendarWithTab(tabType) {
+            const popover = document.getElementById('birthday-popover');
+            if (popover) popover.style.display = 'none';
+
+            openModal('birthdayCalendarModal');
+            switchCalendarModalTab(tabType);
+        }
+        window.openCalendarWithTab = openCalendarWithTab;
+
+        function navigateToFriendCard(ci, fi) {
+            // 全てのモーダル・ポップアップを閉じる
+            closeModal('birthdayCalendarModal');
+            const popover = document.getElementById('birthday-popover');
+            if (popover) popover.style.display = 'none';
+
+            // 「ユーザー管理」タブに遷移する
+            const friendsTabBtn = document.querySelector('[data-tab-target="friends-tab"]');
+            if (friendsTabBtn) {
+                friendsTabBtn.click();
+            } else if (typeof switchTab === 'function') {
+                switchTab('friends-tab');
+            }
+
+            // データのアコーディオン状態を開く
+            if (friendsConfig && friendsConfig[ci] && friendsConfig[ci].friends[fi]) {
+                friendsConfig[ci].friends[fi].isOpen = true;
+                renderFriends();
+            }
+
+            // カード要素を探してスクロール
+            setTimeout(() => {
+                const card = document.getElementById(`friend-card-${ci}-${fi}`);
+                if (card) {
+                    // 親アコーディオン（カテゴリボックス）があれば、閉じている場合は開く
+                    const catBox = card.closest('.category-box');
+                    if (catBox && catBox.classList.contains('closed')) {
+                        const header = catBox.querySelector('.category-name');
+                        if (header) header.click();
+                    }
+
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 見つけやすくするためのハイライト点滅
+                    card.style.transition = 'outline var(--transition-fast, 0.2s)';
+                    card.style.outline = '2px solid var(--twitch-purple)';
+                    setTimeout(() => {
+                        card.style.outline = '2px solid transparent';
+                    }, 1500);
+                }
+            }, 120);
+        }
+        window.navigateToFriendCard = navigateToFriendCard;
+
+
+        function checkTwitchIdDuplicate(twitchId, excludeCi, excludeFi) {
+            const cleanId = (normalizeFriendTwitch(twitchId || '') || '').toLowerCase();
+            if (!cleanId) return null;
+            
+            for (let cIdx = 0; cIdx < (friendsConfig || []).length; cIdx++) {
+                const cat = friendsConfig[cIdx];
+                for (let fIdx = 0; fIdx < (cat.friends || []).length; fIdx++) {
+                    if (excludeCi !== undefined && excludeFi !== undefined) {
+                        if (cIdx === excludeCi && fIdx === excludeFi) continue;
+                    }
+                    const key = (normalizeFriendTwitch(cat.friends[fIdx].twitch || '') || '').toLowerCase();
+                    if (key === cleanId) {
+                        return {
+                            friend: cat.friends[fIdx],
+                            categoryName: cat.name,
+                            ci: cIdx,
+                            fi: fIdx
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+        window.checkTwitchIdDuplicate = checkTwitchIdDuplicate;
+
+        // 大カレンダーの現在表示中年月
+        let calendarCurrentYear = new Date().getFullYear();
+        let calendarCurrentMonth = new Date().getMonth() + 1;
+        let selectedCalendarDay = null; // { year, month, day }
+
+        function renderCalendarGrid(year, month) {
+            const gridBody = document.getElementById('calendar-grid-body');
+            const monthLabel = document.getElementById('calendar-month-title');
+            if (!gridBody || !monthLabel) return;
+
+            calendarCurrentYear = year;
+            calendarCurrentMonth = month;
+            monthLabel.innerText = `${year}年 ${month}月`;
+            gridBody.innerHTML = '';
+
+            // 今月のお祝いイベント (誕生日・記念日) を集計
+            const monthEvents = {};
+            const langMapLoc = langMap[currentLang] || langMap.ja;
+            
+            (friendsConfig || []).forEach(cat => {
+                (cat.friends || []).forEach(f => {
+                    // 誕生日
+                    if (f.birthday) {
+                        const parsed = parseMdDate(f.birthday);
+                        if (parsed && parsed.month === month) {
+                            if (!monthEvents[parsed.day]) monthEvents[parsed.day] = [];
+                            monthEvents[parsed.day].push({ name: f.name || f.twitch, type: 'birthday' });
+                        }
+                    }
+                    // 記念日
+                    if (f.anniversary) {
+                        const parsed = parseMdDate(f.anniversary);
+                        if (parsed && parsed.month === month) {
+                            if (!monthEvents[parsed.day]) monthEvents[parsed.day] = [];
+                            monthEvents[parsed.day].push({ name: f.name || f.twitch, type: 'anniversary' });
+                        }
+                    }
+                });
+            });
+
+            const firstDayIndex = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const isCurrentYearMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
+            const todayDay = today.getDate();
+
+            // 前月の空セル
+            for (let i = 0; i < firstDayIndex; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day-cell empty';
+                gridBody.appendChild(cell);
+            }
+
+            // 日付セル
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day-cell';
+                cell.style.cursor = 'pointer';
+
+                const dayEvents = monthEvents[day] || [];
+                if (dayEvents.length > 0) {
+                    cell.classList.add('has-event');
+                    const bLabel = langMapLoc.birthdayLabel || '誕生日';
+                    const aLabel = langMapLoc.anniversaryLabel || '記念日';
+                    const titleText = dayEvents.map(e => `${e.name} (${e.type === 'birthday' ? bLabel : aLabel})`).join('\n');
+                    cell.title = titleText;
+
+                    const badge = document.createElement('span');
+                    badge.className = 'calendar-day-cell-badge';
+                    badge.innerText = '★';
+                    cell.appendChild(badge);
+                }
+
+                // 今日の日付強調（背景色のみ）
+                if (isCurrentYearMonth && day === todayDay) {
+                    cell.classList.add('today');
+                }
+
+                // 選択日付のハイライト
+                if (selectedCalendarDay &&
+                    selectedCalendarDay.year === year &&
+                    selectedCalendarDay.month === month &&
+                    selectedCalendarDay.day === day) {
+                    cell.classList.add('selected');
+                }
+
+                const numSpan = document.createElement('span');
+                numSpan.innerText = day;
+                numSpan.style.zIndex = '2';
+                cell.appendChild(numSpan);
+
+                // セルクリック → 選択表示更新 + 追加ポップアップ
+                const _day = day, _month = month;
+                cell.addEventListener('click', () => {
+                    document.querySelectorAll('.calendar-day-cell.selected').forEach(c => c.classList.remove('selected'));
+                    cell.classList.add('selected');
+                    selectedCalendarDay = { year, month: _month, day: _day };
+                    openCalDayPopup(_month, _day, dayEvents);
+                });
+
+                gridBody.appendChild(cell);
+            }
+
+            // 6行固定埋め
+            const totalCells = firstDayIndex + daysInMonth;
+            const paddingCells = 42 - totalCells;
+            for (let i = 0; i < paddingCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day-cell empty';
+                gridBody.appendChild(cell);
+            }
+
+            const popup = document.getElementById('cal-day-popup');
+            if (popup) popup.style.display = 'none';
+        }
+        window.renderCalendarGrid = renderCalendarGrid;
+
+        function navigateCalendarMonth(dir) {
+            calendarCurrentMonth += dir;
+            if (calendarCurrentMonth > 12) {
+                calendarCurrentMonth = 1;
+                calendarCurrentYear += 1;
+            } else if (calendarCurrentMonth < 1) {
+                calendarCurrentMonth = 12;
+                calendarCurrentYear -= 1;
+            }
+            renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+        }
+        window.navigateCalendarMonth = navigateCalendarMonth;
+
+        function goCalendarToday() {
+            const today = new Date();
+            calendarCurrentYear = today.getFullYear();
+            calendarCurrentMonth = today.getMonth() + 1;
+            const tD = today.getDate();
+
+            // 選択日付も今日に変更
+            selectedCalendarDay = { year: calendarCurrentYear, month: calendarCurrentMonth, day: tD };
+
+            renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+
+            // 今日用のポップアップを開く
+            const monthEvents = [];
+            (friendsConfig || []).forEach(cat => {
+                (cat.friends || []).forEach(f => {
+                    if (f.birthday) {
+                        const parsed = parseMdDate(f.birthday);
+                        if (parsed && parsed.month === calendarCurrentMonth && parsed.day === tD) {
+                            monthEvents.push({ name: f.name || f.twitch, type: 'birthday' });
+                        }
+                    }
+                    if (f.anniversary) {
+                        const parsed = parseMdDate(f.anniversary);
+                        if (parsed && parsed.month === calendarCurrentMonth && parsed.day === tD) {
+                            monthEvents.push({ name: f.name || f.twitch, type: 'anniversary' });
+                        }
+                    }
+                });
+            });
+            openCalDayPopup(calendarCurrentMonth, tD, monthEvents);
+
+            showToast('今日に移動しました ✓');
+        }
+        window.goCalendarToday = goCalendarToday;
+
+        function switchCalendarModalTab(tabType) {
+            const listBtn = document.getElementById('btn-calendar-tab-list');
+            const gridBtn = document.getElementById('btn-calendar-tab-grid');
+            const listView = document.getElementById('calendar-modal-list-view');
+            const gridView = document.getElementById('calendar-modal-grid-view');
+            
+            if (tabType === 'list') {
+                if (listBtn) { listBtn.className = 'btn-primary'; listBtn.style.background = 'var(--twitch-purple)'; listBtn.style.color = '#fff'; }
+                if (gridBtn) { gridBtn.className = 'btn-secondary'; gridBtn.style.background = 'var(--bg-item)'; gridBtn.style.color = 'var(--text-main)'; }
+                if (listView) listView.style.display = 'block';
+                if (gridView) gridView.style.display = 'none';
+                renderCalendarModalListView();
+            } else {
+                if (gridBtn) { gridBtn.className = 'btn-primary'; gridBtn.style.background = 'var(--twitch-purple)'; gridBtn.style.color = '#fff'; }
+                if (listBtn) { listBtn.className = 'btn-secondary'; listBtn.style.background = 'var(--bg-item)'; listBtn.style.color = 'var(--text-main)'; }
+                if (listView) listView.style.display = 'none';
+                if (gridView) gridView.style.display = 'flex';
+                renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+            }
+        }
+        window.switchCalendarModalTab = switchCalendarModalTab;
+
+        function renderCalendarModalListView() {
+            const c = document.getElementById('calendar-modal-list-view');
+            if (!c) return;
+
+            const L = langMap[currentLang] || langMap.ja;
+            const birthdayLabel = L.birthdayLabel || '誕生日';
+            const anniversaryLabel = L.anniversaryLabel || '記念日';
+            const unitDay = currentLang === 'en' ? 'd' : '日';
+
+            const allEvents = [];
+
+            (friendsConfig || []).forEach((cat, ci) => {
+                const friends = cat.friends || [];
+                friends.forEach((f, fi) => {
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+
+                    const bday = parseMdDate(f.birthday);
+                    if (bday) {
+                        const daysLeft = getDaysUntil(bday.month, bday.day);
+                        allEvents.push({ name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi });
+                    }
+
+                    const anniv = parseMdDate(f.anniversary);
+                    if (anniv) {
+                        const daysLeft = getDaysUntil(anniv.month, anniv.day);
+                        allEvents.push({ name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi });
+                    }
+                });
+            });
+
+            allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
+
+            if (allEvents.length === 0) {
+                c.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size:12px;">${currentLang === 'en' ? 'No anniversaries registered.' : (currentLang === 'zh' ? '暂无日程。' : '記念日の登録がありません。')}</div>`;
+                return;
+            }
+
+            let html = '';
+            allEvents.forEach(m => {
+                const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
+                html += `
+                <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:8px 6px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-radius:6px; transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size: 13px; font-weight:bold; color:var(--text-main);">${raidSoEscape(m.name)}</span>
+                        <span style="font-size: 11px; color:var(--text-muted);">${m.month}/${m.day}</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                        <span style="font-size: 11px; font-weight:bold; color:var(--twitch-purple);">あと ${m.daysLeft}${unitDay}</span>
+                        <span style="font-size: 9px; padding:1px 5px; border-radius:4px; background:${m.type==='birthday'?'rgba(255,74,154,0.15)':'rgba(29,155,240,0.15)'}; color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};">${raidSoEscape(typeLabel)}</span>
+                    </div>
+                </div>`;
+            });
+            c.innerHTML = html;
+        }
+        window.renderCalendarModalListView = renderCalendarModalListView;
+
+
+        // 年月ピッカー
+        function renderCalYMMonths(year, currentMonth) {
+            const container = document.getElementById('cal-ym-months');
+            if (!container) return;
+            const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            container.innerHTML = '';
+            monthNamesJA.forEach((name, idx) => {
+                const m = idx + 1;
+                const btn = document.createElement('button');
+                btn.className = 'ym-month-btn';
+                btn.innerText = name;
+                btn.style.cssText = `padding:5px 2px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);cursor:pointer;font-size:11px;transition:0.15s;`;
+                if (m === currentMonth) {
+                    btn.style.background = 'var(--twitch-purple)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = 'var(--twitch-purple)';
+                    btn.classList.add('selected');
+                }
+                btn.onclick = () => {
+                    calendarCurrentMonth = m;
+                    renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+                    document.getElementById('cal-ym-picker').style.display = 'none';
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleCalendarYMPicker() {
+            const picker = document.getElementById('cal-ym-picker');
+            if (!picker) return;
+            const isVisible = picker.style.display !== 'none';
+            picker.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) renderCalYMMonths(calendarCurrentYear, calendarCurrentMonth);
+        }
+        window.toggleCalendarYMPicker = toggleCalendarYMPicker;
+
+        function shiftCalendarYear(dir) {
+            calendarCurrentYear += dir;
+            const label = document.getElementById('cal-ym-year-label');
+            if (label) label.innerText = `${calendarCurrentYear}年`;
+            renderCalYMMonths(calendarCurrentYear, calendarCurrentMonth);
+        }
+        window.shiftCalendarYear = shiftCalendarYear;
+
+        // 日付ポップアップ
+        let calDayPopupMonth = 0, calDayPopupDay = 0;
+        function openCalDayPopup(month, day, events) {
+            const popup = document.getElementById('cal-day-popup');
+            const titleEl = document.getElementById('cal-day-popup-title');
+            const existingEl = document.getElementById('cal-day-existing');
+            const personSelect = document.getElementById('cal-day-person-select');
+            if (!popup || !titleEl || !existingEl || !personSelect) return;
+
+            calDayPopupMonth = month;
+            calDayPopupDay = day;
+            titleEl.innerText = `${month}月${day}日`;
+
+            if (events.length > 0) {
+                const L = langMap[currentLang] || langMap.ja;
+                const bLabel = L.birthdayLabel || '誕生日';
+                const aLabel = L.anniversaryLabel || '記念日';
+                existingEl.innerHTML = events.map(e =>
+                    `<div style="padding:3px 0;display:flex;align-items:center;gap:6px;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:${e.type==='birthday'?'#ff4a9a':'#1d9bf0'};display:inline-block;flex-shrink:0;"></span>
+                        <span style="font-size:12px;">${raidSoEscape(e.name)}</span>
+                        <span style="font-size:10px;color:var(--text-muted);">${e.type==='birthday'?bLabel:aLabel}</span>
+                    </div>`
+                ).join('');
+            } else {
+                existingEl.innerHTML = '';
+            }
+
+            personSelect.innerHTML = '';
+            (friendsConfig || []).forEach((cat, ci) => {
+                (cat.friends || []).forEach((f, fi) => {
+                    const nickname = String(f.name || '').trim();
+                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                    const label = nickname || f.displayName || cleanTwitch || f.twitch || `(&nbsp;${ci}-${fi})`;
+                    const opt = document.createElement('option');
+                    opt.value = `${ci}:${fi}`;
+                    opt.innerText = label;
+                    personSelect.appendChild(opt);
+                });
+            });
+
+            const optNew = document.createElement('option');
+            optNew.value = 'new_person';
+            optNew.innerText = '＋ 新規ID作成';
+            personSelect.appendChild(optNew);
+
+            const newNameInput = document.getElementById('cal-day-new-name');
+            if (newNameInput) {
+                newNameInput.value = '';
+                newNameInput.style.display = 'none';
+            }
+
+            const addForm = document.getElementById('cal-day-add-form');
+            if (addForm) addForm.style.display = 'block';
+
+            popup.style.display = 'block';
+            selectCalDayType('birthday');
+            popup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        window.openCalDayPopup = openCalDayPopup;
+
+        function handleCalPersonSelectChange() {
+            const select = document.getElementById('cal-day-person-select');
+            const inputName = document.getElementById('cal-day-new-name');
+            const inputTwitch = document.getElementById('cal-day-new-twitch');
+            if (select && inputName && inputTwitch) {
+                if (select.value === 'new_person') {
+                    inputName.style.display = 'block';
+                    inputTwitch.style.display = 'block';
+                    inputName.focus();
+                } else {
+                    inputName.style.display = 'none';
+                    inputTwitch.style.display = 'none';
+                }
+            }
+        }
+        window.handleCalPersonSelectChange = handleCalPersonSelectChange;
+
+        function selectCalDayType(type) {
+            document.getElementById('cal-day-type-value').value = type;
+            const btnB = document.getElementById('cal-type-btn-birthday');
+            const btnA = document.getElementById('cal-type-btn-anniversary');
+            if (!btnB || !btnA) return;
+            if (type === 'birthday') {
+                btnB.style.background = 'var(--twitch-purple)';
+                btnB.style.borderColor = 'var(--twitch-purple)';
+                btnB.style.color = '#fff';
+                btnA.style.background = 'var(--bg-item)';
+                btnA.style.borderColor = 'var(--border-color)';
+                btnA.style.color = 'var(--text-muted)';
+            } else {
+                btnA.style.background = 'var(--twitch-purple)';
+                btnA.style.borderColor = 'var(--twitch-purple)';
+                btnA.style.color = '#fff';
+                btnB.style.background = 'var(--bg-item)';
+                btnB.style.borderColor = 'var(--border-color)';
+                btnB.style.color = 'var(--text-muted)';
+            }
+        }
+        window.selectCalDayType = selectCalDayType;
+
+        async function confirmCalDayAdd() {
+            const personSelect = document.getElementById('cal-day-person-select');
+            const typeInput = document.getElementById('cal-day-type-value');
+            if (!personSelect || !typeInput) return;
+
+            const selectedVal = personSelect.value;
+            const type = typeInput.value;
+            const mm = String(calDayPopupMonth).padStart(2, '0');
+            const dd = String(calDayPopupDay).padStart(2, '0');
+            const dateStrReal = `${mm}/${dd}`;
+
+            if (selectedVal === 'new_person') {
+                const nameInput = document.getElementById('cal-day-new-name');
+                const twitchInput = document.getElementById('cal-day-new-twitch');
+                const newName = nameInput ? nameInput.value.trim() : '';
+                const newTwitch = twitchInput ? twitchInput.value.trim() : '';
+                
+                if (!newName) {
+                    showToast('ニックネームを入力してください');
+                    return;
+                }
+
+                // Twitch ID または ニックネームでの重複チェック
+                let dupe = checkTwitchIdDuplicate(newTwitch || newName);
+                if (!dupe && newTwitch) {
+                    // 同一のニックネームが存在するか検索
+                    for (let cIdx = 0; cIdx < (friendsConfig || []).length; cIdx++) {
+                        const cat = friendsConfig[cIdx];
+                        for (let fIdx = 0; fIdx < (cat.friends || []).length; fIdx++) {
+                            const f = cat.friends[fIdx];
+                            if ((f.name || '').toLowerCase() === newName.toLowerCase()) {
+                                dupe = { friend: f, ci: cIdx, fi: fIdx, categoryName: cat.name };
+                                break;
+                            }
+                        }
+                        if (dupe) break;
+                    }
+                }
+
+                if (dupe) {
+                    const confirmOverwrite = await customConfirm({
+                        title: '重複の警告',
+                        message: `「${newName}」は既にグループ「${dupe.categoryName}」に登録されています。上書きしますか？`
+                    });
+                    if (!confirmOverwrite) return;
+                    
+                    // 既存データの上書き
+                    dupe.friend[type] = dateStrReal;
+                    if (newTwitch) dupe.friend.twitch = newTwitch;
+                    saveFriendsLocal(false);
+                    renderFriends();
+                    checkBirthdaysAndAnniversaries();
+                    renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+                    showToast('上書き保存しました ✓');
+                    return;
+                }
+
+                let targetCat = (friendsConfig || []).find(cat => cat.name === '未分類');
+                if (!targetCat) {
+                    targetCat = { name: '未分類', friends: [], isClosed: false };
+                    if (!friendsConfig) friendsConfig = [];
+                    friendsConfig.push(targetCat);
+                }
+
+                const newFriend = { name: newName, twitch: newTwitch, displayName: "", youtube: "", x: "", memo: "", isOpen: true };
+                newFriend[type] = dateStrReal;
+                targetCat.friends.push(newFriend);
+
+                saveFriendsLocal(false);
+                renderFriends();
+                checkBirthdaysAndAnniversaries();
+            } else {
+                const [ci, fi] = selectedVal.split(':').map(Number);
+                if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
+
+                const friend = friendsConfig[ci].friends[fi];
+                if (friend[type] && friend[type] !== dateStrReal) {
+                    const confirmOverwrite = await customConfirm({
+                        title: '上書きの確認',
+                        message: `既に設定されている日付「${friend[type]}」を「${dateStrReal}」に変更しますか？`
+                    });
+                    if (!confirmOverwrite) return;
+                }
+
+                friend[type] = dateStrReal;
+                saveFriendsLocal(false);
+                renderFriends();
+                checkBirthdaysAndAnniversaries();
+            }
+
+            renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
+            showToast('保存しました ✓');
+        }
+        window.confirmCalDayAdd = confirmCalDayAdd;
+
+        // ミニ日付ピッカー
+        let miniPickerCi = 0, miniPickerFi = 0, miniPickerType = '';
+        let miniPickerYear = new Date().getFullYear(), miniPickerMonth = new Date().getMonth() + 1;
+
+        function openMiniDatePicker(ci, fi, type) {
+            miniPickerCi = ci; miniPickerFi = fi; miniPickerType = type;
+            miniPickerYear = new Date().getFullYear();
+            miniPickerMonth = new Date().getMonth() + 1;
+
+            const currentVal = friendsConfig[ci]?.friends[fi]?.[type] || '';
+            const parsed = parseMdDate(currentVal);
+            if (parsed) miniPickerMonth = parsed.month;
+
+            let overlay = document.getElementById('mini-date-picker-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'mini-date-picker-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;';
+                overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+                document.body.appendChild(overlay);
+            }
+            renderMiniDatePicker(overlay);
+        }
+        window.openMiniDatePicker = openMiniDatePicker;
+
+        function renderMiniDatePicker(overlay) {
+            const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            const firstDayIndex = new Date(miniPickerYear, miniPickerMonth - 1, 1).getDay();
+            const daysInMonth = new Date(miniPickerYear, miniPickerMonth, 0).getDate();
+            const todayD = new Date();
+            const isTodayMonth = todayD.getFullYear() === miniPickerYear && (todayD.getMonth() + 1) === miniPickerMonth;
+            const todayDay = todayD.getDate();
+
+            const currentVal = friendsConfig[miniPickerCi]?.friends[miniPickerFi]?.[miniPickerType] || '';
+            const parsedSel = parseMdDate(currentVal);
+            const selectedDay = (parsedSel && parsedSel.month === miniPickerMonth) ? parsedSel.day : -1;
+
+            const typeLabel = miniPickerType === 'birthday' ? '誕生日' : '記念日';
+
+            let cellsHtml = '';
+            for (let i = 0; i < firstDayIndex; i++) cellsHtml += '<div></div>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = isTodayMonth && day === todayDay;
+                const isSel = day === selectedDay;
+                let bg = 'var(--bg-item)';
+                let color = 'var(--text-main)';
+                let outline = 'none';
+                if (isToday) { bg = 'var(--color-today)'; color = 'var(--color-today-text)'; }
+                if (isSel) { outline = '2px solid var(--twitch-purple)'; }
+
+                cellsHtml += `<button
+                    onclick="selectMiniDate(${day})"
+                    style="aspect-ratio:1;min-width:28px;min-height:28px;border-radius:5px;border:1px solid var(--border-color);background:${bg};color:${color};cursor:pointer;font-size:12px;font-weight:${isToday?'bold':'normal'};outline:${outline};outline-offset:-2px;transition:0.15s;"
+                    onmouseover="if(!this.dataset.sel){this.style.background='var(--twitch-purple)';this.style.color='#fff';}"
+                    onmouseout="if(!this.dataset.sel){this.style.background='${bg}';this.style.color='${color}';}"
+                    ${isSel ? 'data-sel="1"' : ''}>${day}</button>`;
+            }
+            const total = firstDayIndex + daysInMonth;
+            for (let i = 0; i < 42 - total; i++) cellsHtml += '<div></div>';
+
+            overlay.innerHTML = `
+            <div style="background:var(--bg-card);border:2px solid var(--border-color);border-radius:12px;padding:16px;width:300px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <strong style="color:var(--twitch-purple);font-size:13px;">${typeLabel}を選択</strong>
+                    <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&lt;</button>
+                    <span style="font-weight:bold;color:var(--text-main);font-size:13px;">${monthNamesJA[miniPickerMonth-1]}</span>
+                    <button onclick="miniPickerMonth++;if(miniPickerMonth>12){miniPickerMonth=1;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&gt;</button>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:10px;color:var(--text-muted);margin-bottom:3px;">
+                    <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);gap:3px;height:168px;">
+                    ${cellsHtml}
+                </div>
+                <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-muted);">日付をクリックで選択</div>
+                <div style="margin-top:3px;text-align:center;font-size:9px;color:var(--text-muted);opacity:0.6;">※曜日は今年を参照しています</div>
+            </div>`;
+        }
+        window.renderMiniDatePicker = renderMiniDatePicker;
+
+        function selectMiniDate(day) {
+            const mm = String(miniPickerMonth).padStart(2, '0');
+            const dd = String(day).padStart(2, '0');
+            const dateStrReal = `${mm}/${dd}`;
+
+            if (!friendsConfig[miniPickerCi] || !friendsConfig[miniPickerCi].friends[miniPickerFi]) return;
+
+            updateFriendField(miniPickerCi, miniPickerFi, miniPickerType, dateStrReal);
+            checkBirthdaysAndAnniversaries();
+
+            const inputId = miniPickerType === 'birthday'
+                ? `f-bday-${miniPickerCi}-${miniPickerFi}`
+                : `f-anniv-${miniPickerCi}-${miniPickerFi}`;
+            const inputEl = document.getElementById(inputId);
+            if (inputEl) inputEl.value = dateStrReal;
+
+            document.getElementById('mini-date-picker-overlay')?.remove();
+            showToast('保存しました ✓');
+        }
+        window.selectMiniDate = selectMiniDate;
 
         // --- IDリスト専用の追加関数 ---
         function toggleFriendRecordOpen(ci, ri) {
@@ -1171,6 +2237,113 @@ const langMap = {
         }
 
         // --- 各種ボタンの動作（追加ロジック） ---
+        async function refreshFriendUserData(ci, fi, btnEl) {
+            const friend = friendsConfig[ci]?.friends[fi];
+            if (!friend) return;
+            const twitchId = normalizeFriendTwitch(friend.twitch);
+            if (!twitchId) {
+                return showToast('Twitch IDが入力されていません', 'error');
+            }
+
+            const originalContent = btnEl.innerHTML;
+            btnEl.innerHTML = '<span class="spinner" style="display:inline-block;animation:spin 1s linear infinite;font-size:10px;">⏳</span>';
+            btnEl.disabled = true;
+
+            try {
+                // Twitch認証トークンの準備
+                if ((!settings.userId || !getEffectiveTwitchClientId()) && cleanRaidSoToken()) {
+                    await refreshTwitchAuthFromToken(false);
+                }
+                
+                showToast('Twitchから情報を取得中...', 'info');
+                const userData = await apiRequest(`/users?login=${encodeURIComponent(twitchId)}`);
+                
+                if (userData && userData.data && userData.data.length > 0) {
+                    const info = userData.data[0];
+                    const newDisplayName = info.display_name || info.login || '';
+                    
+                    let updated = false;
+
+                    // 表示名(Twitch)の更新
+                    if (friend.displayName !== newDisplayName) {
+                        friend.displayName = newDisplayName;
+                        updated = true;
+                    }
+
+                    // ニックネームが空の場合、取得した表示名を設定
+                    if (!friend.name) {
+                        friend.name = newDisplayName;
+                        updated = true;
+                    }
+
+                    // TwitchIDの大文字小文字をAPI上の正確なログイン名に修正
+                    if (friend.twitch !== info.login) {
+                        friend.twitch = info.login;
+                        updated = true;
+                    }
+
+                    // 取得した説明文 (description) にリンクが含まれるか解析（XやYouTubeのリンク補完）
+                    const desc = info.description || '';
+                    const xMatch = desc.match(/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]{1,15})/i);
+                    const ytMatch = desc.match(/(?:youtube\.com|youtu\.be)\/([@a-zA-Z0-9_\.\-]{3,30})/i);
+
+                    if (xMatch && xMatch[1]) {
+                        const newX = `https://x.com/${xMatch[1].trim()}`;
+                        if (friend.x !== newX) {
+                            if (friend.x) {
+                                const confirmOverwrite = await customConfirm({
+                                    title: 'Xリンクの上書き確認',
+                                    message: `現在登録されている「${friend.x}」を、新しく検出した「${newX}」で上書きしますか？`
+                                });
+                                if (confirmOverwrite) { friend.x = newX; updated = true; }
+                            } else {
+                                friend.x = newX;
+                                updated = true;
+                            }
+                        }
+                    }
+
+                    if (ytMatch && ytMatch[1]) {
+                        let newYt = ytMatch[1].trim();
+                        // 末尾のピリオドや余分な記号を削除
+                        newYt = newYt.replace(/[\.\-]+$/, '');
+                        if (!newYt.startsWith('@') && !newYt.startsWith('http')) {
+                            newYt = `@${newYt}`;
+                        }
+                        if (friend.youtube !== newYt) {
+                            if (friend.youtube) {
+                                const confirmOverwrite = await customConfirm({
+                                    title: 'YouTubeリンクの上書き確認',
+                                    message: `現在登録されている「${friend.youtube}」を、新しく検出した「${newYt}」で上書きしますか？`
+                                });
+                                if (confirmOverwrite) { friend.youtube = newYt; updated = true; }
+                            } else {
+                                friend.youtube = newYt;
+                                updated = true;
+                            }
+                        }
+                    }
+
+                    if (updated) {
+                        saveFriendsLocal(false);
+                        renderFriends();
+                        showToast('情報を更新しました ✓', 'success');
+                    } else {
+                        showToast('更新する情報はありませんでした（最新です） ✓', 'success');
+                    }
+                } else {
+                    showToast('Twitchユーザーが見つかりませんでした', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('APIエラーが発生しました。接続設定を確認してください。', 'error');
+            } finally {
+                btnEl.innerHTML = originalContent;
+                btnEl.disabled = false;
+            }
+        }
+        window.refreshFriendUserData = refreshFriendUserData;
+
         function copyTwitchId(ci, fi) {
             let val = friendsConfig[ci].friends[fi].twitch || "";
             if (!val) return showToast(langMap[currentLang].alerts.copyNoUrl);
@@ -4561,10 +5734,14 @@ function safeSetLocal(key, value) {
 
         async function esSubscribe(type, version, condition) {
             if (!_esSessionId || !settings.clientId || !settings.token) return;
-            await apiRequest('/eventsub/subscriptions', 'POST', {
-                type, version, condition,
-                transport: { method: 'websocket', session_id: _esSessionId }
-            });
+            try {
+                await apiRequest('/eventsub/subscriptions', 'POST', {
+                    type, version, condition,
+                    transport: { method: 'websocket', session_id: _esSessionId }
+                }, true);
+            } catch (err) {
+                console.warn(`[EventSub Subscription Ignored] type: ${type}, status:`, err?.status, err?.message);
+            }
         }
 
         function connectEventSub(socketUrl = 'wss://eventsub.wss.twitch.tv/ws') {
@@ -4591,13 +5768,13 @@ function safeSetLocal(key, value) {
                     await esSubscribe('channel.subscription.message', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.gift', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.cheer', '1', { broadcaster_user_id: bId });
-                    await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
+                    // await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
                     await esSubscribe('channel.raid', '1', { to_broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.begin', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.end', '1', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
-                    await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
-                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 10 }));
+                    // await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
+                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 8 }));
                 } else if (mtype === 'notification') {
                     const subtype = msg.metadata?.subscription_type;
                     const ev = msg.payload?.event;
@@ -5981,6 +7158,122 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         return result;
     };
+
+
+    // --- 制作者および外部リンクの動的読み込み機能 ---
+    const DYNAMIC_CREATOR_INFO_URL = 'https://raw.githubusercontent.com/uikouka/OBS_title_save/main/creators.json';
+
+    const fallbackCreators = [
+        {
+            name: "初狐羽鹿",
+            color: "#bf94ff",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/uikouka.png",
+            links: [
+                { type: "twitch", url: "https://www.twitch.tv/uikouka", title: "Twitch" },
+                { type: "x", url: "https://x.com/uikouka", title: "X" },
+                { type: "booth", url: "https://toumei2suisai.booth.pm/", title: "Booth" }
+            ]
+        },
+        {
+            name: "古隅フユセ",
+            color: "#bf94ff",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/frusumi.png",
+            links: [
+                { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
+                { type: "x", url: "https://x.com/FruEnji", title: "X" },
+                { type: "booth", url: "https://frusumi.booth.pm/", title: "Booth" }
+            ]
+        }
+    ];
+
+    let cachedCreatorInfo = null;
+
+    function getCreatorIconSvg(type) {
+        switch(type) {
+            case 'twitch':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"></path></svg>';
+            case 'x':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>';
+            case 'booth':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>';
+            case 'youtube':
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>';
+            default:
+                return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        }
+    }
+
+    async function fetchDynamicCreatorInfo() {
+        try {
+            const response = await fetch(DYNAMIC_CREATOR_INFO_URL);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && Array.isArray(data.creators)) {
+                    cachedCreatorInfo = data;
+                    updateCreatorsDOM();
+                }
+            }
+        } catch (e) {
+            console.warn("Could not fetch remote creator info, using fallback:", e);
+        }
+    }
+    window.fetchDynamicCreatorInfo = fetchDynamicCreatorInfo;
+
+    function updateCreatorsDOM() {
+        const container = document.getElementById('help-creators-container');
+        if (!container) return;
+
+        const data = cachedCreatorInfo || { creators: fallbackCreators };
+        const creators = data.creators || [];
+
+        if (creators.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `
+        <div style="font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">`;
+
+        creators.forEach(c => {
+            const name = c.name || '';
+            const color = c.color || '#bf94ff';
+            const links = c.links || [];
+            const avatarUrl = c.avatar || '';
+
+            let linksHtml = '';
+            links.forEach(l => {
+                const icon = getCreatorIconSvg(l.type);
+                const title = l.title || l.type || 'Link';
+                linksHtml += `
+                <a href="${l.url}" target="_blank" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
+                    ${icon}
+                </a>`;
+            });
+
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" onerror="this.style.display='none'" />`
+                : '';
+
+            html += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center;">
+                    ${avatarHtml}
+                    <strong style="color: ${color}; min-width: 70px;">${name}</strong>
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    ${linksHtml}
+                </div>
+            </div>`;
+        });
+
+        html += `
+            </div>
+        </div>`;
+
+        container.innerHTML = html;
+    }
+    window.updateCreatorsDOM = updateCreatorsDOM;
 
     function attachAuthInputListeners() {
         const token = document.getElementById('token');

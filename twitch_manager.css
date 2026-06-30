@@ -6,6 +6,7 @@
             --bg-card-hover: #1d1d22;
             --bg-header: #252529;
             --bg-focus: #050507;
+            --bg-item: #1f1f23;
             --border-color: #3f3f46;
             --border-hover: #52525b;
             --text-main: #efeff1;
@@ -27,6 +28,8 @@
             --motion-normal: 180ms;
             --bg-panel: rgba(255, 255, 255, 0.035);
             --border-subtle: rgba(255, 255, 255, 0.07);
+            --color-today: #1e3a2f;
+            --color-today-text: #4cde94;
         }
 
         body.light-theme {
@@ -35,6 +38,7 @@
             --bg-card-hover: #f9f9fb;
             --bg-header: #eef1f6;
             --bg-focus: #ffffff;
+            --bg-item: #e8eaee;
             --border-color: #cfd6df;
             --border-hover: #b0bac9;
             --text-main: #1f1f23;
@@ -43,6 +47,8 @@
             --command-hover-surface: rgba(145, 70, 255, 0.08);
             --bg-panel: rgba(0, 0, 0, 0.035);
             --border-subtle: rgba(0, 0, 0, 0.07);
+            --color-today: #d0f0e4;
+            --color-today-text: #0a7a45;
         }
 
         body.light-theme .modal-close-top {
@@ -260,7 +266,7 @@
 
         .display-settings-content {
             flex: 1 1 auto;
-            min-height: 0;
+            height: 290px;
             padding-right: 4px;
             overflow-y: auto;
         }
@@ -332,7 +338,7 @@
 
         .language-option:hover,
         .language-option.active {
-            background: rgba(145, 70, 255, 0.22);
+            background: var(--twitch-purple);
             color: #fff;
         }
 
@@ -444,7 +450,7 @@
 
         details > summary.tab-help-summary::before {
             content: '▷';
-            color: #fff;
+            color: var(--text-main);
             font-size: 11px;
             line-height: 1;
             transform-origin: center;
@@ -468,15 +474,28 @@
         }
 
         .tab-btn:hover {
-            color: #fff;
+            color: var(--text-main);
             background: rgba(255, 255, 255, 0.04);
+        }
+
+        body.light-theme .tab-btn {
+            color: #4b4b54;
+        }
+
+        body.light-theme .tab-btn:hover {
+            color: var(--twitch-purple);
+            background: rgba(0, 0, 0, 0.04);
         }
 
         .tab-btn.active {
             background: var(--bg-header);
-            color: #bf94ff;
+            color: var(--twitch-purple);
             font-weight: bold;
             box-shadow: inset 0 -2px 0 rgba(191, 148, 255, 0.42);
+        }
+
+        body:not(.light-theme) .tab-btn.active {
+            color: #bf94ff;
         }
 
         .tab-content {
@@ -594,7 +613,7 @@
         .ui-common-warning,
         .ui-backup-warning {
             display: block;
-            color: #ffdca8;
+            color: #7a4a00;
             background: rgba(255, 183, 77, 0.11);
             border: 1px solid rgba(255, 183, 77, 0.36);
             border-left: 4px solid #ffb74d;
@@ -604,11 +623,21 @@
             font-size: 12px;
         }
 
+        /* ダークモードでは明るい色に */
+        :root:not(.light-theme) .ui-common-warning,
+        body:not(.light-theme) .ui-common-warning {
+            color: #ffdca8;
+        }
+
         .ui-backup-warning {
-            color: #ffd3db;
+            color: #6a0010;
             background: rgba(255, 74, 101, 0.10);
             border-color: rgba(255, 74, 101, 0.34);
             border-left-color: #ff4a65;
+        }
+
+        body:not(.light-theme) .ui-backup-warning {
+            color: #ffd3db;
         }
 
         .command-stack {
@@ -1940,10 +1969,65 @@
             background: transparent;
         }
 
+        .id-youtube-action {
+            color: #ff4a65;
+            border-color: rgba(255, 74, 101, 0.45);
+            background: rgba(255, 74, 101, 0.08);
+        }
+
+        /* ライトモード用のアイコンボタン視認性向上 */
+        body.light-theme .id-copy-action {
+            color: #0055ff;
+            border-color: rgba(0, 85, 255, 0.4);
+            background: rgba(0, 85, 255, 0.08);
+        }
+        body.light-theme .id-twitch-action {
+            color: #772ce8;
+            border-color: rgba(119, 44, 232, 0.4);
+            background: rgba(119, 44, 232, 0.08);
+        }
+        body.light-theme .id-refresh-action {
+            color: #772ce8 !important;
+            border-color: rgba(119, 44, 232, 0.4) !important;
+            background: rgba(119, 44, 232, 0.08) !important;
+        }
+        body.light-theme .id-x-action {
+            color: #111115;
+            border-color: rgba(17, 17, 21, 0.35);
+            background: rgba(0, 0, 0, 0.04);
+        }
+        body.light-theme .id-youtube-action {
+            color: #cc0000;
+            border-color: rgba(204, 0, 0, 0.4);
+            background: rgba(204, 0, 0, 0.08);
+        }
+
         .id-action-btn:hover {
-            color: #fff;
-            border-color: var(--twitch-purple);
-            background: rgba(255, 255, 255, 0.05);
+            color: #fff !important;
+            border-color: var(--twitch-purple) !important;
+            background: var(--twitch-purple) !important;
+        }
+
+        body.light-theme .id-copy-action:hover {
+            background: #0055ff !important;
+            border-color: #0055ff !important;
+            color: #fff !important;
+        }
+        body.light-theme .id-twitch-action:hover,
+        body.light-theme .id-refresh-action:hover {
+            background: #772ce8 !important;
+            border-color: #772ce8 !important;
+            color: #fff !important;
+        }
+        body.light-theme .id-x-action:hover {
+            background: #111115 !important;
+            border-color: #111115 !important;
+            color: #fff !important;
+        }
+        body.light-theme .id-youtube-action:hover {
+            background: #cc0000 !important;
+            border-color: #cc0000 !important;
+            color: #fff !important;
         }
 
         .id-meta {
@@ -3363,3 +3447,245 @@ body {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ==========================================================================
+   誕生日・記念日・カレンダー表示用のスタイル
+   ========================================================================== */
+
+#birthday-indicator-btn.inactive {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.4);
+}
+body.light-theme #birthday-indicator-btn.inactive {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+#birthday-indicator-btn.active {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+body.light-theme #birthday-indicator-btn.active {
+    background: rgba(217, 119, 6, 0.12) !important;
+    border-color: #d97706 !important;
+    color: #b45309 !important;
+}
+
+.birthday-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 260px;
+    padding: 12px;
+    background: #1f1f23;
+    border: 1px solid var(--twitch-purple);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1200;
+    color: var(--text-main);
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
+}
+body.light-theme .birthday-popover {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+.birthday-popover-title {
+    font-weight: bold;
+    color: #ffb300;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+body.light-theme .birthday-popover-title {
+    color: #b45309 !important;
+}
+.birthday-popover-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+.birthday-popover-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+body.light-theme .birthday-popover-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+.birthday-popover-item:last-child {
+    border-bottom: none;
+}
+.birthday-popover-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.birthday-popover-name {
+    font-weight: 500;
+}
+.birthday-popover-date {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+.birthday-popover-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.birthday-popover-days {
+    font-size: 10px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+body.light-theme .birthday-popover-days {
+    color: #2e7d32;
+}
+.birthday-popover-more-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 6px;
+    background: rgba(145, 70, 255, 0.1);
+    color: var(--twitch-purple-hover);
+    border: 1px solid var(--twitch-purple);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.2s;
+}
+.birthday-popover-more-btn:hover {
+    background: rgba(145, 70, 255, 0.2);
+}
+
+.calendar-day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 11px;
+    position: relative;
+    cursor: default;
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 2px;
+    box-sizing: border-box;
+}
+.calendar-day-cell.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+}
+.calendar-day-cell.has-event {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    cursor: pointer;
+    font-weight: bold;
+}
+body.light-theme .calendar-day-cell.has-event {
+    background: rgba(217, 119, 6, 0.12) !important;
+    border-color: #d97706 !important;
+}
+/* 今日の日付: 背景色で強調（枠なし） */
+.calendar-day-cell.today {
+    background: var(--color-today) !important;
+    color: var(--color-today-text) !important;
+    font-weight: bold;
+}
+/* 選択した日付: 紫の枠でハイライト */
+.calendar-day-cell.selected {
+    outline: 2px solid var(--twitch-purple);
+    outline-offset: -2px;
+}
+.calendar-day-cell.today.selected {
+    background: var(--color-today) !important;
+    color: var(--color-today-text) !important;
+    outline: 2px solid var(--twitch-purple);
+    outline-offset: -2px;
+}
+.calendar-day-cell-badge {
+    position: absolute;
+    bottom: 2px;
+    font-size: 8px;
+    color: #ffc107;
+}
+body.light-theme .calendar-day-cell-badge {
+    color: #d97706;
+}
+
+.ym-month-btn {
+    padding: 5px 2px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-base);
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.15s;
+}
+.ym-month-btn.selected {
+    background: var(--twitch-purple);
+    color: #fff;
+    border-color: var(--twitch-purple);
+}
+
+/* ========================================
+   カレンダーポップアップ ライト/ダーク統一
+   ======================================== */
+#cal-day-popup {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-left: 3px solid var(--twitch-purple) !important;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+}
+
+/* mini date picker overlay inner box */
+#mini-date-picker-overlay > div {
+    background: var(--bg-card) !important;
+    border: 2px solid var(--border-color) !important;
+}
+
+/* ========================================
+   ツールチップ画面外はみ出し防止 (左右寄せ自動調整)
+   ======================================== */
+.command-grid .has-tooltip:nth-child(4n+1)::after,
+.tw-copy-grid .has-tooltip:nth-child(4n+1)::after {
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+.command-grid .has-tooltip:nth-child(4n)::after,
+.tw-copy-grid .has-tooltip:nth-child(4n)::after {
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
+}
+
+.command-grid.three .has-tooltip:nth-child(3n+1)::after {
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+}
+
+.command-grid.three .has-tooltip:nth-child(3n)::after {
+    left: auto !important;
+    right: 0 !important;
+    transform: none !important;
+}
+
