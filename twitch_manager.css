@@ -2020,6 +2020,11 @@
             transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
         }
 
+        select option {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
         select:focus {
             border-color: var(--twitch-purple);
             box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.2);
