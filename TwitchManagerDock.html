@@ -179,7 +179,7 @@
                         <div class="post-output-actions">
                             <button class="btn-primary" style="flex:2;padding:10px 0;font-size:12px;" onclick="copyPostText()" id="tw-btn-copy-post" data-i18n="extended.copySupporterList">リストをコピー</button>
                             <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,0.05);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
-                            <button class="btn-secondary" style="flex:1;padding:10px 0;font-size:12px;background:#444;" onclick="resetStreamStats()" id="tw-btn-reset-post" data-i18n="extended.resetStats">リセット</button>
+                            <button class="btn-secondary" style="flex:1;padding:10px 0;font-size:12px;background:var(--danger);color:#fff;border:none;" onclick="resetStreamStats()" id="tw-btn-reset-post" data-i18n="extended.resetStats">リセット</button>
                         </div>
                     </div>
                 </details>
@@ -198,7 +198,7 @@
                         <div class="tw-preset-actions">
                             <button class="btn-secondary" onclick="savePredPreset()" data-i18n="extended.saveCurrentBtn">現在の入力を保存</button>
                             <button class="btn-primary" onclick="loadPredPreset()" data-i18n="extended.readBtn">読み込み</button>
-                            <button class="btn-secondary" onclick="deletePredPreset()" style="background:#444;" data-i18n="extended.deleteBtn">削除</button>
+                            <button class="btn-secondary" onclick="deletePredPreset()" style="background:var(--danger);color:#fff;border:none;" data-i18n="extended.deleteBtn">削除</button>
                         </div>
                     </div>
 
@@ -235,7 +235,7 @@
                         <div class="tw-preset-actions">
                             <button class="btn-secondary" onclick="savePollPreset()" data-i18n="extended.saveCurrentBtn">現在の入力を保存</button>
                             <button class="btn-primary" onclick="loadPollPreset()" data-i18n="extended.readBtn">読み込み</button>
-                            <button class="btn-secondary" onclick="deletePollPreset()" style="background:#444;" data-i18n="extended.deleteBtn">削除</button>
+                            <button class="btn-secondary" onclick="deletePollPreset()" style="background:var(--danger);color:#fff;border:none;" data-i18n="extended.deleteBtn">削除</button>
                         </div>
                     </div>
 
@@ -372,7 +372,7 @@
             <div class="category-box tw-section closed" id="tw-box-vip" style="flex:1;min-width:270px;margin-bottom:0;">
                 <div class="category-name" onclick="twToggle('tw-box-vip')"><span id="tw-l-vip" data-i18n="extended.vipManagementTab">>VIP管理</span></div>
                 <div class="tw-body">
-                    <div style="font-size:11px;margin-bottom:8px;opacity:0.9;display:flex;justify-content:space-between;background:#232329;padding:4px 8px;border-radius:4px;" id="tw-vip-slot-info">
+                    <div style="font-size:11px;margin-bottom:8px;opacity:0.9;display:flex;justify-content:space-between;background:var(--bg-base);border:1px solid var(--border-color);padding:4px 8px;border-radius:4px;" id="tw-vip-slot-info">
                         <span><span data-i18n="extended.vipSlotPrefix">VIP枠: </span><strong data-i18n="extended.vipSlotDesc">一覧取得後に反映</strong></span>
                     </div>
                     <button class="btn-secondary" style="width:100%;margin-bottom:10px;" onclick="fetchVips(this)" id="tw-btn-vip-list" data-i18n="extended.fetchListBtn">>一覧を取得</button>

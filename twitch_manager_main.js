@@ -839,8 +839,13 @@ const langMap = {
             const isOn = document.getElementById(tid).classList.toggle('delete-mode-on');
             const b = document.getElementById('del-mode-' + tid.replace('-tab', ''));
             if (b) {
-                b.style.background = isOn ? "#ff4a4a" : "#444";
-                b.style.color = "#fff";
+                if (isOn) {
+                    b.style.background = "#ff4a4a";
+                    b.style.color = "#fff";
+                } else {
+                    b.style.background = "";
+                    b.style.color = "";
+                }
                 b.innerText = isOn ? deleteModeText() : langMap[currentLang].delete;
             }
         }
@@ -4517,9 +4522,11 @@ function safeSetLocal(key, value) {
                     if (t === target) {
                         btn.style.background = 'var(--twitch-purple)';
                         btn.style.fontWeight = 'bold';
+                        btn.style.color = '#fff';
                     } else {
-                        btn.style.background = '#323239';
+                        btn.style.background = 'var(--bg-header)';
                         btn.style.fontWeight = 'normal';
+                        btn.style.color = '';
                     }
                 }
             });
@@ -5566,9 +5573,9 @@ window.addEventListener('DOMContentLoaded', () => {
             select.id = 'date_format_preset';
             select.setAttribute('aria-label', '日付形式プリセット');
             select.style.width = '100%';
-            select.style.background = '#000';
-            select.style.border = '1px solid #444';
-            select.style.color = '#fff';
+            select.style.background = 'var(--bg-base)';
+            select.style.border = '1px solid var(--border-color)';
+            select.style.color = 'var(--text-main)';
             select.style.padding = '10px';
             select.style.borderRadius = '8px';
             select.style.fontSize = '13px';
