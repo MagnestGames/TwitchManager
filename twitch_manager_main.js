@@ -4198,29 +4198,144 @@ const langMap = {
             if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.noFileSelected || langMap.ja.footerActions.noFileSelected);
         }
 
-        function restoreFromLocalFile() {
+        async function restoreFromLocalFile() {
             const file = document.getElementById('ui-restore-file')?.files?.[0];
             if (!file) {
-                showToast(uiText('runtime.selectBackupFile'), 'error');
+                showToast(uiText('runtime.selectBackupFile') || 'バックアップファイルを選択してください。', 'error');
                 return;
             }
-            const reader = new FileReader(); reader.onload = (e) => {
+            const reader = new FileReader(); reader.onload = async (e) => {
                 try {
                     const d = JSON.parse(e.target.result);
-                    if (d.config) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
-                    if (d.friends) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
-                    if (d.settings) localStorage.setItem('stream_settings_v16', JSON.stringify(d.settings));
-                    if (d.memoList) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
-                    if (d.raidShoutOut) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
-                    if (d.raidShoutOutTemplates) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
-                    if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
-                    raidSoLog(uiText('runtime.operationLog.backupRestored'));
-                    location.reload();
+
+                    // 1. 上書き確認
+                    const isOverwrite = await customConfirm({
+                        title: 'バックアップの復元方法',
+                        message: '既存のデータをすべて削除して、バックアップで完全に上書きしますか？\n\n【はい】: 既存のすべてのデータを消去して上書きします。\n【いいえ】: 既存のデータと結合（マージ）します。'
+                    });
+
+                    if (isOverwrite) {
+                        // 完全上書き
+                        if (d.config) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (d.friends) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
+                        if (d.settings) localStorage.setItem('stream_settings_v16', JSON.stringify(d.settings));
+                        if (d.memoList) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
+                        if (d.raidShoutOut) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
+                        if (d.raidShoutOutTemplates) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
+                        if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
+                        
+                        raidSoLog(uiText('runtime.operationLog.backupRestored') || 'バックアップを上書き復元しました。');
+                        showToast('データを上書き復元しました。', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        // 2. 統合確認
+                        const isMerge = await customConfirm({
+                            title: 'データの統合',
+                            message: '既存のデータを残したまま、バックアップデータを統合（マージ）しますか？'
+                        });
+
+                        if (!isMerge) {
+                            showToast('復元をキャンセルしました。', 'info');
+                            return;
+                        }
+
+                        // 差分統合マージ処理
+                        mergeBackupData(d);
+
+                        raidSoLog('バックアップデータを統合復元しました。');
+                        showToast('データを統合（マージ）しました。', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 } catch (error) {
-                    showToast(uiText('runtime.restoreFailed'), 'error');
+                    showToast(uiText('runtime.restoreFailed') || '復元に失敗しました。', 'error');
                 }
             }; reader.readAsText(file);
-            reader.onerror = () => showToast(uiText('runtime.restoreFailed'), 'error');
+            reader.onerror = () => showToast(uiText('runtime.restoreFailed') || '復元に失敗しました。', 'error');
+        }
+
+        function mergeBackupData(d) {
+            // 1. config
+            if (d.config && Array.isArray(d.config)) {
+                let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
+                d.config.forEach(cfg => {
+                    const idx = localConfig.findIndex(c => c.id === cfg.id);
+                    if (idx > -1) localConfig[idx] = cfg;
+                    else localConfig.push(cfg);
+                });
+                localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
+            }
+
+            // 2. settings
+            if (d.settings) {
+                let localSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
+                const mergedSettings = { ...localSettings, ...d.settings };
+                localStorage.setItem('stream_settings_v16', JSON.stringify(mergedSettings));
+            }
+
+            // 3. friends (IDリストの差分マージ)
+            if (d.friends && Array.isArray(d.friends)) {
+                let localFriends = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
+                d.friends.forEach(bkCat => {
+                    let targetCat = localFriends.find(c => c.name === bkCat.name);
+                    if (!targetCat) {
+                        localFriends.push(bkCat);
+                    } else {
+                        if (!targetCat.friends) targetCat.friends = [];
+                        bkCat.friends.forEach(bkF => {
+                            let existingFriend = targetCat.friends.find(f => f.twitch === bkF.twitch || (bkF.name && f.name === bkF.name));
+                            if (!existingFriend) {
+                                targetCat.friends.push(bkF);
+                            } else {
+                                Object.assign(existingFriend, bkF);
+                            }
+                        });
+                    }
+                });
+                localStorage.setItem('stream_friends_v16', JSON.stringify(localFriends));
+            }
+
+            // 4. memoList (メモ帳のマージ)
+            if (d.memoList && Array.isArray(d.memoList)) {
+                let localMemo = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
+                d.memoList.forEach(bkM => {
+                    let existingMemo = localMemo.find(m => m.title === bkM.title);
+                    if (!existingMemo) {
+                        localMemo.push(bkM);
+                    } else {
+                        existingMemo.content = bkM.content;
+                    }
+                });
+                localStorage.setItem('stream_memo_v16', JSON.stringify(localMemo));
+            }
+
+            // 5. raidShoutOut
+            if (d.raidShoutOut) {
+                let localRSO = JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}');
+                const mergedRSO = { ...localRSO, ...d.raidShoutOut };
+                localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(mergedRSO));
+            }
+
+            // 6. raidShoutOutTemplates
+            if (d.raidShoutOutTemplates && Array.isArray(d.raidShoutOutTemplates)) {
+                let localRSOTemplates = JSON.parse(localStorage.getItem(RAIDSO_CUSTOM_TEMPLATES_KEY) || '[]');
+                d.raidShoutOutTemplates.forEach(bkT => {
+                    let idx = localRSOTemplates.findIndex(t => t.name === bkT.name);
+                    if (idx > -1) localRSOTemplates[idx] = bkT;
+                    else localRSOTemplates.push(bkT);
+                });
+                localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(localRSOTemplates));
+            }
+
+            // 7. supporterArchives
+            if (Array.isArray(d.supporterArchives)) {
+                let localArchives = JSON.parse(localStorage.getItem(SUPPORTER_ARCHIVE_STORAGE_KEY) || '[]');
+                d.supporterArchives.forEach(bkA => {
+                    if (!localArchives.some(a => a.id === bkA.id)) {
+                        localArchives.push(bkA);
+                    }
+                });
+                localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
+            }
         }
         async function copyBackupToClipboard() { collectRaidSoSettings(); const d = { config, friends: friendsConfig, settings, memoList: memoConfig, raidShoutOut: raidSoSettings, raidShoutOutTemplates: customRaidSoTemplates, supporterArchives: readSupporterArchives() }; await copyTextToClipboard(JSON.stringify(d, null, 2)); }
 
