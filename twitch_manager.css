@@ -3923,3 +3923,23 @@ body {
 .record-body .field-label {
     margin-bottom: calc(4px * var(--line-height-adjust, 1.5) / 1.5) !important;
 }
+
+/* Explicit overrides for components with hardcoded font sizes to scale with offset */
+.action-text {
+    font-size: calc(9px + var(--font-size-offset, 0px)) !important;
+}
+.birthday-popover-title, .calendar-month-title, .category-subtitle, .tmd-danger-title, #cd-title, #ui-settings-title, #ui-calendar-modal-title {
+    font-size: calc(16px + var(--font-size-offset, 0px)) !important;
+}
+.birthday-popover-days, .calendar-day-cell-badge {
+    font-size: calc(10px + var(--font-size-offset, 0px)) !important;
+}
+.birthday-popover-item, .calendar-day-cell, .settings-help, .dialog-guide-label, .auth-status, .raidso-log-list, .log-item {
+    font-size: calc(11px + var(--font-size-offset, 0px)) !important;
+}
+.tmd-danger-message, #cd-message {
+    font-size: calc(13px + var(--font-size-offset, 0px)) !important;
+}
+.modal-close-top {
+    font-size: calc(28px + var(--font-size-offset, 0px)) !important;
+}
