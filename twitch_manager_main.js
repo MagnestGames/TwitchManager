@@ -2652,7 +2652,9 @@ const langMap = {
                 token: normalizedToken,
                 dateFormat: document.getElementById('date_format').value,
                 autoAdEnabled: !!document.getElementById('settings_auto_ad')?.checked,
-                autoPinEnabled: !!document.getElementById('settings_auto_pin')?.checked
+                autoPinEnabled: !!document.getElementById('settings_auto_pin')?.checked,
+                fontSizeOffset: Number(document.getElementById('settings_font_size_offset')?.value ?? 0),
+                lineHeight: Number(document.getElementById('settings_line_height')?.value ?? 1.5)
             };
             document.getElementById('client_id').value = settings.clientId || '';
             document.getElementById('token').value = normalizedToken;
@@ -4411,6 +4413,22 @@ const langMap = {
                 if (autoAdCheck) autoAdCheck.checked = !!settings.autoAdEnabled;
                 const autoPinCheck = document.getElementById('settings_auto_pin');
                 if (autoPinCheck) autoPinCheck.checked = !!settings.autoPinEnabled;
+
+                // 画面表示微調整（文字サイズ・行間）の初期化
+                const fontSizeOffset = Number(settings.fontSizeOffset ?? 0);
+                const lineHeight = Number(settings.lineHeight ?? 1.5);
+                
+                const fsOffsetSlider = document.getElementById('settings_font_size_offset');
+                if (fsOffsetSlider) fsOffsetSlider.value = fontSizeOffset;
+                const fsOffsetVal = document.getElementById('settings_font_size_val');
+                if (fsOffsetVal) fsOffsetVal.innerText = fontSizeOffset;
+                
+                const lhSlider = document.getElementById('settings_line_height');
+                if (lhSlider) lhSlider.value = lineHeight;
+                const lhVal = document.getElementById('settings_line_height_val');
+                if (lhVal) lhVal.innerText = lineHeight;
+
+                applyFontAdjustments(fontSizeOffset, lineHeight);
             }
 
             initLanguage();
@@ -7436,6 +7454,18 @@ window.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = html;
     }
     window.updateCreatorsDOM = updateCreatorsDOM;
+
+    function applyFontAdjustments(fontSizeOffset, lineHeight) {
+        fontSizeOffset = Number(fontSizeOffset || 0);
+        lineHeight = Number(lineHeight || 1.5);
+        document.documentElement.style.setProperty('--font-size-offset', fontSizeOffset + 'px');
+        document.documentElement.style.setProperty('--line-height-adjust', lineHeight);
+        const fsVal = document.getElementById('settings_font_size_val');
+        if (fsVal) fsVal.innerText = fontSizeOffset;
+        const lhVal = document.getElementById('settings_line_height_val');
+        if (lhVal) lhVal.innerText = lineHeight;
+    }
+    window.applyFontAdjustments = applyFontAdjustments;
 
     function attachAuthInputListeners() {
         const token = document.getElementById('token');

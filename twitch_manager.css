@@ -3858,5 +3858,68 @@ body.light-theme .ui-backup-warning {
     border-left-color: #ff4a65 !important;
 }
 
+/* Custom range slider styling */
+input[type="range"].tw-range-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    outline: none;
+    margin: 12px 0;
+    box-sizing: border-box;
+}
+input[type="range"].tw-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--twitch-purple);
+    cursor: pointer;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+}
+input[type="range"].tw-range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--twitch-purple-hover);
+}
+input[type="range"].tw-range-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--twitch-purple);
+    cursor: pointer;
+    border: none;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+}
+input[type="range"].tw-range-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    background: var(--twitch-purple-hover);
+}
 
-
+/* Font size and line-spacing scaling */
+:root {
+    --font-size-offset: 0px;
+    --line-height-adjust: 1.5;
+}
+body, button, input, select, textarea {
+    font-size: calc(13px + var(--font-size-offset, 0px)) !important;
+}
+body {
+    line-height: var(--line-height-adjust, 1.5) !important;
+}
+.field-label {
+    font-size: calc(11px + var(--font-size-offset, 0px)) !important;
+}
+.category-name span {
+    font-size: calc(13px + var(--font-size-offset, 0px)) !important;
+}
+.record-header span {
+    font-size: calc(13px + var(--font-size-offset, 0px)) !important;
+}
+.record-body input, .record-body textarea, .record-body select {
+    margin-bottom: calc(12px * var(--line-height-adjust, 1.5) / 1.5) !important;
+}
+.record-body .field-label {
+    margin-bottom: calc(4px * var(--line-height-adjust, 1.5) / 1.5) !important;
+}

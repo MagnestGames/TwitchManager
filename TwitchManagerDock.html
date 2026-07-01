@@ -555,7 +555,20 @@
                 <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
                     利用可能な変数: YYYY(年), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)
                 </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+                <div style="font-weight: bold; color: var(--command-accent); margin-bottom: 12px; font-size: 12px;" data-i18n="settingsUi.adjustScreenTitle">画面表示の微調整</div>
+                
+                <span class="field-label" id="ui-settings-font-size-label" data-i18n="settingsUi.fontSizeLabel">文字サイズ調整</span>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <input type="range" id="settings_font_size_offset" class="tw-range-slider" min="-3" max="5" step="1" value="0" oninput="applyFontAdjustments(this.value, document.getElementById('settings_line_height').value)">
+                    <span id="settings_font_size_val" style="font-size: 12px; min-width: 20px; text-align: right; color: var(--text-main);">0</span>
+                </div>
 
+                <span class="field-label" id="ui-settings-line-height-label" data-i18n="settingsUi.lineHeightLabel">行間の隙間調整</span>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                    <input type="range" id="settings_line_height" class="tw-range-slider" min="1.1" max="2.2" step="0.1" value="1.5" oninput="applyFontAdjustments(document.getElementById('settings_font_size_offset').value, this.value)">
+                    <span id="settings_line_height_val" style="font-size: 12px; min-width: 25px; text-align: right; color: var(--text-main);">1.5</span>
+                </div>
             </div>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
