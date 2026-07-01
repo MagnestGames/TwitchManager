@@ -2653,8 +2653,8 @@ const langMap = {
                 dateFormat: document.getElementById('date_format').value,
                 autoAdEnabled: !!document.getElementById('settings_auto_ad')?.checked,
                 autoPinEnabled: !!document.getElementById('settings_auto_pin')?.checked,
-                fontSizeOffset: Number(document.getElementById('settings_font_size_offset')?.value ?? 0),
-                lineHeight: Number(document.getElementById('settings_line_height')?.value ?? 1.5)
+                fontSizeOffset: Number(document.getElementById('settings_font_size_offset')?.getValue?.() ?? document.getElementById('settings_font_size_offset')?.dataset.value ?? 0),
+                lineHeight: Number(document.getElementById('settings_line_height')?.getValue?.() ?? document.getElementById('settings_line_height')?.dataset.value ?? 1.5)
             };
             document.getElementById('client_id').value = settings.clientId || '';
             document.getElementById('token').value = normalizedToken;
@@ -4418,15 +4418,13 @@ const langMap = {
                 const fontSizeOffset = Number(settings.fontSizeOffset ?? 0);
                 const lineHeight = Number(settings.lineHeight ?? 1.5);
                 
-                const fsOffsetSlider = document.getElementById('settings_font_size_offset');
-                if (fsOffsetSlider) fsOffsetSlider.value = fontSizeOffset;
-                const fsOffsetVal = document.getElementById('settings_font_size_val');
-                if (fsOffsetVal) fsOffsetVal.innerText = fontSizeOffset;
+                initCustomSlider('slider-font-size-wrapper', 'settings_font_size_offset', -3, 5, 1, fontSizeOffset, (val) => {
+                    applyFontAdjustments(val, Number(document.getElementById('settings_line_height')?.dataset.value ?? 1.5));
+                });
                 
-                const lhSlider = document.getElementById('settings_line_height');
-                if (lhSlider) lhSlider.value = lineHeight;
-                const lhVal = document.getElementById('settings_line_height_val');
-                if (lhVal) lhVal.innerText = lineHeight;
+                initCustomSlider('slider-line-height-wrapper', 'settings_line_height', 1.1, 2.2, 0.1, lineHeight, (val) => {
+                    applyFontAdjustments(Number(document.getElementById('settings_font_size_offset')?.dataset.value ?? 0), val);
+                });
 
                 applyFontAdjustments(fontSizeOffset, lineHeight);
             }
@@ -7466,6 +7464,74 @@ window.addEventListener('DOMContentLoaded', () => {
         if (lhVal) lhVal.innerText = lineHeight;
     }
     window.applyFontAdjustments = applyFontAdjustments;
+
+    function initCustomSlider(wrapperId, thumbId, min, max, step, initialVal, onChange) {
+        const wrapper = document.getElementById(wrapperId);
+        const thumb = document.getElementById(thumbId);
+        if (!wrapper || !thumb) return;
+
+        let currentValue = initialVal;
+
+        function updateValueFromX(clientX) {
+            const rect = wrapper.getBoundingClientRect();
+            let pct = (clientX - rect.left) / rect.width;
+            pct = Math.max(0, Math.min(1, pct));
+            
+            const rawVal = min + pct * (max - min);
+            const steppedVal = Math.round(rawVal / step) * step;
+            const decimals = (String(step).split('.')[1] || '').length;
+            const fixedVal = parseFloat(steppedVal.toFixed(decimals));
+            const clampedVal = Math.max(min, Math.min(max, fixedVal));
+            
+            setValue(clampedVal);
+            if (typeof onChange === 'function') onChange(clampedVal);
+        }
+
+        function setValue(val) {
+            currentValue = val;
+            thumb.dataset.value = val;
+            const pct = ((val - min) / (max - min)) * 100;
+            thumb.style.left = `${pct}%`;
+        }
+
+        setValue(initialVal);
+
+        let isDragging = false;
+
+        wrapper.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateValueFromX(e.clientX);
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            updateValueFromX(e.clientX);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        wrapper.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateValueFromX(e.touches[0].clientX);
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            updateValueFromX(e.touches[0].clientX);
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        thumb.getValue = () => currentValue;
+        thumb.setValue = (val) => setValue(val);
+    }
+    window.initCustomSlider = initCustomSlider;
 
     function attachAuthInputListeners() {
         const token = document.getElementById('token');

@@ -3858,43 +3858,48 @@ body.light-theme .ui-backup-warning {
     border-left-color: #ff4a65 !important;
 }
 
-/* Custom range slider styling */
-input[type="range"].tw-range-slider {
-    -webkit-appearance: none;
+/* Custom HTML slider styling (Cute water-blue design) */
+.custom-slider-wrapper {
+    position: relative;
     width: 100%;
-    height: 6px;
-    background: var(--border-color);
-    border-radius: 3px;
-    outline: none;
-    margin: 12px 0;
-    box-sizing: border-box;
-}
-input[type="range"].tw-range-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--twitch-purple);
+    height: 32px;
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    transition: transform var(--transition-fast), background var(--transition-fast);
+    user-select: none;
+    -webkit-user-select: none;
+    background: rgba(0, 0, 0, 0);
 }
-input[type="range"].tw-range-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: var(--twitch-purple-hover);
+
+/* Slider Track (Gentle triangle/slope shape) */
+.custom-slider-track {
+    width: 100%;
+    height: 12px;
+    background: #e6f4f8; /* とても淡い水色 */
+    border-radius: 10px;
+    border: 1px solid #cce7f0; /* 少しだけ濃い枠線 */
+    clip-path: polygon(0 35%, 100% 0, 100% 100%, 0 65%);
+    pointer-events: none;
 }
-input[type="range"].tw-range-slider::-moz-range-thumb {
-    width: 16px;
+
+/* Slider Thumb (Rotated to diamond ◆ shape, positioned on top of the track) */
+.custom-slider-thumb {
+    position: absolute;
+    z-index: 10;
     height: 16px;
-    border-radius: 50%;
-    background: var(--twitch-purple);
+    width: 16px;
+    background: #88ccee; /* メインのかわいい水色 */
+    border-radius: 3px; /* 少し角を丸めて可愛く */
+    border: 2px solid #ffffff; /* 白いフチ */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15); /* コロンとした立体感 */
     cursor: pointer;
-    border: none;
-    transition: transform var(--transition-fast), background var(--transition-fast);
+    transition: transform 0.2s ease, background 0.2s ease;
 }
-input[type="range"].tw-range-slider::-moz-range-thumb:hover {
-    transform: scale(1.2);
-    background: var(--twitch-purple-hover);
+
+/* Hover state scale and color transition */
+.custom-slider-wrapper:hover .custom-slider-thumb {
+    transform: translate(-50%, -10px) scale(1.15) rotate(45deg) !important;
+    background: #6bbce6; /* 少し濃い水色 */
 }
 
 /* Font size and line-spacing scaling */
