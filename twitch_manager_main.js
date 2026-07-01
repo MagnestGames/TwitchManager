@@ -842,7 +842,7 @@ const langMap = {
             if (b) {
                 if (isOn) {
                     b.style.background = "#ff4a4a";
-                    b.style.color = "#fff";
+                    b.style.color = "var(--text-white)";
                 } else {
                     b.style.background = "";
                     b.style.color = "";
@@ -1155,8 +1155,9 @@ const langMap = {
                 displayName = `${displayName} (${twitchName})`;
             }
 
-            const shoutoutCount = Number(f.shoutoutCount || 0);
-            const lastDate = f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '';
+            const isSelf = friendsConfig?.[ci]?.kind === 'authenticated-user';
+            const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
+            const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
             const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
 
             // グループタグ HTML
@@ -1204,8 +1205,10 @@ const langMap = {
             </div>
             <div class="record-body">
                 ${meta ? `<div class="id-meta">${raidSoEscape(meta)}</div>` : ''}
+                ${isSelf ? '' : `
                 <span class="field-label">${raidSoEscape(L.labels.twitchId || langMap.ja.labels.twitchId)}</span>
                 <input type="text" id="f-twitch-${ci}-${fi}" value="${raidSoEscape(f.twitch || '')}" oninput="updateFriendField(${ci}, ${fi}, 'twitch', this.value)" onchange="autoFillFriendXFromTwitch(${ci}, ${fi})">
+                `}
                 
                 <span class="field-label">${raidSoEscape(L.labels.xUrl || langMap.ja.labels.xUrl)}</span>
                 <input type="text" id="f-x-${ci}-${fi}" value="${raidSoEscape(f.x || '')}" oninput="updateFriendField(${ci}, ${fi}, 'x', this.value)">
@@ -1259,6 +1262,25 @@ const langMap = {
             // ----- グループ別表示（手動ソート・ドラッグ可能） -----
             if (friendsSortOrder === 'group') {
                 (friendsConfig || []).forEach((cat, ci) => {
+                    if (cat.kind === 'authenticated-user') {
+                        const f = cat.friends[0] || { name: settings.userLogin || '', twitch: settings.userLogin || '' };
+                        const card = _buildFriendCard(f, ci, 0, L, I, null);
+                        card.classList.add('self-account-card');
+                        card.style.borderLeft = '4px solid var(--twitch-purple)';
+                        
+                        // 自分のアカウントなので削除ボタンは非表示（削除不可）にする
+                        const deleteBtn = card.querySelector('.btn-delete-item');
+                        if (deleteBtn) deleteBtn.remove();
+                        
+                        // アカウント表示を分かりやすくするため、行頭の中黒「•」をユーザーアイコン「👤」に差し替える
+                        const headerSpan = card.querySelector('.record-header span');
+                        if (headerSpan) {
+                            headerSpan.innerHTML = headerSpan.innerHTML.replace('•', '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px; vertical-align:middle;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>');
+                        }
+                        
+                        c.appendChild(card);
+                        return;
+                    }
                     const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
                     d.innerHTML = `
                     <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
@@ -1802,13 +1824,13 @@ const langMap = {
             const gridView = document.getElementById('calendar-modal-grid-view');
             
             if (tabType === 'list') {
-                if (listBtn) { listBtn.className = 'btn-primary'; listBtn.style.background = 'var(--twitch-purple)'; listBtn.style.color = '#fff'; }
+                if (listBtn) { listBtn.className = 'btn-primary'; listBtn.style.background = 'var(--twitch-purple)'; listBtn.style.color = 'var(--text-white)'; }
                 if (gridBtn) { gridBtn.className = 'btn-secondary'; gridBtn.style.background = 'var(--bg-item)'; gridBtn.style.color = 'var(--text-main)'; }
                 if (listView) listView.style.display = 'block';
                 if (gridView) gridView.style.display = 'none';
                 renderCalendarModalListView();
             } else {
-                if (gridBtn) { gridBtn.className = 'btn-primary'; gridBtn.style.background = 'var(--twitch-purple)'; gridBtn.style.color = '#fff'; }
+                if (gridBtn) { gridBtn.className = 'btn-primary'; gridBtn.style.background = 'var(--twitch-purple)'; gridBtn.style.color = 'var(--text-white)'; }
                 if (listBtn) { listBtn.className = 'btn-secondary'; listBtn.style.background = 'var(--bg-item)'; listBtn.style.color = 'var(--text-main)'; }
                 if (listView) listView.style.display = 'none';
                 if (gridView) gridView.style.display = 'flex';
@@ -1891,7 +1913,7 @@ const langMap = {
                 btn.style.cssText = `padding:5px 2px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);cursor:pointer;font-size:11px;transition:0.15s;`;
                 if (m === currentMonth) {
                     btn.style.background = 'var(--twitch-purple)';
-                    btn.style.color = '#fff';
+                    btn.style.color = 'var(--text-white)';
                     btn.style.borderColor = 'var(--twitch-purple)';
                     btn.classList.add('selected');
                 }
@@ -2007,14 +2029,14 @@ const langMap = {
             if (type === 'birthday') {
                 btnB.style.background = 'var(--twitch-purple)';
                 btnB.style.borderColor = 'var(--twitch-purple)';
-                btnB.style.color = '#fff';
+                btnB.style.color = 'var(--text-white)';
                 btnA.style.background = 'var(--bg-item)';
                 btnA.style.borderColor = 'var(--border-color)';
                 btnA.style.color = 'var(--text-muted)';
             } else {
                 btnA.style.background = 'var(--twitch-purple)';
                 btnA.style.borderColor = 'var(--twitch-purple)';
-                btnA.style.color = '#fff';
+                btnA.style.color = 'var(--text-white)';
                 btnB.style.background = 'var(--bg-item)';
                 btnB.style.borderColor = 'var(--border-color)';
                 btnB.style.color = 'var(--text-muted)';
@@ -2170,7 +2192,7 @@ const langMap = {
                 cellsHtml += `<button
                     onclick="selectMiniDate(${day})"
                     style="aspect-ratio:1;min-width:28px;min-height:28px;border-radius:5px;border:1px solid var(--border-color);background:${bg};color:${color};cursor:pointer;font-size:12px;font-weight:${isToday?'bold':'normal'};outline:${outline};outline-offset:-2px;transition:0.15s;"
-                    onmouseover="if(!this.dataset.sel){this.style.background='var(--twitch-purple)';this.style.color='#fff';}"
+                    onmouseover="if(!this.dataset.sel){this.style.background='var(--twitch-purple)';this.style.color = 'var(--text-white)';}"
                     onmouseout="if(!this.dataset.sel){this.style.background='${bg}';this.style.color='${color}';}"
                     ${isSel ? 'data-sel="1"' : ''}>${day}</button>`;
             }
@@ -4208,13 +4230,44 @@ const langMap = {
                 try {
                     const d = JSON.parse(e.target.result);
 
-                    // 1. 上書き確認
-                    const isOverwrite = await customConfirm({
-                        title: 'バックアップの復元方法',
-                        message: '既存のデータをすべて削除して、バックアップで完全に上書きしますか？\n\n【はい】: 既存のすべてのデータを消去して上書きします。\n【いいえ】: 既存のデータと結合（マージ）します。'
+                    // 復元方法の選択ダイアログ (上書き / マージ / キャンセル)
+                    const choice = await new Promise((resolveDlg) => {
+                        showCustomDialog({
+                            title: 'バックアップの復元方法',
+                            type: 'alert',
+                            messageHtml: `
+                                <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main);">
+                                    バックアップデータをどのように復元しますか？<br><br>
+                                    <strong>・消去して上書き</strong><br>
+                                    既存のデータをすべて削除し、バックアップファイルの内容で完全に上書きします。<br><br>
+                                    <strong>・差分のみ追加</strong><br>
+                                    既存のデータを残したまま、重複しない差分データのみを追加（マージ）します。
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:10px;">
+                                    <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">消去して上書き</button>
+                                    <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">差分のみ追加</button>
+                                    <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">キャンセル</button>
+                                </div>
+                            `
+                        });
+                        setTimeout(() => {
+                            const btnOverwrite = document.getElementById('restore-opt-overwrite');
+                            const btnMerge = document.getElementById('restore-opt-merge');
+                            const btnCancel = document.getElementById('restore-opt-cancel');
+                            const closeTopBtn = document.getElementById('cd-btn-close-top');
+                            
+                            const finish = (result) => {
+                                if (closeTopBtn) closeTopBtn.click();
+                                resolveDlg(result);
+                            };
+                            
+                            if (btnOverwrite) btnOverwrite.onclick = () => finish('overwrite');
+                            if (btnMerge) btnMerge.onclick = () => finish('merge');
+                            if (btnCancel) btnCancel.onclick = () => finish('cancel');
+                        }, 50);
                     });
 
-                    if (isOverwrite) {
+                    if (choice === 'overwrite') {
                         // 完全上書き
                         if (d.config) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
                         if (d.friends) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
@@ -4227,24 +4280,15 @@ const langMap = {
                         raidSoLog(uiText('runtime.operationLog.backupRestored') || 'バックアップを上書き復元しました。');
                         showToast('データを上書き復元しました。', 'success');
                         setTimeout(() => location.reload(), 1000);
-                    } else {
-                        // 2. 統合確認
-                        const isMerge = await customConfirm({
-                            title: 'データの統合',
-                            message: '既存のデータを残したまま、バックアップデータを統合（マージ）しますか？'
-                        });
-
-                        if (!isMerge) {
-                            showToast('復元をキャンセルしました。', 'info');
-                            return;
-                        }
-
+                    } else if (choice === 'merge') {
                         // 差分統合マージ処理
                         mergeBackupData(d);
 
                         raidSoLog('バックアップデータを統合復元しました。');
                         showToast('データを統合（マージ）しました。', 'success');
                         setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('復元をキャンセルしました。', 'info');
                     }
                 } catch (error) {
                     showToast(uiText('runtime.restoreFailed') || '復元に失敗しました。', 'error');
@@ -5210,7 +5254,7 @@ function safeSetLocal(key, value) {
                     btn.style.margin = '0';
                     btn.style.background = p.isDefault ? 'rgba(145, 70, 255, 0.05)' : 'rgba(145, 70, 255, 0.15)';
                     btn.style.borderColor = 'var(--twitch-purple)';
-                    btn.style.color = '#bf94ff';
+                    btn.style.color = 'var(--command-accent)';
                     const title = String(p.title || '');
                     const choices = (Array.isArray(p.choices) ? p.choices : []).slice(0, TWITCH_POLL_MAX_CHOICES);
                     btn.innerText = `⭐ ${title.slice(0, 10)}${title.length > 10 ? '..' : ''}`;
@@ -5381,7 +5425,7 @@ function safeSetLocal(key, value) {
                     btn.style.margin = '0';
                     btn.style.background = p.isDefault ? 'rgba(145, 70, 255, 0.05)' : 'rgba(145, 70, 255, 0.15)';
                     btn.style.borderColor = 'var(--twitch-purple)';
-                    btn.style.color = '#bf94ff';
+                    btn.style.color = 'var(--command-accent)';
                     const title = String(p.title || '');
                     const outcomes = (Array.isArray(p.outcomes) ? p.outcomes : []).slice(0, TWITCH_PREDICTION_MAX_CHOICES);
                     btn.innerText = `⭐ ${title.slice(0, 10)}${title.length > 10 ? '..' : ''}`;
@@ -5810,7 +5854,7 @@ function safeSetLocal(key, value) {
                     if (t === target) {
                         btn.style.background = 'var(--twitch-purple)';
                         btn.style.fontWeight = 'bold';
-                        btn.style.color = '#fff';
+                        btn.style.color = 'var(--text-white)';
                     } else {
                         btn.style.background = 'var(--bg-header)';
                         btn.style.fontWeight = 'normal';
@@ -5883,13 +5927,13 @@ function safeSetLocal(key, value) {
                     await esSubscribe('channel.subscription.message', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.gift', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.cheer', '1', { broadcaster_user_id: bId });
-                    // await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
+                    await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
                     await esSubscribe('channel.raid', '1', { to_broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.begin', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.end', '1', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
-                    // await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
-                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 8 }));
+                    await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
+                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 10 }));
                 } else if (mtype === 'notification') {
                     const subtype = msg.metadata?.subscription_type;
                     const ev = msg.payload?.event;
@@ -6736,7 +6780,7 @@ function openCategorySettings(initialTabId) {
     // フッター固定: すべてON(50%) / すべてOFF(50%)
     const footerHtml = `<div class="display-settings-footer">` +
         `<button type="button" class="btn-primary" onclick="(function(){ var t = document.querySelector('.display-settings-tab.active'); toggleAllCategories(t ? t.dataset.tab : '${initialTabId}', true); })()">${raidSoEscape(displaySettingsText('btnAllOn', 'すべてON'))}</button>` +
-        `<button type="button" class="btn-secondary" onclick="(function(){ var t = document.querySelector('.display-settings-tab.active'); toggleAllCategories(t ? t.dataset.tab : '${initialTabId}', false); })()">${raidSoEscape(displaySettingsText('btnAllOff', 'すべてOFF'))}</button>` +
+        `<button type="button" class="btn-danger-soft" onclick="(function(){ var t = document.querySelector('.display-settings-tab.active'); toggleAllCategories(t ? t.dataset.tab : '${initialTabId}', false); })()">${raidSoEscape(displaySettingsText('btnAllOff', 'すべてOFF'))}</button>` +
         `</div>`;
 
     const dialogHtml = `<div class="display-settings-layout"><div class="display-settings-tabs">${tabsHtml}</div><div class="display-settings-content">${panelsHtml}</div>${footerHtml}</div>`;
@@ -7188,6 +7232,8 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!match) return;
             const ci = Number(match[1]);
             const fi = Number(match[2]);
+            const isSelf = friendsConfig?.[ci]?.kind === 'authenticated-user';
+            if (isSelf) return;
             const body = card.querySelector('.record-body');
             const friend = friendsConfig?.[ci]?.friends?.[fi];
             if (!body || !friend || body.querySelector('.id-history-actions')) return;

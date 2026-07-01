@@ -18,7 +18,7 @@
         <div class="app-header">
             <h1 class="app-title app-title-row">◆ <span id="today-date"
                     style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: #bf94ff; border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
+                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
                 <!-- Birthday/Anniversary Indicator -->
@@ -91,7 +91,7 @@
         <div class="category-box tw-section" id="tw-box-post-gen">
             <div class="category-name" onclick="twToggle('tw-box-post-gen')"><span id="tw-l-post-gen" data-i18n="extended.postGenTab">サポーターリスト</span></div>
             <div class="tw-body">
-                <div style="font-weight: bold; color: #bf94ff; font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+                <div style="font-weight: bold; color: var(--command-accent); font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                     <span data-i18n="extended.postGenDesc">イベントログ</span>
                 </div>
@@ -178,8 +178,8 @@
                         <textarea id="pg-output" style="height:150px; font-family:monospace; font-size:11px; background:var(--bg-record); border:1px solid var(--border-color); color:var(--text-main);" data-i18n-placeholder="extended.postOutputPlaceholder" placeholder="ここにリストが生成されます" readonly></textarea>
                         <div class="post-output-actions">
                             <button class="btn-primary" style="flex:2;padding:10px 0;font-size:12px;" onclick="copyPostText()" id="tw-btn-copy-post" data-i18n="extended.copySupporterList">リストをコピー</button>
-                            <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,0.05);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
-                            <button class="btn-secondary" style="flex:1;padding:10px 0;font-size:12px;background:var(--danger);color:#fff;border:none;" onclick="resetStreamStats()" id="tw-btn-reset-post" data-i18n="extended.resetStats">リセット</button>
+                            <button class="btn-outline" style="flex:2;padding:10px 0;font-size:12px;border-color: var(--info-border); color: var(--info-text); background: var(--info-bg);" onclick="openPastLogs()" id="tw-btn-copy-past-log" data-i18n="extended.openPastLogs">過去ログを開く</button>
+                            <button class="btn-danger-soft" style="flex:1;padding:10px 0;font-size:12px;" onclick="resetStreamStats()" id="tw-btn-reset-post" data-i18n="extended.resetStats">リセット</button>
                         </div>
                     </div>
                 </details>
@@ -198,7 +198,7 @@
                         <div class="tw-preset-actions">
                             <button class="btn-secondary" onclick="savePredPreset()" data-i18n="extended.saveCurrentBtn">現在の入力を保存</button>
                             <button class="btn-primary" onclick="loadPredPreset()" data-i18n="extended.readBtn">読み込み</button>
-                            <button class="btn-secondary" onclick="deletePredPreset()" style="background:var(--danger);color:#fff;border:none;" data-i18n="extended.deleteBtn">削除</button>
+                            <button class="btn-danger-soft" onclick="deletePredPreset()" data-i18n="extended.deleteBtn">削除</button>
                         </div>
                     </div>
 
@@ -235,7 +235,7 @@
                         <div class="tw-preset-actions">
                             <button class="btn-secondary" onclick="savePollPreset()" data-i18n="extended.saveCurrentBtn">現在の入力を保存</button>
                             <button class="btn-primary" onclick="loadPollPreset()" data-i18n="extended.readBtn">読み込み</button>
-                            <button class="btn-secondary" onclick="deletePollPreset()" style="background:var(--danger);color:#fff;border:none;" data-i18n="extended.deleteBtn">削除</button>
+                            <button class="btn-danger-soft" onclick="deletePollPreset()" data-i18n="extended.deleteBtn">削除</button>
                         </div>
                     </div>
 
@@ -512,7 +512,7 @@
     <div id="settingModal" class="modal-overlay" onclick="if(event.target===this)closeModal('settingModal')">
         <div class="modal-content">
             <button class="modal-close-top" onclick="closeModal('settingModal')">×</button>
-            <h3 id="ui-settings-title" style="color:#bf94ff; font-size:18px; margin-bottom:20px; display:flex; align-items:center;" data-i18n="settingsUi.title">設定</h3>
+            <h3 id="ui-settings-title" style="color: var(--command-accent); font-size:18px; margin-bottom:20px; display:flex; align-items:center;" data-i18n="settingsUi.title">設定</h3>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-auth-title" style="margin-bottom:8px;" data-i18n="settingsUi.authTitle">>Twitch認証</div>
@@ -541,7 +541,7 @@
                     oninput="handleDateFormatPreview(this.value)" onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}"
                     style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; outline: none; margin-bottom: 5px; transition: border-color var(--transition-fast);" 
                     placeholder="YYYY/MM/DD" />
-                <div style="font-size: 12px; color: #4CAF50; margin-bottom: 5px;" id="date_format_live_preview"></div>
+                <div style="font-size: 12px; color: var(--success-text); margin-bottom: 5px;" id="date_format_live_preview"></div>
                 <datalist id="date_format_presets">
                     <option value="MM/DD"></option>
                     <option value="M/D"></option>
@@ -555,24 +555,30 @@
                 <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; margin-bottom: 15px;" data-i18n="settingsUi.dateVarsHint">
                     利用可能な変数: YYYY(年), YY(年2桁), MM(月2桁), M(月), DD(日2桁), D(日), WW(曜日), W(曜日略)
                 </div>
-                <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">テーマ</span>
-                <select id="ui_theme" onchange="applyThemeSetting(this.value)" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
-                    <option value="dark" data-i18n="settingsUi.themeDark">ダークモード</option>
-                    <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
-                </select>
+
             </div>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-stream-title" style="margin-bottom:12px;" data-i18n="settingsUi.streamSettingsTitle">>配信管理設定</div>
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; user-select:none;">
-                        <input type="checkbox" id="settings_auto_ad" style="width:16px; height:16px; margin:0; cursor:pointer;" />
-                        <span id="ui-settings-auto-ad-label" data-i18n="settingsUi.autoAdLabel">配信開始時に自動で広告（3分）を実行する</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; user-select:none;">
-                        <input type="checkbox" id="settings_auto_pin" style="width:16px; height:16px; margin:0; cursor:pointer;" />
-                        <span id="ui-settings-auto-pin-label" data-i18n="settingsUi.autoPinLabel">紹介・レイドメッセージを自動でピン留め（20分）</span>
-                    </label>
+                    <div class="tw-toggle-card" style="margin: 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box; transition: none; transform: none;">
+                        <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; transition: none; transform: none; min-height: unset; margin: 0; gap: 8px;">
+                            <span id="ui-settings-auto-ad-label" data-i18n="settingsUi.autoAdLabel" style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none; flex: 1;">配信開始時に自動で広告（3分）を実行する</span>
+                            <label class="tw-toggle" style="margin: 0; transition: none; transform: none;">
+                                <input type="checkbox" id="settings_auto_ad" />
+                                <span class="tw-slider" style="transition: .2s; transform: none;"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="tw-toggle-card" style="margin: 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box; transition: none; transform: none;">
+                        <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; transition: none; transform: none; min-height: unset; margin: 0; gap: 8px;">
+                            <span id="ui-settings-auto-pin-label" data-i18n="settingsUi.autoPinLabel" style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none; flex: 1;">紹介・レイドメッセージを自動でピン留め（20分）</span>
+                            <label class="tw-toggle" style="margin: 0; transition: none; transform: none;">
+                                <input type="checkbox" id="settings_auto_pin" />
+                                <span class="tw-slider" style="transition: .2s; transform: none;"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">>保存</button>
@@ -650,11 +656,11 @@
                             <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;">お祝い種別</label>
                             <input type="hidden" id="cal-day-type-value" value="birthday">
                             <div style="display:flex;gap:6px;">
-                                <button id="cal-type-btn-birthday" onclick="selectCalDayType('birthday')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--twitch-purple);background:var(--twitch-purple);color:#fff;font-size:11px;font-weight:bold;cursor:pointer;">誕生日</button>
+                                <button id="cal-type-btn-birthday" onclick="selectCalDayType('birthday')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--twitch-purple);background:var(--twitch-purple);color: var(--text-white);font-size:11px;font-weight:bold;cursor:pointer;">誕生日</button>
                                 <button id="cal-type-btn-anniversary" onclick="selectCalDayType('anniversary')" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-muted);font-size:11px;font-weight:bold;cursor:pointer;">記念日</button>
                             </div>
                         </div>
-                        <button onclick="confirmCalDayAdd()" style="width:100%;padding:6px;background:var(--twitch-purple);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;">保存</button>
+                        <button onclick="confirmCalDayAdd()" style="width:100%;padding:6px;background:var(--twitch-purple);color: var(--text-white);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;">保存</button>
                     </div>
                 </div>
             </div>
@@ -664,7 +670,7 @@
     <div id="custom-dialog-overlay" class="custom-dialog-overlay">
         <div class="custom-dialog" style="position: relative;">
             <button id="cd-btn-close-top" class="modal-close-top" style="display:none;" onclick="document.getElementById('cd-btn-ok').click()">×</button>
-            <h3 id="cd-title" style="margin-top: 0; color: #bf94ff; font-size: 16px;">Notice</h3>
+            <h3 id="cd-title" style="margin-top: 0; color: var(--command-accent); font-size: 16px;">Notice</h3>
             <div id="cd-message"
                 style="margin-bottom: 20px; color: var(--text-main); font-size: 13px; line-height: 1.6; word-break: break-all;">
             </div>
@@ -679,6 +685,16 @@
 
     <script src="twitch_manager_locales.js"></script>
     <script src="twitch_manager_main.js"></script>
+    <script>
+        // Goal Bar 連携スクリプトの動的読み込み (ファイルがない場合は無視)
+        (function() {
+            var s = document.createElement('script');
+            s.src = 'twitch_goal_sync.js';
+            s.async = true;
+            s.onerror = function() { console.log('twitch_goal_sync.js was not found. Skipping goal sync.'); };
+            document.body.appendChild(s);
+        })();
+    </script>
 </body>
 
 </html>
