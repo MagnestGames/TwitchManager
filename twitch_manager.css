@@ -3902,7 +3902,7 @@ input[type="range"].tw-range-slider::-moz-range-thumb:hover {
     --font-size-offset: 0px;
     --line-height-adjust: 1.5;
 }
-body, button, input, select, textarea {
+body, button, input, select, textarea, p, li, summary, td, th, details, a, option, #cd-message, #cal-ym-year-label, #cal-day-popup-title, span:not([class]), div:not([class]) {
     font-size: calc(13px + var(--font-size-offset, 0px)) !important;
 }
 body {
@@ -3934,10 +3934,13 @@ body {
 .birthday-popover-days, .calendar-day-cell-badge {
     font-size: calc(10px + var(--font-size-offset, 0px)) !important;
 }
-.birthday-popover-item, .calendar-day-cell, .settings-help, .dialog-guide-label, .auth-status, .raidso-log-list, .log-item {
+.birthday-popover-item, .calendar-day-cell, .settings-help, .dialog-guide-label, .auth-status, .raidso-log-list, .log-item, .calendar-grid-header, .calendar-grid-header span, #cal-day-popup label, #cal-type-btn-birthday, #cal-type-btn-anniversary {
     font-size: calc(11px + var(--font-size-offset, 0px)) !important;
 }
-.tmd-danger-message, #cd-message {
+#ui-settings-auto-ad-label, #ui-settings-auto-pin-label, #tw-btn-copy-post, #cal-day-person-select, #cal-day-new-name, #cal-day-new-twitch, #cal-day-popup button:last-child {
+    font-size: calc(12px + var(--font-size-offset, 0px)) !important;
+}
+.tmd-danger-message {
     font-size: calc(13px + var(--font-size-offset, 0px)) !important;
 }
 .modal-close-top {
