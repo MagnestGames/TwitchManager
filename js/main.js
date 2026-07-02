@@ -536,7 +536,7 @@
 
         let html = `
         <div style="font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 16px; align-items: center;">`;
+            <div class="creators-row">`;
 
         creators.forEach(c => {
             const name = c.name || '';
@@ -692,6 +692,26 @@
                 </defs>
             `;
             document.body.appendChild(svgEl);
+        }
+        if (!document.getElementById('creators-layout-style')) {
+            const styleEl = document.createElement('style');
+            styleEl.setAttribute('id', 'creators-layout-style');
+            styleEl.innerHTML = `
+                .creators-row {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 16px;
+                    align-items: center;
+                    justify-content: center;
+                }
+                @media (max-width: 320px) {
+                    .creators-row {
+                        justify-content: flex-start !important;
+                    }
+                }
+            `;
+            document.head.appendChild(styleEl);
         }
         if (typeof initTheme === 'function') initTheme();
         setupDateFormatSelect();
