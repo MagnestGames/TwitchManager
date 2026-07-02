@@ -500,8 +500,16 @@
 
     async function fetchDynamicCreatorInfo() {
         try {
-            const response = await fetch(DYNAMIC_CREATOR_INFO_URL);
-            if (response.ok) {
+            let response = null;
+            try {
+                response = await fetch('creators.json');
+            } catch (localErr) {
+                console.log("Local creators.json not found, falling back to remote.");
+            }
+            if (!response || !response.ok) {
+                response = await fetch(DYNAMIC_CREATOR_INFO_URL);
+            }
+            if (response && response.ok) {
                 const data = await response.json();
                 if (data && Array.isArray(data.creators)) {
                     cachedCreatorInfo = data;
@@ -509,7 +517,7 @@
                 }
             }
         } catch (e) {
-            console.warn("Could not fetch remote creator info, using fallback:", e);
+            console.warn("Could not fetch creator info, using fallback:", e);
         }
     }
     window.fetchDynamicCreatorInfo = fetchDynamicCreatorInfo;
@@ -546,9 +554,9 @@
                 </a>`;
             });
 
-            const avatarHtml = avatarUrl 
-                ? `<img src="${avatarUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" onerror="this.style.display='none'" />`
-                : '';
+            const firstChar = name.charAt(0);
+            const localAvatarUrl = `../../images/${firstChar}.png`;
+            const avatarHtml = `<img src="${localAvatarUrl}" onerror="if(this.src.indexOf('images/')!==-1){this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`;
 
             html += `
             <div style="display: flex; align-items: center; gap: 8px;">
