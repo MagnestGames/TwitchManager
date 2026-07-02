@@ -562,7 +562,7 @@
             else if (avatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
 
             const avatarHtml = avatarUrl 
-                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;border:1px solid var(--border-color);" />`
+                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
                 : '';
 
             html += `
@@ -676,6 +676,23 @@
     }
 
     ready(() => {
+        if (!document.getElementById('beast-ears-svg')) {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svgEl = document.createElementNS(svgNS, "svg");
+            svgEl.setAttribute("id", "beast-ears-svg");
+            svgEl.setAttribute("width", "0");
+            svgEl.setAttribute("height", "0");
+            svgEl.style.position = "absolute";
+            svgEl.style.pointerEvents = "none";
+            svgEl.innerHTML = `
+                <defs>
+                    <clipPath id="beast-ears" clipPathUnits="objectBoundingBox">
+                        <path d="M 0.20,0.30 L 0.26,0.02 L 0.44,0.22 A 0.40,0.40 0 0,1 0.56,0.22 L 0.74,0.02 L 0.80,0.30 A 0.40,0.40 0 1,1 0.20,0.30 Z" />
+                    </clipPath>
+                </defs>
+            `;
+            document.body.appendChild(svgEl);
+        }
         if (typeof initTheme === 'function') initTheme();
         setupDateFormatSelect();
         attachAuthInputListeners();
