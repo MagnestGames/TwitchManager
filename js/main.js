@@ -536,7 +536,7 @@
 
         let html = `
         <div style="font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; flex-direction: column; gap: 8px;">`;
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 16px; align-items: center;">`;
 
         creators.forEach(c => {
             const name = c.name || '';
@@ -562,14 +562,14 @@
             else if (avatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
 
             const avatarHtml = avatarUrl 
-                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`
+                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;border:1px solid var(--border-color);" />`
                 : '';
 
             html += `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="display: flex; align-items: center;">
                     ${avatarHtml}
-                    <strong style="color: ${color}; min-width: 70px;">${name}</strong>
+                    <strong style="color: ${color}; min-width: 60px;">${name}</strong>
                 </div>
                 <div style="display: flex; gap: 4px; align-items: center;">
                     ${linksHtml}
