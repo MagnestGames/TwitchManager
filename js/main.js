@@ -565,15 +565,8 @@
                 finalAvatarUrl = 'https://avatars.githubusercontent.com/u/106515274?v=4';
             }
 
-            let localUrl = '';
-            if (finalAvatarUrl.includes('/assets/image1.png') || finalAvatarUrl.includes('98635212')) localUrl = '../../images/image1.png';
-            else if (finalAvatarUrl.includes('/assets/image2.png') || finalAvatarUrl.includes('106515274')) localUrl = '../../images/image2.png';
-            else if (finalAvatarUrl.includes('/assets/image3.png')) localUrl = '../../images/image3.png';
-            else if (finalAvatarUrl.includes('/assets/uikouka.png')) localUrl = '../../images/image1.png';
-            else if (finalAvatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
-
             const avatarHtml = finalAvatarUrl 
-                ? `<img src="${finalAvatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true; if('${localUrl}'){this.src='${localUrl}'}else{this.style.display='none'}}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
+                ? `<img src="${finalAvatarUrl}" onerror="this.style.display='none'" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
                 : '';
 
             html += `
