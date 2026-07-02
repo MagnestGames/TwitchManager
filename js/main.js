@@ -558,15 +558,22 @@
                 </a>`;
             });
 
-            let localUrl = '';
-            if (avatarUrl.includes('/assets/image1.png') || avatarUrl.includes('98635212')) localUrl = '../../images/image1.png';
-            else if (avatarUrl.includes('/assets/image2.png') || avatarUrl.includes('106515274')) localUrl = '../../images/image2.png';
-            else if (avatarUrl.includes('/assets/image3.png')) localUrl = '../../images/image3.png';
-            else if (avatarUrl.includes('/assets/uikouka.png')) localUrl = '../../images/image1.png';
-            else if (avatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
+            let finalAvatarUrl = avatarUrl;
+            if (avatarUrl.includes('uikouka.png')) {
+                finalAvatarUrl = 'https://avatars.githubusercontent.com/u/98635212?v=4';
+            } else if (avatarUrl.includes('frusumi.png')) {
+                finalAvatarUrl = 'https://avatars.githubusercontent.com/u/106515274?v=4';
+            }
 
-            const avatarHtml = avatarUrl 
-                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
+            let localUrl = '';
+            if (finalAvatarUrl.includes('/assets/image1.png') || finalAvatarUrl.includes('98635212')) localUrl = '../../images/image1.png';
+            else if (finalAvatarUrl.includes('/assets/image2.png') || finalAvatarUrl.includes('106515274')) localUrl = '../../images/image2.png';
+            else if (finalAvatarUrl.includes('/assets/image3.png')) localUrl = '../../images/image3.png';
+            else if (finalAvatarUrl.includes('/assets/uikouka.png')) localUrl = '../../images/image1.png';
+            else if (finalAvatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
+
+            const avatarHtml = finalAvatarUrl 
+                ? `<img src="${localUrl || finalAvatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${finalAvatarUrl}'}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
                 : '';
 
             html += `
