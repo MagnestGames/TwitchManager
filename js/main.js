@@ -462,7 +462,7 @@
         {
             name: "初狐羽鹿",
             color: "#bf94ff",
-            avatar: "https://github.com/raetniar.png",
+            avatar: "https://avatars.githubusercontent.com/u/98635212?v=4",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/uikouka", title: "Twitch" },
                 { type: "x", url: "https://x.com/uikouka", title: "X" },
@@ -473,7 +473,7 @@
         {
             name: "古隅フユセ",
             color: "#bf94ff",
-            avatar: "https://github.com/Frusumi.png",
+            avatar: "https://avatars.githubusercontent.com/u/106515274?v=4",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
                 { type: "x", url: "https://x.com/FruEnji", title: "X" },
@@ -559,8 +559,8 @@
             });
 
             let localUrl = '';
-            if (avatarUrl.includes('/assets/image1.png') || avatarUrl.includes('github.com/raetniar')) localUrl = '../../images/image1.png';
-            else if (avatarUrl.includes('/assets/image2.png') || avatarUrl.includes('github.com/Frusumi')) localUrl = '../../images/image2.png';
+            if (avatarUrl.includes('/assets/image1.png') || avatarUrl.includes('98635212')) localUrl = '../../images/image1.png';
+            else if (avatarUrl.includes('/assets/image2.png') || avatarUrl.includes('106515274')) localUrl = '../../images/image2.png';
             else if (avatarUrl.includes('/assets/image3.png')) localUrl = '../../images/image3.png';
             else if (avatarUrl.includes('/assets/uikouka.png')) localUrl = '../../images/image1.png';
             else if (avatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
