@@ -554,9 +554,9 @@
                 </a>`;
             });
 
-            const firstChar = name.charAt(0);
-            const localAvatarUrl = `../../images/${firstChar}.png`;
-            const avatarHtml = `<img src="${localAvatarUrl}" onerror="if(this.src.indexOf('images/')!==-1){this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`;
+            const avatarHtml = avatarUrl 
+                ? `<img src="${avatarUrl}" onerror="this.style.display='none'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`
+                : '';
 
             html += `
             <div style="display: flex; align-items: center; gap: 8px;">
