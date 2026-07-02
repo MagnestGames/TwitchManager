@@ -1,0 +1,26 @@
+{
+  "creators": [
+    {
+      "name": "初狐羽鹿",
+      "color": "#bf94ff",
+      "avatar": "https://avatars.githubusercontent.com/u/98635212?v=4",
+      "links": [
+        { "type": "twitch", "url": "https://www.twitch.tv/uikouka", "title": "Twitch" },
+        { "type": "x", "url": "https://x.com/uikouka", "title": "X" },
+        { "type": "booth", "url": "https://toumei2suisai.booth.pm/", "title": "Booth" },
+        { "type": "note", "url": "https://note.com/konpeito_fox", "title": "Note" }
+      ]
+    },
+    {
+      "name": "古隅フユセ",
+      "color": "#bf94ff",
+      "avatar": "https://avatars.githubusercontent.com/u/106515274?v=4",
+      "links": [
+        { "type": "twitch", "url": "https://www.twitch.tv/frusumi", "title": "Twitch" },
+        { "type": "x", "url": "https://x.com/FruEnji", "title": "X" },
+        { "type": "booth", "url": "https://frusumi.booth.pm/", "title": "Booth" },
+        { "type": "note", "url": "https://note.com/frusumi", "title": "Note" }
+      ]
+    }
+  ]
+}
