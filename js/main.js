@@ -462,7 +462,7 @@
         {
             name: "初狐羽鹿",
             color: "#bf94ff",
-            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/uikouka.png",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/image1.png",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/uikouka", title: "Twitch" },
                 { type: "x", url: "https://x.com/uikouka", title: "X" },
@@ -472,7 +472,7 @@
         {
             name: "古隅フユセ",
             color: "#bf94ff",
-            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/frusumi.png",
+            avatar: "https://raw.githubusercontent.com/uikouka/OBS_title_save/main/assets/image2.png",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
                 { type: "x", url: "https://x.com/FruEnji", title: "X" },
@@ -554,8 +554,15 @@
                 </a>`;
             });
 
+            let localUrl = '';
+            if (avatarUrl.includes('/assets/image1.png')) localUrl = '../../images/image1.png';
+            else if (avatarUrl.includes('/assets/image2.png')) localUrl = '../../images/image2.png';
+            else if (avatarUrl.includes('/assets/image3.png')) localUrl = '../../images/image3.png';
+            else if (avatarUrl.includes('/assets/uikouka.png')) localUrl = '../../images/image1.png';
+            else if (avatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
+
             const avatarHtml = avatarUrl 
-                ? `<img src="${avatarUrl}" onerror="this.style.display='none'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`
+                ? `<img src="${localUrl || avatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${avatarUrl}'}else{this.style.display='none'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:4px;border:1px solid var(--border-color);" />`
                 : '';
 
             html += `
