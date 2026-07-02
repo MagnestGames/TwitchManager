@@ -7,7 +7,8 @@
       "links": [
         { "type": "twitch", "url": "https://www.twitch.tv/uikouka", "title": "Twitch" },
         { "type": "x", "url": "https://x.com/uikouka", "title": "X" },
-        { "type": "booth", "url": "https://toumei2suisai.booth.pm/", "title": "Booth" }
+        { "type": "booth", "url": "https://toumei2suisai.booth.pm/", "title": "Booth" },
+        { "type": "note", "url": "https://note.com/konpeito_fox", "title": "Note" }
       ]
     },
     {
