@@ -573,7 +573,7 @@
             else if (finalAvatarUrl.includes('/assets/frusumi.png')) localUrl = '../../images/image2.png';
 
             const avatarHtml = finalAvatarUrl 
-                ? `<img src="${localUrl || finalAvatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${finalAvatarUrl}'}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
+                ? `<img src="${localUrl || finalAvatarUrl}" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried=true;this.src='${finalAvatarUrl}'}else{this.style.display='none'}" style="width:45px;height:45px;clip-path:polygon(30% 0%, 40% 20%, 60% 20%, 70% 0%, 80% 25%, 95% 50%, 80% 85%, 50% 100%, 20% 85%, 5% 50%, 20% 25%);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
                 : '';
 
             html += `
