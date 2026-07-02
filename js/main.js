@@ -477,7 +477,8 @@
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
                 { type: "x", url: "https://x.com/FruEnji", title: "X" },
-                { type: "booth", url: "https://frusumi.booth.pm/", title: "Booth" }
+                { type: "booth", url: "https://frusumi.booth.pm/", title: "Booth" },
+                { type: "note", url: "https://note.com/frusumi", title: "Note" }
             ]
         }
     ];
