@@ -27,7 +27,10 @@
         function closeLanguageMenu() {
             const menu = document.getElementById('language-menu');
             const btn = document.getElementById('ui-btn-language');
-            if (menu) menu.classList.remove('open');
+            if (menu) {
+                menu.classList.remove('open');
+                menu.style.display = '';
+            }
             if (btn) btn.setAttribute('aria-expanded', 'false');
         }
 
@@ -377,6 +380,10 @@
 
         document.addEventListener('click', (event) => {
             if (!event.target.closest('.language-picker')) closeLanguageMenu();
+            if (!event.target.closest('#birthday-anniversary-indicator')) {
+                const birthdayPopover = document.getElementById('birthday-popover');
+                if (birthdayPopover) birthdayPopover.style.display = 'none';
+            }
         });
 
         function replayUiAnimation(el, className, duration = 360) {
@@ -1188,8 +1195,7 @@
             if (!popover) return;
             const isVisible = popover.style.display === 'block';
             
-            const langMenu = document.getElementById('language-menu');
-            if (langMenu) langMenu.style.display = 'none';
+            if (typeof closeLanguageMenu === 'function') closeLanguageMenu();
 
             if (isVisible) {
                 popover.style.display = 'none';
@@ -4694,6 +4700,5 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(initDynamicCategories, 500);
     setTimeout(checkBackupReminder, 1000);
 });
-
 
 

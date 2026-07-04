@@ -77,7 +77,7 @@
             --text-light-purple: #5c35b4;
             --text-dark-purple: #534566;
             --text-on-purple: #ffffff;
-            --text-on-secondary: #713f12;
+            --text-on-secondary: #34343d;
             --twitch-purple: #772ce8;
             --twitch-purple-hover: #5c16c5;
             --danger: #dc3545;
@@ -97,9 +97,9 @@
             --input-border-darker: #b0bac9;
             --dialog-input-border: #cfd6df;
             --tw-toggle-slider-bg: #cfd6df;
-            --button-secondary-bg: #fef9c3;
-            --button-secondary-hover-bg: #fef08a;
-            --button-secondary-border: #fde047;
+            --button-secondary-bg: #f4f6fb;
+            --button-secondary-hover-bg: #e8ecf5;
+            --button-secondary-border: #cfd6df;
             --button-primary-bg: rgba(119, 44, 232, 0.08);
             --button-primary-text: #772ce8;
             --button-primary-border: rgba(119, 44, 232, 0.4);
@@ -1609,6 +1609,16 @@
             font-weight: 700;
         }
 
+        body.light-theme .supporter-reset-card {
+            background: rgba(119, 44, 232, 0.075);
+            border-color: rgba(119, 44, 232, 0.22);
+            box-shadow: inset 2px 0 0 rgba(119, 44, 232, 0.48);
+        }
+
+        body.light-theme .supporter-reset-card .supporter-reset-label {
+            color: #34343d;
+        }
+
         .tw-time-control,
         .cmd-time-control {
             display: inline-grid;
@@ -2009,6 +2019,19 @@
             border-color: var(--text-light-purple);
             background: rgba(145, 70, 255, 0.48);
             box-shadow: 0 0 0 1px rgba(215, 195, 255, 0.28), 0 8px 18px rgba(145, 70, 255, 0.28);
+        }
+
+        body.light-theme .push-action-btn {
+            border-color: rgba(119, 44, 232, 0.65);
+            background: #772ce8;
+            color: #ffffff;
+            box-shadow: 0 0 0 1px rgba(119, 44, 232, 0.12), 0 6px 14px rgba(119, 44, 232, 0.18);
+        }
+
+        body.light-theme .push-action-btn:hover {
+            border-color: #5c16c5;
+            background: #5c16c5;
+            color: #ffffff;
         }
 
         .id-action-btn {
@@ -2783,6 +2806,20 @@
             border-color: var(--twitch-purple-hover);
             background: rgba(145, 70, 255, 0.12);
             color: var(--text-on-purple);
+        }
+
+        body.light-theme .btn-outline:hover,
+        body.light-theme .cmd-copy-btn:hover,
+        body.light-theme .tw-command-copy-btn:hover,
+        body.light-theme .raidso-token-item:hover,
+        body.light-theme .icon-btn:hover {
+            color: var(--twitch-purple) !important;
+            background: rgba(119, 44, 232, 0.12);
+        }
+
+        body.light-theme .language-option:hover,
+        body.light-theme .language-option.active {
+            color: #ffffff;
         }
 
         .btn-outline:active {
