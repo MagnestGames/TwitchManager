@@ -77,7 +77,7 @@
             --text-light-purple: #5c35b4;
             --text-dark-purple: #534566;
             --text-on-purple: #ffffff;
-            --text-on-secondary: #713f12;
+            --text-on-secondary: #34343d;
             --twitch-purple: #772ce8;
             --twitch-purple-hover: #5c16c5;
             --danger: #dc3545;
@@ -97,9 +97,9 @@
             --input-border-darker: #b0bac9;
             --dialog-input-border: #cfd6df;
             --tw-toggle-slider-bg: #cfd6df;
-            --button-secondary-bg: #fef9c3;
-            --button-secondary-hover-bg: #fef08a;
-            --button-secondary-border: #fde047;
+            --button-secondary-bg: #f4f6fb;
+            --button-secondary-hover-bg: #e8ecf5;
+            --button-secondary-border: #cfd6df;
             --button-primary-bg: rgba(119, 44, 232, 0.08);
             --button-primary-text: #772ce8;
             --button-primary-border: rgba(119, 44, 232, 0.4);
@@ -1609,6 +1609,16 @@
             font-weight: 700;
         }
 
+        body.light-theme .supporter-reset-card {
+            background: rgba(119, 44, 232, 0.075);
+            border-color: rgba(119, 44, 232, 0.22);
+            box-shadow: inset 2px 0 0 rgba(119, 44, 232, 0.48);
+        }
+
+        body.light-theme .supporter-reset-card .supporter-reset-label {
+            color: #34343d;
+        }
+
         .tw-time-control,
         .cmd-time-control {
             display: inline-grid;
@@ -2009,6 +2019,19 @@
             border-color: var(--text-light-purple);
             background: rgba(145, 70, 255, 0.48);
             box-shadow: 0 0 0 1px rgba(215, 195, 255, 0.28), 0 8px 18px rgba(145, 70, 255, 0.28);
+        }
+
+        body.light-theme .push-action-btn {
+            border-color: rgba(119, 44, 232, 0.65);
+            background: #772ce8;
+            color: #ffffff;
+            box-shadow: 0 0 0 1px rgba(119, 44, 232, 0.12), 0 6px 14px rgba(119, 44, 232, 0.18);
+        }
+
+        body.light-theme .push-action-btn:hover {
+            border-color: #5c16c5;
+            background: #5c16c5;
+            color: #ffffff;
         }
 
         .id-action-btn {
@@ -2555,7 +2578,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #000;
+            background: var(--bg-focus);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             padding: 8px 10px;
@@ -2783,6 +2806,20 @@
             border-color: var(--twitch-purple-hover);
             background: rgba(145, 70, 255, 0.12);
             color: var(--text-on-purple);
+        }
+
+        body.light-theme .btn-outline:hover,
+        body.light-theme .cmd-copy-btn:hover,
+        body.light-theme .tw-command-copy-btn:hover,
+        body.light-theme .raidso-token-item:hover,
+        body.light-theme .icon-btn:hover {
+            color: var(--twitch-purple) !important;
+            background: rgba(119, 44, 232, 0.12);
+        }
+
+        body.light-theme .language-option:hover,
+        body.light-theme .language-option.active {
+            color: #ffffff;
         }
 
         .btn-outline:active {
@@ -3950,4 +3987,193 @@ body {
 }
 .modal-close-top {
     font-size: calc(28px + var(--font-size-offset, 0px)) !important;
+}
+
+/* Codex PR#7 stabilization: compact overrides for light mode and enlarged text. */
+button, .btn-primary, .btn-secondary, .btn-outline, .btn-add-item,
+.btn-danger-soft, .icon-btn, .twitch-action-btn, .cmd-copy-btn,
+.tw-command-copy-btn, .raidso-token-item {
+    letter-spacing: 0 !important;
+    word-break: keep-all;
+    writing-mode: horizontal-tb !important;
+}
+
+.tw-toggle, .raidso-switch {
+    display: inline-flex !important;
+    flex: 0 0 36px !important;
+    height: 20px !important;
+    width: 36px !important;
+    vertical-align: middle;
+}
+
+.tw-toggle input, .raidso-switch input {
+    opacity: 0;
+    position: absolute;
+}
+
+.tw-slider, .raidso-slider {
+    background: var(--tw-toggle-slider-bg) !important;
+    border: 1px solid transparent !important;
+    border-radius: 20px !important;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+}
+
+.tw-slider:before, .raidso-slider::before {
+    background: var(--text-main) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    height: 16px !important;
+    left: 2px !important;
+    top: 2px !important;
+    width: 16px !important;
+}
+
+.tw-toggle input:checked + .tw-slider,
+.raidso-switch input:checked + .raidso-slider {
+    background: var(--twitch-purple) !important;
+    border-color: var(--twitch-purple) !important;
+}
+
+.tw-toggle input:checked + .tw-slider:before,
+.raidso-switch input:checked + .raidso-slider::before {
+    background: var(--text-on-purple) !important;
+    transform: translateX(16px) !important;
+}
+
+.tw-toggle input:focus-visible + .tw-slider,
+.raidso-switch input:focus-visible + .raidso-slider {
+    outline: 2px solid var(--twitch-purple-hover);
+    outline-offset: 2px;
+}
+
+.twitch-action-btn {
+    align-items: center;
+    height: auto !important;
+    justify-content: center;
+    min-height: 40px !important;
+    min-width: 78px !important;
+    padding: 5px 8px !important;
+}
+
+.twitch-action-btn .action-text {
+    align-items: center;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.05;
+    min-width: max-content;
+    text-align: center;
+}
+
+.twitch-action-btn .action-main,
+.twitch-action-btn .action-sub {
+    overflow-wrap: normal !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+}
+
+.twitch-action-btn .action-main { font-size: clamp(8px, calc(9px + var(--font-size-offset, 0px)), 12px) !important; }
+.twitch-action-btn .action-sub { font-size: clamp(10px, calc(11px + var(--font-size-offset, 0px)), 14px) !important; }
+
+#tw-vip-input-suggest-wrap { min-width: 120px; }
+#tw-btn-vip-add, #tw-btn-vip-rm {
+    flex: 0 0 auto;
+    line-height: 1.22 !important;
+    min-height: 42px;
+    min-width: 64px;
+    padding: 8px 10px !important;
+    text-align: center;
+    white-space: normal;
+}
+
+#birthday-anniversary-indicator {
+    align-items: center;
+    display: inline-flex !important;
+    margin-right: 0 !important;
+}
+
+#birthday-indicator-btn {
+    border-radius: var(--radius-md) !important;
+    height: 36px !important;
+    padding: 0 !important;
+    width: 36px !important;
+}
+
+#birthday-indicator-btn.inactive {
+    background: var(--bg-header) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+#toast {
+    bottom: calc(var(--dock-footer-height, 0px) + 18px) !important;
+    color: #ffffff;
+    max-width: min(460px, calc(100vw - 24px));
+}
+
+body.light-theme .tw-slider,
+body.light-theme .raidso-slider {
+    background: #d5dbe5 !important;
+    border-color: #8b95a6 !important;
+}
+
+body.light-theme .tw-slider:before,
+body.light-theme .raidso-slider::before {
+    background: #1f232b !important;
+}
+
+body.light-theme .tw-toggle input:checked + .tw-slider:before,
+body.light-theme .raidso-switch input:checked + .raidso-slider::before {
+    background: #ffffff !important;
+}
+
+body.light-theme .btn-head-purple[data-tooltip]::after,
+body.light-theme .has-tooltip[data-tooltip]::after {
+    background: #ffffff !important;
+    color: var(--text-main) !important;
+    border-color: var(--twitch-purple-hover) !important;
+    box-shadow: 0 4px 12px rgba(31, 31, 35, 0.16);
+}
+
+body.light-theme .btn-head-purple:hover,
+body.light-theme #birthday-indicator-btn:hover,
+body.light-theme .btn-outline:hover,
+body.light-theme .cmd-copy-btn:hover,
+body.light-theme .tw-command-copy-btn:hover,
+body.light-theme .raidso-token-item:hover,
+body.light-theme .icon-btn:hover {
+    background: rgba(119, 44, 232, 0.12) !important;
+    border-color: var(--twitch-purple-hover) !important;
+    color: var(--twitch-purple) !important;
+}
+
+body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
+
+body.light-theme .raidso-template-box,
+body.light-theme .raidso-token-help,
+body.light-theme .supporter-output-options {
+    background: #ffffff !important;
+    border-color: #cfd6df !important;
+}
+
+body.light-theme .cmd-copy-btn,
+body.light-theme .tw-command-copy-btn,
+body.light-theme .raidso-token-item {
+    background: #f4f6fb !important;
+    border-color: #cfd6df !important;
+    color: #34343d !important;
+}
+
+body.light-theme .raidso-token-item code,
+body.light-theme .cmd-copy-btn code,
+body.light-theme .tw-command-copy-btn code {
+    color: var(--twitch-purple) !important;
+}
+
+@media (max-width: 640px) {
+    #birthday-indicator-btn {
+        height: 32px !important;
+        width: 32px !important;
+    }
+    .twitch-action-btn { min-width: 72px !important; }
 }

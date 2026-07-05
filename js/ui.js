@@ -27,7 +27,10 @@
         function closeLanguageMenu() {
             const menu = document.getElementById('language-menu');
             const btn = document.getElementById('ui-btn-language');
-            if (menu) menu.classList.remove('open');
+            if (menu) {
+                menu.classList.remove('open');
+                menu.style.display = '';
+            }
             if (btn) btn.setAttribute('aria-expanded', 'false');
         }
 
@@ -377,6 +380,10 @@
 
         document.addEventListener('click', (event) => {
             if (!event.target.closest('.language-picker')) closeLanguageMenu();
+            if (!event.target.closest('#birthday-anniversary-indicator')) {
+                const birthdayPopover = document.getElementById('birthday-popover');
+                if (birthdayPopover) birthdayPopover.style.display = 'none';
+            }
         });
 
         function replayUiAnimation(el, className, duration = 360) {
@@ -1188,8 +1195,7 @@
             if (!popover) return;
             const isVisible = popover.style.display === 'block';
             
-            const langMenu = document.getElementById('language-menu');
-            if (langMenu) langMenu.style.display = 'none';
+            if (typeof closeLanguageMenu === 'function') closeLanguageMenu();
 
             if (isVisible) {
                 popover.style.display = 'none';
@@ -2175,7 +2181,9 @@
             firstCommentSoundFile: "sounds/001_pyowan_up.wav",
             firstCommentVolume: 80,
             soundFiles: [],
-            excludedUsers: "StreamElements\nSoundAlerts\nNightbot",
+            excludedUsers: typeof DEFAULT_EXCLUDED_BOT_USERS_TEXT !== 'undefined'
+                ? DEFAULT_EXCLUDED_BOT_USERS_TEXT
+                : "StreamElements\nSoundAlerts\nNightbot\nSery_bot\nFrostyTools",
             raidTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.raid,
             manualTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.manual
         };
@@ -2503,7 +2511,9 @@
                 firstCommentSoundFile: keepValue('raidso-first-comment-sound-file', raidSoSettings.firstCommentSoundFile, RAIDSO_DEFAULTS.firstCommentSoundFile),
                 firstCommentVolume: keepVolume('raidso-first-comment-volume', raidSoSettings.firstCommentVolume, RAIDSO_DEFAULTS.firstCommentVolume),
                 soundFiles: getRaidSoSoundFiles(),
-                excludedUsers: document.getElementById('raidso-excluded-users')?.value || '',
+                excludedUsers: typeof expandDefaultExcludedUsers === 'function'
+                    ? expandDefaultExcludedUsers(document.getElementById('raidso-excluded-users')?.value || '')
+                    : (document.getElementById('raidso-excluded-users')?.value || ''),
                 raidTemplate: document.getElementById('raidso-raid-template')?.value || RAIDSO_DEFAULT_RAID_TEMPLATE,
                 manualTemplate: document.getElementById('raidso-manual-template')?.value || RAIDSO_DEFAULT_MANUAL_TEMPLATE
             };
@@ -2839,7 +2849,10 @@
 
         function isRaidSoExcluded(login, displayName) {
             const excluded = new Set(String(raidSoSettings.excludedUsers || '').split(/[\n,]+/).map(v => normalizeRaidSoLogin(v)).filter(Boolean));
-            return excluded.has(normalizeRaidSoLogin(login)) || excluded.has(normalizeRaidSoLogin(displayName));
+            const selfLogin = normalizeRaidSoLogin(settings.userLogin || document.getElementById('user_login')?.value || '');
+            return excluded.has(normalizeRaidSoLogin(login))
+                || excluded.has(normalizeRaidSoLogin(displayName))
+                || (selfLogin && (normalizeRaidSoLogin(login) === selfLogin || normalizeRaidSoLogin(displayName) === selfLogin));
         }
 
         function idListText() {
@@ -4093,10 +4106,7 @@ function safeSetLocal(key, value) {
         }
 
         function stripAutomaticSupporterHonorifics(value) {
-            return String(value || '')
-                .split('\n')
-                .map(line => line.replace(/さん(?=(?:[\s　(]|$))/g, ''))
-                .join('\n');
+            return String(value || '');
         }
 
         function formatSupporterDetailBlock(value) {
@@ -4106,7 +4116,9 @@ function safeSetLocal(key, value) {
             if (!suffix) return clean;
             return clean.split('\n').map(line => {
                 if (!line.trim()) return line;
-                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, `$1$2${suffix}`);
+                return line.replace(/^(\s*)(\S+?)(?=(?:[\s　(]|$))/, (_, indent, name) => {
+                    return `${indent}${name} ${suffix}`;
+                });
             }).join('\n');
         }
 
@@ -4694,6 +4706,3 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(initDynamicCategories, 500);
     setTimeout(checkBackupReminder, 1000);
 });
-
-
-

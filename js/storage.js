@@ -444,12 +444,32 @@ const langMap = {
             }
         }
 
+        var DEFAULT_EXCLUDED_BOT_USERS = Object.freeze(['StreamElements', 'SoundAlerts', 'Nightbot', 'Sery_bot', 'FrostyTools']);
+        var DEFAULT_EXCLUDED_BOT_USERS_TEXT = DEFAULT_EXCLUDED_BOT_USERS.join('\n');
+
+        function excludedUserLines(value) {
+            return String(value || '')
+                .split(/[\s,、]+/)
+                .filter(Boolean)
+                .map(item => item.trim());
+        }
+
+        function expandDefaultExcludedUsers(value) {
+            const lines = excludedUserLines(value);
+            const seen = new Set(lines.map(normalizeSupporterLogin).filter(Boolean));
+            DEFAULT_EXCLUDED_BOT_USERS.forEach(name => {
+                if (!seen.has(normalizeSupporterLogin(name))) lines.push(name);
+            });
+            return lines.join('\n');
+        }
+
         function loadRaidSoSettings() {
             try {
                 const loaded = { ...RAIDSO_DEFAULTS, ...(JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}')) };
                 if (loaded.firstCommentSoundFile === 'sounds/legacy-default.wav') {
                     loaded.firstCommentSoundFile = RAIDSO_DEFAULTS.firstCommentSoundFile;
                 }
+                loaded.excludedUsers = expandDefaultExcludedUsers(loaded.excludedUsers);
                 return loaded;
             } catch (e) {
                 return { ...RAIDSO_DEFAULTS };
@@ -472,6 +492,10 @@ const langMap = {
         function saveRaidSoSettings(show = true) {
             collectRaidSoSettings();
             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            const excludedInput = document.getElementById('raidso-excluded-users');
+            if (excludedInput && excludedInput.value !== raidSoSettings.excludedUsers) {
+                excludedInput.value = raidSoSettings.excludedUsers;
+            }
             if (show) {
                 showToast(doneText());
                 raidSoLog(uiText('runtime.operationLog.raidSettingsSaved'));
@@ -490,7 +514,7 @@ const langMap = {
                 ...SUPPORTER_CATEGORY_DEFAULTS,
                 ...(settings.supporterCategories && typeof settings.supporterCategories === 'object' ? settings.supporterCategories : {})
             };
-            settings.supporterExcludedUsers = String(settings.supporterExcludedUsers || '');
+            settings.supporterExcludedUsers = expandDefaultExcludedUsers(settings.supporterExcludedUsers);
             settings.supporterHonorificEnabled = settings.supporterHonorificEnabled === true;
         }
 
@@ -510,12 +534,15 @@ const langMap = {
         function isSupporterExcluded(...values) {
             const excluded = supporterExcludedIds();
             const broadcasterId = String(settings.userId || '');
-            const broadcasterLogin = normalizeSupporterLogin(settings.userLogin);
+            const broadcasterLogins = new Set([
+                settings.userLogin,
+                document.getElementById('user_login')?.value
+            ].map(normalizeSupporterLogin).filter(Boolean));
             return values.some(value => {
                 const raw = String(value || '').trim();
                 const login = normalizeSupporterLogin(raw);
                 return (broadcasterId && raw === broadcasterId)
-                    || (broadcasterLogin && login === broadcasterLogin)
+                    || (login && broadcasterLogins.has(login))
                     || (login && excluded.has(login));
             });
         }
@@ -555,8 +582,12 @@ const langMap = {
 
         function saveSupporterExcludedUsers(value) {
             ensureSupporterSettings();
-            settings.supporterExcludedUsers = String(value || '');
+            settings.supporterExcludedUsers = expandDefaultExcludedUsers(value);
             safeSetLocal('stream_settings_v16', JSON.stringify(settings));
+            const excludedInput = document.getElementById('supporter-excluded-users');
+            if (excludedInput && excludedInput.value !== settings.supporterExcludedUsers) {
+                excludedInput.value = settings.supporterExcludedUsers;
+            }
         }
 
         function saveSupporterHonorificSetting(checked) {
