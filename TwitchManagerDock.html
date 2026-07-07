@@ -426,13 +426,27 @@
             </select>
         </div>
 
+        <!-- タグで絞り込むアコーディオン -->
+        <details id="friends-tag-filter-details" style="margin-bottom: 10px; background: var(--bg-header); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12px; color: var(--text-main); outline: none;">
+            <summary style="padding: 6px 12px; cursor: pointer; font-weight: bold; list-style: none; display: flex; justify-content: center; align-items: center; position: relative;">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    タグで絞り込む
+                </span>
+                <span id="friends-selected-tags-count" style="font-size: 10px; color: var(--twitch-purple); font-weight: normal; position: absolute; right: 12px;"></span>
+            </summary>
+            <div id="friends-tag-list" style="padding: 8px 12px; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow-y: auto;">
+                <!-- JSで動的にチェックボックスを挿入 -->
+            </div>
+        </details>
+
         <div id="friends-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
             <button id="del-mode-friends" class="btn-secondary" style="flex: 2;"
                 onclick="toggleDeleteMode('friends-tab')" data-i18n="extended.deleteBtn">削除</button>
             <button class="btn-secondary btn-add-item" id="ui-add-template-friends" style="flex: 5;"
-                onclick="addFriendCategory('friends-container')" data-i18n="extended.addTemplateTitle">＋ テンプレートを追加</button>
+                onclick="showAddFriendDialog()" data-i18n="extended.addItemTitle">＋ 追加</button>
             <button class="btn-primary" id="ui-save-friends" style="flex: 3;"
                 onclick="saveFriendsLocal(true)" data-i18n="extended.saveBtn">保存</button>
         </div>

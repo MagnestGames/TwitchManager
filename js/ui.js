@@ -877,6 +877,22 @@
             card.id = `friend-card-${ci}-${fi}`;
             card.className = "record-card" + (f.isOpen ? " open" : "");
             card.setAttribute('data-idx', fi);
+            // 登録されているすべての所属タグ（グループ名）を動的に収集
+            const cardTwitch = (normalizeFriendTwitch(f.twitch || f.name || '') || '').toLowerCase();
+            const myGroups = [];
+            if (cardTwitch) {
+                (friendsConfig || []).forEach(cat => {
+                    if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+                    const hasMe = (cat.friends || []).some(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === cardTwitch);
+                    if (hasMe && !myGroups.includes(cat.name)) {
+                        myGroups.push(cat.name);
+                    }
+                });
+            }
+            if (myGroups.length === 0 && friendsConfig?.[ci]?.name) {
+                myGroups.push(friendsConfig[ci].name);
+            }
+            card.setAttribute('data-groups', JSON.stringify(myGroups));
             
             // あだな・呼び名 (ツイッチ表示名) の表示ロジック
             const nickname = f.name || '';
@@ -892,12 +908,15 @@
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
             const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
 
-            // グループタグ HTML
-            const groupTagsHtml = groupTags && groupTags.length
-                ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;">
-                    ${groupTags.map(g => `<span style="font-size:9px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border:1px solid rgba(145,70,255,0.3);border-radius:4px;padding:1px 5px;">${raidSoEscape(g)}</span>`).join('')}
-                   </div>`
-                : '';
+            // グループタグ HTML（タグ編集ボタン付き）
+            const groupTagsHtml = isSelf ? '' : `
+                <div style="display:flex; align-items:center; flex-wrap:wrap; gap:3px; margin-top:2px;">
+                    ${myGroups.map(g => `<span style="font-size:9px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border:1px solid rgba(145,70,255,0.3);border-radius:4px;padding:1px 5px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${raidSoEscape(g)}</span>`).join('')}
+                    <button class="icon-btn id-action-btn" title="タグを編集" onclick="event.stopPropagation(); showEditFriendTagsDialog(${ci}, ${fi})" style="padding:1px 3px; font-size:9px; display:inline-flex; align-items:center; justify-content:center; height:15px; width:18px; border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08); color:var(--twitch-purple); margin-left:2px; border-radius:3px;">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    </button>
+                </div>
+            `;
 
             // ソートメタ表示
             const sortMetaHtml = sortMeta
@@ -979,7 +998,34 @@
         function renderFriends() {
             const L = langMap[currentLang];
             const I = L.idList || langMap.ja.idList;
+            const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
+
+            // 現在の選択状態（チェック状態）を退避
+            const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
+
+            // タグリストの生成
+            const tagListEl = document.getElementById('friends-tag-list');
+            if (tagListEl) {
+                const availableTags = (friendsConfig || [])
+                    .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+                    .map(cat => cat.name)
+                    .filter(Boolean);
+
+                tagListEl.innerHTML = availableTags.map(tag => {
+                    const checked = activeTags.includes(tag) ? ' checked' : '';
+                    return `
+                    <label style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; user-select: none; font-size: 11px;">
+                        <input type="checkbox" value="${raidSoEscape(tag)}"${checked} onchange="filterFriendsByTags()">
+                        <span class="filter-tag-name">${raidSoEscape(tag)}</span>
+                    </label>`;
+                }).join('') + `
+                <button type="button" onclick="addNewGroupFromFilter()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(145, 70, 255, 0.08); border: 1px dashed var(--twitch-purple); border-radius: 12px; cursor: pointer; color: var(--twitch-purple); font-size: 11px; font-weight: bold; height: 26px; transition: background var(--transition-fast); outline: none;">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    タグを追加
+                </button>`;
+            }
+
             (friendsConfig || []).forEach(cat => {
                 if (cat.kind === 'shoutout-history') cat.name = I.autoCategory || cat.name;
                 if (cat.kind === 'authenticated-user') cat.name = I.selfCategory || cat.name;
@@ -1114,7 +1160,199 @@
             }
 
             renderShoutoutSuggestions();
+            filterFriendsByTags();
         }
+
+        function filterFriendsByTags() {
+            const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
+            
+            // 選択中の件数をバッジ表示
+            const countEl = document.getElementById('friends-selected-tags-count');
+            if (countEl) {
+                countEl.innerText = activeTags.length > 0 ? `(${activeTags.length})` : '';
+            }
+
+            const isGroupMode = friendsSortOrder === 'group';
+
+            if (isGroupMode) {
+                // グループ表示モード: category-box を対象にする
+                const boxes = document.querySelectorAll('#friends-container > .category-box');
+                boxes.forEach(box => {
+                    const catIdx = parseInt(box.getAttribute('data-idx'), 10);
+                    const cat = friendsConfig[catIdx];
+                    if (!cat) return;
+                    
+                    // 特殊カテゴリーは常に表示する
+                    if (cat.kind === 'authenticated-user') {
+                        box.style.display = '';
+                        return;
+                    }
+                    
+                    if (activeTags.length === 0 || activeTags.includes(cat.name)) {
+                        box.style.display = '';
+                    } else {
+                        box.style.display = 'none';
+                    }
+                });
+            } else {
+                // フラット表示モード: 各 record-card を対象にする
+                const cards = document.querySelectorAll('#friends-container > .record-card');
+                cards.forEach(card => {
+                    // 自分自身のアカウントカードは常に表示
+                    if (card.classList.contains('self-account-card')) {
+                        card.style.display = '';
+                        return;
+                    }
+
+                    // data-groups 属性から所属カテゴリーを取得
+                    const groupsAttr = card.getAttribute('data-groups');
+                    const cardGroups = groupsAttr ? JSON.parse(groupsAttr) : [];
+
+                    if (activeTags.length === 0 || cardGroups.some(g => activeTags.includes(g))) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+        }
+        window.filterFriendsByTags = filterFriendsByTags;
+
+        async function addNewGroupFromFilter() {
+            const L = langMap[currentLang];
+            const E = L.extended || langMap.ja.extended || {};
+            
+            const n = await customPrompt('新規タグ名を入力してください');
+            if (!n) return;
+            
+            friendsConfig.push({
+                name: n,
+                friends: [],
+                isClosed: false
+            });
+            renderFriends();
+            saveFriendsLocal(false);
+        }
+        window.addNewGroupFromFilter = addNewGroupFromFilter;
+
+        async function showEditFriendTagsDialog(ci, fi) {
+            const L = langMap[currentLang];
+            const E = L.extended || langMap.ja.extended || {};
+            const targetFriend = friendsConfig[ci].friends[fi];
+            if (!targetFriend) return;
+
+            // ターゲット配信者の Twitch ID を小文字化・正規化
+            const targetTwitch = (normalizeFriendTwitch(targetFriend.twitch || targetFriend.name || '') || '').toLowerCase();
+            if (!targetTwitch) {
+                showToast('Twitch IDが設定されていないため、タグ編集できません。', 'error');
+                return;
+            }
+
+            // 現在のすべての所属グループ名を抽出
+            const currentBelongingGroups = [];
+            (friendsConfig || []).forEach(cat => {
+                if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+                const hasMe = (cat.friends || []).some(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
+                if (hasMe) currentBelongingGroups.push(cat.name);
+            });
+
+            // 選択肢となる通常のグループ（カテゴリー）一覧
+            const availableCategories = (friendsConfig || [])
+                .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user');
+
+            if (availableCategories.length === 0) {
+                showToast('グループ（タグ）が存在しません。', 'error');
+                return;
+            }
+
+            // ダイアログHTMLの構築
+            const listHtml = availableCategories.map((cat, idx) => {
+                const checked = currentBelongingGroups.includes(cat.name) ? ' checked' : '';
+                return `
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 6px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" class="edit-tags-cb" value="${raidSoEscape(cat.name)}"${checked} style="width:16px; height:16px; accent-color: var(--twitch-purple);">
+                        <span style="font-size:13px; color: var(--text-main); font-weight: bold;">${raidSoEscape(cat.name)}</span>
+                    </label>
+                `;
+            }).join('');
+
+            const dialogHtml = `
+                <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main); min-height: 250px; display: flex; flex-direction: column;">
+                    <p style="color:var(--text-muted); margin-bottom:12px; font-size: 11px;">所属させたいタグ（グループ）にチェックを入れてください。</p>
+                    <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:4px;">
+                        ${listHtml}
+                    </div>
+                    <button class="btn-primary" id="edit-tags-submit" style="padding:10px; font-weight:bold; width:100%; margin-top: 12px;">タグ設定を保存</button>
+                </div>
+            `;
+
+            showCustomDialog({
+                title: `${targetFriend.name || '無名'} のタグ設定`,
+                type: 'alert',
+                messageHtml: dialogHtml
+            });
+
+            setTimeout(() => {
+                const closeTopBtn = document.getElementById('cd-btn-close-top');
+                if (closeTopBtn) closeTopBtn.style.display = 'none';
+
+                const btnSubmit = document.getElementById('edit-tags-submit');
+                if (btnSubmit) {
+                    btnSubmit.onclick = () => {
+                        // チェックされたグループ（タグ）名一覧
+                        const selectedGroupNames = Array.from(document.querySelectorAll('.edit-tags-cb:checked')).map(cb => cb.value);
+
+                        // 選択されたグループがゼロの場合、強制的に「未分類」に登録する（データ消失防止）
+                        if (selectedGroupNames.length === 0) {
+                            const uncategorizedName = E.uncategorized || '未分類';
+                            selectedGroupNames.push(uncategorizedName);
+                            // 未分類グループがなければ作成
+                            let uIdx = (friendsConfig || []).findIndex(cat => cat.name === uncategorizedName);
+                            if (uIdx === -1) {
+                                friendsConfig.push({ name: uncategorizedName, friends: [], isClosed: false });
+                            }
+                        }
+
+                        // 元の配信者オブジェクトの情報を保持する
+                        let baseFriendData = null;
+                        for (let cat of friendsConfig) {
+                            const found = (cat.friends || []).find(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
+                            if (found) {
+                                baseFriendData = { ...found };
+                                break;
+                            }
+                        }
+                        if (!baseFriendData) {
+                            baseFriendData = { ...targetFriend };
+                        }
+
+                        // 各グループの friends 配列を更新する
+                        (friendsConfig || []).forEach(cat => {
+                            if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+                            
+                            const myIdx = (cat.friends || []).findIndex(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
+                            const shouldBelong = selectedGroupNames.includes(cat.name);
+
+                            if (shouldBelong) {
+                                if (myIdx === -1) {
+                                    if (!cat.friends) cat.friends = [];
+                                    cat.friends.push({ ...baseFriendData });
+                                }
+                            } else {
+                                if (myIdx > -1) {
+                                    cat.friends.splice(myIdx, 1);
+                                }
+                            }
+                        });
+
+                        renderFriends();
+                        saveFriendsLocal(false);
+                        if (closeTopBtn) closeTopBtn.click();
+                    };
+                }
+            }, 50);
+        }
+        window.showEditFriendTagsDialog = showEditFriendTagsDialog;
 
 
         // --- Twitch ID 重複チェック共通関数 ---
@@ -1279,13 +1517,13 @@
                     const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
                     html += `
                     <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;cursor:pointer;border-radius:4px;transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
-                        <div style="display:flex;flex-direction:column;">
-                            <span style="font-weight:bold;color:var(--text-main);">${raidSoEscape(m.name)}</span>
+                        <div style="display:flex;flex-direction:column;min-width:0;margin-right:8px;">
+                            <span style="font-weight:bold;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
                             <span style="color:var(--text-muted);font-size:9px;">${m.month}/${m.day}</span>
                         </div>
-                        <div style="display:flex;gap:4px;align-items:center;">
+                        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;white-space:nowrap;">
                             <span style="color:var(--twitch-purple);font-weight:bold;">あと${m.daysLeft}${unitDay}</span>
-                            <span style="font-size:8px;padding:1px 4px;border-radius:3px;background:${m.type==='birthday'?'rgba(255,74,154,0.1)':'rgba(29,155,240,0.1)'};color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};">${raidSoEscape(label)}</span>
+                            <span style="font-size:8px;padding:1px 4px;border-radius:3px;background:${m.type==='birthday'?'rgba(255,74,154,0.1)':'rgba(29,155,240,0.1)'};color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};flex-shrink:0;">${raidSoEscape(label)}</span>
                         </div>
                     </div>`;
                 });
@@ -3495,6 +3733,164 @@
                 renderFriends();
                 saveFriendsLocal(false);
             }
+        }
+
+        async function showAddFriendDialog() {
+            const L = langMap[currentLang];
+            const E = L.extended || langMap.ja.extended || {};
+            const I = L.idList || langMap.ja.idList || {};
+
+            // グループ選択肢の生成
+            const groupsHtml = (friendsConfig || [])
+                .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+                .map((cat, idx) => `<option value="${idx}">${raidSoEscape(cat.name)}</option>`)
+                .join('');
+            
+            const uncategorizedText = E.uncategorized || '未分類';
+            const optionUncategorized = `<option value="uncategorized">${raidSoEscape(uncategorizedText)}</option>`;
+
+            const dialogHtml = `
+                <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main); min-height: 420px; display: flex; flex-direction: column;">
+                    <!-- タブ切り替え（IDカード / グループ） -->
+                    <div style="display:flex; border-bottom: 2px solid var(--border-color); margin-bottom:15px;">
+                        <button id="add-friend-tab-user" class="active" style="flex:1; padding:8px; background:none; border:none; border-bottom:2px solid var(--twitch-purple); color:var(--twitch-purple); font-weight:bold; cursor:pointer;">
+                            ${raidSoEscape(E.addTypeUser || 'IDカードを追加')}
+                        </button>
+                        <button id="add-friend-tab-group" style="flex:1; padding:8px; background:none; border:none; border-bottom:2px solid transparent; color:var(--text-muted); font-weight:bold; cursor:pointer;">
+                            ${raidSoEscape(E.addTypeGroup || 'グループを追加')}
+                        </button>
+                    </div>
+
+                    <!-- IDカードの追加フォーム -->
+                    <div id="add-friend-form-user" style="display:block;">
+                        <p style="color:var(--text-muted); margin-bottom:12px; font-size: 11px;">${raidSoEscape(E.addTypeUserDesc || '名前やTwitch IDでカードを作成します。')}</p>
+                        <div style="margin-bottom:10px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:bold;">${raidSoEscape(I.emptyName || '名前 (あだな)')}</label>
+                            <input type="text" id="add-friend-name" style="width:100%; box-sizing:border-box; padding:8px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:bold;">Twitch ID</label>
+                            <input type="text" id="add-friend-twitch" style="width:100%; box-sizing:border-box; padding:8px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+                        </div>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:bold;">${raidSoEscape(E.selectGroup || '追加先グループ')}</label>
+                            <select id="add-friend-group-select" style="width:100%; box-sizing:border-box; padding:8px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+                                ${groupsHtml}
+                                ${optionUncategorized}
+                            </select>
+                        </div>
+                        <button class="btn-primary" id="add-friend-submit-user" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(E.addItemTitle || '追加')}</button>
+                    </div>
+
+                    <!-- グループの追加フォーム -->
+                    <div id="add-friend-form-group" style="display:none;">
+                        <p style="color:var(--text-muted); margin-bottom:12px; font-size: 11px;">${raidSoEscape(E.addTypeGroupDesc || '配信者を整理するフォルダを作成します。')}</p>
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block; margin-bottom:4px; font-weight:bold;">${raidSoEscape(E.newGroupName || '新規グループ名')}</label>
+                            <input type="text" id="add-group-name" style="width:100%; box-sizing:border-box; padding:8px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+                        </div>
+                        <button class="btn-primary" id="add-friend-submit-group" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(E.addItemTitle || '追加')}</button>
+                    </div>
+                </div>
+            `;
+
+            showCustomDialog({
+                title: E.addItemTitle || '追加',
+                type: 'alert',
+                messageHtml: dialogHtml
+            });
+
+            // ダイアログ内の要素にイベントを設定するため、少し待つ (showCustomDialogの非同期レンダリング対策)
+            setTimeout(() => {
+                const tabUser = document.getElementById('add-friend-tab-user');
+                const tabGroup = document.getElementById('add-friend-tab-group');
+                const formUser = document.getElementById('add-friend-form-user');
+                const formGroup = document.getElementById('add-friend-form-group');
+                
+                const closeTopBtn = document.getElementById('cd-btn-close-top');
+                if (closeTopBtn) closeTopBtn.style.display = 'none';
+
+                if (tabUser && tabGroup && formUser && formGroup) {
+                    tabUser.onclick = () => {
+                        tabUser.style.borderBottomColor = 'var(--twitch-purple)';
+                        tabUser.style.color = 'var(--twitch-purple)';
+                        tabGroup.style.borderBottomColor = 'transparent';
+                        tabGroup.style.color = 'var(--text-muted)';
+                        formUser.style.display = 'block';
+                        formGroup.style.display = 'none';
+                    };
+                    tabGroup.onclick = () => {
+                        tabGroup.style.borderBottomColor = 'var(--twitch-purple)';
+                        tabGroup.style.color = 'var(--twitch-purple)';
+                        tabUser.style.borderBottomColor = 'transparent';
+                        tabUser.style.color = 'var(--text-muted)';
+                        formGroup.style.display = 'block';
+                        formUser.style.display = 'none';
+                    };
+                }
+
+                const btnSubmitUser = document.getElementById('add-friend-submit-user');
+                if (btnSubmitUser) {
+                    btnSubmitUser.onclick = () => {
+                        const nameVal = document.getElementById('add-friend-name')?.value?.trim();
+                        const twitchVal = document.getElementById('add-friend-twitch')?.value?.trim() || "";
+                        const groupSelect = document.getElementById('add-friend-group-select');
+                        const selectedGroup = groupSelect?.value;
+
+                        const nameToUse = nameVal || twitchVal || I.emptyName || '無名';
+
+                        let targetIndex = -1;
+                        if (selectedGroup === 'uncategorized') {
+                            // 未分類グループを探すか、なければ作成
+                            const uncategorizedName = E.uncategorized || '未分類';
+                            let uIdx = (friendsConfig || []).findIndex(cat => cat.name === uncategorizedName);
+                            if (uIdx === -1) {
+                                friendsConfig.push({ name: uncategorizedName, friends: [], isClosed: false });
+                                uIdx = friendsConfig.length - 1;
+                            }
+                            targetIndex = uIdx;
+                        } else {
+                            targetIndex = parseInt(selectedGroup, 10);
+                        }
+
+                        if (targetIndex >= 0 && targetIndex < friendsConfig.length) {
+                            if (!friendsConfig[targetIndex].friends) {
+                                friendsConfig[targetIndex].friends = [];
+                            }
+                            friendsConfig[targetIndex].friends.push({
+                                name: nameToUse,
+                                twitch: twitchVal,
+                                x: "",
+                                youtube: "",
+                                birthday: "",
+                                anniversary: "",
+                                memo: "",
+                                isOpen: true
+                            });
+                            renderFriends();
+                            saveFriendsLocal(false);
+                            if (closeTopBtn) closeTopBtn.click();
+                        }
+                    };
+                }
+
+                const btnSubmitGroup = document.getElementById('add-friend-submit-group');
+                if (btnSubmitGroup) {
+                    btnSubmitGroup.onclick = () => {
+                        const groupNameVal = document.getElementById('add-group-name')?.value?.trim();
+                        if (!groupNameVal) return;
+                        
+                        friendsConfig.push({
+                            name: groupNameVal,
+                            friends: [],
+                            isClosed: false
+                        });
+                        renderFriends();
+                        saveFriendsLocal(false);
+                        if (closeTopBtn) closeTopBtn.click();
+                    };
+                }
+            }, 50);
         }
 
         function updateRestoreFileName(input) {

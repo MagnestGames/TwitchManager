@@ -3623,6 +3623,7 @@ body.light-theme #birthday-indicator-btn.active {
     top: calc(100% + 8px);
     right: 0;
     width: 260px;
+    max-width: calc(100vw - 20px);
     padding: 12px;
     background: var(--bg-item);
     border: 1px solid var(--twitch-purple);
@@ -3989,6 +3990,14 @@ body {
     font-size: calc(28px + var(--font-size-offset, 0px)) !important;
 }
 
+.delete-mode-on .btn-delete-item,
+.delete-mode-on .btn-delete-cat {
+    min-width: calc(56px + var(--font-size-offset, 0px) * 2.5) !important;
+    min-height: calc(32px + var(--font-size-offset, 0px) * 1.5) !important;
+    padding: calc(6px + var(--font-size-offset, 0px) * 0.3) calc(10px + var(--font-size-offset, 0px) * 0.5) !important;
+    font-size: calc(12px + var(--font-size-offset, 0px)) !important;
+}
+
 /* Codex PR#7 stabilization: compact overrides for light mode and enlarged text. */
 button, .btn-primary, .btn-secondary, .btn-outline, .btn-add-item,
 .btn-danger-soft, .icon-btn, .twitch-action-btn, .cmd-copy-btn,
@@ -4024,7 +4033,8 @@ button, .btn-primary, .btn-secondary, .btn-outline, .btn-add-item,
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     height: 16px !important;
     left: 2px !important;
-    top: 2px !important;
+    top: 1px !important;
+    bottom: auto !important;
     width: 16px !important;
 }
 
@@ -4176,4 +4186,73 @@ body.light-theme .tw-command-copy-btn code {
         width: 32px !important;
     }
     .twitch-action-btn { min-width: 72px !important; }
+}
+
+/* ID List Tags & Filter styles */
+.id-card-tag {
+    font-size: calc(9px + var(--font-size-offset, 0px)) !important;
+}
+
+#friends-tag-filter-details {
+    transition: border-color var(--transition-fast);
+}
+#friends-tag-filter-details[open] {
+    border-color: var(--twitch-purple) !important;
+}
+
+#friends-tag-list label {
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+#friends-tag-list label:hover {
+    background: var(--bg-item) !important;
+    border-color: var(--twitch-purple) !important;
+}
+.filter-tag-name {
+    font-size: calc(11px + var(--font-size-offset, 0px) * 0.8) !important;
+    transition: color var(--transition-fast);
+}
+#friends-tag-list input[type="checkbox"]:checked + .filter-tag-name {
+    color: var(--twitch-purple) !important;
+    font-weight: bold;
+}
+
+/* 可愛い丸型チェックボックス（ラジオボタン風） */
+#friends-tag-list input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 50% !important; /* 丸型 */
+    outline: none;
+    background: var(--bg-base);
+    cursor: pointer;
+    position: relative;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+#friends-tag-list input[type="checkbox"]:checked {
+    border-color: var(--twitch-purple);
+    background: rgba(145, 70, 255, 0.1);
+}
+#friends-tag-list input[type="checkbox"]::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50% !important;
+    background: var(--twitch-purple);
+    transform: scale(0);
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+    display: block;
+}
+#friends-tag-list input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+/* タグフィルタアコーディオンのデフォルト三角形マーカー（▶/▼）を消去 */
+#friends-tag-filter-details > summary::before {
+    content: none !important;
 }
