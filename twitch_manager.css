@@ -3618,10 +3618,12 @@ body.light-theme #birthday-indicator-btn.active {
     color: #b45309 !important;
 }
 
+/* Center-aligned layout to prevent window edge overflow on smaller screens */
 .birthday-popover {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 260px;
     max-width: calc(100vw - 20px);
     padding: 12px;

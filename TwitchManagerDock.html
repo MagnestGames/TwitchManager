@@ -721,16 +721,7 @@
     <script src="js/eventsub.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
-    <script>
-        // Goal Bar 連携スクリプトの動的読み込み (ファイルがない場合は無視)
-        (function() {
-            var s = document.createElement('script');
-            s.src = 'twitch_goal_sync.js';
-            s.async = true;
-            s.onerror = function() { console.log('twitch_goal_sync.js was not found. Skipping goal sync.'); };
-            document.body.appendChild(s);
-        })();
-    </script>
+
 </body>
 
 </html>

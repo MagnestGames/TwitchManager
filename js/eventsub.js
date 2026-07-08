@@ -12,7 +12,7 @@
             gift: true,
             chat: true
         });
-        let _esWs = null, _esSessionId = null, _esManualDisconnect = false, _esReconnectTimeout = null;
+        let _esWs = null, _esSessionId = null, _esManualDisconnect = false, _esReconnectTimeout = null, _esReconnectDelay = 5000;
         let _streamStateInitialized = false;
         let _lastObservedStreamId = (() => {
             try {
@@ -183,6 +183,7 @@
                 if (mtype === 'session_welcome') {
                     _esSessionId = msg.payload?.session?.id;
                     esSetStatus(true);
+                    _esReconnectDelay = 5000;
                     esLog('SYS', uiText('runtime.supporter.sessionReceived', { id: _esSessionId?.slice(0, 12) || '' }));
                     const bId = settings.userId;
                     await esSubscribe('channel.subscribe', '1', { broadcaster_user_id: bId });
@@ -191,8 +192,8 @@
                     await esSubscribe('channel.cheer', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
                     await esSubscribe('channel.raid', '1', { to_broadcaster_user_id: bId });
-                    await esSubscribe('channel.hype_train.begin', '1', { broadcaster_user_id: bId });
-                    await esSubscribe('channel.hype_train.end', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.hype_train.begin', '2', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.hype_train.end', '2', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
                     esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 10 }));
@@ -346,13 +347,15 @@
                 _esWs = null;
                 _esSessionId = null;
                 
-                // 手動切断でない場合、5秒後に自動再接続を試みる
+                // 手動切断でない場合、徐々に間隔を広げつつ自動再接続を試みる
                 if (!_esManualDisconnect) {
-                    esLog('SYS', uiText('runtime.supporter.reconnectIn'));
+                    const delaySecs = Math.round(_esReconnectDelay / 1000);
+                    esLog('SYS', uiText('runtime.supporter.reconnectIn', { seconds: delaySecs }));
                     if (_esReconnectTimeout) clearTimeout(_esReconnectTimeout);
                     _esReconnectTimeout = setTimeout(() => {
                         connectEventSub();
-                    }, 5000);
+                    }, _esReconnectDelay);
+                    _esReconnectDelay = Math.min(_esReconnectDelay * 2, 60000);
                 }
             };
         }
