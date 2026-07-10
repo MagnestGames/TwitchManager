@@ -2646,9 +2646,11 @@
                 <div class="category-box tw-section" id="raidso-box-sounds">
                     <div class="category-name" onclick="twToggle('raidso-box-sounds')"><span>${raidSoEscape(r.soundTitle)}</span></div>
                     <div class="tw-body">
-                        <div class="raidso-actions" style="margin-bottom:12px;">
-                            <button type="button" class="btn-outline" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
-                            <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
+                        <div class="raidso-actions" style="margin-bottom:12px; display:flex; gap:8px; align-items:center; width:100%;">
+                            <button type="button" class="btn-outline" style="flex: 8; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
+                            <button type="button" class="btn-outline" style="flex: 2; display:inline-flex; align-items:center; justify-content:center; padding: 0; height: 36px;" id="raidso-reload-sound-folder" title="${raidSoEscape(r.reloadSoundFolder)}" onclick="reloadRaidSoSoundFolder(this)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                            </button>
                         </div>
                         ${raidSoSoundBlockHtml('raid', r.raidSound, r.raidSoundToggle, s.raidSoundEnabled, s.raidSoundFile, s.raidVolume)}
                         ${raidSoSoundBlockHtml('comment', r.commentSound, r.commentSoundToggle, s.commentSoundEnabled, s.commentSoundFile, s.commentVolume)}
@@ -2778,8 +2780,71 @@
         }
 
         function openRaidSoSoundFolder() {
-            const picker = document.getElementById('raidso-sound-folder-picker');
-            if (picker) picker.click();
+            try {
+                const folderUrl = getRaidSoSoundFolderUrl();
+                // パスをデコードしてWindows形式のローカルパス（バックスラッシュ区切り）に変換
+                let localPath = decodeURIComponent(folderUrl.pathname)
+                    .replace(/\//g, '\\')
+                    .replace(/^\\([A-Za-z]:)/, '$1');
+                
+                // 末尾のバックスラッシュを除去
+                if (localPath.endsWith('\\')) {
+                    localPath = localPath.slice(0, -1);
+                }
+
+                // クリップボードにパスをコピー
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(localPath).then(() => {
+                        showToast("フォルダの絶対パスをコピーしました。エクスプローラーに貼り付けて開いてください。");
+                    }).catch(err => {
+                        console.warn('Clipboard write failed:', err);
+                    });
+                }
+
+                // エクスプローラー（またはブラウザ）で開く
+                window.open('file:///' + localPath.replace(/\\/g, '/'));
+            } catch (e) {
+                console.warn('openRaidSoSoundFolder:', e);
+            }
+        }
+
+        async function reloadRaidSoSoundFolder(btn) {
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+            try {
+                // まず sound-list.json マニフェストを試みる
+                let result = await readRaidSoSoundManifest();
+                if (!result.sources.length) {
+                    // マニフェストがなければ iframe でフォルダ一覧を読む
+                    result = await readRaidSoSoundFolderSourcesFromIframe(getRaidSoSoundFolderUrl());
+                }
+                if (!result.sources.length) {
+                    // 通常のブラウザでfile:///を開いている場合はセキュリティ制限の警告を出す
+                    if (window.location.protocol === 'file:' && !window.obsstudio) {
+                        showToast("通常のブラウザではセキュリティ制限のため自動更新できません。OBSのカスタムドック上で実行してください。", 'error');
+                    } else {
+                        showToast(raidSoText().soundFilesReadFailed, 'error');
+                    }
+                    return;
+                }
+                const available = applyRaidSoAvailableSoundFiles(result.sources);
+                collectRaidSoSettings();
+                localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+                renderRaidShoutOutPanel();
+                if (!available.length) {
+                    showToast(raidSoText().soundFilesEmpty, 'error');
+                } else {
+                    showToast(raidSoText().soundFilesUpdated.replace('{count}', available.length));
+                }
+            } catch (e) {
+                raidSoLog(raidSoText().soundFilesReadFailed, 'warn');
+                if (window.location.protocol === 'file:' && !window.obsstudio) {
+                    showToast("通常のブラウザではセキュリティ制限のため自動更新できません。OBSのカスタムドック上で実行してください。", 'error');
+                } else {
+                    showToast(raidSoText().soundFilesReadFailed, 'error');
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+            }
         }
 
         async function raidSoHelix(endpoint, options = {}) {
