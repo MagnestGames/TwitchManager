@@ -3090,10 +3090,8 @@
 
         function isRaidSoExcluded(login, displayName) {
             const excluded = new Set(String(raidSoSettings.excludedUsers || '').split(/[\n,]+/).map(v => normalizeRaidSoLogin(v)).filter(Boolean));
-            const selfLogin = normalizeRaidSoLogin(settings.userLogin || document.getElementById('user_login')?.value || '');
             return excluded.has(normalizeRaidSoLogin(login))
-                || excluded.has(normalizeRaidSoLogin(displayName))
-                || (selfLogin && (normalizeRaidSoLogin(login) === selfLogin || normalizeRaidSoLogin(displayName) === selfLogin));
+                || excluded.has(normalizeRaidSoLogin(displayName));
         }
 
         function idListText() {
