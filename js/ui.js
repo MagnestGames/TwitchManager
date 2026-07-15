@@ -2435,6 +2435,7 @@
             sessionId: "",
             audio: null,
             audioPool: [],
+            soundObjectUrls: new Map(),
             activeSuggestInputId: "",
             seenChatters: new Set(),
             subscriptions: { raid: false, chat: false, reward: false, autoReward: false },
@@ -2647,8 +2648,8 @@
                     <div class="category-name" onclick="twToggle('raidso-box-sounds')"><span>${raidSoEscape(r.soundTitle)}</span></div>
                     <div class="tw-body">
                         <div class="raidso-actions" style="margin-bottom:12px;">
-                            <button type="button" class="btn-outline" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
-                            <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
+                            <button type="button" class="btn-outline" style="width:100%;" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
+                            <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory directory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
                         </div>
                         ${raidSoSoundBlockHtml('raid', r.raidSound, r.raidSoundToggle, s.raidSoundEnabled, s.raidSoundFile, s.raidVolume)}
                         ${raidSoSoundBlockHtml('comment', r.commentSound, r.commentSoundToggle, s.commentSoundEnabled, s.commentSoundFile, s.commentVolume)}
@@ -2779,7 +2780,9 @@
 
         function openRaidSoSoundFolder() {
             const picker = document.getElementById('raidso-sound-folder-picker');
-            if (picker) picker.click();
+            if (!picker) return;
+            picker.value = '';
+            picker.click();
         }
 
         async function raidSoHelix(endpoint, options = {}) {
@@ -3087,10 +3090,8 @@
 
         function isRaidSoExcluded(login, displayName) {
             const excluded = new Set(String(raidSoSettings.excludedUsers || '').split(/[\n,]+/).map(v => normalizeRaidSoLogin(v)).filter(Boolean));
-            const selfLogin = normalizeRaidSoLogin(settings.userLogin || document.getElementById('user_login')?.value || '');
             return excluded.has(normalizeRaidSoLogin(login))
-                || excluded.has(normalizeRaidSoLogin(displayName))
-                || (selfLogin && (normalizeRaidSoLogin(login) === selfLogin || normalizeRaidSoLogin(displayName) === selfLogin));
+                || excluded.has(normalizeRaidSoLogin(displayName));
         }
 
         function idListText() {
@@ -3595,7 +3596,7 @@
                 raidSoState.audio.pause();
                 raidSoState.audio.currentTime = 0;
             }
-            const src = new URL(cfg.src, window.location.href).href;
+            const src = getRaidSoSoundPlaybackUrl(cfg.src);
             const audio = new Audio(src);
             audio.preload = 'auto';
             audio.volume = Math.max(0, Math.min(1, Number(cfg.volume) / 100));
@@ -4746,16 +4747,47 @@ function getRaidSoSoundFiles(selected = '') {
             return stored;
         }
 
+function raidSoSoundSourceFromFile(file) {
+            const parts = String(file?.webkitRelativePath || file?.name || '').replace(/\\/g, '/').split('/').filter(Boolean);
+            const relative = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
+            return normalizeRaidSoSoundSource(relative || '');
+        }
+
+function revokeRaidSoSoundObjectUrls(urls) {
+            if (!(urls instanceof Map)) return;
+            urls.forEach(url => {
+                try { URL.revokeObjectURL(url); } catch (error) {}
+            });
+        }
+
+function replaceRaidSoSoundObjectUrls(files) {
+            const nextUrls = new Map();
+            try {
+                Array.from(files || [])
+                    .filter(file => isRaidSoAudioSource(file.name))
+                    .forEach(file => {
+                        const source = raidSoSoundSourceFromFile(file);
+                        if (!source || nextUrls.has(source)) return;
+                        nextUrls.set(source, URL.createObjectURL(file));
+                    });
+            } catch (error) {
+                revokeRaidSoSoundObjectUrls(nextUrls);
+                throw error;
+            }
+            revokeRaidSoSoundObjectUrls(raidSoState.soundObjectUrls);
+            raidSoState.soundObjectUrls = nextUrls;
+            return [...nextUrls.keys()];
+        }
+
+function getRaidSoSoundPlaybackUrl(src) {
+            const selectedUrl = raidSoState.soundObjectUrls.get(normalizeRaidSoSoundSource(src));
+            return selectedUrl || new URL(src, window.location.href).href;
+        }
+
 function replaceRaidSoSoundFilesFromFolder(input) {
             try {
                 collectRaidSoSettings();
-                const sources = Array.from(input?.files || [])
-                    .filter(file => isRaidSoAudioSource(file.name))
-                    .map(file => {
-                        const parts = String(file.webkitRelativePath || file.name).replace(/\\/g, '/').split('/').filter(Boolean);
-                        const relative = parts.length > 1 ? parts.slice(1).join('/') : parts[0];
-                        return `sounds/${relative}`;
-                    });
+                const sources = replaceRaidSoSoundObjectUrls(input?.files);
                 const available = applyRaidSoAvailableSoundFiles(sources);
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
                 renderRaidShoutOutPanel();
