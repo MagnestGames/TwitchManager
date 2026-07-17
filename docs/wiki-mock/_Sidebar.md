@@ -4,7 +4,6 @@
 - [インストールとOBSへの追加](Getting-Started)
 - [Twitch認証](Authentication)
 - [機能一覧](Feature-Overview)
-- [バージョン管理](Versioning)
 
 ### タブ別
 
