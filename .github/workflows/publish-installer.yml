@@ -2,6 +2,8 @@ name: Build and publish Windows 11 and macOS installers
 
 on:
   push:
+    branches:
+      - "dev_0.9_beta"
     tags:
       - "v*"
   workflow_dispatch:
@@ -34,6 +36,8 @@ jobs:
           set -euo pipefail
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             tag="$INPUT_TAG"
+          elif [[ "$REF_NAME" == "dev_0.9_beta" ]]; then
+            tag="0.9_beta"
           else
             tag="$REF_NAME"
           fi
