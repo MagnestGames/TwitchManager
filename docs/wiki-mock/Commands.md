@@ -9,25 +9,25 @@
 
 ## 配信管理
 
-![配信管理コマンド](images/features/commands-stream.png)
+![配信管理コマンド](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-stream.png)
 
 タイトル、カテゴリ、マーカー、レイド、広告を操作します。レイド先へのURL案内も自動で送りたい場合は、[通知と紹介](Raid-and-Notifications)の`/raid`ボタンを使います。
 
 ## チャット設定
 
-![チャット設定コマンド](images/features/commands-chat.png)
+![チャット設定コマンド](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-chat.png)
 
 告知、クリア、チャットモード、フォロー限定、スローモードを操作します。
 
 ## ユーザー管理
 
-![ユーザー管理コマンド](images/features/commands-users.png)
+![ユーザー管理コマンド](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-users.png)
 
 BAN、タイムアウト、MOD、VIP、監視、制限、ブロック、ウィスパーを操作します。
 
 ## インタラクション
 
-![インタラクションコマンド](images/features/commands-interaction.png)
+![インタラクションコマンド](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-interaction.png)
 
 投票、予測、ピン留め、Shoutoutを操作します。詳細な予測・投票は[Twitch連携機能](Twitch-Tools)、紹介文は[通知と紹介](Raid-and-Notifications)を使います。
 

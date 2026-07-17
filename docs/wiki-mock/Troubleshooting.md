@@ -9,7 +9,6 @@
 | 外部サウンドが鳴らない | 音声フォルダの再選択 |
 | OBSと通常ブラウザで内容が違う | 保存領域とバックアップ |
 | レイドや通知を検知しない | 認証、EventSub、機能のスイッチ |
-| インストーラーの警告が出る | 同じReleaseのSHA256と一致するか |
 
 ## OBSに表示されない
 
@@ -20,7 +19,7 @@
 
 ## Twitch機能が動かない
 
-![認証状態](images/features/settings-authentication.png)
+![認証状態](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
 
 1. 設定画面の連携アカウントを確認します。
 2. 必要な権限（Scope）を付けてトークンを再発行します。
@@ -28,17 +27,11 @@
 
 ポイント引き換え履歴には`channel:read:redemptions`、レイド開始には`channel:manage:raids`が必要です。
 
-## インストーラーの警告が出る
-
-現在のインストーラーは未署名です。同じReleaseのAssetsにある`.sha256`ファイルと、ダウンロードしたファイルのSHA256を照合してください。確認方法は[インストールとOBSへの追加](Getting-Started)を参照してください。
-
-値が一致しない場合は実行せず、ファイルを削除してダウンロードし直してください。
-
 タイトル反映後にOBS標準の配信情報だけが古い場合は、そのドックを再読み込みします。
 
 ## 外部サウンドが鳴らない
 
-![通知音設定](images/features/notification-sounds.png)
+![通知音設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
 
 1. 「音声フォルダを選択」から同じフォルダを再選択します。
 2. 各通知の音源を選び直します。
@@ -50,7 +43,7 @@
 
 キャッシュやサイトデータを削除すると、ローカル保存も消えることがあります。バックアップがある場合は「その他」タブから復元します。
 
-![バックアップと復元](images/features/backup-restore-logs.png)
+![バックアップと復元](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
 
 ## 解決しない場合
 

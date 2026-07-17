@@ -10,13 +10,13 @@ Twitch IDまたはチャンネルURLを入力し、次の操作を行います�
 - `/raid`: 入力したチャンネルへのレイドを開始
 - 「紹介文を送信」: 保存した手動紹介文をチャットへ送信
 
-![手動チャンネル紹介](images/features/raid-manual-introduction.png)
+![手動チャンネル紹介](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png)
 
 IDリストに登録済みの配信者は入力候補に表示されます。`/raid`を押す前に、入力したTwitch IDと配信先を必ず確認してください。
 
 ## 自動レイド紹介
 
-![レイド紹介設定](images/features/raid-auto-introduction.png)
+![レイド紹介設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-auto-introduction.png)
 
 - レイド受信後に紹介文を自動送信
 - 送信までの待ち時間を0～600秒で指定
@@ -29,7 +29,7 @@ IDリストに登録済みの配信者は入力候補に表示されます。`/r
 
 受信レイド用、手動紹介用、送信レイド用の文面を別々に保存できます。送信レイド用の文面は、`/raid`実行後にレイド先URLを案内するときに使います。
 
-![紹介文テンプレート](images/features/raid-message-templates.png)
+![紹介文テンプレート](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-message-templates.png)
 
 | 記法 | 内容 |
 | --- | --- |
@@ -46,11 +46,11 @@ IDリストに登録済みの配信者は入力候補に表示されます。`/r
 
 レイド、コメント、ポイント引換、初回コメントごとに、オン・オフ、音源、音量を設定します。
 
-![通知音の基本設定](images/features/notification-sounds.png)
+![通知音の基本設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
 
-![チャンネルポイント通知音](images/features/notification-sounds-channel-points.png)
+![チャンネルポイント通知音](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds-channel-points.png)
 
-![初回コメント通知音](images/features/notification-sounds-first-comment.png)
+![初回コメント通知音](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds-first-comment.png)
 
 ### 外部サウンドフォルダ
 

@@ -2,7 +2,7 @@
 
 Twitchへの反映、イベント検知、チャット操作などを使うにはアクセストークンが必要です。
 
-![Twitch認証設定](images/features/settings-authentication.png)
+![Twitch認証設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
 
 ## 設定手順
 
