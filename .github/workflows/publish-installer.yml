@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "公開するタグ（例: v1.0.0）"
+        description: "ビルドするバージョン（例: 0.9_beta / v1.0.0）"
         required: true
         type: string
 
@@ -20,6 +20,7 @@ jobs:
     outputs:
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
+      publish: ${{ steps.release.outputs.publish }}
 
     steps:
       - name: Resolve release metadata
@@ -37,13 +38,18 @@ jobs:
             tag="$REF_NAME"
           fi
 
-          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "タグは v1.0.0 の形式で指定してください: $tag" >&2
+          if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            publish="true"
+          elif [[ "$tag" =~ ^[0-9]+\.[0-9]+_beta$ ]]; then
+            publish="false"
+          else
+            echo "バージョンは 0.9_beta または v1.0.0 の形式で指定してください: $tag" >&2
             exit 1
           fi
 
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
 
   build-windows:
     needs: metadata
@@ -110,6 +116,7 @@ jobs:
       - metadata
       - build-windows
       - build-macos
+    if: needs.metadata.outputs.publish == 'true'
     runs-on: ubuntu-latest
 
     steps:
