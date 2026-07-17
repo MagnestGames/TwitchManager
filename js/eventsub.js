@@ -10,7 +10,8 @@
             cheer: true,
             sub: true,
             gift: true,
-            chat: true
+            chat: true,
+            point: true
         });
         let _esWs = null, _esSessionId = null, _esManualDisconnect = false, _esReconnectTimeout = null, _esReconnectDelay = 5000;
         let _streamStateInitialized = false;
@@ -93,7 +94,8 @@
                 follow: uiText('runtime.supporter.headingFollow'),
                 raid: uiText('runtime.supporter.headingRaid'),
                 hype: 'Hype Train',
-                first: uiText('runtime.supporter.headingFirst')
+                first: uiText('runtime.supporter.headingFirst'),
+                point: uiText('runtime.supporter.headingPoint')
             };
             raidSoLog(`${categoryLabels[category] || category}: ${msg}`);
             const ta = document.getElementById(`es-ta-${category}`);
@@ -189,14 +191,16 @@
                     await esSubscribe('channel.subscribe', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.message', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.gift', '1', { broadcaster_user_id: bId });
-                    await esSubscribe('channel.cheer', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.bits.use', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
                     await esSubscribe('channel.raid', '1', { to_broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.begin', '2', { broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.end', '2', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
-                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 10 }));
+                    await esSubscribe('channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_automatic_reward_redemption.add', '2', { broadcaster_user_id: bId });
+                    esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 12 }));
                 } else if (mtype === 'notification') {
                     const subtype = msg.metadata?.subscription_type;
                     const ev = msg.payload?.event;
@@ -239,7 +243,7 @@
                             appendToStatsTextarea('pg-i-gift-det', uiText('runtime.supporter.giftDetail', { user: ev.user_name, count: giftCount }));
                         }
                     }
-                    else if (subtype === 'channel.cheer') {
+                    else if (subtype === 'channel.bits.use') {
                         if (document.getElementById('es-f-cheer')?.checked === false) showLog = false;
                         logMsg = `💎 ${uiText('runtime.supporter.cheer', { user: ev.user_name, bits: ev.bits })}`;
                         triggerNotification('cheer');
@@ -263,24 +267,38 @@
                         }
                     }
                     else if (subtype === 'channel.raid') {
-                        if (document.getElementById('es-f-raid')?.checked === false) showLog = false;
-                        logMsg = `🚀 ${uiText('runtime.supporter.raid', { user: ev.from_broadcaster_user_name, viewers: ev.viewers })}`;
-                        triggerNotification('raid');
-                        
-                        // Stats tracking
-                        if (canAddSupporter('raid', ev.from_broadcaster_user_id, ev.from_broadcaster_user_login, ev.from_broadcaster_user_name)) {
-                            streamStats.raids.push({ user: ev.from_broadcaster_user_name, viewers: ev.viewers });
-                            const twitchUrl = ev.from_broadcaster_user_login ? ` https://www.twitch.tv/${ev.from_broadcaster_user_login}` : '';
-                            appendToStatsTextarea('pg-i-raid-det', uiText('runtime.supporter.raidDetail', { user: ev.from_broadcaster_user_name, viewers: ev.viewers, url: twitchUrl }));
-                        }
+                        const isOutbound = ev.from_broadcaster_user_id === settings.userId;
+                        if (isOutbound) {
+                            logMsg = `🚀 Outbound Raid to ${ev.to_broadcaster_user_name} with ${ev.viewers} viewers!`;
+                            const targetLogin = ev.to_broadcaster_user_login;
+                            const timeDiff = Date.now() - (raidSoState.lastOutboundRaidAt || 0);
+                            const isDuplicate = raidSoState.lastOutboundRaidTarget === targetLogin.toLowerCase() && timeDiff < 60000;
+                            
+                            if (raidSoSettings.autoSendRaidUrlEnabled && !isDuplicate) {
+                                if (typeof handleRaidSoOutboundRaidEvent === 'function') {
+                                    handleRaidSoOutboundRaidEvent(ev);
+                                }
+                            }
+                        } else {
+                            if (document.getElementById('es-f-raid')?.checked === false) showLog = false;
+                            logMsg = `🚀 ${uiText('runtime.supporter.raid', { user: ev.from_broadcaster_user_name, viewers: ev.viewers })}`;
+                            triggerNotification('raid');
+                            
+                            // Stats tracking
+                            if (canAddSupporter('raid', ev.from_broadcaster_user_id, ev.from_broadcaster_user_login, ev.from_broadcaster_user_name)) {
+                                streamStats.raids.push({ user: ev.from_broadcaster_user_name, viewers: ev.viewers });
+                                const twitchUrl = ev.from_broadcaster_user_login ? ` https://www.twitch.tv/${ev.from_broadcaster_user_login}` : '';
+                                appendToStatsTextarea('pg-i-raid-det', uiText('runtime.supporter.raidDetail', { user: ev.from_broadcaster_user_name, viewers: ev.viewers, url: twitchUrl }));
+                            }
 
-                        // Shoutout (シャウトアウト) の入力欄にレイド元のIDを自動入力
-                        if (ev.from_broadcaster_user_login) {
-                            const soInput = document.getElementById('so-user-input');
-                            if (soInput) {
-                                // 手動入力中の邪魔をしないよう、入力欄が空の場合のみ自動入力します
-                                if (!soInput.value.trim()) {
-                                    soInput.value = ev.from_broadcaster_user_login;
+                            // Shoutout (シャウトアウト) の入力欄にレイド元のIDを自動入力
+                            if (ev.from_broadcaster_user_login) {
+                                const soInput = document.getElementById('so-user-input');
+                                if (soInput) {
+                                    // 手動入力中の邪魔をしないよう、入力欄が空の場合のみ自動入力します
+                                    if (!soInput.value.trim()) {
+                                        soInput.value = ev.from_broadcaster_user_login;
+                                    }
                                 }
                             }
                         }
@@ -311,17 +329,54 @@
                             appendToStatsTextarea('pg-i-chat-det', chatName);
                         }
                     }
+                    else if (subtype === 'channel.channel_points_custom_reward_redemption.add') {
+                        if (document.getElementById('es-f-point')?.checked === false) showLog = false;
+                        const rewardTitle = ev.reward?.title || '';
+                        logMsg = `🪙 ${uiText('runtime.supporter.channelPointRedeemed', { user: ev.user_name || ev.user_login, reward: rewardTitle })}`;
+                        triggerNotification('point');
+                        if (canAddSupporter('point', ev.user_id, ev.user_login, ev.user_name)) {
+                            appendToStatsTextarea('pg-i-point-det', uiText('runtime.supporter.channelPointRedeemedDetail', { user: ev.user_name || ev.user_login, reward: rewardTitle }));
+                        }
+                    }
+                    else if (subtype === 'channel.channel_points_automatic_reward_redemption.add') {
+                        if (document.getElementById('es-f-point')?.checked === false) showLog = false;
+                        const autoRewardType = ev.reward?.type || '';
+                        let rewardTitle = autoRewardType;
+                        if (currentLang === 'ja') {
+                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = 'スタンプ巨大化';
+                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = 'メッセージエフェクト';
+                            else if (autoRewardType === 'celebration') rewardTitle = '全画面セレブレーション';
+                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = 'メッセージのハイライト';
+                        } else if (currentLang === 'zh') {
+                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = '表情巨大化';
+                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = '消息特效';
+                            else if (autoRewardType === 'celebration') rewardTitle = '全屏庆祝';
+                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = '高亮消息';
+                        } else {
+                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = 'Gigantify an Emote';
+                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = 'Message Effect';
+                            else if (autoRewardType === 'celebration') rewardTitle = 'Full-Screen Celebration';
+                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = 'Highlight Message';
+                        }
+                        
+                        logMsg = `🪙 ${uiText('runtime.supporter.channelPointRedeemed', { user: ev.user_name || ev.user_login, reward: rewardTitle })}`;
+                        triggerNotification('point');
+                        if (canAddSupporter('point', ev.user_id, ev.user_login, ev.user_name)) {
+                            appendToStatsTextarea('pg-i-point-det', uiText('runtime.supporter.channelPointRedeemedDetail', { user: ev.user_name || ev.user_login, reward: rewardTitle }));
+                        }
+                    }
 
                     // カテゴリログは showLog に関わらず logMsg があれば記録
                     if (logMsg) {
                         if (subtype === 'channel.subscribe') appendCategoryTextLog('sub', logMsg);
                         else if (subtype === 'channel.subscription.message') appendCategoryTextLog('sub', logMsg);
                         else if (subtype === 'channel.subscription.gift') appendCategoryTextLog('sub', logMsg);
-                        else if (subtype === 'channel.cheer') appendCategoryTextLog('cheer', logMsg);
+                        else if (subtype === 'channel.bits.use') appendCategoryTextLog('cheer', logMsg);
                         else if (subtype === 'channel.follow') appendCategoryTextLog('follow', logMsg);
                         else if (subtype === 'channel.raid') appendCategoryTextLog('raid', logMsg);
                         else if (subtype.startsWith('channel.hype_train')) appendCategoryTextLog('hype', logMsg);
                         else if (subtype === 'channel.chat.message') appendCategoryTextLog('first', logMsg);
+                        else if (subtype === 'channel.channel_points_custom_reward_redemption.add' || subtype === 'channel.channel_points_automatic_reward_redemption.add') appendCategoryTextLog('point', logMsg);
                     }
                 } else if (mtype === 'session_keepalive') {
                     // keep-alive、ログ不要

@@ -158,6 +158,13 @@
                             </div>
                             <div class="supporter-option-body"><textarea id="pg-i-chat-det" oninput="updatePostPreview()" data-i18n-placeholder="extended.postChatPlaceholder" placeholder="例: 〇〇"></textarea></div>
                         </div>
+                        <div class="supporter-option" data-supporter-category="point">
+                            <div class="tw-toggle-row">
+                                <span class="field-label" data-i18n="extended.channelPoints">ポイント引き換え</span>
+                                <label class="tw-toggle"><input type="checkbox" id="supporter-cat-point" checked onchange="saveSupporterCategorySetting('point', this.checked)"><span class="tw-slider"></span></label>
+                            </div>
+                            <div class="supporter-option-body"><textarea id="pg-i-point-det" oninput="updatePostPreview()" data-i18n-placeholder="extended.postPointPlaceholder" placeholder="例: 〇〇 (スタンプ巨大化)"></textarea></div>
+                        </div>
                     </div>
                 </div>
 

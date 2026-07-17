@@ -650,6 +650,17 @@
                 await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
             }
         }
+        async function sendRaidCommandFromInput() {
+            const input = document.getElementById('so-user-input');
+            const raw = input?.value.trim() || '';
+            const login = normalizeFriendTwitch(raw);
+            if (!login) return showToast(uiText('runtime.inputTwitchId'));
+            try {
+                await executeOutboundRaid(login);
+            } catch (e) {
+                // executeOutboundRaid will handle alerts
+            }
+        }
 
         function parseCommandIds(value) {
             return [...new Set(String(value || '')
@@ -2423,7 +2434,9 @@
                 ? DEFAULT_EXCLUDED_BOT_USERS_TEXT
                 : "StreamElements\nSoundAlerts\nNightbot\nSery_bot\nFrostyTools",
             raidTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.raid,
-            manualTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.manual
+            manualTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.manual,
+            autoSendRaidUrlEnabled: true,
+            outboundRaidTemplate: "▶本日のレイド先はこちら：{url}"
         };
         let raidSoSettings = loadRaidSoSettings();
         let customRaidSoTemplates = loadRaidSoCustomTemplates();
@@ -2571,6 +2584,7 @@
                         ${raidSoSuggestInputHtml('so-user-input', r.manualTargetPlaceholder || command.soInput || 'ID')}
                         <div class="raidso-intro-buttons">
                             <button class="btn-primary has-tooltip" data-tooltip="${raidSoEscape(command.tips.so)}" onclick="sendShoutoutCommandFromInput()">/shoutout</button>
+                            <button class="btn-primary has-tooltip" data-tooltip="レイドを開始し、レイド先URLを自動送信します" onclick="sendRaidCommandFromInput()">/raid</button>
                             <button class="btn-primary" onclick="manualRaidSoIntroduce(true)">${raidSoEscape(r.sendIntro)}</button>
                         </div>
                     </div>
@@ -2614,6 +2628,7 @@
                             </div>
                         </div>
                         ${raidSoToggleHtml('raidso-official-shoutout', r.officialShoutout, s.officialShoutoutOnRaid)}
+                        ${raidSoToggleHtml('raidso-auto-send-raid-url', r.outboundRaidToggle, s.autoSendRaidUrlEnabled, 'handleRaidSoFeatureToggle()')}
                         ${raidSoToggleHtml('raidso-manual-command-enabled', r.manualCommandToggle, s.manualCommandEnabled, 'handleRaidSoManualCommandToggle(this)')}
                         <details class="raidso-child-settings" id="raidso-command-settings"${s.manualCommandEnabled ? '' : ' hidden'}>
                             <summary>${raidSoEscape(r.commandSettings || langMap.ja.raidSo.commandSettings)}</summary>
@@ -2637,6 +2652,8 @@
                         <textarea id="raidso-raid-template" style="min-height:110px;">${raidSoEscape(s.raidTemplate)}</textarea>
                         <span class="field-label">${raidSoEscape(r.manualTemplateLabel)}</span>
                         <textarea id="raidso-manual-template" style="min-height:110px;">${raidSoEscape(s.manualTemplate)}</textarea>
+                        <span class="field-label">${raidSoEscape(r.outboundRaidTemplateLabel)}</span>
+                        <textarea id="raidso-outbound-raid-template" style="min-height:110px;">${raidSoEscape(s.outboundRaidTemplate)}</textarea>
                         ${raidSoTokenHelpHtml(r)}
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="btn-primary" onclick="saveRaidSoSettings(true)">${raidSoEscape(r.saveMessages)}</button>
@@ -2754,7 +2771,9 @@
                     ? expandDefaultExcludedUsers(document.getElementById('raidso-excluded-users')?.value || '')
                     : (document.getElementById('raidso-excluded-users')?.value || ''),
                 raidTemplate: document.getElementById('raidso-raid-template')?.value || RAIDSO_DEFAULT_RAID_TEMPLATE,
-                manualTemplate: document.getElementById('raidso-manual-template')?.value || RAIDSO_DEFAULT_MANUAL_TEMPLATE
+                manualTemplate: document.getElementById('raidso-manual-template')?.value || RAIDSO_DEFAULT_MANUAL_TEMPLATE,
+                autoSendRaidUrlEnabled: document.getElementById('raidso-auto-send-raid-url')?.checked ?? raidSoSettings.autoSendRaidUrlEnabled,
+                outboundRaidTemplate: document.getElementById('raidso-outbound-raid-template')?.value ?? raidSoSettings.outboundRaidTemplate
             };
             delete raidSoSettings.raidCustomSound;
             delete raidSoSettings.commentCustomSound;
@@ -2963,7 +2982,7 @@
         }
 
         async function subscribeRaidSoSession(sessionId) {
-            raidSoState.subscriptions = { raid: false, chat: false, reward: false, autoReward: false };
+            raidSoState.subscriptions = { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false };
             await ensureRaidSoSubscriptions(sessionId);
         }
 
@@ -2976,6 +2995,14 @@
                     raidSoLog(langMap[currentLang].logs.logRaidSub);
                 } catch (e) {
                     raidSoLog(`${langMap[currentLang].logs.warnRaidFail} ${localizeRaidSoError(e)}`, 'warn');
+                }
+            }
+            if (needsRaidSoRaidSubscription() && !raidSoState.subscriptions.outboundRaid) {
+                try {
+                    await createRaidSoSubscription('channel.raid', { from_broadcaster_user_id: settings.userId }, sessionId);
+                    raidSoState.subscriptions.outboundRaid = true;
+                } catch (e) {
+                    // Ignored or logged silently
                 }
             }
             if (needsRaidSoChatSubscription() && !raidSoState.subscriptions.chat) {
@@ -3429,6 +3456,79 @@
                 }
             }
             raidSoLog(`${langMap[currentLang].logs.logIntroDone} ${data.displayName}`);
+        }
+
+        async function executeOutboundRaid(targetLogin) {
+            ensureRaidSoBaseSettings();
+            try {
+                const user = await getRaidSoUser(targetLogin);
+                // Start raid via Helix API
+                await raidSoHelix(`/raids?from_broadcaster_id=${settings.userId}&to_broadcaster_id=${user.id}`, {
+                    method: 'POST'
+                });
+                raidSoLog(`レイドを開始しました: ${user.display_name || targetLogin} 宛て`);
+                showToast(doneText());
+                
+                // Automatically send URL if enabled
+                if (raidSoSettings.autoSendRaidUrlEnabled) {
+                    const url = `https://www.twitch.tv/${user.login || targetLogin}`;
+                    const rawTemplate = raidSoSettings.outboundRaidTemplate || '▶本日のレイド先はこちら：{url}';
+                    const channel = await getRaidSoChannel(user.id).catch(() => null);
+                    const data = {
+                        username: user.login || targetLogin,
+                        displayName: user.display_name || targetLogin,
+                        game: channel?.game_name || '',
+                        title: channel?.title || '',
+                        viewers: '',
+                        url: url
+                    };
+                    const message = renderRaidSoTemplate(rawTemplate, data);
+                    try {
+                        // Remember this target to avoid duplicate URL posts from EventSub
+                        raidSoState.lastOutboundRaidTarget = targetLogin.toLowerCase();
+                        raidSoState.lastOutboundRaidAt = Date.now();
+                        
+                        await sendRaidSoChat(message);
+                        raidSoLog(`レイド先URLを自動送信しました: ${message}`);
+                    } catch (e) {
+                        raidSoLog(`レイド先URLの自動送信に失敗しました: ${localizeRaidSoError(e)}`, 'warn');
+                    }
+                }
+            } catch (e) {
+                const fail = "レイドの開始に失敗しました";
+                const detail = localizeRaidSoError(e);
+                raidSoLog(`${fail}: ${detail}`, 'warn');
+                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                throw e;
+            }
+        }
+
+        async function handleRaidSoOutboundRaidEvent(event) {
+            const targetLogin = event.to_broadcaster_user_login;
+            const targetName = event.to_broadcaster_user_name;
+            const targetId = event.to_broadcaster_user_id;
+            raidSoLog(`アウトバウンドレイド通知を受信: ${targetName} 宛て`);
+            
+            if (raidSoSettings.autoSendRaidUrlEnabled) {
+                const url = `https://www.twitch.tv/${targetLogin}`;
+                const rawTemplate = raidSoSettings.outboundRaidTemplate || '▶本日のレイド先はこちら：{url}';
+                const channel = await getRaidSoChannel(targetId).catch(() => null);
+                const data = {
+                    username: targetLogin,
+                    displayName: targetName,
+                    game: channel?.game_name || '',
+                    title: channel?.title || '',
+                    viewers: event.viewers || '',
+                    url: url
+                };
+                const message = renderRaidSoTemplate(rawTemplate, data);
+                try {
+                    await sendRaidSoChat(message);
+                    raidSoLog(`レイド先URLを自動送信しました: ${message}`);
+                } catch (e) {
+                    raidSoLog(`レイド先URLの自動送信に失敗しました: ${localizeRaidSoError(e)}`, 'warn');
+                }
+            }
         }
 
         async function getRaidSoUser(loginOrId) {
@@ -4134,6 +4234,7 @@
                     if (listCache.sub && document.getElementById('pg-i-sub-det')) document.getElementById('pg-i-sub-det').value = listCache.sub;
                     if (listCache.gift && document.getElementById('pg-i-gift-det')) document.getElementById('pg-i-gift-det').value = listCache.gift;
                     if (listCache.chat && document.getElementById('pg-i-chat-det')) document.getElementById('pg-i-chat-det').value = listCache.chat;
+                    if (listCache.point && document.getElementById('pg-i-point-det')) document.getElementById('pg-i-point-det').value = listCache.point;
                     if (Array.isArray(listCache.chatIds)) streamStats.chatters = new Set(listCache.chatIds.map(normalizeSupporterLogin).filter(Boolean));
                     if (listCache.streamDate) streamStats.streamDate = listCache.streamDate;
                     if (typeof listCache.streamTitle === 'string') streamStats.streamTitle = listCache.streamTitle;
@@ -4187,6 +4288,27 @@
 
     async function handleCommandClick(cmd, label, isAutoExec) {
         const cleanedCmd = String(cmd || '').trim();
+        if (cleanedCmd === '/raid') {
+            const target = await customPrompt("レイド先のTwitch IDを入力してください:");
+            if (target) {
+                const targetLogin = normalizeRaidSoLogin(target);
+                try {
+                    await executeOutboundRaid(targetLogin);
+                } catch (e) {
+                    // Handled inside
+                }
+            }
+            return;
+        } else if (cleanedCmd.startsWith('/raid ')) {
+            const targetLogin = normalizeRaidSoLogin(cleanedCmd.substring(6));
+            try {
+                await executeOutboundRaid(targetLogin);
+            } catch (e) {
+                // Handled inside
+            }
+            return;
+        }
+
         const isSlashCommand = cleanedCmd.startsWith('/');
         const isAllowedDirect = cleanedCmd.startsWith('/me ') || cleanedCmd.startsWith('/announce ');
 
@@ -4534,6 +4656,7 @@ function safeSetLocal(key, value) {
             const subDet = readSupporterDetail('pg-i-sub-det');
             const giftDet = readSupporterDetail('pg-i-gift-det');
             const chatDet = readSupporterDetail('pg-i-chat-det');
+            const pointDet = readSupporterDetail('pg-i-point-det');
             
             const dateValue = new Date(streamStats.streamDate || Date.now());
             const locale = currentLang === 'ja' ? 'ja-JP' : currentLang === 'zh' ? 'zh-CN' : 'en-US';
@@ -4566,6 +4689,9 @@ function safeSetLocal(key, value) {
             if (chatDet && isSupporterCategoryEnabled('chat')) {
                 text += `☆ ${uiText('runtime.supporter.headingChat')}\n${formatSupporterDetailBlock(chatDet)}\n\n`;
             }
+            if (pointDet && isSupporterCategoryEnabled('point')) {
+                text += `☆ ${uiText('runtime.supporter.headingPoint')}\n${formatSupporterDetailBlock(pointDet)}\n\n`;
+            }
 
             const outputEl = document.getElementById('pg-output');
             if (outputEl) outputEl.value = text.trim();
@@ -4578,6 +4704,7 @@ function safeSetLocal(key, value) {
                 sub: subDet,
                 gift: giftDet,
                 chat: chatDet,
+                point: pointDet,
                 chatIds: Array.from(streamStats.chatters),
                 streamDate: streamStats.streamDate,
                 streamTitle: streamStats.streamTitle
@@ -4592,7 +4719,7 @@ function safeSetLocal(key, value) {
         }
 
         function supporterEntriesExist() {
-            return ['pg-i-first-det', 'pg-i-raid-det', 'pg-i-follow-det', 'pg-i-cheer-det', 'pg-i-sub-det', 'pg-i-gift-det', 'pg-i-chat-det']
+            return ['pg-i-first-det', 'pg-i-raid-det', 'pg-i-follow-det', 'pg-i-cheer-det', 'pg-i-sub-det', 'pg-i-gift-det', 'pg-i-chat-det', 'pg-i-point-det']
                 .some(id => Boolean(document.getElementById(id)?.value.trim()));
         }
 
@@ -4692,6 +4819,7 @@ function safeSetLocal(key, value) {
             if (document.getElementById('pg-i-sub-det')) document.getElementById('pg-i-sub-det').value = "";
             if (document.getElementById('pg-i-gift-det')) document.getElementById('pg-i-gift-det').value = "";
             if (document.getElementById('pg-i-chat-det')) document.getElementById('pg-i-chat-det').value = "";
+            if (document.getElementById('pg-i-point-det')) document.getElementById('pg-i-point-det').value = "";
             
             updatePostPreview();
             if (show) {
