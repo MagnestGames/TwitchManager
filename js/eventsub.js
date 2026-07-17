@@ -191,7 +191,7 @@
                     await esSubscribe('channel.subscribe', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.message', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.subscription.gift', '1', { broadcaster_user_id: bId });
-                    await esSubscribe('channel.cheer', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.bits.use', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.follow', '2', { broadcaster_user_id: bId, moderator_user_id: bId });
                     await esSubscribe('channel.raid', '1', { to_broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.begin', '2', { broadcaster_user_id: bId });
@@ -243,7 +243,7 @@
                             appendToStatsTextarea('pg-i-gift-det', uiText('runtime.supporter.giftDetail', { user: ev.user_name, count: giftCount }));
                         }
                     }
-                    else if (subtype === 'channel.cheer') {
+                    else if (subtype === 'channel.bits.use') {
                         if (document.getElementById('es-f-cheer')?.checked === false) showLog = false;
                         logMsg = `💎 ${uiText('runtime.supporter.cheer', { user: ev.user_name, bits: ev.bits })}`;
                         triggerNotification('cheer');
@@ -371,7 +371,7 @@
                         if (subtype === 'channel.subscribe') appendCategoryTextLog('sub', logMsg);
                         else if (subtype === 'channel.subscription.message') appendCategoryTextLog('sub', logMsg);
                         else if (subtype === 'channel.subscription.gift') appendCategoryTextLog('sub', logMsg);
-                        else if (subtype === 'channel.cheer') appendCategoryTextLog('cheer', logMsg);
+                        else if (subtype === 'channel.bits.use') appendCategoryTextLog('cheer', logMsg);
                         else if (subtype === 'channel.follow') appendCategoryTextLog('follow', logMsg);
                         else if (subtype === 'channel.raid') appendCategoryTextLog('raid', logMsg);
                         else if (subtype.startsWith('channel.hype_train')) appendCategoryTextLog('hype', logMsg);
