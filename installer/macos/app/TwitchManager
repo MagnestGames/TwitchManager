@@ -1,0 +1,14 @@
+#!/bin/zsh
+set -eu
+
+dock_url="file:///Applications/TwitchManager/TwitchManagerDock.html"
+dock_file="/Applications/TwitchManager/TwitchManagerDock.html"
+
+if [[ ! -f "$dock_file" ]]; then
+  /usr/bin/osascript -e 'display alert "TwitchManager" message "TwitchManagerDock.htmlが見つかりません。再インストールしてください。" as critical'
+  exit 1
+fi
+
+/usr/bin/printf '%s' "$dock_url" | /usr/bin/pbcopy
+/usr/bin/open "$dock_url"
+/usr/bin/osascript -e 'display notification "OBSへ登録するURLをコピーしました。" with title "TwitchManager"'
