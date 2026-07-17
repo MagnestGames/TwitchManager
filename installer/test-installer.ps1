@@ -57,7 +57,15 @@ try {
             "twitch_manager_locales.js",
             "twitch_manager.css",
             "js/ui.js",
-            "sounds/raid_1.wav"
+            "sounds/chat_1.wav",
+            "sounds/chat_2.wav",
+            "sounds/chat_3.wav",
+            "sounds/chat_4.wav",
+            "sounds/first_1.wav",
+            "sounds/first_3.wav",
+            "sounds/first_4.wav",
+            "sounds/raid_1.wav",
+            "sounds/raid_2.wav"
         )
         foreach ($entryName in $requiredEntries) {
             if ($entryNames -notcontains $entryName) {
