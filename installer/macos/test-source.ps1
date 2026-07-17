@@ -8,6 +8,19 @@ $buildScript = Join-Path $PSScriptRoot "build-installer.sh"
 $testScript = Join-Path $PSScriptRoot "test-installer.sh"
 $launcherScript = Join-Path $PSScriptRoot "app\TwitchManager"
 $infoPlist = Join-Path $PSScriptRoot "app\Info.plist"
+$storageScript = Join-Path $repositoryRoot "js\storage.js"
+$uiScript = Join-Path $repositoryRoot "js\ui.js"
+$defaultSoundFiles = @(
+    "chat_1.wav",
+    "chat_2.wav",
+    "chat_3.wav",
+    "chat_4.wav",
+    "first_1.wav",
+    "first_3.wav",
+    "first_4.wav",
+    "raid_1.wav",
+    "raid_2.wav"
+)
 
 $requiredFiles = @(
     $buildScript,
@@ -15,9 +28,12 @@ $requiredFiles = @(
     $launcherScript,
     $infoPlist,
     (Join-Path $repositoryRoot "TwitchManagerDock.html"),
-    (Join-Path $repositoryRoot "js\ui.js"),
-    (Join-Path $repositoryRoot "sounds\raid_1.wav")
+    $storageScript,
+    $uiScript
 )
+$requiredFiles += $defaultSoundFiles | ForEach-Object {
+    Join-Path $repositoryRoot "sounds\$_"
+}
 foreach ($requiredFile in $requiredFiles) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
         throw "Required macOS installer source was not found: $requiredFile"
@@ -51,11 +67,36 @@ if ($launcherText -notmatch '/usr/bin/pbcopy') {
     throw "The macOS helper app does not copy the OBS dock URL."
 }
 
-$bashCandidates = @(
-    "C:\Users\kagom\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\bin\bash.exe",
-    "C:\Users\kagom\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\usr\bin\sh.exe",
-    "C:\Program Files\Git\bin\bash.exe"
-)
+$storageText = Get-Content -LiteralPath $storageScript -Raw
+foreach ($soundFile in $defaultSoundFiles) {
+    if ($storageText -notmatch [regex]::Escape("sounds/$soundFile")) {
+        throw "Default sound file is not referenced by storage settings: $soundFile"
+    }
+}
+
+$uiText = Get-Content -LiteralPath $uiScript -Raw
+foreach ($defaultSound in @(
+    "raidSoundFile: `"sounds/raid_1.wav`"",
+    "commentSoundFile: `"sounds/chat_1.wav`"",
+    "channelPointSoundFile: `"sounds/chat_1.wav`"",
+    "firstCommentSoundFile: `"sounds/first_1.wav`"",
+    "soundFiles: [...RAIDSO_DEFAULT_SOUND_FILES]")) {
+    if (-not $uiText.Contains($defaultSound)) {
+        throw "UI sound default is missing: $defaultSound"
+    }
+}
+
+$bashCandidates = @()
+$bashCommand = Get-Command bash.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($bashCommand) {
+    $bashCandidates += $bashCommand.Source
+}
+foreach ($programFilesPath in @($env:ProgramFiles, ${env:ProgramFiles(x86)})) {
+    if (-not [string]::IsNullOrWhiteSpace($programFilesPath)) {
+        $bashCandidates += Join-Path $programFilesPath "Git\bin\bash.exe"
+    }
+}
+$bashCandidates = $bashCandidates | Select-Object -Unique
 $bash = $bashCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if ($bash) {
     foreach ($shellFile in @($buildScript, $testScript, $launcherScript)) {
@@ -109,11 +150,13 @@ $preparedFiles = @(
     (Join-Path $preparedRoot "twitch_manager_locales.js"),
     (Join-Path $preparedRoot "twitch_manager.css"),
     (Join-Path $preparedRoot "js\ui.js"),
-    (Join-Path $preparedRoot "sounds\raid_1.wav"),
     $preparedUrlPath,
     (Join-Path $preparedApp "Info.plist"),
     (Join-Path $preparedApp "MacOS\TwitchManager")
 )
+$preparedFiles += $defaultSoundFiles | ForEach-Object {
+    Join-Path $preparedRoot "sounds\$_"
+}
 foreach ($preparedFile in $preparedFiles) {
     if (-not (Test-Path -LiteralPath $preparedFile -PathType Leaf)) {
         throw "Prepared macOS payload entry was not found: $preparedFile"

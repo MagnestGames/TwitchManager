@@ -8,7 +8,7 @@ OBSのドックから、Twitchの配信準備・配信中の操作・情報管�
 - 配信中: レイド紹介、送信レイド、通知音、予測・投票、チャット操作
 - 配信後: サポーター・ポイント引き換え集計、ログ、バックアップ
 
-![TwitchManagerドック](images/twitch-manager-dock.png)
+![TwitchManagerドック](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png)
 
 ## はじめる
 

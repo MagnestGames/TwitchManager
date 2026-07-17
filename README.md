@@ -4,7 +4,7 @@ OBS Studioから、Twitch配信の準備・操作・記録をまとめて行え�
 
 > TwitchおよびOBS Studioの公式ツールではありません。
 
-![TwitchManagerの画面](docs/images/twitch-manager-dock.png)
+![TwitchManagerの画面](docs/wiki-mock/images/twitch-manager-dock.png)
 
 ## 1. ダウンロード
 
@@ -44,14 +44,14 @@ OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できま�
 
 1. OBS Studio上部の「ドック」から「カスタムブラウザドック」を開きます。
 
-![OBS Studioのドックメニュー](docs/images/obs-custom-browser-dock-menu.png)
+![OBS Studioのドックメニュー](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
 
 2. 必要なら「＋」で行を追加します。
 3. ドック名に`TwitchManager`と入力します。
 4. URL欄に、インストール時にコピーされたOBS用URLを貼り付けます。
 5. 「適用」を押します。
 
-![カスタムブラウザドックの設定例](docs/images/obs-custom-browser-dock-settings.png)
+![カスタムブラウザドックの設定例](docs/wiki-mock/images/obs-custom-browser-dock-settings.png)
 
 追加されたドックは、ドラッグして好きな位置へ移動できます。文字やボタンが切れる場合は、ドックの幅を広げてください。
 

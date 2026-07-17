@@ -2,7 +2,7 @@
 
 配信タイトルとカテゴリをカードとして保存し、Twitchへ反映します。
 
-![タイトル管理](images/features/title-management.png)
+![タイトル管理](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/title-management.png)
 
 ## カードを作る
 

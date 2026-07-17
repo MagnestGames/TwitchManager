@@ -380,38 +380,15 @@ const langMap = {
             return sanitizeTwitchClientId(document.getElementById('client_id')?.value || settings.clientId || TITLE_DOCK_DEFAULT_CLIENT_ID || '');
         }
         const RAIDSO_DEFAULT_SOUND_FILES = [
-            'sounds/001_picon_down.wav',
-            'sounds/001_picoon_down.wav',
-            'sounds/001_powa.wav',
-            'sounds/001_pyowan_up.wav',
-            'sounds/002_talk_1.wav',
-            'sounds/002_talk_2.wav',
-            'sounds/002_talk_3_low.wav',
-            'sounds/003_click.wav',
-            'sounds/003_clickB.wav',
-            'sounds/004_noise_high.wav',
-            'sounds/005_flag_high.wav',
-            'sounds/005_flag_middle.wav',
-            'sounds/005_flag_middle2.wav',
-            'sounds/006_door_locked.wav',
-            'sounds/006_door_open2.wav',
-            'sounds/006_door_unlocked.wav',
-            'sounds/beep.wav',
-            'sounds/BGM_ending.wav',
-            'sounds/BGM_main.wav',
-            'sounds/BGM_main2.wav',
-            'sounds/BGM_title.wav',
-            'sounds/comment-notification.wav',
-            'sounds/raidbeep.wav',
-            'sounds/se_balloon_pop.wav',
-            'sounds/se_box_close.wav',
-            'sounds/se_box_key_drop.wav',
-            'sounds/se_box_open.wav',
-            'sounds/se_clock_hand_get.wav',
-            'sounds/se_clock.wav',
-            'sounds/se_key_drop.wav',
-            'sounds/se_key_get.wav',
-            'sounds/se_scissors.wav'
+            'sounds/chat_1.wav',
+            'sounds/chat_2.wav',
+            'sounds/chat_3.wav',
+            'sounds/chat_4.wav',
+            'sounds/first_1.wav',
+            'sounds/first_3.wav',
+            'sounds/first_4.wav',
+            'sounds/raid_1.wav',
+            'sounds/raid_2.wav'
         ];
         const RAIDSO_TEMPLATE_PRESET_IDS = ['classic', 'simple', 'polite', 'energetic', 'stream-focus', 'bilingual'];
         const RAIDSO_RAID_TEMPLATE_PRESETS = RAIDSO_TEMPLATE_PRESET_IDS.map(id => ({

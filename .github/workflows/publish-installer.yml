@@ -141,14 +141,14 @@ jobs:
 
       - name: Create release description
         shell: bash
-        env:
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_TAG: ${{ needs.metadata.outputs.tag }}
         run: |
           set -euo pipefail
           body_path="$RUNNER_TEMP/release-body-ja.md"
+          windows_sha256="$(awk '{print $1}' dist/TwitchManager-Windows11-Setup.sha256)"
+          macos_sha256="$(awk '{print $1}' dist/TwitchManager-macOS.sha256)"
           sed \
-            -e "s/{{VERSION}}/$RELEASE_VERSION/g" \
+            -e "s/{{WINDOWS_SHA256}}/$windows_sha256/g" \
+            -e "s/{{MACOS_SHA256}}/$macos_sha256/g" \
             .github/release-body-ja.md > "$body_path"
           echo "RELEASE_BODY=$body_path" >> "$GITHUB_ENV"
 
