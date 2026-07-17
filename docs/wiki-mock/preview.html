@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TwitchManager Wiki モック</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --link: #a970ff;
+      --code: #21262d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .topbar { position: sticky; top: 0; z-index: 3; height: 58px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid var(--border); background: rgba(13, 17, 23, .96); }
+    .topbar strong { font-size: 18px; }
+    .topbar span { margin-left: 12px; color: var(--muted); font-size: 12px; }
+    .layout { width: min(1240px, 100%); margin: 0 auto; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 28px; padding: 28px 24px 64px; }
+    aside { position: sticky; top: 86px; align-self: start; max-height: calc(100vh - 110px); overflow: auto; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+    aside h2 { margin: 0 0 10px; border: 0; font-size: 16px; }
+    aside h3 { margin: 18px 0 6px; color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    aside a { display: block; padding: 5px 7px; border-radius: 6px; color: var(--text); text-decoration: none; }
+    aside a:hover, aside a.active { background: rgba(169, 112, 255, .18); color: #d8bfff; }
+    main { min-width: 0; padding: 8px 34px 48px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+    h1, h2 { padding-bottom: .35em; border-bottom: 1px solid var(--border); line-height: 1.25; }
+    h1 { margin-top: 22px; font-size: 30px; }
+    h2 { margin-top: 34px; font-size: 22px; }
+    h3 { margin-top: 26px; font-size: 18px; }
+    a { color: var(--link); }
+    img { display: block; max-width: 100%; height: auto; margin: 16px auto; border-radius: 8px; border: 1px solid var(--border); }
+    blockquote { margin: 16px 0; padding: 8px 16px; border-left: 4px solid var(--link); color: var(--muted); background: rgba(169, 112, 255, .06); }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; }
+    th, td { padding: 9px 12px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--code); }
+    code, pre { background: var(--code); border-radius: 6px; }
+    code { padding: 2px 5px; }
+    pre { overflow: auto; padding: 14px; }
+    .loading { color: var(--muted); }
+    .error { padding: 12px; border: 1px solid #f85149; border-radius: 8px; color: #ff7b72; }
+    @media (max-width: 800px) {
+      .topbar span { display: none; }
+      .layout { display: block; padding: 14px; }
+      aside { position: static; max-height: none; margin-bottom: 14px; }
+      main { padding: 6px 18px 36px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <strong>TwitchManager Wiki</strong>
+    <span>ローカル構成モック</span>
+  </header>
+  <div class="layout">
+    <aside id="sidebar" aria-label="Wikiナビゲーション"></aside>
+    <main id="content"><p class="loading">読み込み中...</p></main>
+  </div>
+  <script>
+    (function () {
+      var content = document.getElementById("content");
+      var sidebar = document.getElementById("sidebar");
+
+      function inline(text) {
+        return text
+          .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/(^|[^/])\/(shoutout|raid|clear|marker|commercial)(?=[\s、・<]|$)/g, "$1<code>/$2</code>");
+      }
+
+      function renderMarkdown(markdown) {
+        var lines = markdown.replace(/\r/g, "").split("\n");
+        var html = [];
+        var i = 0;
+        while (i < lines.length) {
+          var line = lines[i];
+          if (!line.trim()) { i += 1; continue; }
+
+          if (/^~~~/.test(line)) {
+            var code = [];
+            i += 1;
+            while (i < lines.length && !/^~~~/.test(lines[i])) { code.push(lines[i]); i += 1; }
+            i += 1;
+            html.push("<pre><code>" + code.join("\n").replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</code></pre>");
+            continue;
+          }
+
+          var heading = line.match(/^(#{1,3})\s+(.+)$/);
+          if (heading) {
+            var level = heading[1].length;
+            html.push("<h" + level + ">" + inline(heading[2]) + "</h" + level + ">");
+            i += 1;
+            continue;
+          }
+
+          if (/^>\s?/.test(line)) {
+            var quote = [];
+            while (i < lines.length && /^>\s?/.test(lines[i])) {
+              quote.push(lines[i].replace(/^>\s?/, ""));
+              i += 1;
+            }
+            html.push("<blockquote>" + inline(quote.join(" ")) + "</blockquote>");
+            continue;
+          }
+
+          if (line.indexOf("|") === 0 && i + 1 < lines.length && /^\|\s*:?-+/.test(lines[i + 1])) {
+            var rows = [];
+            rows.push(line);
+            i += 2;
+            while (i < lines.length && lines[i].indexOf("|") === 0) { rows.push(lines[i]); i += 1; }
+            var cells = rows.map(function (row) {
+              return row.split("|").slice(1, -1).map(function (cell) { return cell.trim(); });
+            });
+            var table = "<table><thead><tr>" + cells[0].map(function (cell) { return "<th>" + inline(cell) + "</th>"; }).join("") + "</tr></thead><tbody>";
+            table += cells.slice(1).map(function (row) {
+              return "<tr>" + row.map(function (cell) { return "<td>" + inline(cell) + "</td>"; }).join("") + "</tr>";
+            }).join("");
+            html.push(table + "</tbody></table>");
+            continue;
+          }
+
+          if (/^[-*]\s+/.test(line)) {
+            var list = [];
+            while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+              list.push("<li>" + inline(lines[i].replace(/^[-*]\s+/, "")) + "</li>");
+              i += 1;
+            }
+            html.push("<ul>" + list.join("") + "</ul>");
+            continue;
+          }
+
+          if (/^\d+\.\s+/.test(line)) {
+            var ordered = [];
+            while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
+              ordered.push("<li>" + inline(lines[i].replace(/^\d+\.\s+/, "")) + "</li>");
+              i += 1;
+            }
+            html.push("<ol>" + ordered.join("") + "</ol>");
+            continue;
+          }
+
+          if (/^<img\b/i.test(line)) {
+            html.push(line);
+            i += 1;
+            continue;
+          }
+
+          var paragraph = [line];
+          i += 1;
+          while (i < lines.length && lines[i].trim() && !/^(#{1,3})\s+|^>\s?|^[-*]\s+|^\d+\.\s+|^\||^~~~|^<img\b/i.test(lines[i])) {
+            paragraph.push(lines[i]);
+            i += 1;
+          }
+          html.push("<p>" + inline(paragraph.join(" ")) + "</p>");
+        }
+        return html.join("\n");
+      }
+
+      function normalizePage(value) {
+        var raw = (value || "Home").replace(/^#/, "");
+        var page = raw;
+        try { page = decodeURIComponent(raw); } catch (error) { page = raw; }
+        page = page.replace(/\.md$/i, "");
+        return page || "Home";
+      }
+
+      function bindLinks(root) {
+        Array.prototype.forEach.call(root.querySelectorAll("a"), function (link) {
+          var href = link.getAttribute("href") || "";
+          if (/^(https?:|mailto:|#)/i.test(href)) return;
+          link.addEventListener("click", function (event) {
+            event.preventDefault();
+            loadPage(normalizePage(href), true);
+          });
+        });
+      }
+
+      function updateActive(page) {
+        Array.prototype.forEach.call(sidebar.querySelectorAll("a"), function (link) {
+          link.classList.toggle("active", normalizePage(link.getAttribute("href")) === page);
+        });
+      }
+
+      function loadPage(page, updateHash) {
+        page = normalizePage(page);
+        content.innerHTML = '<p class="loading">読み込み中...</p>';
+        fetch(encodeURI(page + ".md"))
+          .then(function (response) {
+            if (!response.ok) throw new Error(page + ".md を読み込めませんでした");
+            return response.text();
+          })
+          .then(function (markdown) {
+            content.innerHTML = renderMarkdown(markdown);
+            bindLinks(content);
+            updateActive(page);
+            document.title = page + " | TwitchManager Wiki モック";
+            if (updateHash) history.pushState({ page: page }, "", "#" + page);
+            window.scrollTo({ top: 0, behavior: "instant" });
+          })
+          .catch(function (error) {
+            content.innerHTML = '<p class="error">' + error.message + "</p>";
+          });
+      }
+
+      fetch("_Sidebar.md")
+        .then(function (response) { return response.text(); })
+        .then(function (markdown) {
+          sidebar.innerHTML = renderMarkdown(markdown);
+          bindLinks(sidebar);
+          loadPage(normalizePage(location.hash), false);
+        })
+        .catch(function () {
+          sidebar.innerHTML = '<p class="error">サイドバーを読み込めませんでした。</p>';
+        });
+
+      window.addEventListener("popstate", function () {
+        loadPage(normalizePage(location.hash), false);
+      });
+    }());
+  </script>
+</body>
+</html>
