@@ -1,0 +1,2 @@
+*.sh text eol=lf
+installer/macos/app/TwitchManager text eol=lf
