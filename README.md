@@ -1,27 +1,49 @@
 # TwitchManager
 
-OBS Studioから、Twitch配信の準備・操作・記録をまとめて行えるカスタムブラウザドックです。
+![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/images/twitchmanager-overview.png)
 
-> TwitchおよびOBS Studioの公式ツールではありません。
+OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
-![TwitchManagerの画面](docs/wiki-mock/images/twitch-manager-dock.png)
+> TwitchおよびOBS Studioの公式ツールではありません。現在の公開版は`1.0_beta`です。
 
-## 1. ダウンロード
+## 主な機能
 
-1. [Releases（ダウンロードページ）](https://github.com/MagnestGames/TwitchManager/releases)を開きます。
-2. 一番上のReleaseにある **Assets** を開きます。
-3. 使用しているOSのインストーラーを選びます。
+### 配信タイトルとカテゴリの保存・反映
+
+よく使う配信タイトルとカテゴリを保存し、配信前の設定をTwitchへ反映できます。配信ごとに同じ情報を入力し直す手間を減らします。
+
+### レイド受信時の自動紹介・IDの記録
+
+レイドを受信すると、相手のチャンネルを自動で紹介できます。公式`/shoutout`の実行にも対応し、レイド元の配信者IDをIDリストへ記録できます。
+
+### チャット・初チャット・レイド受信時の通知音
+
+チャット、初チャット、レイド受信を通知音で把握できます。配信中に画面を見続けなくても、大切な反応に気づきやすくなります。
+
+### 配信者・視聴者の管理と記録
+
+- **サポーターリスト** — 初見、レイド、フォロー、Bits、サブスク、チャット、ポイント引き換えを記録し、配信中の反応をまとめて確認できます。
+- **サブスクライバー・VIP一覧の取得** — チャンネルのサブスクライバーとVIPを一覧で確認できます。
+- **IDリスト** — レイドや紹介に利用する配信者IDを保存・管理できます。
+
+### その他の配信支援
+
+- 配信先への`/raid`とレイド先URLの自動送信
+- 予測、投票、チャット設定、クリップ、VIPの操作
+- 誕生日・記念日、メモ、設定やリストのバックアップ
+
+## ダウンロード
+
+[TwitchManager 1.0_betaのリリースページ](https://github.com/MagnestGames/TwitchManager/releases/tag/1.0_beta)から、使用しているOSのインストーラーをダウンロードしてください。
 
 | OS | ダウンロードするファイル |
 | --- | --- |
-| Windows 11 | `TwitchManager-Windows11-Setup.exe` |
-| macOS 11以降 | `TwitchManager-macOS.pkg` |
+| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-Windows11-Setup.exe) |
+| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-macOS.pkg) |
 
-`Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。
+`Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。必要に応じて、同じリリースにある`.sha256`ファイルでダウンロードしたファイルを確認できます。
 
-必要に応じて、同名の`.sha256`ファイルでダウンロードしたファイルを確認できます。
-
-## 2. インストール
+## インストール
 
 ### Windows 11
 
@@ -29,8 +51,7 @@ OBS Studioから、Twitch配信の準備・操作・記録をまとめて行え�
 2. インストール先を確認し、「インストール」を押します。
 3. 完了画面で、OBS用URLがコピーされたことを確認します。
 
-既定では、Windowsの **ドキュメント** フォルダ内の`TwitchManager`にインストールされます。  
-OBS用URLは、インストール先の`OBS_Dock_URL.txt`でも確認できます。
+既定では、Windowsの**ドキュメント**フォルダ内の`TwitchManager`にインストールされます。OBS用URLは、インストール先の`OBS_Dock_URL.txt`でも確認できます。
 
 ### macOS
 
@@ -40,11 +61,11 @@ OBS用URLは、インストール先の`OBS_Dock_URL.txt`でも確認できま�
 
 OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できます。
 
-## 3. OBS Studioへ追加する
+## OBS Studioへ追加する
 
 1. OBS Studio上部の「ドック」から「カスタムブラウザドック」を開きます。
 
-![OBS Studioのドックメニュー](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+   ![OBS Studioのドックメニュー](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
 
 2. 必要なら「＋」で行を追加します。
 3. ドック名に`TwitchManager`と入力します。
@@ -55,22 +76,15 @@ OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できま�
 
 追加されたドックは、ドラッグして好きな位置へ移動できます。文字やボタンが切れる場合は、ドックの幅を広げてください。
 
-## 4. Twitch認証
+## Twitch認証
 
 TwitchManager右上の歯車を開き、Twitch認証を設定します。
 
 [認証手順（Wiki）](https://github.com/MagnestGames/TwitchManager/wiki/Authentication)
 
-## 主な機能
+## 実際の画面
 
-- 配信タイトルとカテゴリの保存・反映
-- レイド受信時の自動紹介と公式`/shoutout`
-- 配信先への`/raid`とレイド先URLの自動送信
-- 初見、レイド、フォロー、Bits、サブスク、チャット、ポイント引き換えの記録
-- 予測、投票、チャット設定、クリップ、VIPの操作
-- 通知音、配信者IDリスト、誕生日・記念日、メモ、バックアップ
-
-[詳しい機能一覧（Wiki）](https://github.com/MagnestGames/TwitchManager/wiki/Feature-Overview)
+![TwitchManagerの画面](docs/wiki-mock/images/twitch-manager-dock.png)
 
 ## データの保存とバックアップ
 
