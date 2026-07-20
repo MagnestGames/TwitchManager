@@ -40,7 +40,7 @@
         if (!select) {
             select = document.createElement('select');
             select.id = 'date_format_preset';
-            select.setAttribute('aria-label', '日付形式プリセット');
+            select.setAttribute('aria-label', getSettingsUi().datePresetLabel);
             select.style.width = '100%';
             select.style.background = 'var(--bg-base)';
             select.style.border = '1px solid var(--border-color)';
@@ -68,7 +68,7 @@
         const L = langMap?.[currentLang] || langMap?.ja || {};
         const labels = L.dateFormatOptions || {};
         const current = select.value;
-        const customLabel = currentLang === 'en' ? 'Custom' : (currentLang === 'zh' ? '自定义' : 'カスタム');
+        const customLabel = getSettingsUi().customDateFormat;
         select.innerHTML = DATE_FORMAT_VALUES.map(value => {
             const label = labels[value] ? `${labels[value]} (${value})` : value;
             return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
@@ -129,7 +129,7 @@
             ? extractTwitchAccessToken(tokenInput?.value || settings?.token || '')
             : String(tokenInput?.value || settings?.token || '').replace(/^oauth:/i, '').trim();
         if (!token) {
-            await customAlert?.(ui.tokenMissing || 'Access Tokenを入力してください。');
+            await customAlert?.(ui.tokenMissing || langMap.ja.settingsUi.tokenMissing);
             return;
         }
         const btn = document.getElementById('ui-settings-revoke-auth-btn');
@@ -137,7 +137,7 @@
         if (btn) {
             btn.disabled = true;
             btn.style.opacity = '0.55';
-            btn.innerText = ui.authChecking || '認証中...';
+            btn.innerText = ui.authChecking || langMap.ja.settingsUi.authChecking;
         }
         try {
             settings = {
@@ -155,7 +155,7 @@
             if (typeof ensureAuthenticatedUserIdList === 'function') ensureAuthenticatedUserIdList();
             if (typeof renderFriends === 'function') renderFriends();
             if (typeof updateSettingsAuthStatus === 'function') updateSettingsAuthStatus();
-            showToast?.(ui.authSuccess || 'Twitch認証を保存しました。', 'success');
+            showToast?.(ui.authSuccess || langMap.ja.settingsUi.authSuccess, 'success');
             try { if (typeof syncRaidSoConnection === 'function') syncRaidSoConnection(false); } catch (e) {}
         } finally {
             if (btn) {
@@ -179,8 +179,8 @@
                 <h3 class="tmd-danger-title" id="tmd-danger-title"></h3>
                 <div class="tmd-danger-message" id="tmd-danger-message"></div>
                 <div class="tmd-danger-actions">
-                    <button type="button" class="btn-secondary tmd-danger-cancel" id="tmd-danger-cancel">キャンセル</button>
-                    <button type="button" class="btn-primary tmd-danger-ok" id="tmd-danger-ok">認証を解除する</button>
+                    <button type="button" class="btn-secondary tmd-danger-cancel" id="tmd-danger-cancel"></button>
+                    <button type="button" class="btn-primary tmd-danger-ok" id="tmd-danger-ok"></button>
                 </div>
             </div>`;
         document.body.appendChild(overlay);
@@ -194,10 +194,10 @@
         const message = overlay.querySelector('#tmd-danger-message');
         const cancel = overlay.querySelector('#tmd-danger-cancel');
         const ok = overlay.querySelector('#tmd-danger-ok');
-        title.innerText = ui.revokeAuthConfirmTitle || 'Twitch認証を解除';
-        message.innerText = ui.revokeAuthConfirmMessageShort || 'Twitch認証を解除します。\n\n保存済みAccess Tokenを無効化します。\n無効化後は再利用できません。\n\n再度使うには、Access Tokenを作り直してください。\nこの操作は取り消せません。';
-        cancel.innerText = langMap?.[currentLang]?.cancel || langMap?.ja?.cancel || 'キャンセル';
-        ok.innerText = ui.revokeAuthConfirmOk || '認証を解除する';
+        title.innerText = ui.revokeAuthConfirmTitle || langMap.ja.settingsUi.revokeAuthConfirmTitle;
+        message.innerText = ui.revokeAuthConfirmMessageShort || langMap.ja.settingsUi.revokeAuthConfirmMessageShort;
+        cancel.innerText = langMap?.[currentLang]?.cancel || langMap.ja.cancel;
+        ok.innerText = ui.revokeAuthConfirmOk || langMap.ja.settingsUi.revokeAuthConfirmOk;
         return new Promise(resolve => {
             const close = result => {
                 overlay.classList.remove('show');
@@ -231,7 +231,7 @@
         const hasLocalAuth = Boolean(token || settings?.userId || settings?.userLogin);
         if (!hasLocalAuth) {
             clearLocalTwitchAuth?.();
-            showToast?.(ui.revokeAuthMissing || 'ローカル認証情報を削除しました。', 'info');
+            showToast?.(ui.revokeAuthMissing || langMap.ja.settingsUi.revokeAuthMissing, 'info');
             return;
         }
         const ok = await showRevokeDangerConfirm();
@@ -262,10 +262,10 @@
         try { if (typeof renderRaidSoStatus === 'function') renderRaidSoStatus(); } catch (e) {}
         try { if (typeof renderEventSubUI === 'function') renderEventSubUI(); } catch (e) {}
         const message = remoteRevoked
-            ? (ui.revokeAuthSuccess || 'Twitch認証を解除しました。')
+            ? (ui.revokeAuthSuccess || langMap.ja.settingsUi.revokeAuthSuccess)
             : remoteInvalid
-                ? (ui.revokeAuthInvalid || '保存済みTokenは既に無効です。ローカル認証情報を削除しました。')
-                : (ui.revokeAuthLocalOnly || 'Twitch側の解除は未確認です。ローカル認証情報を削除しました。');
+                ? (ui.revokeAuthInvalid || langMap.ja.settingsUi.revokeAuthInvalid)
+                : (ui.revokeAuthLocalOnly || langMap.ja.settingsUi.revokeAuthLocalOnly);
         showToast?.(message, remoteRevoked || remoteInvalid ? 'success' : 'info');
         try { if (typeof raidSoLog === 'function') raidSoLog(message, remoteRevoked || remoteInvalid ? 'info' : 'warn'); } catch (e) {}
         updateSettingsAuthStatus();
@@ -291,7 +291,9 @@
         btn.classList.add('auth-action-toggle');
         btn.classList.toggle('is-authenticate', !isAuthed);
         btn.classList.toggle('is-revoke', isAuthed);
-        btn.innerText = isAuthed ? (ui.revokeAuth || 'Twitch認証を解除') : (ui.authenticateNow || '認証する');
+        btn.innerText = isAuthed
+            ? (ui.revokeAuth || langMap.ja.settingsUi.revokeAuth)
+            : (ui.authenticateNow || langMap.ja.settingsUi.authenticateNow);
         btn.disabled = !isAuthed && !token;
         btn.style.opacity = btn.disabled ? '0.45' : '1';
         btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
@@ -344,15 +346,15 @@
         if (!friend) return;
         const name = friend.name || friend.twitch || '';
         const ok = await customConfirm?.({
-            title: getIdText().resetShoutoutTitle || '紹介履歴をリセット',
-            message: (getIdText().resetShoutoutMessage || 'このIDの紹介回数と最終紹介日時をリセットします。').replace('{name}', name)
+            title: getIdText().resetShoutoutTitle || langMap.ja.idList.resetShoutoutTitle,
+            message: (getIdText().resetShoutoutMessage || langMap.ja.idList.resetShoutoutMessage).replace('{name}', name)
         });
         if (!ok) return;
         friend.shoutoutCount = 0;
         friend.lastShoutoutAt = '';
         if (typeof saveFriendsLocal === 'function') saveFriendsLocal(false);
         if (typeof renderFriends === 'function') renderFriends();
-        showToast?.(getIdText().resetShoutoutDone || '紹介履歴をリセットしました。', 'success');
+        showToast?.(getIdText().resetShoutoutDone || langMap.ja.idList.resetShoutoutDone, 'success');
     }
     window.resetFriendShoutoutHistory = resetFriendShoutoutHistory;
 
@@ -376,7 +378,7 @@
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'btn-outline id-history-reset-btn';
-            btn.innerText = getIdText().resetShoutout || '紹介履歴リセット';
+            btn.innerText = getIdText().resetShoutout || langMap.ja.idList.resetShoutout;
             btn.disabled = !hasHistory;
             btn.onclick = event => {
                 event.stopPropagation();
@@ -461,7 +463,7 @@
     const fallbackCreators = [
         {
             name: "初狐羽鹿",
-            color: "#bf94ff",
+            color: "var(--command-accent)",
             avatar: "https://avatars.githubusercontent.com/u/98635212?v=4",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/uikouka", title: "Twitch" },
@@ -472,7 +474,7 @@
         },
         {
             name: "古隅フユセ",
-            color: "#bf94ff",
+            color: "var(--command-accent)",
             avatar: "https://avatars.githubusercontent.com/u/106515274?v=4",
             links: [
                 { type: "twitch", url: "https://www.twitch.tv/frusumi", title: "Twitch" },
@@ -544,7 +546,10 @@
 
         creators.forEach(c => {
             const name = c.name || '';
-            const color = c.color || '#bf94ff';
+            const requestedColor = String(c.color || '').trim();
+            const color = !requestedColor || /^#bf94ff$/i.test(requestedColor)
+                ? 'var(--command-accent)'
+                : requestedColor;
             const links = c.links || [];
             const avatarUrl = c.avatar || '';
 

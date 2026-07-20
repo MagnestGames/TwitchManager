@@ -74,14 +74,14 @@ const cmdSets = {
             return `
             <div class="command-stack" style="display: flex; flex-direction: column; gap: 8px;">
                 <div class="tab-lead-note">
-                    <span><span style="color: #bf94ff;">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
+                    <span><span style="color: var(--command-accent);">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-stream" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-stream')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.stream}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-stream')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.stream}</span></div>
                     <div class="tw-body">${renderGrid([b.title, b.game, b.marker, b.raid, b.unraid, b.ads30, b.ads60, b.ads180])}</div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-chat" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-chat')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.chat}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-chat')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.chat}</span></div>
                     <div class="tw-body">
                         ${renderGrid([b.announce, b.clear, b.color, b.me, b.disconnect])}
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 6px;">
@@ -94,11 +94,11 @@ const cmdSets = {
                     </div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-user" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-user')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.user}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-user')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.user}</span></div>
                     <div class="tw-body">${renderGrid([b.ban, b.unban, b.timeout, b.mod, b.unmod, b.vip, b.unvip, b.mods, b.vips, b.user, b.monitor, b.unmonitor, b.restrict, b.unrestrict, b.block, b.unblock, b.w])}</div>
                 </div>
                 <div class="category-box tw-section" id="cmd-box-interact" style="margin-bottom: 0;">
-                    <div class="category-name" onclick="twToggle('cmd-box-interact')" style="padding: 6px 10px; background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.interact}</span></div>
+                    <div class="category-name" onclick="twToggle('cmd-box-interact')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px;"><span>${c.interact}</span></div>
                     <div class="tw-body">${renderGrid([b.poll, b.predict, b.pin, b.unpin, b.shoutout])}</div>
                 </div>
             </div>`;
@@ -117,14 +117,13 @@ const langMap = {
         const LANGUAGE_STORAGE_KEY = 'stream_language_v16';
         const LANGUAGE_OPTIONS = [
             { code: 'ja', short: 'JP' },
-            { code: 'en', short: 'EN' },
-            { code: 'zh', short: 'ZH' }
+            { code: 'en', short: 'EN' }
         ];
         function detectInitialLanguage() {
             const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-            if (langMap[savedLang]) return savedLang;
+            if (LANGUAGE_OPTIONS.some(option => option.code === savedLang)) return savedLang;
             const browserLang = navigator.language.toLowerCase();
-            return browserLang.startsWith('ja') ? 'ja' : (browserLang.startsWith('zh') ? 'zh' : 'en');
+            return browserLang.startsWith('ja') ? 'ja' : 'en';
         }
 
         let currentLang = detectInitialLanguage(), config = [], friendsConfig = [], memoConfig = [], settings = {}, isSortLocked = true, sortableInstances = [], dynamicCategorySortables = [];
@@ -300,12 +299,12 @@ const langMap = {
             const hasLocalAuth = Boolean(token || settings.userId || settings.userLogin);
             if (!hasLocalAuth) {
                 clearLocalTwitchAuth();
-                showToast(ui.revokeAuthMissing || 'ローカル認証情報を削除しました。', 'info');
+                showToast(ui.revokeAuthMissing || langMap.ja.settingsUi.revokeAuthMissing, 'info');
                 return;
             }
             const ok = await customConfirm({
-                title: ui.revokeAuthConfirmTitle || 'Twitch認証解除',
-                message: ui.revokeAuthConfirmMessage || '保存済みAccess TokenをTwitch側で失効させ、このHTML内の認証情報も削除します。続行しますか？'
+                title: ui.revokeAuthConfirmTitle || langMap.ja.settingsUi.revokeAuthConfirmTitle,
+                message: ui.revokeAuthConfirmMessage || langMap.ja.settingsUi.revokeAuthConfirmMessage
             });
             if (!ok) return;
             const btn = document.getElementById('ui-settings-revoke-auth-btn');
@@ -334,10 +333,10 @@ const langMap = {
             try { if (typeof renderRaidSoStatus === 'function') renderRaidSoStatus(); } catch (e) {}
             try { if (typeof renderEventSubUI === 'function') renderEventSubUI(); } catch (e) {}
             const message = remoteRevoked
-                ? (ui.revokeAuthSuccess || 'Twitch認証を解除しました。')
+                ? (ui.revokeAuthSuccess || langMap.ja.settingsUi.revokeAuthSuccess)
                 : remoteInvalid
-                    ? (ui.revokeAuthInvalid || '保存済みTokenは既に無効です。ローカル認証情報を削除しました。')
-                    : (ui.revokeAuthLocalOnly || 'Twitch側の解除は未確認です。ローカル認証情報を削除しました。');
+                    ? (ui.revokeAuthInvalid || langMap.ja.settingsUi.revokeAuthInvalid)
+                    : (ui.revokeAuthLocalOnly || langMap.ja.settingsUi.revokeAuthLocalOnly);
             showToast(message, remoteRevoked || remoteInvalid ? 'success' : 'info');
             raidSoLog(message, remoteRevoked || remoteInvalid ? 'info' : 'warn');
         }
@@ -626,7 +625,7 @@ const langMap = {
             const c = document.getElementById('tw-clip-result');
             const favs = getStoredFavClips();
             if (favs.length === 0) {
-                c.innerHTML = `<p style="color:#888;font-size:11px;">${raidSoEscape(twExt('noFavClips'))}</p>`;
+                c.innerHTML = `<p style="color:var(--text-muted);font-size:11px;">${raidSoEscape(twExt('noFavClips'))}</p>`;
                 return;
             }
             
@@ -650,7 +649,7 @@ const langMap = {
                     </div>
                     <div class="tw-clip-actions">
                         <button class="btn-secondary" data-url="${safeUrl}" onclick="copyClipFromButton(this)">${raidSoEscape(twExt('copyShort'))}</button>
-                        <button class="btn-secondary" style="background:rgba(255,100,100,0.1);color:#ff6b6b;" data-id="${safeId}" onclick="deleteFavClipFromButton(this)">×${raidSoEscape(twExt('removeShort'))}</button>
+                        <button class="btn-secondary" style="background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);" data-id="${safeId}" onclick="deleteFavClipFromButton(this)">×${raidSoEscape(twExt('removeShort'))}</button>
                     </div>
                 </article>`;
             }).join('')}</div>`;

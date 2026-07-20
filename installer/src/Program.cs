@@ -41,16 +41,16 @@ namespace TwitchManagerInstaller
             if (!InstallService.IsTwitchManagerInstallation(installDirectory))
             {
                 MessageBox.Show(
-                    "TwitchManagerのインストール情報を確認できませんでした。",
-                    "TwitchManager アンインストーラー",
+                    InstallerStrings.InstallationNotFound,
+                    InstallerStrings.UninstallerTitle,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;
             }
 
             DialogResult result = MessageBox.Show(
-                "TwitchManagerをアンインストールしますか？\r\n\r\n設定やOBS側のドック登録は自動では削除されません。",
-                "TwitchManager アンインストーラー",
+                InstallerStrings.UninstallConfirmation,
+                InstallerStrings.UninstallerTitle,
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);
@@ -78,8 +78,8 @@ namespace TwitchManagerInstaller
             catch (Exception error)
             {
                 MessageBox.Show(
-                    "アンインストールを開始できませんでした。\r\n\r\n" + error.Message,
-                    "TwitchManager アンインストーラー",
+                    InstallerStrings.UninstallStartFailed + "\r\n\r\n" + error.Message,
+                    InstallerStrings.UninstallerTitle,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

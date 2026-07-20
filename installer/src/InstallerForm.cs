@@ -16,7 +16,7 @@ namespace TwitchManagerInstaller
 
         public InstallerForm()
         {
-            Text = "TwitchManager Windows 11 セットアップ";
+            Text = InstallerStrings.SetupWindowTitle;
             ClientSize = new Size(650, 365);
             MinimumSize = new Size(650, 404);
             StartPosition = FormStartPosition.CenterScreen;
@@ -28,7 +28,7 @@ namespace TwitchManagerInstaller
 
             Label titleLabel = new Label();
             titleLabel.AutoSize = true;
-            titleLabel.Font = new Font("Yu Gothic UI", 21F, FontStyle.Bold, GraphicsUnit.Point);
+            titleLabel.Font = new Font(InstallerStrings.UiFontName, 21F, FontStyle.Bold, GraphicsUnit.Point);
             titleLabel.ForeColor = Color.FromArgb(176, 117, 255);
             titleLabel.Location = new Point(28, 24);
             titleLabel.Text = "TwitchManager";
@@ -36,32 +36,32 @@ namespace TwitchManagerInstaller
 
             Label versionLabel = new Label();
             versionLabel.AutoSize = true;
-            versionLabel.Font = new Font("Yu Gothic UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            versionLabel.Font = new Font(InstallerStrings.UiFontName, 9F, FontStyle.Regular, GraphicsUnit.Point);
             versionLabel.ForeColor = Color.Silver;
             versionLabel.Location = new Point(32, 69);
             versionLabel.Text = "Version " + InstallService.Version;
             Controls.Add(versionLabel);
 
             Label descriptionLabel = new Label();
-            descriptionLabel.Font = new Font("Yu Gothic UI", 10.5F, FontStyle.Regular, GraphicsUnit.Point);
+            descriptionLabel.Font = new Font(InstallerStrings.UiFontName, 10.5F, FontStyle.Regular, GraphicsUnit.Point);
             descriptionLabel.ForeColor = Color.Gainsboro;
             descriptionLabel.Location = new Point(32, 104);
             descriptionLabel.Size = new Size(586, 52);
-            descriptionLabel.Text = "Windows 11へOBSカスタムブラウザドック用のファイルをインストールします。\r\n完了後、OBSへ登録するローカルURLをクリップボードへコピーします。";
+            descriptionLabel.Text = InstallerStrings.Description;
             Controls.Add(descriptionLabel);
 
             Label pathLabel = new Label();
             pathLabel.AutoSize = true;
-            pathLabel.Font = new Font("Yu Gothic UI", 9.5F, FontStyle.Bold, GraphicsUnit.Point);
+            pathLabel.Font = new Font(InstallerStrings.UiFontName, 9.5F, FontStyle.Bold, GraphicsUnit.Point);
             pathLabel.ForeColor = Color.WhiteSmoke;
             pathLabel.Location = new Point(32, 169);
-            pathLabel.Text = "インストール先";
+            pathLabel.Text = InstallerStrings.InstallLocation;
             Controls.Add(pathLabel);
 
             installDirectoryTextBox = new TextBox();
             installDirectoryTextBox.BackColor = Color.FromArgb(42, 42, 50);
             installDirectoryTextBox.BorderStyle = BorderStyle.FixedSingle;
-            installDirectoryTextBox.Font = new Font("Yu Gothic UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            installDirectoryTextBox.Font = new Font(InstallerStrings.UiFontName, 10F, FontStyle.Regular, GraphicsUnit.Point);
             installDirectoryTextBox.ForeColor = Color.White;
             installDirectoryTextBox.Location = new Point(32, 195);
             installDirectoryTextBox.Size = new Size(478, 30);
@@ -75,11 +75,11 @@ namespace TwitchManagerInstaller
             browseButton.FlatAppearance.MouseDownBackColor = Color.FromArgb(74, 61, 94);
             browseButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(66, 66, 82);
             browseButton.FlatStyle = FlatStyle.Flat;
-            browseButton.Font = new Font("Yu Gothic UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            browseButton.Font = new Font(InstallerStrings.UiFontName, 9F, FontStyle.Regular, GraphicsUnit.Point);
             browseButton.ForeColor = Color.White;
             browseButton.Location = new Point(520, 193);
             browseButton.Size = new Size(98, 32);
-            browseButton.Text = "参照...";
+            browseButton.Text = InstallerStrings.Browse;
             browseButton.UseVisualStyleBackColor = false;
             browseButton.Click += BrowseButtonClick;
             Controls.Add(browseButton);
@@ -88,16 +88,16 @@ namespace TwitchManagerInstaller
             openFolderCheckBox.AutoSize = true;
             openFolderCheckBox.BackColor = BackColor;
             openFolderCheckBox.Checked = true;
-            openFolderCheckBox.Font = new Font("Yu Gothic UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
+            openFolderCheckBox.Font = new Font(InstallerStrings.UiFontName, 9.5F, FontStyle.Regular, GraphicsUnit.Point);
             openFolderCheckBox.ForeColor = Color.WhiteSmoke;
             openFolderCheckBox.Location = new Point(32, 244);
-            openFolderCheckBox.Text = "インストール後にフォルダーを開く";
+            openFolderCheckBox.Text = InstallerStrings.OpenFolderAfterInstall;
             openFolderCheckBox.UseVisualStyleBackColor = false;
             Controls.Add(openFolderCheckBox);
 
             statusLabel = new Label();
             statusLabel.AutoEllipsis = true;
-            statusLabel.Font = new Font("Yu Gothic UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            statusLabel.Font = new Font(InstallerStrings.UiFontName, 9F, FontStyle.Regular, GraphicsUnit.Point);
             statusLabel.ForeColor = Color.Silver;
             statusLabel.Location = new Point(32, 282);
             statusLabel.Size = new Size(410, 27);
@@ -110,11 +110,11 @@ namespace TwitchManagerInstaller
             installButton.FlatAppearance.MouseOverBackColor = Color.FromArgb(148, 83, 236);
             installButton.FlatAppearance.BorderSize = 0;
             installButton.FlatStyle = FlatStyle.Flat;
-            installButton.Font = new Font("Yu Gothic UI", 10.5F, FontStyle.Bold, GraphicsUnit.Point);
+            installButton.Font = new Font(InstallerStrings.UiFontName, 10.5F, FontStyle.Bold, GraphicsUnit.Point);
             installButton.ForeColor = Color.White;
             installButton.Location = new Point(452, 274);
             installButton.Size = new Size(166, 48);
-            installButton.Text = "インストール";
+            installButton.Text = InstallerStrings.Install;
             installButton.UseVisualStyleBackColor = false;
             installButton.Click += InstallButtonClick;
             Controls.Add(installButton);
@@ -124,7 +124,7 @@ namespace TwitchManagerInstaller
         {
             using (FolderBrowserDialog dialog = new FolderBrowserDialog())
             {
-                dialog.Description = "TwitchManagerのインストール先を選択してください。";
+                dialog.Description = InstallerStrings.SelectInstallLocation;
                 dialog.SelectedPath = installDirectoryTextBox.Text;
                 dialog.ShowNewFolderButton = true;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
@@ -137,14 +137,14 @@ namespace TwitchManagerInstaller
         private void InstallButtonClick(object sender, EventArgs e)
         {
             ToggleControls(false);
-            statusLabel.Text = "インストールしています...";
+            statusLabel.Text = InstallerStrings.Installing;
             Cursor = Cursors.WaitCursor;
 
             try
             {
                 InstallResult result = InstallService.Install(installDirectoryTextBox.Text);
                 Clipboard.SetText(result.DockUrl);
-                statusLabel.Text = "インストールが完了しました。";
+                statusLabel.Text = InstallerStrings.InstallCompleteStatus;
 
                 if (openFolderCheckBox.Checked)
                 {
@@ -155,18 +155,18 @@ namespace TwitchManagerInstaller
                 }
 
                 MessageBox.Show(
-                    "インストールが完了しました。\r\n\r\nOBSの「ドック」→「カスタムブラウザドック」で、クリップボードへコピーされたURLを指定してください。\r\n\r\n" + result.DockUrl,
-                    "TwitchManager セットアップ",
+                    InstallerStrings.InstallCompleteMessage + result.DockUrl,
+                    InstallerStrings.SetupTitle,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
                 Close();
             }
             catch (Exception error)
             {
-                statusLabel.Text = "インストールに失敗しました。";
+                statusLabel.Text = InstallerStrings.InstallFailedStatus;
                 MessageBox.Show(
-                    "インストールできませんでした。\r\n\r\n" + error.Message,
-                    "TwitchManager セットアップ",
+                    InstallerStrings.InstallFailedMessage + "\r\n\r\n" + error.Message,
+                    InstallerStrings.SetupTitle,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 ToggleControls(true);

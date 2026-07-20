@@ -40,7 +40,7 @@ namespace TwitchManagerInstaller
         {
             if (string.IsNullOrWhiteSpace(requestedDirectory))
             {
-                throw new InvalidOperationException("インストール先を指定してください。");
+                throw new InvalidOperationException(InstallerStrings.InstallDirectoryRequired);
             }
 
             string installDirectory = Path.GetFullPath(Environment.ExpandEnvironmentVariables(requestedDirectory.Trim()));
@@ -48,9 +48,7 @@ namespace TwitchManagerInstaller
                 && Directory.GetFileSystemEntries(installDirectory).Length > 0
                 && !IsTwitchManagerInstallation(installDirectory))
             {
-                throw new InvalidOperationException(
-                    "指定したフォルダーには既存のファイルがあります。\r\n"
-                    + "空のフォルダーを選択するか、既存のTwitchManagerインストール先を指定してください。");
+                throw new InvalidOperationException(InstallerStrings.InstallDirectoryNotEmpty);
             }
 
             Directory.CreateDirectory(installDirectory);
@@ -59,7 +57,7 @@ namespace TwitchManagerInstaller
             string dockPath = Path.Combine(installDirectory, "TwitchManagerDock.html");
             if (!File.Exists(dockPath))
             {
-                throw new InvalidDataException("TwitchManagerDock.htmlを展開できませんでした。");
+                throw new InvalidDataException(InstallerStrings.DockExtractionFailed);
             }
 
             string dockUrl = new Uri(dockPath).AbsoluteUri;
@@ -134,7 +132,7 @@ namespace TwitchManagerInstaller
             {
                 if (payload == null)
                 {
-                    throw new InvalidDataException("インストールデータが見つかりません。");
+                    throw new InvalidDataException(InstallerStrings.PayloadMissing);
                 }
 
                 string root = Path.GetFullPath(installDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
@@ -146,7 +144,7 @@ namespace TwitchManagerInstaller
                         string destination = Path.GetFullPath(Path.Combine(root, entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
                         if (!destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
                         {
-                            throw new InvalidDataException("不正なインストールデータを検出しました。");
+                            throw new InvalidDataException(InstallerStrings.InvalidPayload);
                         }
 
                         if (string.IsNullOrEmpty(entry.Name))
@@ -195,7 +193,7 @@ namespace TwitchManagerInstaller
         {
             string startMenuDirectory = GetStartMenuDirectory();
             Directory.CreateDirectory(startMenuDirectory);
-            string shortcutPath = Path.Combine(startMenuDirectory, "TwitchManagerをブラウザで開く.url");
+            string shortcutPath = Path.Combine(startMenuDirectory, InstallerStrings.BrowserShortcutName);
             string contents = "[InternetShortcut]" + Environment.NewLine
                 + "URL=" + dockUrl + Environment.NewLine;
             File.WriteAllText(shortcutPath, contents, new UTF8Encoding(true));

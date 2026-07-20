@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$InstallerPath = ""
+    [string]$InstallerPath = "",
+    [string]$ExpectedVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -113,6 +114,36 @@ finally {
 
 if ([string]::IsNullOrWhiteSpace($version)) {
     throw "Embedded version is empty."
+}
+if ((-not [string]::IsNullOrWhiteSpace($ExpectedVersion)) -and
+    (-not [string]::Equals($version, $ExpectedVersion, [System.StringComparison]::Ordinal))) {
+    throw "Unexpected embedded version. Expected $ExpectedVersion, actual $version"
+}
+
+$installerStrings = $assembly.GetType("TwitchManagerInstaller.InstallerStrings", $true)
+$stringPropertyFlags = [System.Reflection.BindingFlags]::Public -bor [System.Reflection.BindingFlags]::Static
+$setupTitleProperty = $installerStrings.GetProperty("SetupWindowTitle", $stringPropertyFlags)
+if ($null -eq $setupTitleProperty) {
+    throw "Installer localization property was not found."
+}
+$previousLanguageOverride = [Environment]::GetEnvironmentVariable("TWITCHMANAGER_INSTALLER_LANGUAGE")
+try {
+    [Environment]::SetEnvironmentVariable("TWITCHMANAGER_INSTALLER_LANGUAGE", "ja")
+    $japaneseSetupTitle = [string]$setupTitleProperty.GetValue($null, $null)
+    [Environment]::SetEnvironmentVariable("TWITCHMANAGER_INSTALLER_LANGUAGE", "en")
+    $englishSetupTitle = [string]$setupTitleProperty.GetValue($null, $null)
+}
+finally {
+    [Environment]::SetEnvironmentVariable("TWITCHMANAGER_INSTALLER_LANGUAGE", $previousLanguageOverride)
+}
+if ($japaneseSetupTitle -notmatch "セットアップ") {
+    throw "Japanese installer text could not be selected."
+}
+if ($englishSetupTitle -notmatch "Setup") {
+    throw "English installer text could not be selected."
+}
+if ([string]::Equals($japaneseSetupTitle, $englishSetupTitle, [System.StringComparison]::Ordinal)) {
+    throw "Japanese and English installer text must differ."
 }
 
 $temporaryBase = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
