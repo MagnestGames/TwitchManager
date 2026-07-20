@@ -1,6 +1,6 @@
 # TwitchManager
 
-![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/images/twitchmanager-overview.png)
+![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
