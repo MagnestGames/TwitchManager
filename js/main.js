@@ -504,6 +504,20 @@
         }
     }
 
+    function safeCreatorUrl(value) {
+        try {
+            const url = new URL(String(value || ''));
+            return url.protocol === 'https:' ? url.href : '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function safeCreatorColor(value) {
+        const color = String(value || '').trim();
+        return /^#[0-9a-f]{3,8}$/i.test(color) ? color : 'var(--command-accent)';
+    }
+
     async function fetchDynamicCreatorInfo() {
         try {
             let response = null;
@@ -545,20 +559,19 @@
             <div class="creators-row">`;
 
         creators.forEach(c => {
-            const name = c.name || '';
-            const requestedColor = String(c.color || '').trim();
-            const color = !requestedColor || /^#bf94ff$/i.test(requestedColor)
-                ? 'var(--command-accent)'
-                : requestedColor;
-            const links = c.links || [];
-            const avatarUrl = c.avatar || '';
+            const name = escapeHtml(c.name || '');
+            const color = safeCreatorColor(c.color);
+            const links = Array.isArray(c.links) ? c.links : [];
+            const avatarUrl = String(c.avatar || '');
 
             let linksHtml = '';
             links.forEach(l => {
+                const safeUrl = safeCreatorUrl(l.url);
+                if (!safeUrl) return;
                 const icon = getCreatorIconSvg(l.type);
-                const title = l.title || l.type || 'Link';
+                const title = escapeHtml(l.title || l.type || 'Link');
                 linksHtml += `
-                <a href="${l.url}" target="_blank" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
+                <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
                     ${icon}
                 </a>`;
             });
@@ -570,8 +583,9 @@
                 finalAvatarUrl = 'https://avatars.githubusercontent.com/u/106515274?v=4';
             }
 
-            const avatarHtml = finalAvatarUrl 
-                ? `<img src="${finalAvatarUrl}" onerror="this.style.display='none'" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
+            const safeAvatarUrl = safeCreatorUrl(finalAvatarUrl);
+            const avatarHtml = safeAvatarUrl
+                ? `<img src="${escapeHtml(safeAvatarUrl)}" onerror="this.style.display='none'" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
                 : '';
 
             html += `

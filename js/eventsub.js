@@ -142,7 +142,13 @@
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
             entry.className = 'tw-log-entry';
-            entry.innerHTML = `<span class="tw-log-time">${time}</span><span class="tw-log-type">[${type}]</span>${msg}`;
+            const timeEl = document.createElement('span');
+            timeEl.className = 'tw-log-time';
+            timeEl.textContent = time;
+            const typeEl = document.createElement('span');
+            typeEl.className = 'tw-log-type';
+            typeEl.textContent = `[${type}]`;
+            entry.append(timeEl, typeEl, document.createTextNode(String(msg ?? '')));
             if (log.firstChild?.tagName === 'P') log.innerHTML = '';
             log.insertBefore(entry, log.firstChild);
             if (log.children.length > 50) log.removeChild(log.lastChild);

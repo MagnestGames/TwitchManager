@@ -287,7 +287,11 @@
                 const actionsEl = document.getElementById('cd-actions');
 
                 titleEl.innerText = options.title || langMap[currentLang].alerts.notice;
-                msgEl.innerHTML = options.messageHtml || options.message || "";
+                if (options.messageHtml) {
+                    msgEl.innerHTML = options.messageHtml;
+                } else {
+                    msgEl.textContent = options.message || "";
+                }
                 msgEl.scrollTop = 0;
 
                 inputEl.style.display = options.type === 'prompt' ? 'block' : 'none';
@@ -349,6 +353,7 @@
         }
 
         async function customAlert(message) { await showCustomDialog({ type: 'alert', message: message }); }
+        async function customAlertHtml(messageHtml) { await showCustomDialog({ type: 'alert', messageHtml }); }
         async function customConfirm(messageOrOptions) {
             const options = typeof messageOrOptions === 'object'
                 ? messageOrOptions
@@ -530,7 +535,7 @@
                 return true;
             }
             const message = uiText('runtime.copyFallback');
-            await customAlert(`${message}<br><br><div style="background:var(--bg-base);color:var(--text-main);border:1px solid var(--border-color);border-radius:8px;padding:10px;white-space:pre-wrap;">${raidSoEscape(value)}</div>`);
+            await customAlertHtml(`${raidSoEscape(message)}<br><br><div style="background:var(--bg-base);color:var(--text-main);border:1px solid var(--border-color);border-radius:8px;padding:10px;white-space:pre-wrap;">${raidSoEscape(value)}</div>`);
             return false;
         }
 
@@ -620,7 +625,7 @@
                 const fail = commandText().commandSendFailed || cmdSets.ja.commandSendFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
             }
         }
 
@@ -657,7 +662,7 @@
                 const fail = commandText().shoutoutSendFailed || cmdSets.ja.shoutoutSendFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
             }
         }
         async function sendRaidCommandFromInput() {
@@ -769,7 +774,7 @@
             }
             config.forEach((cat, ci) => {
                 const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${cat.name}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
                 const records = cat.records || [];
                 if (!records.length) {
                     d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
@@ -780,7 +785,7 @@
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${r.label || A.newLabel}</span>
+                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
                         <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -799,19 +804,19 @@
                 </div>
                 <div class="record-body">
                     <span class="field-label">${L.game}</span>
-                    <input type="text" value="${r.game || ''}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${r.title || ''}</textarea>
+                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${r.notif || ''}</textarea>
+                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <input type="text" value="${r.tags || ''}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+                    <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
 
                     <span class="field-label">${L.memo}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${r.memo || ''}</textarea>
+                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
                 </div>`;
                     d.querySelector('.category-records').appendChild(card);
                 });
@@ -2313,12 +2318,12 @@
                 if ((m.content || '').length > 15) previewText += '...';
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
-                        <span style="white-space:nowrap;">${m.title}</span>
-                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${previewText}</small>
+                        <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
+                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
                     <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
                 </div>
-            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${m.content || ''}</textarea>`;
+            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${raidSoEscape(m.content || '')}</textarea>`;
                 c.appendChild(d);
             });
             initSortable();
@@ -2469,7 +2474,7 @@
         };
 
         function raidSoEscape(value) {
-            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
         function raidSoSelected(value, expected) {
@@ -2486,7 +2491,7 @@
 
         async function openAuthUrlInBrowser(url, openedMessage = authOpenText('opened'), blockedMessage = authOpenText('blocked')) {
             await copyTextToClipboard(url, doneText());
-            await customAlert(openedMessage || blockedMessage);
+            await customAlertHtml(openedMessage || blockedMessage);
             return false;
         }
 
@@ -3509,7 +3514,7 @@
                 const fail = raidSoText().outboundRaidStartFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
                 throw e;
             }
         }
@@ -3791,7 +3796,7 @@
             const subs = [];
             if (raidSoState.subscriptions.raid) subs.push(I18N_DATA[currentLang]?.ui?.jsMsgs?.raid || langMap.ja.jsMsgs.raid);
             if (raidSoState.subscriptions.chat) subs.push(I18N_DATA[currentLang]?.ui?.jsMsgs?.chat || langMap.ja.jsMsgs.chat);
-            el.innerHTML = `${I18N_DATA[currentLang]?.ui?.jsMsgs?.statusPrefix}${connected ? I18N_DATA[currentLang]?.ui?.jsMsgs?.statusConn : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusDisconn}${I18N_DATA[currentLang]?.ui?.jsMsgs?.monitorPrefix}${subs.length ? subs.join(', ') : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}${I18N_DATA[currentLang]?.ui?.jsMsgs?.authPrefix}${settings.userLogin || settings.userId || I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}`;
+            el.textContent = `${I18N_DATA[currentLang]?.ui?.jsMsgs?.statusPrefix}${connected ? I18N_DATA[currentLang]?.ui?.jsMsgs?.statusConn : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusDisconn}${I18N_DATA[currentLang]?.ui?.jsMsgs?.monitorPrefix}${subs.length ? subs.join(', ') : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}${I18N_DATA[currentLang]?.ui?.jsMsgs?.authPrefix}${settings.userLogin || settings.userId || I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}`;
         }
 
         function raidSoLog(message, type = 'info') {
@@ -4010,6 +4015,52 @@
             if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.noFileSelected || langMap.ja.footerActions.noFileSelected);
         }
 
+        const BACKUP_BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+        function isBackupRecord(value) {
+            return value !== null && typeof value === 'object' && !Array.isArray(value);
+        }
+
+        function parseBackupJson(text) {
+            const parsed = JSON.parse(text, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
+            if (!isBackupRecord(parsed)) throw new Error('Invalid backup root');
+            const expectedTypes = {
+                config: Array.isArray,
+                friends: Array.isArray,
+                settings: isBackupRecord,
+                memoList: Array.isArray,
+                raidShoutOut: isBackupRecord,
+                raidShoutOutTemplates: Array.isArray,
+                supporterArchives: Array.isArray
+            };
+            Object.entries(expectedTypes).forEach(([key, validator]) => {
+                if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
+                    throw new Error(`Invalid backup field: ${key}`);
+                }
+            });
+            return parsed;
+        }
+
+        function backupSettingsWithoutToken(source) {
+            if (!isBackupRecord(source)) return {};
+            const result = {};
+            Object.entries(source).forEach(([key, value]) => {
+                if (key !== 'token' && !BACKUP_BLOCKED_KEYS.has(key)) result[key] = value;
+            });
+            return result;
+        }
+
+        function restoreSettingsWithoutBackupToken(importedSettings, currentSettings, overwrite = false) {
+            const current = isBackupRecord(currentSettings) ? currentSettings : {};
+            const restored = overwrite
+                ? backupSettingsWithoutToken(importedSettings)
+                : { ...current, ...backupSettingsWithoutToken(importedSettings) };
+            const currentToken = extractTwitchAccessToken(current.token || '');
+            if (currentToken) restored.token = currentToken;
+            else delete restored.token;
+            return restored;
+        }
+
         async function restoreFromLocalFile() {
             const file = document.getElementById('ui-restore-file')?.files?.[0];
             if (!file) {
@@ -4018,7 +4069,7 @@
             }
             const reader = new FileReader(); reader.onload = async (e) => {
                 try {
-                    const d = JSON.parse(e.target.result);
+                    const d = parseBackupJson(e.target.result);
 
                     // 復元方法の選択ダイアログ (上書き / マージ / キャンセル)
                     const choice = await new Promise((resolveDlg) => {
@@ -4059,12 +4110,16 @@
 
                     if (choice === 'overwrite') {
                         // 完全上書き
-                        if (d.config) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
-                        if (d.friends) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
-                        if (d.settings) localStorage.setItem('stream_settings_v16', JSON.stringify(d.settings));
-                        if (d.memoList) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
-                        if (d.raidShoutOut) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
-                        if (d.raidShoutOutTemplates) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
+                        if (Array.isArray(d.config)) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
+                        if (isBackupRecord(d.settings)) {
+                            const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
+                            const restoredSettings = restoreSettingsWithoutBackupToken(d.settings, currentSettings, true);
+                            localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
+                        }
+                        if (Array.isArray(d.memoList)) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
+                        if (isBackupRecord(d.raidShoutOut)) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
+                        if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
                         if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
                         
                         raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
@@ -4100,9 +4155,9 @@
             }
 
             // 2. settings
-            if (d.settings) {
+            if (isBackupRecord(d.settings)) {
                 let localSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
-                const mergedSettings = { ...localSettings, ...d.settings };
+                const mergedSettings = restoreSettingsWithoutBackupToken(d.settings, localSettings);
                 localStorage.setItem('stream_settings_v16', JSON.stringify(mergedSettings));
             }
 
@@ -4143,7 +4198,7 @@
             }
 
             // 5. raidShoutOut
-            if (d.raidShoutOut) {
+            if (isBackupRecord(d.raidShoutOut)) {
                 let localRSO = JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}');
                 const mergedRSO = { ...localRSO, ...d.raidShoutOut };
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(mergedRSO));
@@ -4171,7 +4226,20 @@
                 localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
             }
         }
-        async function copyBackupToClipboard() { collectRaidSoSettings(); const d = { config, friends: friendsConfig, settings, memoList: memoConfig, raidShoutOut: raidSoSettings, raidShoutOutTemplates: customRaidSoTemplates, supporterArchives: readSupporterArchives() }; await copyTextToClipboard(JSON.stringify(d, null, 2)); }
+        async function copyBackupToClipboard() {
+            collectRaidSoSettings();
+            const d = {
+                backupVersion: 2,
+                config,
+                friends: friendsConfig,
+                settings: backupSettingsWithoutToken(settings),
+                memoList: memoConfig,
+                raidShoutOut: raidSoSettings,
+                raidShoutOutTemplates: customRaidSoTemplates,
+                supporterArchives: readSupporterArchives()
+            };
+            await copyTextToClipboard(JSON.stringify(d, null, 2));
+        }
 
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
