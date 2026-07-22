@@ -124,7 +124,9 @@ const langMap = {
             const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
             if (LANGUAGE_OPTIONS.some(option => option.code === savedLang)) return savedLang;
             const browserLang = navigator.language.toLowerCase();
-            return browserLang.startsWith('ja') ? 'ja' : 'en';
+            if (browserLang.startsWith('ja')) return 'ja';
+            if (browserLang.startsWith('zh')) return 'zh';
+            return 'en';
         }
 
         let currentLang = detectInitialLanguage(), config = [], friendsConfig = [], memoConfig = [], settings = {}, isSortLocked = true, sortableInstances = [], dynamicCategorySortables = [];
