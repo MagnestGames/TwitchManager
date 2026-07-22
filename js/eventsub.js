@@ -348,21 +348,14 @@
                         if (document.getElementById('es-f-point')?.checked === false) showLog = false;
                         const autoRewardType = ev.reward?.type || '';
                         let rewardTitle = autoRewardType;
-                        if (currentLang === 'ja') {
-                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = 'スタンプ巨大化';
-                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = 'メッセージエフェクト';
-                            else if (autoRewardType === 'celebration') rewardTitle = '全画面セレブレーション';
-                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = 'メッセージのハイライト';
-                        } else if (currentLang === 'zh') {
-                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = '表情巨大化';
-                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = '消息特效';
-                            else if (autoRewardType === 'celebration') rewardTitle = '全屏庆祝';
-                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = '高亮消息';
-                        } else {
-                            if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') rewardTitle = 'Gigantify an Emote';
-                            else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') rewardTitle = 'Message Effect';
-                            else if (autoRewardType === 'celebration') rewardTitle = 'Full-Screen Celebration';
-                            else if (autoRewardType === 'send_highlighted_message') rewardTitle = 'Highlight Message';
+                        if (autoRewardType === 'send_gigantified_emote' || autoRewardType === 'gigantify_an_emote') {
+                            rewardTitle = uiText('runtime.rewardLabels.gigantifiedEmote');
+                        } else if (autoRewardType === 'send_animated_message' || autoRewardType === 'message_effect') {
+                            rewardTitle = uiText('runtime.rewardLabels.messageEffect');
+                        } else if (autoRewardType === 'celebration') {
+                            rewardTitle = uiText('runtime.rewardLabels.celebration');
+                        } else if (autoRewardType === 'send_highlighted_message') {
+                            rewardTitle = uiText('runtime.rewardLabels.highlightedMessage');
                         }
                         
                         logMsg = `🪙 ${uiText('runtime.supporter.channelPointRedeemed', { user: ev.user_name || ev.user_login, reward: rewardTitle })}`;
