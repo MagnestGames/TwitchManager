@@ -37,6 +37,7 @@
             --button-danger-border: #ff5c70;
             --button-danger-hover-bg: #b91c1c;
             --tooltip-bg: #333333;
+            --placeholder-text: #9a9aa6;
 
             --twitch-purple: #9146ff;
             --twitch-purple-hover: #a970ff;
@@ -50,8 +51,8 @@
             --border-hover: #52525b;
             --text-main: #efeff1;
             --text-muted: #adadb8;
-            --success: #00ca4e;
-            --danger: #ff4a4a;
+            --success: #087f3c;
+            --danger: #b91c1c;
             --command-accent: #bf94ff;
             --command-surface: var(--bg-card);
             --command-hover-surface: rgba(145, 70, 255, 0.14);
@@ -73,14 +74,14 @@
 
         body.light-theme {
             /* Semantic Variables for Light Theme */
-            --text-white: #1f1f23;
+            --text-white: #ffffff;
             --text-light-purple: #5c35b4;
             --text-dark-purple: #534566;
             --text-on-purple: #ffffff;
             --text-on-secondary: #34343d;
             --twitch-purple: #772ce8;
             --twitch-purple-hover: #5c16c5;
-            --danger: #dc3545;
+            --danger: #b91c1c;
             --warning-text: #664d03;
             --warning-bg: #fff3cd;
             --warning-border: #ffecb5;
@@ -105,7 +106,7 @@
             --button-primary-border: rgba(119, 44, 232, 0.4);
             --button-primary-hover-bg: rgba(119, 44, 232, 0.16);
             --button-add-bg: rgba(0, 85, 255, 0.08);
-            --button-add-text: #0055ff;
+            --button-add-text: #004fe8;
             --button-add-border: rgba(0, 85, 255, 0.4);
             --button-add-hover-bg: rgba(0, 85, 255, 0.16);
             --button-danger-bg: rgba(204, 0, 0, 0.08);
@@ -113,6 +114,7 @@
             --button-danger-border: rgba(204, 0, 0, 0.4);
             --button-danger-hover-bg: rgba(204, 0, 0, 0.16);
             --tooltip-bg: #f0f2f5;
+            --placeholder-text: #656573;
 
             --bg-base: #f0f2f5;
             --bg-card: #ffffff;
@@ -129,7 +131,7 @@
             --bg-panel: rgba(0, 0, 0, 0.035);
             --border-subtle: rgba(0, 0, 0, 0.07);
             --color-today: #d0f0e4;
-            --color-today-text: #0a7a45;
+            --color-today-text: #086b3d;
         }
 
         body.light-theme .modal-close-top {
@@ -251,6 +253,7 @@
         .btn-head-purple.unlocked {
             background: var(--success) !important;
             border-color: var(--success) !important;
+            color: #ffffff !important;
         }
 
         .btn-head-purple[data-tooltip]::after {
@@ -1537,6 +1540,23 @@
             border-color: rgba(232, 213, 138, 0.58);
         }
 
+        body.light-theme .tw-chat-clear-btn {
+            color: #6b4f00;
+            background: #fff8dc;
+            border-color: #c7a934;
+        }
+
+        body.light-theme .tw-chat-clear-btn:hover,
+        body.light-theme .tw-chat-clear-btn:focus-visible {
+            color: #513b00;
+            background: #fff2b8;
+            border-color: #9a7b00;
+        }
+
+        body.light-theme .tw-chat-clear-mark {
+            color: #6b4f00;
+        }
+
         .tw-chat-clear-mark {
             margin-right: 4px;
             color: #f0d96b;
@@ -2008,6 +2028,11 @@
             color: var(--text-on-purple);
         }
 
+        body.light-theme .sync-action-btn:hover {
+            background: rgba(79, 140, 255, 0.22);
+            color: var(--info-text);
+        }
+
         .push-action-btn {
             border-color: var(--twitch-purple-hover);
             background: rgba(145, 70, 255, 0.34);
@@ -2076,7 +2101,7 @@
 
         /* ライトモード用のアイコンボタン視認性向上 */
         body.light-theme .id-copy-action {
-            color: #0055ff;
+            color: #004fe8;
             border-color: rgba(0, 85, 255, 0.4);
             background: rgba(0, 85, 255, 0.08);
         }
@@ -2282,7 +2307,7 @@
         }
 
         .raidso-note summary:hover {
-            color: var(--text-on-purple);
+            color: var(--command-accent);
         }
 
         .raidso-note-body {
@@ -2491,7 +2516,7 @@
         .raidso-choice.active {
             border-color: var(--twitch-purple);
             background: rgba(145, 70, 255, 0.16);
-            color: var(--text-on-purple);
+            color: var(--command-accent);
         }
 
         .raidso-choice:hover {
@@ -2927,7 +2952,8 @@
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
-            word-break: break-all;
+            word-break: normal;
+            overflow-wrap: anywhere;
             padding: 35px 25px 25px 25px !important;
             background: var(--bg-base);
             border-radius: var(--radius-lg);
@@ -2935,6 +2961,86 @@
             width: 100%;
             max-width: 580px;
             animation: modalIn var(--motion-normal) var(--ease-out);
+        }
+
+        .calendar-modal-header {
+            gap: 12px;
+        }
+
+        .calendar-modal-header > h2 {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .calendar-modal-header-actions {
+            flex: 0 0 auto;
+        }
+
+        button:focus-visible,
+        summary:focus-visible,
+        [role="button"]:focus-visible {
+            outline: 2px solid var(--twitch-purple-hover);
+            outline-offset: 2px;
+        }
+
+        .friends-toolbar > span {
+            flex: 0 0 auto;
+        }
+
+        .friends-toolbar > select {
+            min-width: 0;
+        }
+
+        @media (max-width: 420px) {
+            .modal-overlay {
+                padding: 10px;
+            }
+
+            .modal-content {
+                max-height: calc(100vh - 20px);
+                padding: 32px 16px 18px !important;
+            }
+
+            .calendar-modal-header {
+                align-items: flex-start !important;
+                gap: 8px;
+            }
+
+            .calendar-modal-header > h2 {
+                font-size: 16px !important;
+                line-height: 1.35;
+            }
+
+            .calendar-modal-header-actions {
+                gap: 4px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .app-header {
+                gap: 4px;
+            }
+
+            .app-header-controls {
+                gap: 4px;
+            }
+
+            #birthday-anniversary-indicator {
+                margin-right: 0 !important;
+            }
+
+            .app-header-controls .btn-head-purple,
+            #birthday-indicator-btn {
+                width: 30px !important;
+                height: 30px !important;
+                min-width: 30px;
+            }
+
+            #ui-btn-copy-date {
+                margin-left: 4px !important;
+                max-width: 58px;
+                padding-inline: 5px !important;
+            }
         }
 
         .modal-close-top {
@@ -3319,10 +3425,10 @@
 .tw-toggle input:checked + .tw-slider:before { transform: translateX(16px); background-color: var(--text-on-purple); }
 
 .active-toggle {
-    background: rgba(145, 70, 255, 0.2) !important;
+    background: rgba(145, 70, 255, 0.12) !important;
     border-color: var(--command-accent) !important;
     box-shadow: 0 0 8px rgba(145, 70, 255, 0.4);
-    color: var(--text-on-purple) !important;
+    color: var(--command-accent) !important;
 }
 
 details > summary {
@@ -3573,12 +3679,13 @@ body {
 }
 .tmd-danger-ok {
     background: var(--button-danger-bg) !important;
-    color: var(--text-on-purple) !important;
+    color: var(--button-danger-text) !important;
     border: 1px solid var(--button-danger-border) !important;
 }
 .tmd-danger-cancel {
     background: var(--button-secondary-bg) !important;
-    color: var(--text-on-purple) !important;
+    color: var(--text-on-secondary) !important;
+    border: 1px solid var(--button-secondary-border) !important;
 }
 @media (max-width: 760px) {
     body {
@@ -3605,7 +3712,7 @@ body {
 body.light-theme #birthday-indicator-btn.inactive {
     background: rgba(0, 0, 0, 0.05) !important;
     border-color: rgba(0, 0, 0, 0.15) !important;
-    color: rgba(0, 0, 0, 0.4) !important;
+    color: rgba(0, 0, 0, 0.6) !important;
 }
 #birthday-indicator-btn.active {
     background: rgba(255, 193, 7, 0.15);
@@ -3615,7 +3722,7 @@ body.light-theme #birthday-indicator-btn.inactive {
 body.light-theme #birthday-indicator-btn.active {
     background: rgba(217, 119, 6, 0.12) !important;
     border-color: #d97706 !important;
-    color: #b45309 !important;
+    color: #92400e !important;
 }
 
 /* Center-aligned layout to prevent window edge overflow on smaller screens */
@@ -3651,7 +3758,7 @@ body.light-theme .birthday-popover {
     font-size: 13px;
 }
 body.light-theme .birthday-popover-title {
-    color: #b45309 !important;
+    color: #92400e !important;
 }
 .birthday-popover-subtitle {
     font-size: 11px;
@@ -3772,7 +3879,7 @@ body.light-theme .calendar-day-cell.has-event {
     color: var(--warning-text);
 }
 body.light-theme .calendar-day-cell-badge {
-    color: #d97706;
+    color: #92400e;
 }
 
 .ym-month-btn {
@@ -3847,13 +3954,13 @@ body.light-theme .id-meta {
 }
 
 body.light-theme .id-history-reset-btn {
-    border-color: #ef4444 !important;
-    color: #ef4444 !important;
+    border-color: #b91c1c !important;
+    color: #b91c1c !important;
     background: rgba(239, 68, 68, 0.05) !important;
 }
 
 body.light-theme .id-history-reset-btn:hover:not(:disabled) {
-    background: #ef4444 !important;
+    background: #b91c1c !important;
     color: var(--text-on-purple) !important;
 }
 
@@ -3879,9 +3986,10 @@ body.light-theme .raidso-log-list {
     border-color: #cfd6df !important;
 }
 
-body.light-theme input::placeholder,
-body.light-theme textarea::placeholder {
-    color: #8b8b98 !important;
+input::placeholder,
+textarea::placeholder {
+    color: var(--placeholder-text) !important;
+    opacity: 1;
 }
 
 body.light-theme .ui-common-warning {
@@ -3896,6 +4004,40 @@ body.light-theme .ui-backup-warning {
     background: rgba(255, 74, 101, 0.12) !important;
     border-color: rgba(255, 74, 101, 0.4) !important;
     border-left-color: #ff4a65 !important;
+}
+
+.calendar-event-type-birthday {
+    background: rgba(255, 74, 154, 0.14);
+    color: #ff9cc5;
+}
+
+.calendar-event-type-anniversary {
+    background: rgba(29, 155, 240, 0.14);
+    color: #7cc7ff;
+}
+
+body.light-theme .calendar-event-type-birthday {
+    background: #fde7f1 !important;
+    color: #a30d54 !important;
+}
+
+body.light-theme .calendar-event-type-anniversary {
+    background: #e0f2fe !important;
+    color: #075985 !important;
+}
+
+body.light-theme #ui-guide-content h3,
+body.light-theme #help-creators-container strong {
+    color: var(--command-accent) !important;
+}
+
+body.light-theme #ui-guide-content div[style*="rgba(255, 74, 74"] {
+    background: var(--danger-bg) !important;
+    border-left-color: var(--danger-border) !important;
+}
+
+body.light-theme #ui-guide-content strong[style*="#ff4a4a"] {
+    color: var(--danger-text) !important;
 }
 
 /* Custom HTML slider styling (Cute water-blue design) */
@@ -3955,6 +4097,15 @@ body {
 }
 .field-label {
     font-size: calc(11px + var(--font-size-offset, 0px)) !important;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.settings-help,
+.category-subtitle,
+.supporter-options-title,
+.tw-preset-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 .category-name span {
     font-size: calc(13px + var(--font-size-offset, 0px)) !important;
@@ -4188,6 +4339,13 @@ body.light-theme .tw-command-copy-btn code {
         width: 32px !important;
     }
     .twitch-action-btn { min-width: 72px !important; }
+}
+
+@media (max-width: 360px) {
+    #birthday-indicator-btn {
+        height: 30px !important;
+        width: 30px !important;
+    }
 }
 
 /* ID List Tags & Filter styles */

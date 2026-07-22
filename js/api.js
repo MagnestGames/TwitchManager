@@ -148,7 +148,7 @@
             if (!friend) return;
             const twitchId = normalizeFriendTwitch(friend.twitch);
             if (!twitchId) {
-                return showToast('Twitch IDが入力されていません', 'error');
+                return showToast(uiText('runtime.friendTwitchMissing'), 'error');
             }
 
             const originalContent = btnEl.innerHTML;
@@ -161,7 +161,7 @@
                     await refreshTwitchAuthFromToken(false);
                 }
                 
-                showToast('Twitchから情報を取得中...', 'info');
+                showToast(uiText('runtime.friendFetching'), 'info');
                 const userData = await apiRequest(`/users?login=${encodeURIComponent(twitchId)}`);
                 
                 if (userData && userData.data && userData.data.length > 0) {
@@ -198,8 +198,8 @@
                         if (friend.x !== newX) {
                             if (friend.x) {
                                 const confirmOverwrite = await customConfirm({
-                                    title: 'Xリンクの上書き確認',
-                                    message: `現在登録されている「${friend.x}」を、新しく検出した「${newX}」で上書きしますか？`
+                                    title: uiText('runtime.overwriteXTitle'),
+                                    message: uiText('runtime.overwriteXMessage', { oldValue: friend.x, newValue: newX })
                                 });
                                 if (confirmOverwrite) { friend.x = newX; updated = true; }
                             } else {
@@ -219,8 +219,8 @@
                         if (friend.youtube !== newYt) {
                             if (friend.youtube) {
                                 const confirmOverwrite = await customConfirm({
-                                    title: 'YouTubeリンクの上書き確認',
-                                    message: `現在登録されている「${friend.youtube}」を、新しく検出した「${newYt}」で上書きしますか？`
+                                    title: uiText('runtime.overwriteYoutubeTitle'),
+                                    message: uiText('runtime.overwriteYoutubeMessage', { oldValue: friend.youtube, newValue: newYt })
                                 });
                                 if (confirmOverwrite) { friend.youtube = newYt; updated = true; }
                             } else {
@@ -233,16 +233,16 @@
                     if (updated) {
                         saveFriendsLocal(false);
                         renderFriends();
-                        showToast('情報を更新しました ✓', 'success');
+                        showToast(uiText('runtime.friendUpdated'), 'success');
                     } else {
-                        showToast('更新する情報はありませんでした（最新です） ✓', 'success');
+                        showToast(uiText('runtime.friendUpToDate'), 'success');
                     }
                 } else {
-                    showToast('Twitchユーザーが見つかりませんでした', 'error');
+                    showToast(uiText('runtime.friendNotFound'), 'error');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('APIエラーが発生しました。接続設定を確認してください。', 'error');
+                showToast(uiText('runtime.friendUpdateFailed'), 'error');
             } finally {
                 btnEl.innerHTML = originalContent;
                 btnEl.disabled = false;
@@ -303,7 +303,7 @@
             c.innerHTML = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${total}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>` +
                 subscribers.map(s => {
                     const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
-                    const col = s.tier === '3000' ? '#ffc800' : s.tier === '2000' ? '#bf94ff' : '#aaa';
+                    const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
                     return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
                 }).join('');
         }
@@ -820,7 +820,7 @@
         function renderPollResult(p) {
             const choices = Array.isArray(p.choices) ? p.choices : [];
             const total = choices.reduce((s, c) => s + (c.votes || 0), 0);
-            const statusColor = p.status === 'ACTIVE' ? '#00ca4e' : '#888';
+            const statusColor = p.status === 'ACTIVE' ? 'var(--success-text)' : 'var(--text-muted)';
             document.getElementById('tw-poll-result').innerHTML = `
                 <div class="tw-result-card">
                     <strong>${raidSoEscape(p.title || '')}</strong>
@@ -999,7 +999,7 @@
         function renderPredResult(p) {
             const outcomes = Array.isArray(p.outcomes) ? p.outcomes : [];
             const total = outcomes.reduce((s, o) => s + (o.channel_points || 0), 0);
-            const statusColor = p.status === 'ACTIVE' ? '#00ca4e' : p.status === 'LOCKED' ? '#ffc800' : '#888';
+            const statusColor = p.status === 'ACTIVE' ? 'var(--success-text)' : p.status === 'LOCKED' ? 'var(--warning-text)' : 'var(--text-muted)';
             const resolveBtns = p.status === 'ACTIVE' || p.status === 'LOCKED'
                 ? outcomes.map(o => `<button class="btn-secondary" style="margin:4px;font-size:11px;" data-prediction-id="${raidSoEscape(p.id || '')}" data-outcome-id="${raidSoEscape(o.id || '')}" onclick="resolvePredictionFromButton(this)">✔ ${raidSoEscape(o.title || '')}</button>`).join('')
                 : '';
@@ -1016,7 +1016,7 @@
                             <div class="tw-result-bar"><div class="tw-result-bar-fill" style="width:${pct}%"></div></div>
                         </div>`;
                     }).join('')}
-                    ${resolveBtns ? `<div style="margin-top:10px;"><span style="font-size:10px;color:#888;">${raidSoEscape(uiText('runtime.resolveResult'))}:</span><br>${resolveBtns}</div>` : ''}
+                    ${resolveBtns ? `<div style="margin-top:10px;"><span style="font-size:10px;color:var(--text-muted);">${raidSoEscape(uiText('runtime.resolveResult'))}:</span><br>${resolveBtns}</div>` : ''}
                 </div>`;
         }
 
@@ -1051,10 +1051,10 @@
             if (r?.data?.[0]) {
                 const url = r.data[0].edit_url || '';
                 const safeUrl = raidSoEscape(url);
-                c.innerHTML = `<div class="tw-result-card">✅ ${raidSoEscape(twExt('clipCreated'))}<br><a href="${safeUrl}" target="_blank" style="color:#bf94ff;word-break:break-all;">${safeUrl}</a><br><button class="btn-secondary" style="margin-top:6px;font-size:11px;" data-url="${safeUrl}" onclick="copyClipFromButton(this)">${raidSoEscape(uiText('runtime.copyUrl'))}</button></div>`;
+                c.innerHTML = `<div class="tw-result-card">✅ ${raidSoEscape(twExt('clipCreated'))}<br><a href="${safeUrl}" target="_blank" style="color:var(--command-accent);overflow-wrap:anywhere;">${safeUrl}</a><br><button class="btn-secondary" style="margin-top:6px;font-size:11px;" data-url="${safeUrl}" onclick="copyClipFromButton(this)">${raidSoEscape(uiText('runtime.copyUrl'))}</button></div>`;
                 showToast(twExt('clipCreated'), 'success');
             } else {
-                c.innerHTML = `<div class="tw-result-card" style="color:#ff4a4a;">❌ ${raidSoEscape(uiText('runtime.clipCreateLiveFailed'))}</div>`;
+                c.innerHTML = `<div class="tw-result-card" style="color:var(--danger-text);">❌ ${raidSoEscape(uiText('runtime.clipCreateLiveFailed'))}</div>`;
                 showToast(twExt('clipCreateFailed'), 'error');
             }
         }
@@ -1069,7 +1069,7 @@
             const r = await apiRequest(`/clips?broadcaster_id=${bId}&first=100`);
             setBtnLoading(btn, false);
             const c = document.getElementById('tw-clip-result');
-            if (!r?.data?.length) { c.innerHTML = `<p style="color:#888;font-size:11px;">${raidSoEscape(twExt('clipEmpty'))}</p>`; return; }
+            if (!r?.data?.length) { c.innerHTML = `<p style="color:var(--text-muted);font-size:11px;">${raidSoEscape(twExt('clipEmpty'))}</p>`; return; }
             
             let clips = [...r.data];
             if (sortVal === 'recent') {
@@ -1097,7 +1097,7 @@
                     </div>
                     <div class="tw-clip-actions">
                         <button class="btn-secondary" data-url="${safeUrl}" onclick="copyClipFromButton(this)">${raidSoEscape(twExt('copyShort'))}</button>
-                        <button class="btn-secondary" style="background:rgba(255,255,255,0.05);" data-url="${safeUrl}" data-title="${safeTitle}" onclick="saveFavClipFromButton(this)">★${raidSoEscape(uiText('runtime.saveShort'))}</button>
+                        <button class="btn-secondary" data-url="${safeUrl}" data-title="${safeTitle}" onclick="saveFavClipFromButton(this)">★${raidSoEscape(uiText('runtime.saveShort'))}</button>
                     </div>
                 </article>`;
             }).join('')}</div>`;

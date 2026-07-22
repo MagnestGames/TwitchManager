@@ -50,10 +50,10 @@
             if (!settings.autoAdEnabled) return;
             const bId = settings.userId;
             if (!bId) {
-                raidSoLog('自動広告エラー: 配信者が未設定です', 'warn');
+                raidSoLog(uiText('runtime.autoAdMissingBroadcaster'), 'warn');
                 return;
             }
-            raidSoLog('配信開始を検知しました。自動広告（3分間）を実行します...');
+            raidSoLog(uiText('runtime.autoAdStreamStarted'));
             try {
                 const r = await apiRequest('/channels/commercial', 'POST', {
                     broadcaster_id: bId,
@@ -61,12 +61,12 @@
                 });
                 if (r?.data?.[0]) {
                     const sec = r.data[0].length || 180;
-                    raidSoLog(`自動広告を開始しました: ${sec}秒`);
+                    raidSoLog(uiText('runtime.autoAdStarted', { seconds: sec }));
                 } else {
-                    raidSoLog('自動広告の開始に失敗しました。クールダウン中などの可能性があります。', 'warn');
+                    raidSoLog(uiText('runtime.autoAdFailed'), 'warn');
                 }
             } catch (err) {
-                raidSoLog(`自動広告エラー: ${err.message || err}`, 'warn');
+                raidSoLog(uiText('runtime.autoAdError', { error: err.message || err }), 'warn');
             }
         }
 
@@ -142,7 +142,13 @@
             const time = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
             entry.className = 'tw-log-entry';
-            entry.innerHTML = `<span class="tw-log-time">${time}</span><span class="tw-log-type">[${type}]</span>${msg}`;
+            const timeEl = document.createElement('span');
+            timeEl.className = 'tw-log-time';
+            timeEl.textContent = time;
+            const typeEl = document.createElement('span');
+            typeEl.className = 'tw-log-type';
+            typeEl.textContent = `[${type}]`;
+            entry.append(timeEl, typeEl, document.createTextNode(String(msg ?? '')));
             if (log.firstChild?.tagName === 'P') log.innerHTML = '';
             log.insertBefore(entry, log.firstChild);
             if (log.children.length > 50) log.removeChild(log.lastChild);

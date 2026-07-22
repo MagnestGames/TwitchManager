@@ -1,0 +1,29 @@
+# メモ帳・その他
+
+## メモ帳
+
+配信準備や進行内容を複数のカードへ保存します。
+
+![メモ帳](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/memo-pad.png)
+
+「＋」で追加し、ロック解除中に並び替えます。不要なカードは削除モードで削除します。
+
+使用例:
+
+- 配信中に話すこと
+- ゲームや企画の進行
+- コラボ当日の流れ
+- 次回配信の作業
+
+## バックアップ・復元
+
+![バックアップと復元](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+
+- バックアップ: 保存データをコピーしてテキストファイルへ保管
+- 復元: バックアップJSONを読み込み、上書きまたはマージ
+
+復元前にも現在のバックアップを作成してください。
+
+## イベントログ
+
+認証、通知、レイド紹介、コマンドなどの動作を確認できます。問い合わせ時はトークンや個人情報が含まれていないか確認してから共有してください。

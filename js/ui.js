@@ -83,6 +83,10 @@
                 keys.forEach(k => { if (val) val = val[k]; });
                 if (val !== undefined) el.setAttribute('aria-label', val);
             });
+            const calendarWeekdays = document.querySelectorAll('.calendar-grid-header span');
+            (L.runtime?.weekdaysShort || langMap.ja.runtime.weekdaysShort).forEach((day, index) => {
+                if (calendarWeekdays[index]) calendarWeekdays[index].innerText = day;
+            });
 
 
             document.getElementById('toast').innerText = L.toast;
@@ -192,6 +196,12 @@
                 });
             }
             updateTodayDateDisplay();
+            const liveDatePreview = document.getElementById('date_format_live_preview');
+            if (liveDatePreview) {
+                liveDatePreview.innerText = uiText('runtime.datePreview', {
+                    date: formatDateToken(new Date(), settings.dateFormat || 'MM/DD')
+                });
+            }
 
             // モーダルとコマンドの更新
             const guideEl = document.getElementById('ui-guide-content');
@@ -277,7 +287,11 @@
                 const actionsEl = document.getElementById('cd-actions');
 
                 titleEl.innerText = options.title || langMap[currentLang].alerts.notice;
-                msgEl.innerHTML = options.messageHtml || options.message || "";
+                if (options.messageHtml) {
+                    msgEl.innerHTML = options.messageHtml;
+                } else {
+                    msgEl.textContent = options.message || "";
+                }
                 msgEl.scrollTop = 0;
 
                 inputEl.style.display = options.type === 'prompt' ? 'block' : 'none';
@@ -339,6 +353,7 @@
         }
 
         async function customAlert(message) { await showCustomDialog({ type: 'alert', message: message }); }
+        async function customAlertHtml(messageHtml) { await showCustomDialog({ type: 'alert', messageHtml }); }
         async function customConfirm(messageOrOptions) {
             const options = typeof messageOrOptions === 'object'
                 ? messageOrOptions
@@ -520,7 +535,7 @@
                 return true;
             }
             const message = uiText('runtime.copyFallback');
-            await customAlert(`${message}<br><br><div style="background:#000;border:1px solid var(--border-color);border-radius:8px;padding:10px;white-space:pre-wrap;">${raidSoEscape(value)}</div>`);
+            await customAlertHtml(`${raidSoEscape(message)}<br><br><div style="background:var(--bg-base);color:var(--text-main);border:1px solid var(--border-color);border-radius:8px;padding:10px;white-space:pre-wrap;">${raidSoEscape(value)}</div>`);
             return false;
         }
 
@@ -610,7 +625,7 @@
                 const fail = commandText().commandSendFailed || cmdSets.ja.commandSendFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
             }
         }
 
@@ -647,7 +662,7 @@
                 const fail = commandText().shoutoutSendFailed || cmdSets.ja.shoutoutSendFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
             }
         }
         async function sendRaidCommandFromInput() {
@@ -728,7 +743,7 @@
             const b = document.getElementById('del-mode-' + tid.replace('-tab', ''));
             if (b) {
                 if (isOn) {
-                    b.style.background = "#ff4a4a";
+                    b.style.background = "var(--danger)";
                     b.style.color = "var(--text-white)";
                 } else {
                     b.style.background = "";
@@ -759,7 +774,7 @@
             }
             config.forEach((cat, ci) => {
                 const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${cat.name}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
                 const records = cat.records || [];
                 if (!records.length) {
                     d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
@@ -770,7 +785,7 @@
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${r.label || A.newLabel}</span>
+                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
                         <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -789,19 +804,19 @@
                 </div>
                 <div class="record-body">
                     <span class="field-label">${L.game}</span>
-                    <input type="text" value="${r.game || ''}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${r.title || ''}</textarea>
+                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:#aaa; margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${r.notif || ''}</textarea>
+                    <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:#aaa; margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <input type="text" value="${r.tags || ''}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+                    <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                    <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
 
                     <span class="field-label">${L.memo}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${r.memo || ''}</textarea>
+                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
                 </div>`;
                     d.querySelector('.category-records').appendChild(card);
                 });
@@ -923,7 +938,7 @@
             const groupTagsHtml = isSelf ? '' : `
                 <div style="display:flex; align-items:center; flex-wrap:wrap; gap:3px; margin-top:2px;">
                     ${myGroups.map(g => `<span style="font-size:9px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border:1px solid rgba(145,70,255,0.3);border-radius:4px;padding:1px 5px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${raidSoEscape(g)}</span>`).join('')}
-                    <button class="icon-btn id-action-btn" title="タグを編集" onclick="event.stopPropagation(); showEditFriendTagsDialog(${ci}, ${fi})" style="padding:1px 3px; font-size:9px; display:inline-flex; align-items:center; justify-content:center; height:15px; width:18px; border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08); color:var(--twitch-purple); margin-left:2px; border-radius:3px;">
+                    <button class="icon-btn id-action-btn" title="${raidSoEscape(I.editTags)}" onclick="event.stopPropagation(); showEditFriendTagsDialog(${ci}, ${fi})" style="padding:1px 3px; font-size:9px; display:inline-flex; align-items:center; justify-content:center; height:15px; width:18px; border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08); color:var(--twitch-purple); margin-left:2px; border-radius:3px;">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
                     </button>
                 </div>
@@ -947,7 +962,7 @@
                     ${groupTagsHtml}
                 </div>
                 <div style="display:flex; gap:5px; flex-shrink:0;">
-                    <button class="icon-btn id-action-btn id-refresh-action" title="情報を更新" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
+                    <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
                     <button class="icon-btn id-action-btn id-copy-action" title="${raidSoEscape(L.tips.copyId)}" onclick="event.stopPropagation(); copyTwitchId(${ci}, ${fi})">
@@ -959,7 +974,7 @@
                     <button class="icon-btn id-action-btn id-x-action" title="${raidSoEscape(L.tips.openX)}" onclick="event.stopPropagation(); openXLink(${ci}, ${fi})">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16zM4 20l6.768 -6.768m2.46 -2.46L20 4"></path></svg>
                     </button>
-                    <button class="icon-btn id-action-btn id-youtube-action" title="${raidSoEscape(L.tips.openYoutube || 'YouTubeを開く')}" onclick="event.stopPropagation(); openYoutubeLink(${ci}, ${fi})">
+                    <button class="icon-btn id-action-btn id-youtube-action" title="${raidSoEscape(L.tips.openYoutube || langMap.ja.tips.openYoutube)}" onclick="event.stopPropagation(); openYoutubeLink(${ci}, ${fi})">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
                     </button>
                     <button class="btn-delete-item" onclick="event.stopPropagation(); deleteFriendRecord(${ci}, ${fi})">✕</button>
@@ -975,24 +990,24 @@
                 <span class="field-label">${raidSoEscape(L.labels.xUrl || langMap.ja.labels.xUrl)}</span>
                 <input type="text" id="f-x-${ci}-${fi}" value="${raidSoEscape(f.x || '')}" oninput="updateFriendField(${ci}, ${fi}, 'x', this.value)">
 
-                <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || 'YouTube リンク')}</span>
+                <span class="field-label">${raidSoEscape(L.labels.youtubeUrl || langMap.ja.labels.youtubeUrl)}</span>
                 <input type="text" id="f-yt-${ci}-${fi}" value="${raidSoEscape(f.youtube || '')}" oninput="updateFriendField(${ci}, ${fi}, 'youtube', this.value)">
 
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <div style="flex: 1;">
-                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.birthday || '誕生日')}</span>
+                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(I.birthday)}</span>
                         <div style="display: flex; gap: 4px; align-items: center;">
-                            <input type="text" id="f-bday-${ci}-${fi}" value="${raidSoEscape(f.birthday || '')}" placeholder="MM/DD (例: 04/25)" oninput="updateFriendField(${ci}, ${fi}, 'birthday', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
-                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'birthday')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="カレンダーから選択">
+                            <input type="text" id="f-bday-${ci}-${fi}" value="${raidSoEscape(f.birthday || '')}" placeholder="${raidSoEscape(I.datePlaceholderBirthday)}" oninput="updateFriendField(${ci}, ${fi}, 'birthday', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
+                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'birthday')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="${raidSoEscape(I.chooseFromCalendar)}">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                             </button>
                         </div>
                     </div>
                     <div style="flex: 1;">
-                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(L.labels.anniversary || '記念日')}</span>
+                        <span class="field-label" style="margin-bottom: 4px; display: block;">${raidSoEscape(I.anniversary)}</span>
                         <div style="display: flex; gap: 4px; align-items: center;">
-                            <input type="text" id="f-anniv-${ci}-${fi}" value="${raidSoEscape(f.anniversary || '')}" placeholder="MM/DD (例: 10/01)" oninput="updateFriendField(${ci}, ${fi}, 'anniversary', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
-                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'anniversary')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="カレンダーから選択">
+                            <input type="text" id="f-anniv-${ci}-${fi}" value="${raidSoEscape(f.anniversary || '')}" placeholder="${raidSoEscape(I.datePlaceholderAnniversary)}" oninput="updateFriendField(${ci}, ${fi}, 'anniversary', this.value); checkBirthdaysAndAnniversaries()" style="margin-bottom: 0; flex: 1; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color);">
+                            <button type="button" class="btn-secondary" onclick="openMiniDatePicker(${ci}, ${fi}, 'anniversary')" style="padding: 4px 6px; height: 26px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: var(--bg-item); color: var(--text-main);" title="${raidSoEscape(I.chooseFromCalendar)}">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                             </button>
                         </div>
@@ -1033,7 +1048,7 @@
                 }).join('') + `
                 <button type="button" onclick="addNewGroupFromFilter()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(145, 70, 255, 0.08); border: 1px dashed var(--twitch-purple); border-radius: 12px; cursor: pointer; color: var(--twitch-purple); font-size: 11px; font-weight: bold; height: 26px; transition: background var(--transition-fast); outline: none;">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    タグを追加
+                    ${raidSoEscape(I.addTag)}
                 </button>`;
             }
 
@@ -1153,11 +1168,13 @@
                         return new Date(f.lastShoutoutAt).toLocaleDateString();
                     }
                     if (friendsSortOrder === 'so-count' && f.shoutoutCount) {
-                        return `${f.shoutoutCount}回応援`;
+                        return uiText('idList.shoutoutCountMeta', { count: f.shoutoutCount });
                     }
                     if (friendsSortOrder === 'birthday' && f.birthday) {
                         const d = daysUntil(f.birthday);
-                        return d === 0 ? '🎂 今日！' : `誕生日まで${d}日`;
+                        return d === 0
+                            ? `🎂 ${uiText('idList.today')}`
+                            : uiText('idList.birthdayInDays', { count: d });
                     }
                     return '';
                 }
@@ -1233,7 +1250,7 @@
             const L = langMap[currentLang];
             const E = L.extended || langMap.ja.extended || {};
             
-            const n = await customPrompt('新規タグ名を入力してください');
+            const n = await customPrompt(uiText('idList.newTagPrompt'));
             if (!n) return;
             
             friendsConfig.push({
@@ -1255,7 +1272,7 @@
             // ターゲット配信者の Twitch ID を小文字化・正規化
             const targetTwitch = (normalizeFriendTwitch(targetFriend.twitch || targetFriend.name || '') || '').toLowerCase();
             if (!targetTwitch) {
-                showToast('Twitch IDが設定されていないため、タグ編集できません。', 'error');
+                showToast(uiText('idList.tagEditMissingTwitch'), 'error');
                 return;
             }
 
@@ -1272,7 +1289,7 @@
                 .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user');
 
             if (availableCategories.length === 0) {
-                showToast('グループ（タグ）が存在しません。', 'error');
+                showToast(uiText('idList.noGroups'), 'error');
                 return;
             }
 
@@ -1289,16 +1306,16 @@
 
             const dialogHtml = `
                 <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main); min-height: 250px; display: flex; flex-direction: column;">
-                    <p style="color:var(--text-muted); margin-bottom:12px; font-size: 11px;">所属させたいタグ（グループ）にチェックを入れてください。</p>
+                    <p style="color:var(--text-muted); margin-bottom:12px; font-size: 11px;">${raidSoEscape(uiText('idList.tagInstructions'))}</p>
                     <div style="flex:1; max-height:220px; overflow-y:auto; padding-right:4px;">
                         ${listHtml}
                     </div>
-                    <button class="btn-primary" id="edit-tags-submit" style="padding:10px; font-weight:bold; width:100%; margin-top: 12px;">タグ設定を保存</button>
+                    <button class="btn-primary" id="edit-tags-submit" style="padding:10px; font-weight:bold; width:100%; margin-top: 12px;">${raidSoEscape(uiText('idList.saveTags'))}</button>
                 </div>
             `;
 
             showCustomDialog({
-                title: `${targetFriend.name || '無名'} のタグ設定`,
+                title: uiText('idList.tagDialogTitle', { name: targetFriend.name || uiText('idList.unnamed') }),
                 type: 'alert',
                 messageHtml: dialogHtml
             });
@@ -1315,7 +1332,7 @@
 
                         // 選択されたグループがゼロの場合、強制的に「未分類」に登録する（データ消失防止）
                         if (selectedGroupNames.length === 0) {
-                            const uncategorizedName = E.uncategorized || '未分類';
+                            const uncategorizedName = I18N_DATA[currentLang]?.ui?.idList?.uncategorized || I18N_DATA.ja.ui.idList.uncategorized;
                             selectedGroupNames.push(uncategorizedName);
                             // 未分類グループがなければ作成
                             let uIdx = (friendsConfig || []).findIndex(cat => cat.name === uncategorizedName);
@@ -1459,11 +1476,10 @@
             const popover = document.getElementById('birthday-popover');
             if (!popover) return;
 
-            const L = langMap[currentLang] || langMap.ja;
-            const titleText = L.birthdayTitle || '今日の主役！';
-            const birthdayLabel = L.birthdayLabel || '誕生日';
-            const anniversaryLabel = L.anniversaryLabel || '記念日';
-            const unitDay = currentLang === 'en' ? 'd' : '日';
+            const I = (langMap[currentLang] || langMap.ja).idList;
+            const titleText = I.birthdayTitle;
+            const birthdayLabel = I.birthday;
+            const anniversaryLabel = I.anniversary;
             
             const today = new Date();
             const tM = today.getMonth() + 1;
@@ -1516,10 +1532,10 @@
                     </div>`;
                 });
             } else {
-                html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-align:center;">今日がお祝いの配信者はいません</div>`;
+                html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-align:center;">${raidSoEscape(I.noCelebrantsToday)}</div>`;
             }
 
-            html += `<div style="font-weight:bold;font-size:11px;margin:12px 0 6px 0;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:8px;">近日のスケジュール</div>`;
+            html += `<div style="font-weight:bold;font-size:11px;margin:12px 0 6px 0;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:8px;">${raidSoEscape(I.upcomingSchedule)}</div>`;
 
             const upcoming = allEvents.filter(e => e.daysLeft > 0).slice(0, 3);
             if (upcoming.length > 0) {
@@ -1533,20 +1549,20 @@
                             <span style="color:var(--text-muted);font-size:9px;">${m.month}/${m.day}</span>
                         </div>
                         <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;white-space:nowrap;">
-                            <span style="color:var(--twitch-purple);font-weight:bold;">あと${m.daysLeft}${unitDay}</span>
-                            <span style="font-size:8px;padding:1px 4px;border-radius:3px;background:${m.type==='birthday'?'rgba(255,74,154,0.1)':'rgba(29,155,240,0.1)'};color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};flex-shrink:0;">${raidSoEscape(label)}</span>
+                            <span style="color:var(--twitch-purple);font-weight:bold;">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                            <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size:8px;padding:1px 4px;border-radius:3px;flex-shrink:0;">${raidSoEscape(label)}</span>
                         </div>
                     </div>`;
                 });
             } else {
-                html += `<div style="font-size:10px;color:var(--text-muted);text-align:center;">予定はありません</div>`;
+                html += `<div style="font-size:10px;color:var(--text-muted);text-align:center;">${raidSoEscape(I.noSchedule)}</div>`;
             }
 
             // 下部ナビゲーションボタンエリア
             html += `
             <div style="display:flex; gap:6px; border-top:1px solid var(--border-color); padding-top:8px; margin-top:8px;">
-                <button onclick="openCalendarWithTab('list')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">一覧表示</button>
-                <button onclick="openCalendarWithTab('calendar')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">カレンダー</button>
+                <button onclick="openCalendarWithTab('list')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">${raidSoEscape(I.listView)}</button>
+                <button onclick="openCalendarWithTab('calendar')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">${raidSoEscape(I.calendarView)}</button>
             </div>`;
 
             popover.innerHTML = html;
@@ -1643,7 +1659,7 @@
 
             calendarCurrentYear = year;
             calendarCurrentMonth = month;
-            monthLabel.innerText = `${year}年 ${month}月`;
+            monthLabel.innerText = uiText('idList.monthYearFormat', { year, month });
             gridBody.innerHTML = '';
 
             // 今月のお祝いイベント (誕生日・記念日) を集計
@@ -1694,8 +1710,8 @@
                 const dayEvents = monthEvents[day] || [];
                 if (dayEvents.length > 0) {
                     cell.classList.add('has-event');
-                    const bLabel = langMapLoc.birthdayLabel || '誕生日';
-                    const aLabel = langMapLoc.anniversaryLabel || '記念日';
+                    const bLabel = langMapLoc.idList.birthday;
+                    const aLabel = langMapLoc.idList.anniversary;
                     const titleText = dayEvents.map(e => `${e.name} (${e.type === 'birthday' ? bLabel : aLabel})`).join('\n');
                     cell.title = titleText;
 
@@ -1793,7 +1809,7 @@
             });
             openCalDayPopup(calendarCurrentMonth, tD, monthEvents);
 
-            showToast('今日に移動しました ✓');
+            showToast(uiText('idList.movedToday'));
         }
         window.goCalendarToday = goCalendarToday;
 
@@ -1823,10 +1839,9 @@
             const c = document.getElementById('calendar-modal-list-view');
             if (!c) return;
 
-            const L = langMap[currentLang] || langMap.ja;
-            const birthdayLabel = L.birthdayLabel || '誕生日';
-            const anniversaryLabel = L.anniversaryLabel || '記念日';
-            const unitDay = currentLang === 'en' ? 'd' : '日';
+            const I = (langMap[currentLang] || langMap.ja).idList;
+            const birthdayLabel = I.birthday;
+            const anniversaryLabel = I.anniversary;
 
             const allEvents = [];
 
@@ -1854,7 +1869,7 @@
             allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
 
             if (allEvents.length === 0) {
-                c.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size:12px;">${currentLang === 'en' ? 'No anniversaries registered.' : (currentLang === 'zh' ? '暂无日程。' : '記念日の登録がありません。')}</div>`;
+                c.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size:12px;">${raidSoEscape(I.noAnniversaries)}</div>`;
                 return;
             }
 
@@ -1869,8 +1884,8 @@
                         <span style="font-size: 11px; color:var(--text-muted);">${m.month}/${m.day}</span>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
-                        <span style="font-size: 11px; font-weight:bold; color:var(--twitch-purple);">あと ${m.daysLeft}${unitDay}</span>
-                        <span style="font-size: 9px; padding:1px 5px; border-radius:4px; background:${m.type==='birthday'?'rgba(255,74,154,0.15)':'rgba(29,155,240,0.15)'}; color:${m.type==='birthday'?'#ff4a9a':'#1d9bf0'};">${raidSoEscape(typeLabel)}</span>
+                        <span style="font-size: 11px; font-weight:bold; color:var(--twitch-purple);">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                        <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size: 9px; padding:1px 5px; border-radius:4px;">${raidSoEscape(typeLabel)}</span>
                     </div>
                 </div>`;
             });
@@ -1883,13 +1898,11 @@
         function renderCalYMMonths(year, currentMonth) {
             const container = document.getElementById('cal-ym-months');
             if (!container) return;
-            const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
             container.innerHTML = '';
-            monthNamesJA.forEach((name, idx) => {
-                const m = idx + 1;
+            Array.from({ length: 12 }, (_, idx) => idx + 1).forEach(m => {
                 const btn = document.createElement('button');
                 btn.className = 'ym-month-btn';
-                btn.innerText = name;
+                btn.innerText = uiText('idList.monthFormat', { month: m });
                 btn.style.cssText = `padding:5px 2px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);cursor:pointer;font-size:11px;transition:0.15s;`;
                 if (m === currentMonth) {
                     btn.style.background = 'var(--twitch-purple)';
@@ -1918,7 +1931,7 @@
         function shiftCalendarYear(dir) {
             calendarCurrentYear += dir;
             const label = document.getElementById('cal-ym-year-label');
-            if (label) label.innerText = `${calendarCurrentYear}年`;
+            if (label) label.innerText = uiText('idList.yearFormat', { year: calendarCurrentYear });
             renderCalYMMonths(calendarCurrentYear, calendarCurrentMonth);
         }
         window.shiftCalendarYear = shiftCalendarYear;
@@ -1934,12 +1947,12 @@
 
             calDayPopupMonth = month;
             calDayPopupDay = day;
-            titleEl.innerText = `${month}月${day}日`;
+            titleEl.innerText = uiText('idList.monthDayFormat', { month, day });
 
             if (events.length > 0) {
-                const L = langMap[currentLang] || langMap.ja;
-                const bLabel = L.birthdayLabel || '誕生日';
-                const aLabel = L.anniversaryLabel || '記念日';
+                const I = (langMap[currentLang] || langMap.ja).idList;
+                const bLabel = I.birthday;
+                const aLabel = I.anniversary;
                 existingEl.innerHTML = events.map(e =>
                     `<div style="padding:3px 0;display:flex;align-items:center;gap:6px;">
                         <span style="width:6px;height:6px;border-radius:50%;background:${e.type==='birthday'?'#ff4a9a':'#1d9bf0'};display:inline-block;flex-shrink:0;"></span>
@@ -1966,7 +1979,7 @@
 
             const optNew = document.createElement('option');
             optNew.value = 'new_person';
-            optNew.innerText = '＋ 新規ID作成';
+            optNew.innerText = `＋ ${uiText('idList.newId')}`;
             personSelect.appendChild(optNew);
 
             const newNameInput = document.getElementById('cal-day-new-name');
@@ -2042,7 +2055,7 @@
                 const newTwitch = twitchInput ? twitchInput.value.trim() : '';
                 
                 if (!newName) {
-                    showToast('ニックネームを入力してください');
+                    showToast(uiText('idList.enterNickname'));
                     return;
                 }
 
@@ -2065,8 +2078,8 @@
 
                 if (dupe) {
                     const confirmOverwrite = await customConfirm({
-                        title: '重複の警告',
-                        message: `「${newName}」は既にグループ「${dupe.categoryName}」に登録されています。上書きしますか？`
+                        title: uiText('idList.duplicateWarningTitle'),
+                        message: uiText('idList.duplicateWarningMessage', { name: newName, group: dupe.categoryName })
                     });
                     if (!confirmOverwrite) return;
                     
@@ -2077,13 +2090,14 @@
                     renderFriends();
                     checkBirthdaysAndAnniversaries();
                     renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
-                    showToast('上書き保存しました ✓');
+                    showToast(uiText('idList.overwriteSaved'));
                     return;
                 }
 
-                let targetCat = (friendsConfig || []).find(cat => cat.name === '未分類');
+                const uncategorizedName = uiText('idList.uncategorized');
+                let targetCat = (friendsConfig || []).find(cat => cat.name === uncategorizedName);
                 if (!targetCat) {
-                    targetCat = { name: '未分類', friends: [], isClosed: false };
+                    targetCat = { name: uncategorizedName, friends: [], isClosed: false };
                     if (!friendsConfig) friendsConfig = [];
                     friendsConfig.push(targetCat);
                 }
@@ -2102,8 +2116,8 @@
                 const friend = friendsConfig[ci].friends[fi];
                 if (friend[type] && friend[type] !== dateStrReal) {
                     const confirmOverwrite = await customConfirm({
-                        title: '上書きの確認',
-                        message: `既に設定されている日付「${friend[type]}」を「${dateStrReal}」に変更しますか？`
+                        title: uiText('idList.overwriteDateTitle'),
+                        message: uiText('idList.overwriteDateMessage', { oldDate: friend[type], newDate: dateStrReal })
                     });
                     if (!confirmOverwrite) return;
                 }
@@ -2115,7 +2129,7 @@
             }
 
             renderCalendarGrid(calendarCurrentYear, calendarCurrentMonth);
-            showToast('保存しました ✓');
+            showToast(uiText('idList.saved'));
         }
         window.confirmCalDayAdd = confirmCalDayAdd;
 
@@ -2145,7 +2159,6 @@
         window.openMiniDatePicker = openMiniDatePicker;
 
         function renderMiniDatePicker(overlay) {
-            const monthNamesJA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
             const firstDayIndex = new Date(miniPickerYear, miniPickerMonth - 1, 1).getDay();
             const daysInMonth = new Date(miniPickerYear, miniPickerMonth, 0).getDate();
             const todayD = new Date();
@@ -2156,7 +2169,10 @@
             const parsedSel = parseMdDate(currentVal);
             const selectedDay = (parsedSel && parsedSel.month === miniPickerMonth) ? parsedSel.day : -1;
 
-            const typeLabel = miniPickerType === 'birthday' ? '誕生日' : '記念日';
+            const typeLabel = miniPickerType === 'birthday'
+                ? uiText('idList.birthday')
+                : uiText('idList.anniversary');
+            const weekdays = (langMap[currentLang] || langMap.ja).runtime.weekdaysShort;
 
             let cellsHtml = '';
             for (let i = 0; i < firstDayIndex; i++) cellsHtml += '<div></div>';
@@ -2182,22 +2198,22 @@
             overlay.innerHTML = `
             <div style="background:var(--bg-card);border:2px solid var(--border-color);border-radius:12px;padding:16px;width:300px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                    <strong style="color:var(--twitch-purple);font-size:13px;">${typeLabel}を選択</strong>
+                    <strong style="color:var(--twitch-purple);font-size:13px;">${raidSoEscape(uiText('idList.datePickerTitle', { type: typeLabel }))}</strong>
                     <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&lt;</button>
-                    <span style="font-weight:bold;color:var(--text-main);font-size:13px;">${monthNamesJA[miniPickerMonth-1]}</span>
+                    <span style="font-weight:bold;color:var(--text-main);font-size:13px;">${raidSoEscape(uiText('idList.monthFormat', { month: miniPickerMonth }))}</span>
                     <button onclick="miniPickerMonth++;if(miniPickerMonth>12){miniPickerMonth=1;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&gt;</button>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:10px;color:var(--text-muted);margin-bottom:3px;">
-                    <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+                    ${weekdays.map(day => `<span>${raidSoEscape(day)}</span>`).join('')}
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);gap:3px;height:168px;">
                     ${cellsHtml}
                 </div>
-                <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-muted);">日付をクリックで選択</div>
-                <div style="margin-top:3px;text-align:center;font-size:9px;color:var(--text-muted);opacity:0.6;">※曜日は今年を参照しています</div>
+                <div style="margin-top:8px;text-align:center;font-size:10px;color:var(--text-muted);">${raidSoEscape(uiText('idList.datePickerHint'))}</div>
+                <div style="margin-top:3px;text-align:center;font-size:9px;color:var(--text-muted);opacity:0.6;">${raidSoEscape(uiText('idList.weekdayCurrentYearNote'))}</div>
             </div>`;
         }
         window.renderMiniDatePicker = renderMiniDatePicker;
@@ -2219,7 +2235,7 @@
             if (inputEl) inputEl.value = dateStrReal;
 
             document.getElementById('mini-date-picker-overlay')?.remove();
-            showToast('保存しました ✓');
+            showToast(uiText('idList.saved'));
         }
         window.selectMiniDate = selectMiniDate;
 
@@ -2302,12 +2318,12 @@
                 if ((m.content || '').length > 15) previewText += '...';
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
-                        <span style="white-space:nowrap;">${m.title}</span>
-                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${previewText}</small>
+                        <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
+                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
                     <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
                 </div>
-            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${m.content || ''}</textarea>`;
+            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${raidSoEscape(m.content || '')}</textarea>`;
                 c.appendChild(d);
             });
             initSortable();
@@ -2421,22 +2437,22 @@
             manualCommandEnabled: true,
             commandAliases: "!latest,!so,!shoutout",
             allowedRoles: ["broadcaster", "moderator"],
-            raidSoundFile: "sounds/raidbeep.wav",
+            raidSoundFile: "sounds/raid_1.wav",
             raidVolume: 80,
-            commentSoundFile: "sounds/comment-notification.wav",
+            commentSoundFile: "sounds/chat_1.wav",
             commentVolume: 60,
-            channelPointSoundFile: "sounds/comment-notification.wav",
+            channelPointSoundFile: "sounds/chat_1.wav",
             channelPointVolume: 60,
-            firstCommentSoundFile: "sounds/001_pyowan_up.wav",
+            firstCommentSoundFile: "sounds/first_1.wav",
             firstCommentVolume: 80,
-            soundFiles: [],
+            soundFiles: [...RAIDSO_DEFAULT_SOUND_FILES],
             excludedUsers: typeof DEFAULT_EXCLUDED_BOT_USERS_TEXT !== 'undefined'
                 ? DEFAULT_EXCLUDED_BOT_USERS_TEXT
                 : "StreamElements\nSoundAlerts\nNightbot\nSery_bot\nFrostyTools",
             raidTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.raid,
             manualTemplate: RAIDSO_DEFAULT_TEMPLATE_SET.manual,
             autoSendRaidUrlEnabled: true,
-            outboundRaidTemplate: "▶本日のレイド先はこちら：{url}"
+            outboundRaidTemplate: raidSoText().outboundRaidDefaultTemplate
         };
         let raidSoSettings = loadRaidSoSettings();
         let customRaidSoTemplates = loadRaidSoCustomTemplates();
@@ -2451,14 +2467,14 @@
             soundObjectUrls: new Map(),
             activeSuggestInputId: "",
             seenChatters: new Set(),
-            subscriptions: { raid: false, chat: false, reward: false, autoReward: false },
+            subscriptions: { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false },
             shoutoutRetryTimers: new Map(),
             nextOfficialShoutoutAt: 0,
             logs: loadRaidSoLogs()
         };
 
         function raidSoEscape(value) {
-            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
         function raidSoSelected(value, expected) {
@@ -2475,7 +2491,7 @@
 
         async function openAuthUrlInBrowser(url, openedMessage = authOpenText('opened'), blockedMessage = authOpenText('blocked')) {
             await copyTextToClipboard(url, doneText());
-            await customAlert(openedMessage || blockedMessage);
+            await customAlertHtml(openedMessage || blockedMessage);
             return false;
         }
 
@@ -2584,7 +2600,7 @@
                         ${raidSoSuggestInputHtml('so-user-input', r.manualTargetPlaceholder || command.soInput || 'ID')}
                         <div class="raidso-intro-buttons">
                             <button class="btn-primary has-tooltip" data-tooltip="${raidSoEscape(command.tips.so)}" onclick="sendShoutoutCommandFromInput()">/shoutout</button>
-                            <button class="btn-primary has-tooltip" data-tooltip="レイドを開始し、レイド先URLを自動送信します" onclick="sendRaidCommandFromInput()">/raid</button>
+                            <button class="btn-primary has-tooltip" data-tooltip="${raidSoEscape(r.outboundRaidStartTip)}" onclick="sendRaidCommandFromInput()">/raid</button>
                             <button class="btn-primary" onclick="manualRaidSoIntroduce(true)">${raidSoEscape(r.sendIntro)}</button>
                         </div>
                     </div>
@@ -2605,7 +2621,7 @@
                     <div class="raidso-note-body">
                         <p style="margin: 0 0 8px 0;">${raidSoEscape(r.noteIntro)}</p>
                         <p style="margin: 0 0 8px 0;">${raidSoEscape(r.noteToken)}</p>
-                        <p style="margin: 0 0 8px 0;">${raidSoEscape(r.requiredScopes)}: <span style="color:#bf94ff;">${raidSoEscape(TITLE_DOCK_REQUIRED_SCOPES.join(' / '))}</span></p>
+                        <p style="margin: 0 0 8px 0;">${raidSoEscape(r.requiredScopes)}: <span style="color:var(--command-accent);">${raidSoEscape(TITLE_DOCK_REQUIRED_SCOPES.join(' / '))}</span></p>
                         <div class="raidso-actions">
                             <button type="button" class="btn-outline" onclick="openOfficialAuth()">${raidSoEscape(langMap[currentLang]?.settingsUi?.openAuth || langMap.ja.settingsUi.openAuth)}</button>
                         </div>
@@ -2620,10 +2636,10 @@
                         <div class="raidso-auto-intro-setting">
                             ${raidSoSwitchHtml('raidso-auto-intro', r.autoIntroToggle, s.autoIntroEnabled, 'handleRaidSoAutoIntroToggle(this)')}
                             <div class="raidso-auto-intro-wait" id="raidso-auto-intro-wait"${s.autoIntroEnabled ? '' : ' hidden'}>
-                                <span class="field-label">${raidSoEscape(r.autoIntroWaitLabel || '自動紹介までの時間')}</span>
+                                <span class="field-label">${raidSoEscape(r.autoIntroWaitLabel || langMap.ja.raidSo.autoIntroWaitLabel)}</span>
                                 <div class="tw-time-control">
                                     <input type="number" id="raidso-auto-intro-wait-seconds" value="${Math.max(0, Math.min(600, Number(s.autoIntroWaitSeconds) || 0))}" min="0" max="600" step="1" onchange="saveRaidSoSettings(false)">
-                                    <span>${raidSoEscape(twExt('unitSecond', '秒'))}</span>
+                                    <span>${raidSoEscape(twExt('unitSecond', langMap.ja.extended.unitSecond))}</span>
                                 </div>
                             </div>
                         </div>
@@ -2923,7 +2939,7 @@
             clearTimeout(raidSoState.reconnectTimer);
             if (raidSoState.ws) raidSoState.ws.close();
             raidSoState.ws = null;
-            raidSoState.subscriptions = { raid: false, chat: false, reward: false, autoReward: false };
+            raidSoState.subscriptions = { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false };
             renderRaidSoStatus();
             raidSoLog(langMap[currentLang].logs.logStopped);
         }
@@ -3048,7 +3064,7 @@
             if (!raidSoSettings.autoIntroEnabled) return;
             const waitSeconds = Math.max(0, Math.min(600, Number(raidSoSettings.autoIntroWaitSeconds) || 0));
             if (waitSeconds > 0) {
-                raidSoLog(twFormat(raidSoText().autoIntroScheduled || '{seconds}秒後に紹介します: {user}', {
+                raidSoLog(twFormat(raidSoText().autoIntroScheduled || langMap.ja.raidSo.autoIntroScheduled, {
                     seconds: waitSeconds,
                     user: event.from_broadcaster_user_name || event.from_broadcaster_user_login || ''
                 }));
@@ -3353,7 +3369,7 @@
 
         function isPlaceholderFriendName(value) {
             const name = String(value || '').trim();
-            const placeholders = ['USER', '配信者', 'Streamer', '主播'];
+            const placeholders = ['USER', ...Object.values(I18N_DATA).map(locale => locale?.ui?.idList?.emptyName).filter(Boolean)];
             return !name || placeholders.includes(name);
         }
 
@@ -3452,7 +3468,7 @@
                         await pinRaidSoChatMessage(msgId, 1200);
                     }
                 } catch (e) {
-                    raidSoLog(`紹介メッセージ送信失敗: ${e.message || e}`, 'warn');
+                    raidSoLog(uiText('raidSo.introSendFailed', { error: e.message || e }), 'warn');
                 }
             }
             raidSoLog(`${langMap[currentLang].logs.logIntroDone} ${data.displayName}`);
@@ -3466,13 +3482,13 @@
                 await raidSoHelix(`/raids?from_broadcaster_id=${settings.userId}&to_broadcaster_id=${user.id}`, {
                     method: 'POST'
                 });
-                raidSoLog(`レイドを開始しました: ${user.display_name || targetLogin} 宛て`);
+                raidSoLog(uiText('raidSo.outboundRaidStarted', { user: user.display_name || targetLogin }));
                 showToast(doneText());
                 
                 // Automatically send URL if enabled
                 if (raidSoSettings.autoSendRaidUrlEnabled) {
                     const url = `https://www.twitch.tv/${user.login || targetLogin}`;
-                    const rawTemplate = raidSoSettings.outboundRaidTemplate || '▶本日のレイド先はこちら：{url}';
+                    const rawTemplate = raidSoSettings.outboundRaidTemplate || raidSoText().outboundRaidDefaultTemplate;
                     const channel = await getRaidSoChannel(user.id).catch(() => null);
                     const data = {
                         username: user.login || targetLogin,
@@ -3489,16 +3505,16 @@
                         raidSoState.lastOutboundRaidAt = Date.now();
                         
                         await sendRaidSoChat(message);
-                        raidSoLog(`レイド先URLを自動送信しました: ${message}`);
+                        raidSoLog(uiText('raidSo.outboundRaidUrlSent', { message }));
                     } catch (e) {
-                        raidSoLog(`レイド先URLの自動送信に失敗しました: ${localizeRaidSoError(e)}`, 'warn');
+                        raidSoLog(uiText('raidSo.outboundRaidUrlFailed', { error: localizeRaidSoError(e) }), 'warn');
                     }
                 }
             } catch (e) {
-                const fail = "レイドの開始に失敗しました";
+                const fail = raidSoText().outboundRaidStartFailed;
                 const detail = localizeRaidSoError(e);
                 raidSoLog(`${fail}: ${detail}`, 'warn');
-                await customAlert(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
+                await customAlertHtml(`${raidSoEscape(fail)}<br><br><span style="color:var(--text-muted);">${raidSoEscape(detail)}</span>`);
                 throw e;
             }
         }
@@ -3507,11 +3523,11 @@
             const targetLogin = event.to_broadcaster_user_login;
             const targetName = event.to_broadcaster_user_name;
             const targetId = event.to_broadcaster_user_id;
-            raidSoLog(`アウトバウンドレイド通知を受信: ${targetName} 宛て`);
+            raidSoLog(uiText('raidSo.outboundRaidDetected', { user: targetName }));
             
             if (raidSoSettings.autoSendRaidUrlEnabled) {
                 const url = `https://www.twitch.tv/${targetLogin}`;
-                const rawTemplate = raidSoSettings.outboundRaidTemplate || '▶本日のレイド先はこちら：{url}';
+                const rawTemplate = raidSoSettings.outboundRaidTemplate || raidSoText().outboundRaidDefaultTemplate;
                 const channel = await getRaidSoChannel(targetId).catch(() => null);
                 const data = {
                     username: targetLogin,
@@ -3524,9 +3540,9 @@
                 const message = renderRaidSoTemplate(rawTemplate, data);
                 try {
                     await sendRaidSoChat(message);
-                    raidSoLog(`レイド先URLを自動送信しました: ${message}`);
+                    raidSoLog(uiText('raidSo.outboundRaidUrlSent', { message }));
                 } catch (e) {
-                    raidSoLog(`レイド先URLの自動送信に失敗しました: ${localizeRaidSoError(e)}`, 'warn');
+                    raidSoLog(uiText('raidSo.outboundRaidUrlFailed', { error: localizeRaidSoError(e) }), 'warn');
                 }
             }
         }
@@ -3567,9 +3583,9 @@
                 await raidSoHelix(`/chat/pins?broadcaster_id=${settings.userId}&moderator_id=${settings.userId}&message_id=${messageId}&duration=${durationSeconds}`, {
                     method: 'POST'
                 });
-                raidSoLog(`紹介・応援メッセージをピン留めしました（${Math.floor(durationSeconds / 60)}分間）`);
+                raidSoLog(uiText('raidSo.pinSucceeded', { minutes: Math.floor(durationSeconds / 60) }));
             } catch (err) {
-                raidSoLog(`ピン留め失敗: ${err.message || err}`, 'warn');
+                raidSoLog(uiText('raidSo.pinFailed', { error: err.message || err }), 'warn');
             }
         }
 
@@ -3780,7 +3796,7 @@
             const subs = [];
             if (raidSoState.subscriptions.raid) subs.push(I18N_DATA[currentLang]?.ui?.jsMsgs?.raid || langMap.ja.jsMsgs.raid);
             if (raidSoState.subscriptions.chat) subs.push(I18N_DATA[currentLang]?.ui?.jsMsgs?.chat || langMap.ja.jsMsgs.chat);
-            el.innerHTML = `${I18N_DATA[currentLang]?.ui?.jsMsgs?.statusPrefix}${connected ? I18N_DATA[currentLang]?.ui?.jsMsgs?.statusConn : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusDisconn}${I18N_DATA[currentLang]?.ui?.jsMsgs?.monitorPrefix}${subs.length ? subs.join(', ') : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}${I18N_DATA[currentLang]?.ui?.jsMsgs?.authPrefix}${settings.userLogin || settings.userId || I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}`;
+            el.textContent = `${I18N_DATA[currentLang]?.ui?.jsMsgs?.statusPrefix}${connected ? I18N_DATA[currentLang]?.ui?.jsMsgs?.statusConn : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusDisconn}${I18N_DATA[currentLang]?.ui?.jsMsgs?.monitorPrefix}${subs.length ? subs.join(', ') : I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}${I18N_DATA[currentLang]?.ui?.jsMsgs?.authPrefix}${settings.userLogin || settings.userId || I18N_DATA[currentLang]?.ui?.jsMsgs?.statusUnset}`;
         }
 
         function raidSoLog(message, type = 'info') {
@@ -3999,33 +4015,79 @@
             if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.noFileSelected || langMap.ja.footerActions.noFileSelected);
         }
 
+        const BACKUP_BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
+        function isBackupRecord(value) {
+            return value !== null && typeof value === 'object' && !Array.isArray(value);
+        }
+
+        function parseBackupJson(text) {
+            const parsed = JSON.parse(text, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
+            if (!isBackupRecord(parsed)) throw new Error('Invalid backup root');
+            const expectedTypes = {
+                config: Array.isArray,
+                friends: Array.isArray,
+                settings: isBackupRecord,
+                memoList: Array.isArray,
+                raidShoutOut: isBackupRecord,
+                raidShoutOutTemplates: Array.isArray,
+                supporterArchives: Array.isArray
+            };
+            Object.entries(expectedTypes).forEach(([key, validator]) => {
+                if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
+                    throw new Error(`Invalid backup field: ${key}`);
+                }
+            });
+            return parsed;
+        }
+
+        function backupSettingsWithoutToken(source) {
+            if (!isBackupRecord(source)) return {};
+            const result = {};
+            Object.entries(source).forEach(([key, value]) => {
+                if (key !== 'token' && !BACKUP_BLOCKED_KEYS.has(key)) result[key] = value;
+            });
+            return result;
+        }
+
+        function restoreSettingsWithoutBackupToken(importedSettings, currentSettings, overwrite = false) {
+            const current = isBackupRecord(currentSettings) ? currentSettings : {};
+            const restored = overwrite
+                ? backupSettingsWithoutToken(importedSettings)
+                : { ...current, ...backupSettingsWithoutToken(importedSettings) };
+            const currentToken = extractTwitchAccessToken(current.token || '');
+            if (currentToken) restored.token = currentToken;
+            else delete restored.token;
+            return restored;
+        }
+
         async function restoreFromLocalFile() {
             const file = document.getElementById('ui-restore-file')?.files?.[0];
             if (!file) {
-                showToast(uiText('runtime.selectBackupFile') || 'バックアップファイルを選択してください。', 'error');
+                showToast(uiText('runtime.selectBackupFile'), 'error');
                 return;
             }
             const reader = new FileReader(); reader.onload = async (e) => {
                 try {
-                    const d = JSON.parse(e.target.result);
+                    const d = parseBackupJson(e.target.result);
 
                     // 復元方法の選択ダイアログ (上書き / マージ / キャンセル)
                     const choice = await new Promise((resolveDlg) => {
                         showCustomDialog({
-                            title: 'バックアップの復元方法',
+                            title: uiText('runtime.restoreModeTitle'),
                             type: 'alert',
                             messageHtml: `
                                 <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main);">
-                                    バックアップデータをどのように復元しますか？<br><br>
-                                    <strong>・消去して上書き</strong><br>
-                                    既存のデータをすべて削除し、バックアップファイルの内容で完全に上書きします。<br><br>
-                                    <strong>・差分のみ追加</strong><br>
-                                    既存のデータを残したまま、重複しない差分データのみを追加（マージ）します。
+                                    ${raidSoEscape(uiText('runtime.restoreModeQuestion'))}<br><br>
+                                    <strong>・${raidSoEscape(uiText('runtime.restoreOverwrite'))}</strong><br>
+                                    ${raidSoEscape(uiText('runtime.restoreOverwriteDescription'))}<br><br>
+                                    <strong>・${raidSoEscape(uiText('runtime.restoreMerge'))}</strong><br>
+                                    ${raidSoEscape(uiText('runtime.restoreMergeDescription'))}
                                 </div>
                                 <div style="display:flex; flex-direction:column; gap:10px;">
-                                    <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">消去して上書き</button>
-                                    <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">差分のみ追加</button>
-                                    <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">キャンセル</button>
+                                    <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreOverwrite'))}</button>
+                                    <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreMerge'))}</button>
+                                    <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(langMap[currentLang].cancel)}</button>
                                 </div>
                             `
                         });
@@ -4048,32 +4110,36 @@
 
                     if (choice === 'overwrite') {
                         // 完全上書き
-                        if (d.config) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
-                        if (d.friends) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
-                        if (d.settings) localStorage.setItem('stream_settings_v16', JSON.stringify(d.settings));
-                        if (d.memoList) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
-                        if (d.raidShoutOut) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
-                        if (d.raidShoutOutTemplates) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
+                        if (Array.isArray(d.config)) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
+                        if (isBackupRecord(d.settings)) {
+                            const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
+                            const restoredSettings = restoreSettingsWithoutBackupToken(d.settings, currentSettings, true);
+                            localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
+                        }
+                        if (Array.isArray(d.memoList)) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
+                        if (isBackupRecord(d.raidShoutOut)) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(d.raidShoutOut));
+                        if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
                         if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
                         
-                        raidSoLog(uiText('runtime.operationLog.backupRestored') || 'バックアップを上書き復元しました。');
-                        showToast('データを上書き復元しました。', 'success');
+                        raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
+                        showToast(uiText('runtime.restoreOverwriteDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else if (choice === 'merge') {
                         // 差分統合マージ処理
                         mergeBackupData(d);
 
-                        raidSoLog('バックアップデータを統合復元しました。');
-                        showToast('データを統合（マージ）しました。', 'success');
+                        raidSoLog(uiText('runtime.operationLog.backupMergeRestored'));
+                        showToast(uiText('runtime.restoreMergeDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
-                        showToast('復元をキャンセルしました。', 'info');
+                        showToast(uiText('runtime.restoreCanceled'), 'info');
                     }
                 } catch (error) {
-                    showToast(uiText('runtime.restoreFailed') || '復元に失敗しました。', 'error');
+                    showToast(uiText('runtime.restoreFailed'), 'error');
                 }
             }; reader.readAsText(file);
-            reader.onerror = () => showToast(uiText('runtime.restoreFailed') || '復元に失敗しました。', 'error');
+            reader.onerror = () => showToast(uiText('runtime.restoreFailed'), 'error');
         }
 
         function mergeBackupData(d) {
@@ -4089,9 +4155,9 @@
             }
 
             // 2. settings
-            if (d.settings) {
+            if (isBackupRecord(d.settings)) {
                 let localSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
-                const mergedSettings = { ...localSettings, ...d.settings };
+                const mergedSettings = restoreSettingsWithoutBackupToken(d.settings, localSettings);
                 localStorage.setItem('stream_settings_v16', JSON.stringify(mergedSettings));
             }
 
@@ -4132,7 +4198,7 @@
             }
 
             // 5. raidShoutOut
-            if (d.raidShoutOut) {
+            if (isBackupRecord(d.raidShoutOut)) {
                 let localRSO = JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}');
                 const mergedRSO = { ...localRSO, ...d.raidShoutOut };
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(mergedRSO));
@@ -4160,7 +4226,20 @@
                 localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
             }
         }
-        async function copyBackupToClipboard() { collectRaidSoSettings(); const d = { config, friends: friendsConfig, settings, memoList: memoConfig, raidShoutOut: raidSoSettings, raidShoutOutTemplates: customRaidSoTemplates, supporterArchives: readSupporterArchives() }; await copyTextToClipboard(JSON.stringify(d, null, 2)); }
+        async function copyBackupToClipboard() {
+            collectRaidSoSettings();
+            const d = {
+                backupVersion: 2,
+                config,
+                friends: friendsConfig,
+                settings: backupSettingsWithoutToken(settings),
+                memoList: memoConfig,
+                raidShoutOut: raidSoSettings,
+                raidShoutOutTemplates: customRaidSoTemplates,
+                supporterArchives: readSupporterArchives()
+            };
+            await copyTextToClipboard(JSON.stringify(d, null, 2));
+        }
 
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
@@ -4289,7 +4368,7 @@
     async function handleCommandClick(cmd, label, isAutoExec) {
         const cleanedCmd = String(cmd || '').trim();
         if (cleanedCmd === '/raid') {
-            const target = await customPrompt("レイド先のTwitch IDを入力してください:");
+            const target = await customPrompt(uiText('runtime.raidTargetPrompt'));
             if (target) {
                 const targetLogin = normalizeRaidSoLogin(target);
                 try {
@@ -4849,7 +4928,7 @@ function raidSoSoundControlsHtml(kind, title, file, volume) {
             const soundOptions = getRaidSoSoundFiles(file);
             const volumeValue = clampRaidSoVolume(volume);
             return `<div>
-                <div style="font-weight:bold; color:#bf94ff; margin-bottom:8px;">${raidSoEscape(title)}</div>
+                <div style="font-weight:bold; color:var(--command-accent); margin-bottom:8px;">${raidSoEscape(title)}</div>
                 <span class="field-label">${raidSoEscape(r.soundSource)}</span>
                 <select id="raidso-${id}-sound-file" style="width:100%; background:var(--bg-base); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
                     ${soundOptions.map(src => `<option value="${raidSoEscape(src)}"${raidSoSelected(file, src)}>${raidSoEscape(raidSoSoundFileLabel(src))}</option>`).join('')}

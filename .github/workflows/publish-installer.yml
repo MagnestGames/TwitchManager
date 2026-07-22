@@ -1,0 +1,188 @@
+name: Build and publish Windows 11 and macOS installers
+
+on:
+  push:
+    branches:
+      - "dev_1.0_beta"
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "ビルドするバージョン（例: 1.0_beta / v1.0.0）"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      publish: ${{ steps.release.outputs.publish }}
+
+    steps:
+      - name: Resolve release metadata
+        id: release
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$INPUT_TAG"
+          elif [[ "$REF_NAME" == "dev_1.0_beta" ]]; then
+            tag="1.0_beta"
+          else
+            tag="$REF_NAME"
+          fi
+
+          if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            publish="true"
+          elif [[ "$tag" =~ ^[0-9]+\.[0-9]+_beta$ ]]; then
+            publish="false"
+          else
+            echo "バージョンは 1.0_beta または v1.0.0 の形式で指定してください: $tag" >&2
+            exit 1
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
+  build-windows:
+    needs: metadata
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Japanese and English localization
+        shell: pwsh
+        run: node scripts/check-localization.mjs
+
+      - name: Verify dark and light theme contrast
+        shell: pwsh
+        run: node scripts/check-theme-contrast.mjs
+
+      - name: Build Windows 11 installer
+        shell: pwsh
+        run: ./installer/build-installer.ps1 -Version "${{ needs.metadata.outputs.version }}"
+
+      - name: Verify Windows 11 installer
+        shell: pwsh
+        run: ./installer/test-installer.ps1 -ExpectedVersion "${{ needs.metadata.outputs.version }}"
+
+      - name: Verify macOS installer sources
+        shell: pwsh
+        run: ./installer/macos/test-source.ps1
+
+      - name: Verify release workflow references
+        shell: pwsh
+        run: ./installer/test-release-workflow.ps1
+
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TwitchManager-Windows11-Installer-${{ needs.metadata.outputs.version }}
+          path: |
+            dist/TwitchManager-Windows11-Setup.exe
+            dist/TwitchManager-Windows11-Setup.sha256
+          if-no-files-found: error
+
+  build-macos:
+    needs: metadata
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build macOS installer
+        shell: bash
+        run: |
+          chmod +x installer/macos/build-installer.sh installer/macos/test-installer.sh installer/macos/app/TwitchManager
+          ./installer/macos/build-installer.sh "${{ needs.metadata.outputs.version }}"
+
+      - name: Verify macOS installer
+        shell: bash
+        run: ./installer/macos/test-installer.sh
+
+      - name: Upload macOS installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TwitchManager-macOS-Installer-${{ needs.metadata.outputs.version }}
+          path: |
+            dist/TwitchManager-macOS.pkg
+            dist/TwitchManager-macOS.sha256
+          if-no-files-found: error
+
+  publish:
+    needs:
+      - metadata
+      - build-windows
+      - build-macos
+    if: needs.metadata.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Windows installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: TwitchManager-Windows11-Installer-${{ needs.metadata.outputs.version }}
+          path: dist
+
+      - name: Download macOS installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: TwitchManager-macOS-Installer-${{ needs.metadata.outputs.version }}
+          path: dist
+
+      - name: Create release description
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_path="$RUNNER_TEMP/release-body-ja.md"
+          windows_sha256="$(awk '{print $1}' dist/TwitchManager-Windows11-Setup.sha256)"
+          macos_sha256="$(awk '{print $1}' dist/TwitchManager-macOS.sha256)"
+          sed \
+            -e "s/{{WINDOWS_SHA256}}/$windows_sha256/g" \
+            -e "s/{{MACOS_SHA256}}/$macos_sha256/g" \
+            .github/release-body-ja.md > "$body_path"
+          echo "RELEASE_BODY=$body_path" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.metadata.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          title="TwitchManager $RELEASE_VERSION"
+          assets=(
+            "dist/TwitchManager-Windows11-Setup.exe"
+            "dist/TwitchManager-Windows11-Setup.sha256"
+            "dist/TwitchManager-macOS.pkg"
+            "dist/TwitchManager-macOS.sha256"
+          )
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            gh release edit "$RELEASE_TAG" --title "$title" --notes-file "$RELEASE_BODY" --latest
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --title "$title" \
+              --notes-file "$RELEASE_BODY" \
+              --target "${{ github.sha }}" \
+              --latest
+          fi
