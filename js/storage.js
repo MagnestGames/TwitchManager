@@ -117,7 +117,8 @@ const langMap = {
         const LANGUAGE_STORAGE_KEY = 'stream_language_v16';
         const LANGUAGE_OPTIONS = [
             { code: 'ja', short: 'JP' },
-            { code: 'en', short: 'EN' }
+            { code: 'en', short: 'EN' },
+            { code: 'zh', short: 'ZH' }
         ];
         function detectInitialLanguage() {
             const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);

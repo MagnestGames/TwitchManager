@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "..");
-const supportedLanguages = ["ja", "en"];
+const supportedLanguages = ["ja", "en", "zh"];
 const errors = [];
 const warnings = [];
 
