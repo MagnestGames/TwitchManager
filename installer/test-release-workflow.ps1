@@ -36,8 +36,9 @@ $workflowRequirements = @(
     'TwitchManager-Windows11-Setup\.sha256',
     'TwitchManager-macOS\.pkg',
     'TwitchManager-macOS\.sha256',
-    'actions/upload-artifact@v4',
-    'actions/download-artifact@v4',
+    'actions/checkout@v7',
+    'actions/upload-artifact@v7',
+    'actions/download-artifact@v8',
     '--draft=false',
     '--prerelease=false'
 )
