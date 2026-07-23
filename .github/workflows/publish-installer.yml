@@ -65,7 +65,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Japanese and English localization
+      - name: Verify supported localization
         shell: pwsh
         run: node scripts/check-localization.mjs
 
@@ -180,7 +180,12 @@ jobs:
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
-            gh release edit "$RELEASE_TAG" --title "$title" --notes-file "$RELEASE_BODY" --latest
+            gh release edit "$RELEASE_TAG" \
+              --title "$title" \
+              --notes-file "$RELEASE_BODY" \
+              --draft=false \
+              --prerelease=false \
+              --latest
           else
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --title "$title" \
