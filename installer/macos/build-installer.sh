@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-version="${1:-1.0_beta}"
+version="${1:-1.0.0}"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
 output_directory="${2:-$repository_root/dist}"

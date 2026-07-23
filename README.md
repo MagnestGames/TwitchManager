@@ -4,7 +4,7 @@
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
-> TwitchおよびOBS Studioの公式ツールではありません。現在の公開版は`1.0_beta`です。
+> TwitchおよびOBS Studioの公式ツールではありません。現在のリリース版は`1.0.0`です。
 
 ## 主な機能
 
@@ -34,12 +34,12 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 
 ## ダウンロード
 
-[TwitchManager 1.0_betaのリリースページ](https://github.com/MagnestGames/TwitchManager/releases/tag/1.0_beta)から、使用しているOSのインストーラーをダウンロードしてください。
+[TwitchManager 1.0.0のリリースページ](https://github.com/MagnestGames/TwitchManager/releases/tag/v1.0.0)から、使用しているOSのインストーラーをダウンロードしてください。
 
 | OS | ダウンロードするファイル |
 | --- | --- |
-| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-Windows11-Setup.exe) |
-| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-macOS.pkg) |
+| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/download/v1.0.0/TwitchManager-Windows11-Setup.exe) |
+| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/download/v1.0.0/TwitchManager-macOS.pkg) |
 
 `Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。必要に応じて、同じリリースにある`.sha256`ファイルでダウンロードしたファイルを確認できます。
 
