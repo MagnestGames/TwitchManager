@@ -37,7 +37,9 @@ $workflowRequirements = @(
     'TwitchManager-macOS\.pkg',
     'TwitchManager-macOS\.sha256',
     'actions/upload-artifact@v4',
-    'actions/download-artifact@v4'
+    'actions/download-artifact@v4',
+    '--draft=false',
+    '--prerelease=false'
 )
 foreach ($requirement in $workflowRequirements) {
     if ($workflow -notmatch $requirement) {
