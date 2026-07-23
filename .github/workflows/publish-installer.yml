@@ -63,7 +63,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Verify supported localization
         shell: pwsh
@@ -90,7 +90,7 @@ jobs:
         run: ./installer/test-release-workflow.ps1
 
       - name: Upload Windows installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TwitchManager-Windows11-Installer-${{ needs.metadata.outputs.version }}
           path: |
@@ -104,7 +104,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build macOS installer
         shell: bash
@@ -117,7 +117,7 @@ jobs:
         run: ./installer/macos/test-installer.sh
 
       - name: Upload macOS installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: TwitchManager-macOS-Installer-${{ needs.metadata.outputs.version }}
           path: |
@@ -135,16 +135,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download Windows installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: TwitchManager-Windows11-Installer-${{ needs.metadata.outputs.version }}
           path: dist
 
       - name: Download macOS installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: TwitchManager-macOS-Installer-${{ needs.metadata.outputs.version }}
           path: dist
