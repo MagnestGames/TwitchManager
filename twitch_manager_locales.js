@@ -1,4 +1,4 @@
-const I18N_DATA ={
+const I18N_DATA = {
     "ja": {
         "ui": {
             "tabs": [
@@ -315,7 +315,13 @@ const I18N_DATA ={
                 "excludedUsers": "通知音を鳴らさないユーザー",
                 "commandLabel": "コマンド",
                 "rolesLabel": "許可する権限",
-                "roles": { "broadcaster": "配信者", "moderator": "モデレーター", "vip": "VIP", "subscriber": "サブスク", "everyone": "全員" },
+                "roles": {
+                    "broadcaster": "配信者",
+                    "moderator": "モデレーター",
+                    "vip": "VIP",
+                    "subscriber": "サブスク",
+                    "everyone": "全員"
+                },
                 "commandSettings": "コマンド設定",
                 "introActionsTitle": "チャンネル紹介",
                 "manualIntroTitle": "紹介文の送信",
@@ -471,14 +477,56 @@ const I18N_DATA ={
                 "maxPredictionChoices": "選択肢は最大10件までです",
                 "minChoicesNotice": "選択肢は2件必要です",
                 "defaultPredictionPresets": [
-                    { "title": "今日クリアできる？", "choices": ["できる", "できない"], "duration": 120 },
-                    { "title": "次のボスに勝てる？", "choices": ["勝てる", "負ける"], "duration": 120 },
-                    { "title": "目標時間内に達成できる？", "choices": ["達成できる", "間に合わない"], "duration": 180 }
+                    {
+                        "title": "今日クリアできる？",
+                        "choices": [
+                            "できる",
+                            "できない"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "次のボスに勝てる？",
+                        "choices": [
+                            "勝てる",
+                            "負ける"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "目標時間内に達成できる？",
+                        "choices": [
+                            "達成できる",
+                            "間に合わない"
+                        ],
+                        "duration": 180
+                    }
                 ],
                 "defaultPollPresets": [
-                    { "title": "次に何をする？", "choices": ["このまま続ける", "別のことをする"], "duration": 60 },
-                    { "title": "休憩する？", "choices": ["休憩する", "このまま続ける"], "duration": 60 },
-                    { "title": "配信を延長する？", "choices": ["延長する", "ここで終わる"], "duration": 60 }
+                    {
+                        "title": "次に何をする？",
+                        "choices": [
+                            "このまま続ける",
+                            "別のことをする"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "休憩する？",
+                        "choices": [
+                            "休憩する",
+                            "このまま続ける"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "配信を延長する？",
+                        "choices": [
+                            "延長する",
+                            "ここで終わる"
+                        ],
+                        "duration": 60
+                    }
                 ],
                 "defaultPresetProtected": "標準プリセットは削除できません",
                 "pollQuestionRequired": "質問を入力してください",
@@ -598,17 +646,67 @@ const I18N_DATA ={
                 "inputLabel": "入力する内容",
                 "outputLabel": "作成・変更されるもの",
                 "noteLabel": "補足",
-                "titleCategoryAdd": { "title": "タイトル項目を追加", "input": "項目名（例: 雑談、ゲーム、コラボ）", "output": "タイトルタブに新しい折りたたみ項目を作成します。作成後、右上の「＋」から配信タイトルを追加できます。", "placeholder": "例: 雑談" },
-                "idCategoryAdd": { "title": "IDリスト項目を追加", "input": "項目名（例: よく紹介する配信者、コラボ相手）", "output": "IDリストに配信者をまとめる項目を作成します。作成後、右上の「＋」からTwitch IDを追加できます。", "placeholder": "例: よく紹介する配信者" },
-                "titleRecordRename": { "title": "タイトル名を変更", "input": "カード上部に表示する名前", "output": "Twitchへ反映される配信タイトルではなく、このドック内で見分けるための名前です。", "placeholder": "例: 通常配信" },
-                "idRecordRename": { "title": "配信者名を変更", "input": "IDリストに表示する配信者名", "output": "Twitch IDは変更されません。表示名だけを変更します。", "placeholder": "例: 配信者名" },
-                "memoAdd": { "title": "メモを追加", "input": "メモの見出し", "output": "メモ一覧に新しい項目を作成します。", "placeholder": "例: 配信メモ" },
-                "customTemplateSave": { "title": "カスタムテンプレートを保存", "input": "テンプレート一覧に表示する名前", "output": "現在のレイド時の紹介文と手動紹介の文面をセットで保存します。同じ名前で保存すると上書きします。", "placeholder": "例: いつもの紹介文" },
-                "deleteTitleCategory": { "title": "タイトル項目を削除", "output": "この項目と、中にあるタイトルカードを削除します。", "note": "この操作は元に戻せません。" },
-                "deleteTitleRecord": { "title": "タイトルカードを削除", "output": "このタイトルカードを削除します。Twitch側の現在の配信情報は変更しません。", "note": "この操作は元に戻せません。" },
-                "deleteIdCategory": { "title": "IDリスト項目を削除", "output": "この項目と、中にあるIDカードを削除します。", "note": "この操作は元に戻せません。" },
-                "deleteIdRecord": { "title": "IDカードを削除", "output": "この配信者のIDカードを削除します。", "note": "この操作は元に戻せません。" },
-                "deleteMemo": { "title": "メモを削除", "output": "このメモを削除します。", "note": "この操作は元に戻せません。" }
+                "titleCategoryAdd": {
+                    "title": "タイトル項目を追加",
+                    "input": "項目名（例: 雑談、ゲーム、コラボ）",
+                    "output": "タイトルタブに新しい折りたたみ項目を作成します。作成後、右上の「＋」から配信タイトルを追加できます。",
+                    "placeholder": "例: 雑談"
+                },
+                "idCategoryAdd": {
+                    "title": "IDリスト項目を追加",
+                    "input": "項目名（例: よく紹介する配信者、コラボ相手）",
+                    "output": "IDリストに配信者をまとめる項目を作成します。作成後、右上の「＋」からTwitch IDを追加できます。",
+                    "placeholder": "例: よく紹介する配信者"
+                },
+                "titleRecordRename": {
+                    "title": "タイトル名を変更",
+                    "input": "カード上部に表示する名前",
+                    "output": "Twitchへ反映される配信タイトルではなく、このドック内で見分けるための名前です。",
+                    "placeholder": "例: 通常配信"
+                },
+                "idRecordRename": {
+                    "title": "配信者名を変更",
+                    "input": "IDリストに表示する配信者名",
+                    "output": "Twitch IDは変更されません。表示名だけを変更します。",
+                    "placeholder": "例: 配信者名"
+                },
+                "memoAdd": {
+                    "title": "メモを追加",
+                    "input": "メモの見出し",
+                    "output": "メモ一覧に新しい項目を作成します。",
+                    "placeholder": "例: 配信メモ"
+                },
+                "customTemplateSave": {
+                    "title": "カスタムテンプレートを保存",
+                    "input": "テンプレート一覧に表示する名前",
+                    "output": "現在のレイド時の紹介文と手動紹介の文面をセットで保存します。同じ名前で保存すると上書きします。",
+                    "placeholder": "例: いつもの紹介文"
+                },
+                "deleteTitleCategory": {
+                    "title": "タイトル項目を削除",
+                    "output": "この項目と、中にあるタイトルカードを削除します。",
+                    "note": "この操作は元に戻せません。"
+                },
+                "deleteTitleRecord": {
+                    "title": "タイトルカードを削除",
+                    "output": "このタイトルカードを削除します。Twitch側の現在の配信情報は変更しません。",
+                    "note": "この操作は元に戻せません。"
+                },
+                "deleteIdCategory": {
+                    "title": "IDリスト項目を削除",
+                    "output": "この項目と、中にあるIDカードを削除します。",
+                    "note": "この操作は元に戻せません。"
+                },
+                "deleteIdRecord": {
+                    "title": "IDカードを削除",
+                    "output": "この配信者のIDカードを削除します。",
+                    "note": "この操作は元に戻せません。"
+                },
+                "deleteMemo": {
+                    "title": "メモを削除",
+                    "output": "このメモを削除します。",
+                    "note": "この操作は元に戻せません。"
+                }
             },
             "apiErrors": {
                 "shoutoutCooldown": "公式 /shoutout はクールダウン中です。予約投稿できる場合は自動で再実行します。",
@@ -691,8 +789,24 @@ const I18N_DATA ={
                 "viewSuffix": "回視聴",
                 "saveShort": "登録",
                 "copyUrl": "URLをコピー",
-                "weekdaysShort": ["日", "月", "火", "水", "木", "金", "土"],
-                "weekdaysLong": ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"],
+                "weekdaysShort": [
+                    "日",
+                    "月",
+                    "火",
+                    "水",
+                    "木",
+                    "金",
+                    "土"
+                ],
+                "weekdaysLong": [
+                    "日曜日",
+                    "月曜日",
+                    "火曜日",
+                    "水曜日",
+                    "木曜日",
+                    "金曜日",
+                    "土曜日"
+                ],
                 "statsArchiveStarted": "新しい集計を開始しました。前回のログはアーカイブしました",
                 "statsArchiveEmpty": "前回のログが空のため、アーカイブせずにリセットしました。",
                 "channelPointRedeemed": "チャンネルポイント引換: {user} / {reward}",
@@ -906,38 +1020,166 @@ const I18N_DATA ={
                     "/commercial 180",
                     "3分の広告を流す"
                 ],
-                "uniqueOff": ["重複チャット制限を解除", "/uniquechatoff", ""],
-                "slowOff": ["スローモードを解除", "/slowoff", ""],
-                "subOff": ["サブスク限定チャットを解除", "/subscribersoff", ""],
-                "emoteOnly": ["エモート限定", "/emoteonly", ""],
-                "emoteOff": ["エモート 解除", "/emoteonlyoff", ""],
-                "followerOnly": ["フォロー限定", "/followers", ""],
-                "followerOff": ["フォロワー 解除", "/followersoff", ""],
-                "ban": ["BAN", "/ban ", ""],
-                "unban": ["BAN解除", "/unban ", ""],
-                "timeout": ["タイムアウト", "/timeout ", ""],
-                "mod": ["MOD付与", "/mod ", ""],
-                "unmod": ["MOD剥奪", "/unmod ", ""],
-                "vip": ["VIP付与", "/vip ", ""],
-                "unvip": ["VIP剥奪", "/unvip ", ""],
-                "vips": ["VIP一覧", "/vips", ""],
-                "mods": ["MOD一覧", "/mods", ""],
-                "pin": ["ピン留め", "/pin ", ""],
-                "unpin": ["ピン留め解除", "/unpin", ""],
-                "raid": ["レイド", "/raid ", ""],
-                "unraid": ["レイド解除", "/unraid", ""],
-                "shoutout": ["シャウトアウト", "/shoutout ", ""],
-                "w": ["ウィスパー", "/w ", ""],
-                "me": ["アクション", "/me ", ""],
-                "color": ["名前色", "/color ", ""],
-                "user": ["ユーザー情報", "/user ", ""],
-                "disconnect": ["切断", "/disconnect", ""],
-                "monitor": ["監視", "/monitor ", ""],
-                "unmonitor": ["監視解除", "/unmonitor ", ""],
-                "restrict": ["制限", "/restrict ", ""],
-                "unrestrict": ["制限解除", "/unrestrict ", ""],
-                "block": ["ブロック", "/block ", ""],
-                "unblock": ["ブロック解除", "/unblock ", ""]
+                "uniqueOff": [
+                    "重複チャット制限を解除",
+                    "/uniquechatoff",
+                    ""
+                ],
+                "slowOff": [
+                    "スローモードを解除",
+                    "/slowoff",
+                    ""
+                ],
+                "subOff": [
+                    "サブスク限定チャットを解除",
+                    "/subscribersoff",
+                    ""
+                ],
+                "emoteOnly": [
+                    "エモート限定",
+                    "/emoteonly",
+                    ""
+                ],
+                "emoteOff": [
+                    "エモート 解除",
+                    "/emoteonlyoff",
+                    ""
+                ],
+                "followerOnly": [
+                    "フォロー限定",
+                    "/followers",
+                    ""
+                ],
+                "followerOff": [
+                    "フォロワー 解除",
+                    "/followersoff",
+                    ""
+                ],
+                "ban": [
+                    "BAN",
+                    "/ban ",
+                    ""
+                ],
+                "unban": [
+                    "BAN解除",
+                    "/unban ",
+                    ""
+                ],
+                "timeout": [
+                    "タイムアウト",
+                    "/timeout ",
+                    ""
+                ],
+                "mod": [
+                    "MOD付与",
+                    "/mod ",
+                    ""
+                ],
+                "unmod": [
+                    "MOD剥奪",
+                    "/unmod ",
+                    ""
+                ],
+                "vip": [
+                    "VIP付与",
+                    "/vip ",
+                    ""
+                ],
+                "unvip": [
+                    "VIP剥奪",
+                    "/unvip ",
+                    ""
+                ],
+                "vips": [
+                    "VIP一覧",
+                    "/vips",
+                    ""
+                ],
+                "mods": [
+                    "MOD一覧",
+                    "/mods",
+                    ""
+                ],
+                "pin": [
+                    "ピン留め",
+                    "/pin ",
+                    ""
+                ],
+                "unpin": [
+                    "ピン留め解除",
+                    "/unpin",
+                    ""
+                ],
+                "raid": [
+                    "レイド",
+                    "/raid ",
+                    ""
+                ],
+                "unraid": [
+                    "レイド解除",
+                    "/unraid",
+                    ""
+                ],
+                "shoutout": [
+                    "シャウトアウト",
+                    "/shoutout ",
+                    ""
+                ],
+                "w": [
+                    "ウィスパー",
+                    "/w ",
+                    ""
+                ],
+                "me": [
+                    "アクション",
+                    "/me ",
+                    ""
+                ],
+                "color": [
+                    "名前色",
+                    "/color ",
+                    ""
+                ],
+                "user": [
+                    "ユーザー情報",
+                    "/user ",
+                    ""
+                ],
+                "disconnect": [
+                    "切断",
+                    "/disconnect",
+                    ""
+                ],
+                "monitor": [
+                    "監視",
+                    "/monitor ",
+                    ""
+                ],
+                "unmonitor": [
+                    "監視解除",
+                    "/unmonitor ",
+                    ""
+                ],
+                "restrict": [
+                    "制限",
+                    "/restrict ",
+                    ""
+                ],
+                "unrestrict": [
+                    "制限解除",
+                    "/unrestrict ",
+                    ""
+                ],
+                "block": [
+                    "ブロック",
+                    "/block ",
+                    ""
+                ],
+                "unblock": [
+                    "ブロック解除",
+                    "/unblock ",
+                    ""
+                ]
             },
             "tips": {
                 "so": "指定したIDへTwitch公式の /shoutout を実行",
@@ -1261,7 +1503,13 @@ const I18N_DATA ={
                 "excludedUsers": "Users excluded from notification sounds",
                 "commandLabel": "Commands",
                 "rolesLabel": "Allowed roles",
-                "roles": { "broadcaster": "Broadcaster", "moderator": "Moderator", "vip": "VIP", "subscriber": "Subscriber", "everyone": "Everyone" },
+                "roles": {
+                    "broadcaster": "Broadcaster",
+                    "moderator": "Moderator",
+                    "vip": "VIP",
+                    "subscriber": "Subscriber",
+                    "everyone": "Everyone"
+                },
                 "commandSettings": "Command Settings",
                 "introActionsTitle": "Channel Shoutout",
                 "manualIntroTitle": "Send Shoutout Message",
@@ -1417,14 +1665,56 @@ const I18N_DATA ={
                 "maxPredictionChoices": "You can add up to 10 choices",
                 "minChoicesNotice": "At least two choices are required",
                 "defaultPredictionPresets": [
-                    { "title": "Will I clear it today?", "choices": ["Yes", "No"], "duration": 120 },
-                    { "title": "Will I beat the next boss?", "choices": ["Win", "Lose"], "duration": 120 },
-                    { "title": "Will I finish in time?", "choices": ["Finish", "Run out of time"], "duration": 180 }
+                    {
+                        "title": "Will I clear it today?",
+                        "choices": [
+                            "Yes",
+                            "No"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "Will I beat the next boss?",
+                        "choices": [
+                            "Win",
+                            "Lose"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "Will I finish in time?",
+                        "choices": [
+                            "Finish",
+                            "Run out of time"
+                        ],
+                        "duration": 180
+                    }
                 ],
                 "defaultPollPresets": [
-                    { "title": "What should we do next?", "choices": ["Keep going", "Do something else"], "duration": 60 },
-                    { "title": "Take a break?", "choices": ["Take a break", "Keep going"], "duration": 60 },
-                    { "title": "Extend the stream?", "choices": ["Extend", "End here"], "duration": 60 }
+                    {
+                        "title": "What should we do next?",
+                        "choices": [
+                            "Keep going",
+                            "Do something else"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "Take a break?",
+                        "choices": [
+                            "Take a break",
+                            "Keep going"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "Extend the stream?",
+                        "choices": [
+                            "Extend",
+                            "End here"
+                        ],
+                        "duration": 60
+                    }
                 ],
                 "defaultPresetProtected": "Default presets cannot be deleted",
                 "pollQuestionRequired": "Enter a question",
@@ -1544,17 +1834,67 @@ const I18N_DATA ={
                 "inputLabel": "What to enter",
                 "outputLabel": "What will be created or changed",
                 "noteLabel": "Note",
-                "titleCategoryAdd": { "title": "Add Title Section", "input": "Section name, such as Chatting, Game, Collab", "output": "Creates a collapsible section in the Title tab. After creating it, use the + button to add stream title cards.", "placeholder": "e.g. Chatting" },
-                "idCategoryAdd": { "title": "Add ID List Section", "input": "Section name, such as Frequent shoutouts or Collab partners", "output": "Creates a section for grouping streamers in the ID List. After creating it, use the + button to add Twitch IDs.", "placeholder": "e.g. Frequent shoutouts" },
-                "titleRecordRename": { "title": "Rename Title Card", "input": "Name shown at the top of the card", "output": "This is only a local label in the dock. It is not the stream title sent to Twitch.", "placeholder": "e.g. Default stream" },
-                "idRecordRename": { "title": "Rename Streamer", "input": "Display name shown in the ID List", "output": "The Twitch ID will not change. Only the display name is updated.", "placeholder": "e.g. Streamer name" },
-                "memoAdd": { "title": "Add Memo", "input": "Memo heading", "output": "Creates a new memo item.", "placeholder": "e.g. Stream memo" },
-                "customTemplateSave": { "title": "Save Custom Template", "input": "Name shown in the template list", "output": "Saves the current raid message and manual shoutout message as a set. Saving with the same name overwrites it.", "placeholder": "e.g. My usual shoutout" },
-                "deleteTitleCategory": { "title": "Delete Title Section", "output": "Deletes this section and all title cards inside it.", "note": "This cannot be undone." },
-                "deleteTitleRecord": { "title": "Delete Title Card", "output": "Deletes this title card. Current Twitch stream info will not be changed.", "note": "This cannot be undone." },
-                "deleteIdCategory": { "title": "Delete ID List Section", "output": "Deletes this section and all ID cards inside it.", "note": "This cannot be undone." },
-                "deleteIdRecord": { "title": "Delete ID Card", "output": "Deletes this streamer's ID card.", "note": "This cannot be undone." },
-                "deleteMemo": { "title": "Delete Memo", "output": "Deletes this memo.", "note": "This cannot be undone." }
+                "titleCategoryAdd": {
+                    "title": "Add Title Section",
+                    "input": "Section name, such as Chatting, Game, Collab",
+                    "output": "Creates a collapsible section in the Title tab. After creating it, use the + button to add stream title cards.",
+                    "placeholder": "e.g. Chatting"
+                },
+                "idCategoryAdd": {
+                    "title": "Add ID List Section",
+                    "input": "Section name, such as Frequent shoutouts or Collab partners",
+                    "output": "Creates a section for grouping streamers in the ID List. After creating it, use the + button to add Twitch IDs.",
+                    "placeholder": "e.g. Frequent shoutouts"
+                },
+                "titleRecordRename": {
+                    "title": "Rename Title Card",
+                    "input": "Name shown at the top of the card",
+                    "output": "This is only a local label in the dock. It is not the stream title sent to Twitch.",
+                    "placeholder": "e.g. Default stream"
+                },
+                "idRecordRename": {
+                    "title": "Rename Streamer",
+                    "input": "Display name shown in the ID List",
+                    "output": "The Twitch ID will not change. Only the display name is updated.",
+                    "placeholder": "e.g. Streamer name"
+                },
+                "memoAdd": {
+                    "title": "Add Memo",
+                    "input": "Memo heading",
+                    "output": "Creates a new memo item.",
+                    "placeholder": "e.g. Stream memo"
+                },
+                "customTemplateSave": {
+                    "title": "Save Custom Template",
+                    "input": "Name shown in the template list",
+                    "output": "Saves the current raid message and manual shoutout message as a set. Saving with the same name overwrites it.",
+                    "placeholder": "e.g. My usual shoutout"
+                },
+                "deleteTitleCategory": {
+                    "title": "Delete Title Section",
+                    "output": "Deletes this section and all title cards inside it.",
+                    "note": "This cannot be undone."
+                },
+                "deleteTitleRecord": {
+                    "title": "Delete Title Card",
+                    "output": "Deletes this title card. Current Twitch stream info will not be changed.",
+                    "note": "This cannot be undone."
+                },
+                "deleteIdCategory": {
+                    "title": "Delete ID List Section",
+                    "output": "Deletes this section and all ID cards inside it.",
+                    "note": "This cannot be undone."
+                },
+                "deleteIdRecord": {
+                    "title": "Delete ID Card",
+                    "output": "Deletes this streamer's ID card.",
+                    "note": "This cannot be undone."
+                },
+                "deleteMemo": {
+                    "title": "Delete Memo",
+                    "output": "Deletes this memo.",
+                    "note": "This cannot be undone."
+                }
             },
             "apiErrors": {
                 "shoutoutCooldown": "Official /shoutout is cooling down. It will retry automatically when it can be queued.",
@@ -1637,8 +1977,24 @@ const I18N_DATA ={
                 "viewSuffix": " views",
                 "saveShort": "Save",
                 "copyUrl": "Copy URL",
-                "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-                "weekdaysLong": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                "weekdaysShort": [
+                    "Sun",
+                    "Mon",
+                    "Tue",
+                    "Wed",
+                    "Thu",
+                    "Fri",
+                    "Sat"
+                ],
+                "weekdaysLong": [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                ],
                 "statsArchiveStarted": "Started a new count. The previous log was archived.",
                 "statsArchiveEmpty": "The previous log was empty, so the stats were reset without archiving.",
                 "channelPointRedeemed": "Channel point redemption: {user} / {reward}",
@@ -1748,7 +2104,7 @@ const I18N_DATA ={
         },
         "twitch": {
             "so": "Shoutout",
-                "soInput": "Twitch ID or URL",
+            "soInput": "Twitch ID or URL",
             "collab": "Collaboration Viewing URL",
             "collabInput": "User IDs or URLs, separated by spaces or commas",
             "stream": "Stream Management",
@@ -1852,38 +2208,166 @@ const I18N_DATA ={
                     "/commercial 180",
                     "Run 3m ad"
                 ],
-                "uniqueOff": ["Disable Unique Chat", "/uniquechatoff", ""],
-                "slowOff": ["Disable Slow Mode", "/slowoff", ""],
-                "subOff": ["Disable Sub-Only", "/subscribersoff", ""],
-                "emoteOnly": ["Emote Only", "/emoteonly", ""],
-                "emoteOff": ["Disable Emote-Only", "/emoteonlyoff", ""],
-                "followerOnly": ["Follower Only", "/followers", ""],
-                "followerOff": ["Disable Follower-Only", "/followersoff", ""],
-                "ban": ["Ban", "/ban ", ""],
-                "unban": ["Unban", "/unban ", ""],
-                "timeout": ["Timeout", "/timeout ", ""],
-                "mod": ["Add Moderator", "/mod ", ""],
-                "unmod": ["Remove Mod", "/unmod ", ""],
-                "vip": ["Add VIP", "/vip ", ""],
-                "unvip": ["Remove VIP", "/unvip ", ""],
-                "vips": ["VIP List", "/vips", ""],
-                "mods": ["Mod List", "/mods", ""],
-                "pin": ["Pin Message", "/pin ", ""],
-                "unpin": ["Unpin Message", "/unpin", ""],
-                "raid": ["Start Raid", "/raid ", ""],
-                "unraid": ["Cancel Raid", "/unraid", ""],
-                "shoutout": ["Shoutout", "/shoutout ", ""],
-                "w": ["Whisper", "/w ", ""],
-                "me": ["Action", "/me ", ""],
-                "color": ["Name Color", "/color ", ""],
-                "user": ["User Info", "/user ", ""],
-                "disconnect": ["Disconnect", "/disconnect", ""],
-                "monitor": ["Monitor", "/monitor ", ""],
-                "unmonitor": ["Unmonitor", "/unmonitor ", ""],
-                "restrict": ["Restrict", "/restrict ", ""],
-                "unrestrict": ["Unrestrict", "/unrestrict ", ""],
-                "block": ["Block", "/block ", ""],
-                "unblock": ["Unblock", "/unblock ", ""]
+                "uniqueOff": [
+                    "Disable Unique Chat",
+                    "/uniquechatoff",
+                    ""
+                ],
+                "slowOff": [
+                    "Disable Slow Mode",
+                    "/slowoff",
+                    ""
+                ],
+                "subOff": [
+                    "Disable Sub-Only",
+                    "/subscribersoff",
+                    ""
+                ],
+                "emoteOnly": [
+                    "Emote Only",
+                    "/emoteonly",
+                    ""
+                ],
+                "emoteOff": [
+                    "Disable Emote-Only",
+                    "/emoteonlyoff",
+                    ""
+                ],
+                "followerOnly": [
+                    "Follower Only",
+                    "/followers",
+                    ""
+                ],
+                "followerOff": [
+                    "Disable Follower-Only",
+                    "/followersoff",
+                    ""
+                ],
+                "ban": [
+                    "Ban",
+                    "/ban ",
+                    ""
+                ],
+                "unban": [
+                    "Unban",
+                    "/unban ",
+                    ""
+                ],
+                "timeout": [
+                    "Timeout",
+                    "/timeout ",
+                    ""
+                ],
+                "mod": [
+                    "Add Moderator",
+                    "/mod ",
+                    ""
+                ],
+                "unmod": [
+                    "Remove Mod",
+                    "/unmod ",
+                    ""
+                ],
+                "vip": [
+                    "Add VIP",
+                    "/vip ",
+                    ""
+                ],
+                "unvip": [
+                    "Remove VIP",
+                    "/unvip ",
+                    ""
+                ],
+                "vips": [
+                    "VIP List",
+                    "/vips",
+                    ""
+                ],
+                "mods": [
+                    "Mod List",
+                    "/mods",
+                    ""
+                ],
+                "pin": [
+                    "Pin Message",
+                    "/pin ",
+                    ""
+                ],
+                "unpin": [
+                    "Unpin Message",
+                    "/unpin",
+                    ""
+                ],
+                "raid": [
+                    "Start Raid",
+                    "/raid ",
+                    ""
+                ],
+                "unraid": [
+                    "Cancel Raid",
+                    "/unraid",
+                    ""
+                ],
+                "shoutout": [
+                    "Shoutout",
+                    "/shoutout ",
+                    ""
+                ],
+                "w": [
+                    "Whisper",
+                    "/w ",
+                    ""
+                ],
+                "me": [
+                    "Action",
+                    "/me ",
+                    ""
+                ],
+                "color": [
+                    "Name Color",
+                    "/color ",
+                    ""
+                ],
+                "user": [
+                    "User Info",
+                    "/user ",
+                    ""
+                ],
+                "disconnect": [
+                    "Disconnect",
+                    "/disconnect",
+                    ""
+                ],
+                "monitor": [
+                    "Monitor",
+                    "/monitor ",
+                    ""
+                ],
+                "unmonitor": [
+                    "Unmonitor",
+                    "/unmonitor ",
+                    ""
+                ],
+                "restrict": [
+                    "Restrict",
+                    "/restrict ",
+                    ""
+                ],
+                "unrestrict": [
+                    "Unrestrict",
+                    "/unrestrict ",
+                    ""
+                ],
+                "block": [
+                    "Block",
+                    "/block ",
+                    ""
+                ],
+                "unblock": [
+                    "Unblock",
+                    "/unblock ",
+                    ""
+                ]
             },
             "tips": {
                 "so": "Run the official Twitch /shoutout for the specified ID",
@@ -1987,7 +2471,67 @@ const I18N_DATA ={
                 "sortRecentSo": "按最近应援",
                 "sortSoCount": "按应援次数",
                 "sortBirthday": "按生日临近",
-                "sortName": "按姓名"
+                "sortName": "按姓名",
+                "filterTags": "按标签筛选",
+                "editTags": "编辑标签",
+                "refreshInfo": "重新获取 Twitch 信息",
+                "birthday": "生日",
+                "anniversary": "纪念日",
+                "datePlaceholderBirthday": "生日 (MM/DD)",
+                "datePlaceholderAnniversary": "纪念日 (MM/DD)",
+                "chooseFromCalendar": "从日历选择",
+                "addTag": "＋ 添加标签",
+                "shoutoutCountMeta": "介绍 {count} 次",
+                "today": "今天",
+                "birthdayInDays": "距离生日还有 {count} 天",
+                "newTagPrompt": "新标签名称",
+                "tagEditMissingTwitch": "要编辑标签，请先注册 Twitch ID。",
+                "noGroups": "没有群组",
+                "tagInstructions": "请选择所属标签，或添加新标签。",
+                "saveTags": "保存标签",
+                "unnamed": "未设置名称",
+                "tagDialogTitle": "{name} 的标签设置",
+                "birthdayTitle": "今日庆祝",
+                "calendarTitle": "◆ 纪念日日历",
+                "birthdayLabel": "生日:",
+                "anniversaryLabel": "纪念日:",
+                "unitDay": "天",
+                "noCelebrantsToday": "今天没有要庆祝生日或纪念日的播主。",
+                "upcomingSchedule": "近期庆祝日程",
+                "daysRemaining": "还有 {count} 天",
+                "noSchedule": "没有日程。",
+                "listView": "列表显示",
+                "calendarView": "日历显示",
+                "previousMonth": "上个月",
+                "nextMonth": "下个月",
+                "chooseMonthYear": "选择年月",
+                "previousYear": "上一年",
+                "nextYear": "下一年",
+                "monthYearFormat": "{year}年{month}月",
+                "monthFormat": "{month}月",
+                "movedToday": "已移动到今天。",
+                "noAnniversaries": "没有纪念日。",
+                "yearFormat": "{year}年",
+                "monthDayFormat": "{month}月{day}日",
+                "newId": "新 ID",
+                "enterNickname": "请输入昵称",
+                "newTwitchPlaceholder": "请输入 Twitch ID（可选）",
+                "duplicateWarningTitle": "已注册相同的播主",
+                "duplicateWarningMessage": "{name} 也已注册在“{group}”中。要同时添加到此群组吗？",
+                "overwriteSaved": "已覆盖保存。",
+                "uncategorized": "未分类",
+                "overwriteDateTitle": "要覆盖日期吗？",
+                "overwriteDateMessage": "将已注册的日期 {oldDate} 更改为 {newDate}。",
+                "saved": "已保存。",
+                "datePickerTitle": "选择{type}",
+                "datePickerHint": "请选择日期",
+                "weekdayCurrentYearNote": "星期将以今年的日期为基准显示。",
+                "selectStreamer": "选择播主",
+                "celebrationType": "庆祝类别",
+                "resetShoutoutTitle": "重置介绍历史",
+                "resetShoutoutMessage": "将重置 {name} 的介绍次数和最后介绍时间。",
+                "resetShoutoutDone": "已重置介绍历史。",
+                "resetShoutout": "重置介绍历史"
             },
             "titleActions": {
                 "newLabel": "新建",
@@ -2034,7 +2578,19 @@ const I18N_DATA ={
                 "dateFormatLabelExtended": "日期格式 (用于 {date}) *可自由自定义",
                 "streamSettingsTitle": "直播管理设置",
                 "autoAdLabel": "直播开始时自动播放3分钟广告",
-                "autoPinLabel": "自动置顶介绍/Raid消息（20分钟）"
+                "autoPinLabel": "自动置顶介绍/Raid消息（20分钟）",
+                "toggleTokenVisibility": "切换访问令牌显示",
+                "adjustScreenTitle": "微调画面显示",
+                "fontSizeLabel": "文字大小调整",
+                "lineHeightLabel": "行间距调整",
+                "datePresetLabel": "日期显示预设",
+                "customDateFormat": "自定义",
+                "tokenMissing": "未设置访问令牌。",
+                "authChecking": "正在确认 Twitch 认证...",
+                "authSuccess": "已确认 Twitch 认证。",
+                "authenticateNow": "立即认证",
+                "revokeAuthConfirmMessageShort": "要解除 Twitch 认证吗？",
+                "revokeAuthConfirmOk": "解除认证"
             },
             "raidSo": {
                 "notice": "帮助",
@@ -2125,16 +2681,32 @@ const I18N_DATA ={
                 "excludedUsers": "不播放通知音的用户",
                 "commandLabel": "指令",
                 "rolesLabel": "允许的权限",
-                "roles": { "broadcaster": "主播", "moderator": "管理员", "vip": "VIP", "subscriber": "订阅者", "everyone": "所有人" },
+                "roles": {
+                    "broadcaster": "主播",
+                    "moderator": "管理员",
+                    "vip": "VIP",
+                    "subscriber": "订阅者",
+                    "everyone": "所有人"
+                },
                 "commandSettings": "指令设置",
                 "introActionsTitle": "频道介绍",
                 "manualIntroTitle": "发送介绍文",
                 "manualTargetPlaceholder": "Twitch ID 或 URL",
                 "sendIntro": "发送介绍文",
                 "logsTitle": "日志",
-                "noLogs": "暂无日志。"
+                "noLogs": "暂无日志。",
+                "outboundRaidDefaultTemplate": "▶今天的 Raid 目标在此：{url}",
+                "outboundRaidStartTip": "发起 Raid 并自动发送其频道 URL",
+                "introSendFailed": "介绍消息发送失败: {error}",
+                "outboundRaidStarted": "已开始向 {user} 发起 Raid。",
+                "outboundRaidUrlSent": "已自动发送 Raid 目标 URL: {message}",
+                "outboundRaidUrlFailed": "自动发送 Raid 目标 URL 失败: {error}",
+                "outboundRaidStartFailed": "发起 Raid 失败",
+                "outboundRaidDetected": "检测到向 {user} 发起的 Raid。",
+                "pinSucceeded": "介绍/支持消息已置顶 {minutes} 分钟。",
+                "pinFailed": "置顶失败: {error}"
             },
-            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ 帮助</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch 绑定设置</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 选择 Custom Scope Token，勾选所需权限，然后生成 ACCESS TOKEN。</li>\n                            <li><strong>Access Token:</strong> 将生成的 ACCESS TOKEN 粘贴到设置并保存。Client ID 和频道 ID 会自动确认。</li>\n                            <li><strong>更新:</strong> 如果应用或同步时出现认证错误，请用相同步骤重新生成 Access Token 并保存。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ 关于安全（！）</strong><br>\n                            Access Token 关系到您的直播权限。请勿告诉第三方或在直播画面中展示。万一泄露，请在 Twitch 连接设置中撤销权限，并生成新的 Token。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 关于“保存”与“应用”</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自动保存:</strong> 将内容记录在浏览器（缓存）中。关闭工具也会保留。</li>\n                            <li><strong>应用 (PUSH):</strong> 将编辑内容发送至实际的 Twitch 直播信息，直接修改标题和分类。</li>\n                            <li><strong>同步 (SYNC):</strong> 将当前实际的 Twitch 直播信息读取到此工具中。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: var(--text-muted); background: var(--bg-base); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;\">※ 由于当前 Twitch API の制限，工具无法直接修改标签和通知。请将此作为“备忘录”功能使用。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. 备份（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>为防止浏览器缓存被清除，请定期从“备份”选项卡将数据保存为文本。</li>\n                            <li>由于无法从 OBS 停靠栏直接保存文件，请复制并粘贴到记事本等处保管。</li>\n                            <li>更换电脑或恢复数据时，请读取保存的文本。</li>\n                            <li>如果要保存的信息过多，复制到剪贴板可能会失败，请定期整理和删除数据。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: var(--bg-header); border: 1px solid var(--border-color); color: var(--text-main); text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 打开详细手册 (英文版 note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[免责声明]</strong><br>\n                        本工具为个人制作。已尽力测试，但意外导致数据丢失的可能性并非为零。请自行承担风险，并勤做备份。如有疑问，请联系作者。\n                    </div>\n                    <div id=\"help-creators-container\"></div>\n                </div>",
+            "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ 帮助</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch 绑定设置</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 选择 Custom Scope Token，勾选所需权限，然后生成 ACCESS TOKEN。</li>\n                            <li><strong>Access Token:</strong> 将生成的 ACCESS TOKEN 粘贴到设置并保存。Client ID 和频道 ID 会自动确认。</li>\n                            <li><strong>更新:</strong> 如果应用或同步时出现认证错误，请用相同步骤重新生成 Access Token 并保存。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">⚠️ 关于安全（！）</strong><br>\n                            Access Token 关系到您的直播权限。请勿告诉第三方或在直播画面中展示。万一泄露，请在 Twitch 连接设置中撤销权限，并生成新的 Token。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 关于“保存”与“应用”</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自动保存:</strong> 将内容记录在浏览器（缓存）中。关闭工具也会保留。</li>\n                            <li><strong>应用 (PUSH):</strong> 将编辑内容发送至实际的 Twitch 直播信息，直接修改标题和分类。</li>\n                            <li><strong>同步 (SYNC):</strong> 将当前实际的 Twitch 直播信息读取到此工具中。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: var(--text-muted); background: var(--bg-base); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;\">※ 由于当前 Twitch API 的限制，工具无法直接修改标签和通知。请将此作为“备忘录”功能使用。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. 备份（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>为防止浏览器缓存被清除，请定期从“备份”选项卡将数据保存为文本。</li>\n                            <li>由于无法从 OBS 停靠栏直接保存文件，请复制并粘贴到记事本等处保管。</li>\n                            <li>更换电脑或恢复数据时，请读取保存的文本。</li>\n                            <li>如果要保存的信息过多，复制到剪贴板可能会失败，请定期整理和删除数据。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/na3b5b6d69748\" target=\"_blank\" style=\"display: block; background: var(--bg-header); border: 1px solid var(--border-color); color: var(--text-main); text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 打开详细手册 (英文版 note)</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>[免责声明]</strong><br>\n                        本工具为个人制作。已尽力测试，但意外导致数据丢失的可能性并非为零。请自行承担风险，并勤做备份。如有疑问，请联系作者。\n                    </div>\n                    <div id=\"help-creators-container\"></div>\n                </div>",
             "extended": {
                 "addItemTitle": "添加",
                 "addTypeUser": "添加 ID卡",
@@ -2280,14 +2852,56 @@ const I18N_DATA ={
                 "maxPredictionChoices": "最多只能添加 10 个选项",
                 "minChoicesNotice": "至少需要两个选项",
                 "defaultPredictionPresets": [
-                    { "title": "今天能通关吗？", "choices": ["能", "不能"], "duration": 120 },
-                    { "title": "能打败下一个 Boss 吗？", "choices": ["能赢", "会输"], "duration": 120 },
-                    { "title": "能在目标时间内完成吗？", "choices": ["能完成", "来不及"], "duration": 180 }
+                    {
+                        "title": "今天能通关吗？",
+                        "choices": [
+                            "能",
+                            "不能"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "能打败下一个 Boss 吗？",
+                        "choices": [
+                            "能赢",
+                            "会输"
+                        ],
+                        "duration": 120
+                    },
+                    {
+                        "title": "能在目标时间内完成吗？",
+                        "choices": [
+                            "能完成",
+                            "来不及"
+                        ],
+                        "duration": 180
+                    }
                 ],
                 "defaultPollPresets": [
-                    { "title": "接下来做什么？", "choices": ["继续", "做别的"], "duration": 60 },
-                    { "title": "休息一下吗？", "choices": ["休息", "继续"], "duration": 60 },
-                    { "title": "延长直播吗？", "choices": ["延长", "到此结束"], "duration": 60 }
+                    {
+                        "title": "接下来做什么？",
+                        "choices": [
+                            "继续",
+                            "做别的"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "休息一下吗？",
+                        "choices": [
+                            "休息",
+                            "继续"
+                        ],
+                        "duration": 60
+                    },
+                    {
+                        "title": "延长直播吗？",
+                        "choices": [
+                            "延长",
+                            "到此结束"
+                        ],
+                        "duration": 60
+                    }
                 ],
                 "defaultPresetProtected": "默认预设无法删除",
                 "pollQuestionRequired": "请输入问题",
@@ -2339,7 +2953,8 @@ const I18N_DATA ={
                 "supporterListCopied": "列表已复制",
                 "pastLogCopied": "历史日志已复制",
                 "noPastLog": "暂无历史日志",
-                "statsReset": "支持者统计已重置"
+                "statsReset": "支持者统计已重置",
+                "close": "关闭"
             },
             "logs": {
                 "errNotSet": "未设置访问令牌。请在设置 (⚙) 中保存后使用。",
@@ -2407,17 +3022,67 @@ const I18N_DATA ={
                 "inputLabel": "输入内容",
                 "outputLabel": "会创建或修改的内容",
                 "noteLabel": "补充",
-                "titleCategoryAdd": { "title": "添加标题项目", "input": "项目名称，例如聊天、游戏、联动", "output": "在标题标签中创建新的折叠项目。创建后可用右上角的 + 添加直播标题卡片。", "placeholder": "例如：聊天" },
-                "idCategoryAdd": { "title": "添加 ID 列表项目", "input": "项目名称，例如常用推荐、联动对象", "output": "在 ID 列表中创建用于整理主播的项目。创建后可用右上角的 + 添加 Twitch ID。", "placeholder": "例如：常用推荐" },
-                "titleRecordRename": { "title": "修改标题卡片名称", "input": "显示在卡片上方的名称", "output": "这是 Dock 内用于识别的名称，不是发送到 Twitch 的直播标题。", "placeholder": "例如：通常直播" },
-                "idRecordRename": { "title": "修改主播名称", "input": "ID 列表中显示的主播名", "output": "Twitch ID 不会改变，只修改显示名。", "placeholder": "例如：主播名" },
-                "memoAdd": { "title": "添加备忘录", "input": "备忘录标题", "output": "创建新的备忘录项目。", "placeholder": "例如：直播备忘录" },
-                "customTemplateSave": { "title": "保存自定义模板", "input": "模板列表中显示的名称", "output": "将当前 Raid 介绍文和手动介绍文作为一组保存。同名保存会覆盖。", "placeholder": "例如：常用介绍文" },
-                "deleteTitleCategory": { "title": "删除标题项目", "output": "删除此项目以及其中的标题卡片。", "note": "此操作无法撤销。" },
-                "deleteTitleRecord": { "title": "删除标题卡片", "output": "删除此标题卡片。Twitch 当前直播信息不会改变。", "note": "此操作无法撤销。" },
-                "deleteIdCategory": { "title": "删除 ID 列表项目", "output": "删除此项目以及其中的 ID 卡片。", "note": "此操作无法撤销。" },
-                "deleteIdRecord": { "title": "删除 ID 卡片", "output": "删除此主播的 ID 卡片。", "note": "此操作无法撤销。" },
-                "deleteMemo": { "title": "删除备忘录", "output": "删除此备忘录。", "note": "此操作无法撤销。" }
+                "titleCategoryAdd": {
+                    "title": "添加标题项目",
+                    "input": "项目名称，例如聊天、游戏、联动",
+                    "output": "在标题标签中创建新的折叠项目。创建后可用右上角的 + 添加直播标题卡片。",
+                    "placeholder": "例如：聊天"
+                },
+                "idCategoryAdd": {
+                    "title": "添加 ID 列表项目",
+                    "input": "项目名称，例如常用推荐、联动对象",
+                    "output": "在 ID 列表中创建用于整理主播的项目。创建后可用右上角的 + 添加 Twitch ID。",
+                    "placeholder": "例如：常用推荐"
+                },
+                "titleRecordRename": {
+                    "title": "修改标题卡片名称",
+                    "input": "显示在卡片上方的名称",
+                    "output": "这是 Dock 内用于识别的名称，不是发送到 Twitch 的直播标题。",
+                    "placeholder": "例如：通常直播"
+                },
+                "idRecordRename": {
+                    "title": "修改主播名称",
+                    "input": "ID 列表中显示的主播名",
+                    "output": "Twitch ID 不会改变，只修改显示名。",
+                    "placeholder": "例如：主播名"
+                },
+                "memoAdd": {
+                    "title": "添加备忘录",
+                    "input": "备忘录标题",
+                    "output": "创建新的备忘录项目。",
+                    "placeholder": "例如：直播备忘录"
+                },
+                "customTemplateSave": {
+                    "title": "保存自定义模板",
+                    "input": "模板列表中显示的名称",
+                    "output": "将当前 Raid 介绍文和手动介绍文作为一组保存。同名保存会覆盖。",
+                    "placeholder": "例如：常用介绍文"
+                },
+                "deleteTitleCategory": {
+                    "title": "删除标题项目",
+                    "output": "删除此项目以及其中的标题卡片。",
+                    "note": "此操作无法撤销。"
+                },
+                "deleteTitleRecord": {
+                    "title": "删除标题卡片",
+                    "output": "删除此标题卡片。Twitch 当前直播信息不会改变。",
+                    "note": "此操作无法撤销。"
+                },
+                "deleteIdCategory": {
+                    "title": "删除 ID 列表项目",
+                    "output": "删除此项目以及其中的 ID 卡片。",
+                    "note": "此操作无法撤销。"
+                },
+                "deleteIdRecord": {
+                    "title": "删除 ID 卡片",
+                    "output": "删除此主播的 ID 卡片。",
+                    "note": "此操作无法撤销。"
+                },
+                "deleteMemo": {
+                    "title": "删除备忘录",
+                    "output": "删除此备忘录。",
+                    "note": "此操作无法撤销。"
+                }
             },
             "apiErrors": {
                 "shoutoutCooldown": "官方 /shoutout 正在冷却中。可预约时会自动重试。",
@@ -2500,8 +3165,24 @@ const I18N_DATA ={
                 "viewSuffix": "次观看",
                 "saveShort": "保存",
                 "copyUrl": "复制 URL",
-                "weekdaysShort": ["周日", "周一", "周二", "周三", "周四", "周五", "周六"],
-                "weekdaysLong": ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
+                "weekdaysShort": [
+                    "周日",
+                    "周一",
+                    "周二",
+                    "周三",
+                    "周四",
+                    "周五",
+                    "周六"
+                ],
+                "weekdaysLong": [
+                    "星期日",
+                    "星期一",
+                    "星期二",
+                    "星期三",
+                    "星期四",
+                    "星期五",
+                    "星期六"
+                ],
                 "statsArchiveStarted": "已开始新的统计，并归档了上一份日志。",
                 "statsArchiveEmpty": "由于上一份日志为空，已直接重置且未归档。",
                 "channelPointRedeemed": "频道积分兑换: {user} / {reward}",
@@ -2523,7 +3204,9 @@ const I18N_DATA ={
                     "pastLogsOpened": "已打开支持者名单历史记录",
                     "resetSettingOn": "已开启直播开始时重置",
                     "resetSettingOff": "已关闭直播开始时重置",
-                    "eventSub": "EventSub: {message}"
+                    "eventSub": "EventSub: {message}",
+                    "backupOverwriteRestored": "已覆盖恢复备份",
+                    "backupMergeRestored": "已合并恢复备份"
                 },
                 "supporter": {
                     "statusConnected": "● 已连接",
@@ -2573,7 +3256,38 @@ const I18N_DATA ={
                     "streamTitle": "直播标题",
                     "streamTitleUnknown": "未获取",
                     "honorificSuffix": ""
-                }
+                },
+                "friendTwitchMissing": "未注册 Twitch ID。",
+                "friendFetching": "正在从 Twitch 获取最新信息...",
+                "overwriteXTitle": "要覆盖 X 的注册信息吗？",
+                "overwriteXMessage": "当前: {oldValue}\n获取: {newValue}",
+                "overwriteYoutubeTitle": "要覆盖 YouTube 的注册信息吗？",
+                "overwriteYoutubeMessage": "当前: {oldValue}\n获取: {newValue}",
+                "friendUpdated": "已更新播主信息。",
+                "friendUpToDate": "注册信息已是最新。",
+                "friendNotFound": "未找到 Twitch 用户。",
+                "friendUpdateFailed": "更新播主信息失败。",
+                "autoAdMissingBroadcaster": "无法执行自动广告：未获取频道信息。",
+                "autoAdStreamStarted": "检测到直播已开始。将执行自动广告。",
+                "autoAdStarted": "已开始自动广告（{seconds} 秒）。",
+                "autoAdFailed": "执行自动广告失败。",
+                "autoAdError": "自动广告错误: {error}",
+                "rewardLabels": {
+                    "gigantifiedEmote": "表情巨大化",
+                    "messageEffect": "消息特效",
+                    "celebration": "全屏庆祝",
+                    "highlightedMessage": "高亮消息"
+                },
+                "restoreModeTitle": "选择恢复方式",
+                "restoreModeQuestion": "您希望如何恢复备份？",
+                "restoreOverwrite": "覆盖",
+                "restoreOverwriteDescription": "用备份内容替换当前数据。",
+                "restoreMerge": "合并",
+                "restoreMergeDescription": "保留当前数据并添加备份内容。",
+                "restoreOverwriteDone": "已用备份覆盖。",
+                "restoreMergeDone": "已合并备份。",
+                "restoreCanceled": "已取消恢复。",
+                "raidTargetPrompt": "请输入 Raid 目标 Twitch ID:"
             }
         },
         "twitch": {
@@ -2682,38 +3396,166 @@ const I18N_DATA ={
                     "/commercial 180",
                     "播放3分钟广告"
                 ],
-                "uniqueOff": ["关闭重复限制", "/uniquechatoff", ""],
-                "slowOff": ["关闭慢速模式", "/slowoff", ""],
-                "subOff": ["关闭仅订阅者", "/subscribersoff", ""],
-                "emoteOnly": ["仅表情", "/emoteonly", ""],
-                "emoteOff": ["关闭仅表情", "/emoteonlyoff", ""],
-                "followerOnly": ["仅关注", "/followers", ""],
-                "followerOff": ["关闭仅关注者", "/followersoff", ""],
-                "ban": ["封禁", "/ban ", ""],
-                "unban": ["解除封禁", "/unban ", ""],
-                "timeout": ["超时", "/timeout ", ""],
-                "mod": ["添加管理员", "/mod ", ""],
-                "unmod": ["移除管理员", "/unmod ", ""],
-                "vip": ["添加 VIP", "/vip ", ""],
-                "unvip": ["移除 VIP", "/unvip ", ""],
-                "vips": ["VIP 列表", "/vips", ""],
-                "mods": ["管理员列表", "/mods", ""],
-                "pin": ["置顶消息", "/pin ", ""],
-                "unpin": ["取消置顶", "/unpin", ""],
-                "raid": ["发起 Raid", "/raid ", ""],
-                "unraid": ["取消 Raid", "/unraid", ""],
-                "shoutout": ["Shoutout", "/shoutout ", ""],
-                "w": ["私信", "/w ", ""],
-                "me": ["动作", "/me ", ""],
-                "color": ["名称颜色", "/color ", ""],
-                "user": ["用户信息", "/user ", ""],
-                "disconnect": ["断开连接", "/disconnect", ""],
-                "monitor": ["监视", "/monitor ", ""],
-                "unmonitor": ["停止监视", "/unmonitor ", ""],
-                "restrict": ["限制", "/restrict ", ""],
-                "unrestrict": ["解除限制", "/unrestrict ", ""],
-                "block": ["屏蔽", "/block ", ""],
-                "unblock": ["解除屏蔽", "/unblock ", ""]
+                "uniqueOff": [
+                    "关闭重复限制",
+                    "/uniquechatoff",
+                    ""
+                ],
+                "slowOff": [
+                    "关闭慢速模式",
+                    "/slowoff",
+                    ""
+                ],
+                "subOff": [
+                    "关闭仅订阅者",
+                    "/subscribersoff",
+                    ""
+                ],
+                "emoteOnly": [
+                    "仅表情",
+                    "/emoteonly",
+                    ""
+                ],
+                "emoteOff": [
+                    "关闭仅表情",
+                    "/emoteonlyoff",
+                    ""
+                ],
+                "followerOnly": [
+                    "仅关注",
+                    "/followers",
+                    ""
+                ],
+                "followerOff": [
+                    "关闭仅关注者",
+                    "/followersoff",
+                    ""
+                ],
+                "ban": [
+                    "封禁",
+                    "/ban ",
+                    ""
+                ],
+                "unban": [
+                    "解除封禁",
+                    "/unban ",
+                    ""
+                ],
+                "timeout": [
+                    "超时",
+                    "/timeout ",
+                    ""
+                ],
+                "mod": [
+                    "添加管理员",
+                    "/mod ",
+                    ""
+                ],
+                "unmod": [
+                    "移除管理员",
+                    "/unmod ",
+                    ""
+                ],
+                "vip": [
+                    "添加 VIP",
+                    "/vip ",
+                    ""
+                ],
+                "unvip": [
+                    "移除 VIP",
+                    "/unvip ",
+                    ""
+                ],
+                "vips": [
+                    "VIP 列表",
+                    "/vips",
+                    ""
+                ],
+                "mods": [
+                    "管理员列表",
+                    "/mods",
+                    ""
+                ],
+                "pin": [
+                    "置顶消息",
+                    "/pin ",
+                    ""
+                ],
+                "unpin": [
+                    "取消置顶",
+                    "/unpin",
+                    ""
+                ],
+                "raid": [
+                    "发起 Raid",
+                    "/raid ",
+                    ""
+                ],
+                "unraid": [
+                    "取消 Raid",
+                    "/unraid",
+                    ""
+                ],
+                "shoutout": [
+                    "Shoutout",
+                    "/shoutout ",
+                    ""
+                ],
+                "w": [
+                    "私信",
+                    "/w ",
+                    ""
+                ],
+                "me": [
+                    "动作",
+                    "/me ",
+                    ""
+                ],
+                "color": [
+                    "名称颜色",
+                    "/color ",
+                    ""
+                ],
+                "user": [
+                    "用户信息",
+                    "/user ",
+                    ""
+                ],
+                "disconnect": [
+                    "断开连接",
+                    "/disconnect",
+                    ""
+                ],
+                "monitor": [
+                    "监视",
+                    "/monitor ",
+                    ""
+                ],
+                "unmonitor": [
+                    "停止监视",
+                    "/unmonitor ",
+                    ""
+                ],
+                "restrict": [
+                    "限制",
+                    "/restrict ",
+                    ""
+                ],
+                "unrestrict": [
+                    "解除限制",
+                    "/unrestrict ",
+                    ""
+                ],
+                "block": [
+                    "屏蔽",
+                    "/block ",
+                    ""
+                ],
+                "unblock": [
+                    "解除屏蔽",
+                    "/unblock ",
+                    ""
+                ]
             },
             "tips": {
                 "so": "为指定ID执行 Twitch 官方 /shoutout",

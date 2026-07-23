@@ -117,13 +117,16 @@ const langMap = {
         const LANGUAGE_STORAGE_KEY = 'stream_language_v16';
         const LANGUAGE_OPTIONS = [
             { code: 'ja', short: 'JP' },
-            { code: 'en', short: 'EN' }
+            { code: 'en', short: 'EN' },
+            { code: 'zh', short: 'ZH' }
         ];
         function detectInitialLanguage() {
             const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
             if (LANGUAGE_OPTIONS.some(option => option.code === savedLang)) return savedLang;
             const browserLang = navigator.language.toLowerCase();
-            return browserLang.startsWith('ja') ? 'ja' : 'en';
+            if (browserLang.startsWith('ja')) return 'ja';
+            if (browserLang.startsWith('zh')) return 'zh';
+            return 'en';
         }
 
         let currentLang = detectInitialLanguage(), config = [], friendsConfig = [], memoConfig = [], settings = {}, isSortLocked = true, sortableInstances = [], dynamicCategorySortables = [];
