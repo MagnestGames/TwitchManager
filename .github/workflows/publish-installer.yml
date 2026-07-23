@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "ビルドするバージョン（例: 1.0_beta / v1.0.0）"
+        description: "ビルドするバージョン（例: 1.0_beta / 1.0.0（非公開ビルド） / v1.0.0（公開））"
         required: true
         type: string
 
@@ -44,10 +44,12 @@ jobs:
 
           if [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             publish="true"
+          elif [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            publish="false"
           elif [[ "$tag" =~ ^[0-9]+\.[0-9]+_beta$ ]]; then
             publish="false"
           else
-            echo "バージョンは 1.0_beta または v1.0.0 の形式で指定してください: $tag" >&2
+            echo "バージョンは 1.0_beta、1.0.0（非公開ビルド）、v1.0.0（公開）のいずれかの形式で指定してください: $tag" >&2
             exit 1
           fi
 
