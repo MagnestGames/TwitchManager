@@ -24,6 +24,8 @@ $workflowRequirements = @(
     'runs-on: windows-latest',
     'runs-on: macos-latest',
     'dev_1\.0_beta',
+    '1\.0\.0（非公開ビルド）',
+    '\^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$',
     'scripts/check-localization\.mjs',
     'scripts/check-theme-contrast\.mjs',
     'installer/build-installer\.ps1',
