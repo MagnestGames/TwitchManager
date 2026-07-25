@@ -4249,6 +4249,8 @@
             settings = {
                 redirectUri: 'http://localhost',
                 supporterResetOnStreamStart: true,
+                autoAdEnabled: false,
+                autoPinEnabled: false,
                 ...JSON.parse(localStorage.getItem('stream_settings_v16') || '{}')
             };
             ensureSupporterSettings();
