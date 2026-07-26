@@ -1,10 +1,18 @@
 # TwitchManager
 
+[日本語](README.md) | [English](README.en.md)
+
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
-> TwitchおよびOBS Studioの公式ツールではありません。現在のリリース版は`1.0.0`です。
+> TwitchManagerは、配信者の活動を少しでも支えたいという思いから、個人が善意で開発・無償公開しているツールです。TwitchおよびOBS Studioの公式ツールではありません。
+>
+> 開発を応援していただける方向けに、無料版と機能・内容が同じ[BOOTH支援版](https://toumei2suisai.booth.pm/items/8654630)を用意しています。支援は任意で、無料版の機能や利用条件は変わりません。
+
+**UI対応言語:** 日本語 / English / 简体中文
+
+最新版は[GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest)で公開しています。
 
 ## 主な機能
 
@@ -34,12 +42,12 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 
 ## ダウンロード
 
-[TwitchManager 1.0.0のリリースページ](https://github.com/MagnestGames/TwitchManager/releases/tag/v1.0.0)から、使用しているOSのインストーラーをダウンロードしてください。
+[最新リリースページ](https://github.com/MagnestGames/TwitchManager/releases/latest)の「Assets」から、使用しているOSのインストーラーをダウンロードしてください。
 
 | OS | ダウンロードするファイル |
 | --- | --- |
-| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/download/v1.0.0/TwitchManager-Windows11-Setup.exe) |
-| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/download/v1.0.0/TwitchManager-macOS.pkg) |
+| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
+| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
 `Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。必要に応じて、同じリリースにある`.sha256`ファイルでダウンロードしたファイルを確認できます。
 
@@ -60,6 +68,12 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 3. OBS用URLがコピーされたことを確認します。
 
 OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できます。
+
+## アップデート
+
+「その他」タブでバックアップを取ってから、最新リリースのインストーラーをもう一度実行してください。Windowsでは現在のTwitchManagerインストール先を指定し、macOSでは同じパッケージをインストールします。
+
+同じ場所へインストールした場合、OBSに登録したURLを通常は変更する必要はありません。
 
 ## OBS Studioへ追加する
 
