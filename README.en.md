@@ -8,7 +8,7 @@ TwitchManager is a custom OBS Studio browser dock for preparing and managing Twi
 
 > TwitchManager is independently developed and shared free of charge in good faith, with the hope of supporting streamers. It is not an official Twitch or OBS Studio product.
 >
-> If you would like to support continued development, a voluntary [BOOTH support edition](https://toumei2suisai.booth.pm/items/8654630) with the same features and contents as the free edition is available. Support is optional and does not affect the features or terms of the free edition.
+> If you would like to support continued development, a [BOOTH support edition](https://toumei2suisai.booth.pm/items/8654630) with the same features and contents as the free edition is available.
 
 **UI languages:** 日本語 / English / 简体中文
 
@@ -16,17 +16,20 @@ The latest version is available from [GitHub Releases](https://github.com/Magnes
 
 ## Main features
 
-### Save and apply stream titles and categories
+### Stream titles and categories
 
-Save frequently used stream titles and categories, then apply them to Twitch before a stream without entering the same information again.
+Save frequently used title and category pairs.  
+Apply them to Twitch before a stream and avoid entering the same information again.
 
 ### Automatic raid introductions and ID records
 
-When a raid arrives, TwitchManager can automatically introduce the raiding channel, run the official `/shoutout` command, and add the raider's Twitch ID to the ID list.
+Automatically introduce a channel when it raids you.  
+Run the official `/shoutout` command and record the raider's Twitch ID.
 
-### Notification sounds for chat, first-time chat, and raids
+### Chat and raid notification sounds
 
-Use notification sounds to notice chats, first-time chatters, and incoming raids without watching the screen continuously.
+Play sounds for chats, first-time chatters, and incoming raids.  
+Notice important activity without watching the screen continuously.
 
 ### Streamer and viewer management
 
