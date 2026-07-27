@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Raid-and-Notifications-EN) | [🇨🇳 繁體中文](Raid-and-Notifications-ZH)
+
+---
+
 # 通知と紹介・通知音
 
 「通知と紹介」タブでは、チャンネル紹介、レイド時の自動処理、紹介文、通知音を設定します。

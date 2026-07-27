@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Home-EN) | [🇨🇳 繁體中文](Home-ZH)
+
+---
+
 # TwitchManager
 
 OBSのドックから、Twitchの配信準備・配信中の操作・情報管理をまとめて行うローカルツールです。

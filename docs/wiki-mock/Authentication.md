@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Authentication-EN) | [🇨🇳 繁體中文](Authentication-ZH)
+
+---
+
 # Twitch認証
 
 Twitchへの反映、イベント検知、チャット操作などを使うにはアクセストークンが必要です。
