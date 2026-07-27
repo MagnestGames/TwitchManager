@@ -2648,10 +2648,13 @@
                     </div>
                 </details>
 
-                <div style="margin-bottom: 12px;">
-                    <button type="button" class="btn-outline" onclick="openTwitchStreamSettings()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:8px 12px; font-weight:600;">
-                        <span>⚙️ ${raidSoEscape(r.openRaidSettings || 'Twitchのレイド受付設定を開く')}</span>
-                    </button>
+                <div class="category-box command-feature-box tw-section" id="raidso-box-open-settings">
+                    <div class="category-name" onclick="twToggle('raidso-box-open-settings')"><span>${raidSoEscape(r.openRaidSettingsTitle || 'Twitch レイド受付設定')}</span></div>
+                    <div class="tw-body">
+                        <button type="button" class="btn-outline" onclick="openTwitchStreamSettings()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:8px 12px; font-weight:600;">
+                            <span>⚙️ ${raidSoEscape(r.openRaidSettings || 'Twitchのレイド受付設定を開く')}</span>
+                        </button>
+                    </div>
                 </div>
 
                 ${raidSoIntroActionsBoxHtml(r)}
