@@ -1,6 +1,6 @@
 # TwitchManager
 
-[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh.md)
+[日本語](README.md) | [English](docs/README.en.md) | [简体中文](docs/README.zh.md)
 
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 

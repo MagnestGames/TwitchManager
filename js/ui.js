@@ -2602,11 +2602,34 @@
             </div>`;
         }
 
+        function handleRaidSoQuickAutoIntroToggle(checkbox) {
+            if (!checkbox) return;
+            const enabled = checkbox.checked;
+            raidSoSettings.autoIntroEnabled = enabled;
+            saveRaidSoSettings(false);
+            const mainCheckbox = document.getElementById('raidso-auto-intro');
+            if (mainCheckbox) mainCheckbox.checked = enabled;
+            const waitBox = document.getElementById('raidso-auto-intro-wait');
+            if (waitBox) waitBox.hidden = !enabled;
+            const r = raidSoText();
+            const msg = enabled ? (r.autoIntroOnToast || 'レイド自動紹介（受付）: ON') : (r.autoIntroOffToast || 'レイド自動紹介（受付）: OFF');
+            showToast(msg);
+        }
+        window.handleRaidSoQuickAutoIntroToggle = handleRaidSoQuickAutoIntroToggle;
+
         function raidSoIntroActionsBoxHtml(r) {
             const command = commandText();
+            const s = raidSoSettings || RAIDSO_DEFAULTS;
             return `<div class="category-box command-feature-box tw-section" id="raidso-box-shoutout">
                 <div class="category-name" onclick="twToggle('raidso-box-shoutout')"><span>${raidSoEscape(r.introActionsTitle || r.manualIntroTitle)}</span></div>
                 <div class="tw-body">
+                    <div style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg-base); border-radius:8px; border:1px solid var(--border-color);">
+                        <span class="field-label" style="font-weight:bold; margin:0;">${raidSoEscape(r.autoIntroToggle || 'レイド自動紹介（受付）')}</span>
+                        <label class="raidso-switch">
+                            <input type="checkbox" id="raidso-auto-intro-quick" ${s.autoIntroEnabled ? 'checked' : ''} onchange="handleRaidSoQuickAutoIntroToggle(this)">
+                            <span class="raidso-slider"></span>
+                        </label>
+                    </div>
                     <div class="raidso-intro-actions">
                         ${raidSoSuggestInputHtml('so-user-input', r.manualTargetPlaceholder || command.soInput || 'ID')}
                         <div class="raidso-intro-buttons">
@@ -2966,6 +2989,8 @@
         function handleRaidSoAutoIntroToggle(input) {
             const waitControl = document.getElementById('raidso-auto-intro-wait');
             if (waitControl) waitControl.hidden = !input.checked;
+            const quickCheckbox = document.getElementById('raidso-auto-intro-quick');
+            if (quickCheckbox) quickCheckbox.checked = input.checked;
             handleRaidSoFeatureToggle();
         }
 

@@ -1,6 +1,6 @@
 # TwitchManager
 
-[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh.md)
+[日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
 ![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](docs/wiki-mock/images/twitchmanager-overview.png)
 

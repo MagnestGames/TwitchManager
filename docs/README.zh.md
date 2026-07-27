@@ -1,6 +1,6 @@
 # TwitchManager
 
-[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh.md)
+[日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
 ![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](docs/wiki-mock/images/twitchmanager-overview.png)
 
