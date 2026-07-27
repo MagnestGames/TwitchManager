@@ -2616,9 +2616,6 @@
             return `<div class="category-box command-feature-box tw-section" id="raidso-box-shoutout">
                 <div class="category-name" onclick="twToggle('raidso-box-shoutout')"><span>${raidSoEscape(r.introActionsTitle || r.manualIntroTitle)}</span></div>
                 <div class="tw-body">
-                    <button type="button" class="btn-outline" onclick="openTwitchStreamSettings()" style="width:100%; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:6px 10px;">
-                        <span>⚙️ ${raidSoEscape(r.openRaidSettings || 'Twitchのレイド受付設定を開く')}</span>
-                    </button>
                     <div class="raidso-intro-actions">
                         ${raidSoSuggestInputHtml('so-user-input', r.manualTargetPlaceholder || command.soInput || 'ID')}
                         <div class="raidso-intro-buttons">
@@ -2650,6 +2647,12 @@
                         </div>
                     </div>
                 </details>
+
+                <div style="margin-bottom: 12px;">
+                    <button type="button" class="btn-outline" onclick="openTwitchStreamSettings()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:8px 12px; font-weight:600;">
+                        <span>⚙️ ${raidSoEscape(r.openRaidSettings || 'Twitchのレイド受付設定を開く')}</span>
+                    </button>
+                </div>
 
                 ${raidSoIntroActionsBoxHtml(r)}
 
