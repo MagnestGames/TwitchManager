@@ -24,6 +24,8 @@ $workflowRequirements = @(
     'runs-on: windows-latest',
     'runs-on: macos-latest',
     'dev_1\.0_beta',
+    '1\.0\.0（非公開ビルド）',
+    '\^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$',
     'scripts/check-localization\.mjs',
     'scripts/check-theme-contrast\.mjs',
     'installer/build-installer\.ps1',
@@ -34,8 +36,11 @@ $workflowRequirements = @(
     'TwitchManager-Windows11-Setup\.sha256',
     'TwitchManager-macOS\.pkg',
     'TwitchManager-macOS\.sha256',
-    'actions/upload-artifact@v4',
-    'actions/download-artifact@v4'
+    'actions/checkout@v7',
+    'actions/upload-artifact@v7',
+    'actions/download-artifact@v8',
+    '--draft=false',
+    '--prerelease=false'
 )
 foreach ($requirement in $workflowRequirements) {
     if ($workflow -notmatch $requirement) {

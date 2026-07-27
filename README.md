@@ -1,28 +1,39 @@
 # TwitchManager
 
+[日本語](README.md) | [English](README.en.md)
+
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
-> TwitchおよびOBS Studioの公式ツールではありません。現在の公開版は`1.0_beta`です。
+> TwitchManagerは、配信者の活動を少しでも支えたいという思いから、個人が善意で開発・無償公開しているツールです。TwitchおよびOBS Studioの公式ツールではありません。
+>
+> 開発を応援していただける方向けに、無料版と機能・内容が同じ[BOOTH支援版](https://toumei2suisai.booth.pm/items/8654630)を用意しています。
+
+**UI対応言語:** 日本語 / English / 简体中文
+
+最新版は[GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest)で公開しています。
 
 ## 主な機能
 
-### 配信タイトルとカテゴリの保存・反映
+### 配信タイトル・カテゴリ
 
-よく使う配信タイトルとカテゴリを保存し、配信前の設定をTwitchへ反映できます。配信ごとに同じ情報を入力し直す手間を減らします。
+よく使うタイトルとカテゴリをセットで保存できます。  
+保存した内容を配信前にTwitchへ反映し、毎回の入力を減らします。
 
-### レイド受信時の自動紹介・IDの記録
+### レイドの自動紹介・ID記録
 
-レイドを受信すると、相手のチャンネルを自動で紹介できます。公式`/shoutout`の実行にも対応し、レイド元の配信者IDをIDリストへ記録できます。
+レイド受信時に、相手のチャンネルを自動で紹介できます。  
+公式`/shoutout`の実行と、レイド元のTwitch IDの記録にも対応しています。
 
-### チャット・初チャット・レイド受信時の通知音
+### チャット・レイド通知音
 
-チャット、初チャット、レイド受信を通知音で把握できます。配信中に画面を見続けなくても、大切な反応に気づきやすくなります。
+チャット、初チャット、レイド受信を音で通知します。  
+配信中に画面を見続けなくても、大切な反応に気づきやすくなります。
 
-### 配信者・視聴者の管理と記録
+### 配信者・視聴者管理
 
-- **サポーターリスト** — 初見、レイド、フォロー、Bits、サブスク、チャット、ポイント引き換えを記録し、配信中の反応をまとめて確認できます。
+- **サポーターリスト** — 初見、レイド、フォロー、Bits、サブスク、チャット、ポイント引き換えを記録します。
 - **サブスクライバー・VIP一覧の取得** — チャンネルのサブスクライバーとVIPを一覧で確認できます。
 - **IDリスト** — レイドや紹介に利用する配信者IDを保存・管理できます。
 
@@ -34,12 +45,12 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 
 ## ダウンロード
 
-[TwitchManager 1.0_betaのリリースページ](https://github.com/MagnestGames/TwitchManager/releases/tag/1.0_beta)から、使用しているOSのインストーラーをダウンロードしてください。
+[最新リリースページ](https://github.com/MagnestGames/TwitchManager/releases/latest)の「Assets」から、使用しているOSのインストーラーをダウンロードしてください。
 
 | OS | ダウンロードするファイル |
 | --- | --- |
-| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-Windows11-Setup.exe) |
-| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/download/1.0_beta/TwitchManager-macOS.pkg) |
+| Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
+| macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
 `Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。必要に応じて、同じリリースにある`.sha256`ファイルでダウンロードしたファイルを確認できます。
 
@@ -60,6 +71,12 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 3. OBS用URLがコピーされたことを確認します。
 
 OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できます。
+
+## アップデート
+
+「その他」タブでバックアップを取ってから、最新リリースのインストーラーをもう一度実行してください。Windowsでは現在のTwitchManagerインストール先を指定し、macOSでは同じパッケージをインストールします。
+
+同じ場所へインストールした場合、OBSに登録したURLを通常は変更する必要はありません。
 
 ## OBS Studioへ追加する
 

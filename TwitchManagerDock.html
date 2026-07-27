@@ -42,6 +42,7 @@
                     <div id="language-menu" class="language-menu" role="menu" aria-label="言語を選択" data-i18n-aria="extended.languageMenuLabel">
                         <button type="button" class="language-option" data-lang-option="ja" onclick="chooseLanguage('ja')" role="menuitem">日本語</button>
                         <button type="button" class="language-option" data-lang-option="en" onclick="chooseLanguage('en')" role="menuitem">English</button>
+                        <button type="button" class="language-option" data-lang-option="zh" onclick="chooseLanguage('zh')" role="menuitem">简体中文</button>
                     </div>
                 </div>
                 <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort" data-i18n-aria="extended.unlockSort" aria-label="並び替え解除"
@@ -496,7 +497,7 @@
                     <div class="restore-file-picker">
                         <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,application/json" onchange="updateRestoreFileName(this)">
                         <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" data-i18n="footerActions.selectFile">ファイル選択</label>
-                        <span id="ui-restore-file-name" class="restore-file-name">未選択</span>
+                        <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
                     </div>
                     <button id="ui-restore-btn" class="btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
                 </div>
