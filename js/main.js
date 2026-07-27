@@ -40,6 +40,7 @@
         if (!select) {
             select = document.createElement('select');
             select.id = 'date_format_preset';
+            select.setAttribute('data-i18n-aria', 'settingsUi.datePresetLabel');
             select.setAttribute('aria-label', getSettingsUi().datePresetLabel);
             select.style.width = '100%';
             select.style.background = 'var(--bg-base)';
@@ -70,7 +71,7 @@
         const current = select.value;
         const customLabel = getSettingsUi().customDateFormat;
         select.innerHTML = DATE_FORMAT_VALUES.map(value => {
-            const label = labels[value] ? `${labels[value]} (${value})` : value;
+            const label = labels[value] || value;
             return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
         }).join('') + `<option value="__custom__">${escapeHtml(customLabel)}</option>`;
         select.value = current || DATE_FORMAT_VALUES[0];

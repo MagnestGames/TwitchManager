@@ -195,6 +195,7 @@
                     if (L.dateFormatOptions[opt.value]) opt.innerText = L.dateFormatOptions[opt.value];
                 });
             }
+            try { if (typeof updateDateFormatSelectOptions === 'function') updateDateFormatSelectOptions(); } catch (e) {}
             updateTodayDateDisplay();
             const liveDatePreview = document.getElementById('date_format_live_preview');
             if (liveDatePreview) {
@@ -2437,6 +2438,15 @@
             manualCommandEnabled: true,
             commandAliases: "!latest,!so,!shoutout",
             allowedRoles: ["broadcaster", "moderator"],
+            soundPlaybackMethod: "browser",
+            obsWsHost: "localhost",
+            obsWsPort: "4455",
+            obsWsPassword: "",
+            obsWsIncludeInBackup: true,
+            raidMediaSource: "",
+            commentMediaSource: "",
+            channelPointMediaSource: "",
+            firstCommentMediaSource: "",
             raidSoundFile: "sounds/raid_1.wav",
             raidVolume: 80,
             commentSoundFile: "sounds/chat_1.wav",
@@ -2465,6 +2475,7 @@
             audio: null,
             audioPool: [],
             soundObjectUrls: new Map(),
+            obsMediaSources: [],
             activeSuggestInputId: "",
             seenChatters: new Set(),
             subscriptions: { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false },
@@ -2680,7 +2691,37 @@
                 <div class="category-box tw-section" id="raidso-box-sounds">
                     <div class="category-name" onclick="twToggle('raidso-box-sounds')"><span>${raidSoEscape(r.soundTitle)}</span></div>
                     <div class="tw-body">
-                        <div class="raidso-actions" style="margin-bottom:12px;">
+                        <div style="margin-bottom:15px; background:var(--bg-base); padding:12px; border-radius:8px; border:1px solid var(--border-color);">
+                            <span class="field-label" style="font-weight:bold; margin-bottom:6px; display:block;">${raidSoEscape(r.soundPlaybackMethodLabel || '全体再生方式')}</span>
+                            <select id="raidso-sound-playback-method" onchange="handleRaidSoPlaybackMethodChange(this.value)" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-color); font-size:13px; margin-bottom:8px;">
+                                <option value="browser"${(s.soundPlaybackMethod || 'browser') === 'browser' ? ' selected' : ''}>${raidSoEscape(r.soundPlaybackBrowser || '音声ファイル（ブラウザ再生）')}</option>
+                                <option value="obs_mediasource"${(s.soundPlaybackMethod || 'browser') === 'obs_mediasource' ? ' selected' : ''}>${raidSoEscape(r.soundPlaybackObsWs || 'OBSメディアソース (obs-websocket)')}</option>
+                            </select>
+                            
+                            <div id="raidso-obs-ws-settings" style="margin-top:10px; display:${(s.soundPlaybackMethod || 'browser') === 'obs_mediasource' ? 'block' : 'none'};">
+                                <span class="field-label" style="font-size:12px; font-weight:bold; color:var(--text-muted); display:block; margin-bottom:6px;">${raidSoEscape(r.obsWsSettingsTitle || 'obs-websocket 接続設定')}</span>
+                                <div style="display:flex; gap:8px; margin-bottom:6px;">
+                                    <div style="flex:2;">
+                                        <span class="field-label" style="font-size:11px;">${raidSoEscape(r.obsWsHostLabel || 'ホスト')}</span>
+                                        <input type="text" id="raidso-obs-ws-host" value="${raidSoEscape(s.obsWsHost || 'localhost')}" style="width:100%; padding:6px; font-size:12px; border-radius:4px; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-color);" onchange="saveRaidSoSettings(false)">
+                                    </div>
+                                    <div style="flex:1;">
+                                        <span class="field-label" style="font-size:11px;">${raidSoEscape(r.obsWsPortLabel || 'ポート')}</span>
+                                        <input type="text" id="raidso-obs-ws-port" value="${raidSoEscape(s.obsWsPort || '4455')}" style="width:100%; padding:6px; font-size:12px; border-radius:4px; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-color);" onchange="saveRaidSoSettings(false)">
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:8px;">
+                                    <span class="field-label" style="font-size:11px;">${raidSoEscape(r.obsWsPasswordLabel || 'パスワード')}</span>
+                                    <input type="password" id="raidso-obs-ws-password" value="${raidSoEscape(s.obsWsPassword || '')}" placeholder="*****" style="width:100%; padding:6px; font-size:12px; border-radius:4px; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-color);" onchange="saveRaidSoSettings(false)">
+                                </div>
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                    <button type="button" class="btn-outline" style="font-size:11px; padding:4px 10px;" onclick="fetchObsMediaSources()">${raidSoEscape(r.obsWsFetchSources || 'OBSソース一覧を取得')}</button>
+                                    <span id="raidso-obs-ws-status" style="font-size:11px; color:var(--text-muted);"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="raidso-actions" style="margin-bottom:12px; display:${(s.soundPlaybackMethod || 'browser') === 'browser' ? 'block' : 'none'};">
                             <button type="button" class="btn-outline" style="width:100%;" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
                             <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory directory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
                         </div>
@@ -2774,6 +2815,15 @@
                 manualCommandEnabled: document.getElementById('raidso-manual-command-enabled')?.checked ?? raidSoSettings.manualCommandEnabled,
                 commandAliases: document.getElementById('raidso-command-aliases')?.value.trim() || RAIDSO_DEFAULTS.commandAliases,
                 allowedRoles: roleInputs.map(input => input.value),
+                soundPlaybackMethod: document.getElementById('raidso-sound-playback-method')?.value || raidSoSettings.soundPlaybackMethod || 'browser',
+                obsWsHost: (document.getElementById('raidso-obs-ws-host')?.value ?? raidSoSettings.obsWsHost ?? 'localhost').trim(),
+                obsWsPort: (document.getElementById('raidso-obs-ws-port')?.value ?? raidSoSettings.obsWsPort ?? '4455').trim(),
+                obsWsPassword: document.getElementById('raidso-obs-ws-password')?.value ?? raidSoSettings.obsWsPassword ?? '',
+                obsWsIncludeInBackup: document.getElementById('raidso-obs-ws-include-backup')?.checked ?? raidSoSettings.obsWsIncludeInBackup ?? true,
+                raidMediaSource: keepValue('raidso-raid-media-source', raidSoSettings.raidMediaSource, RAIDSO_DEFAULTS.raidMediaSource),
+                commentMediaSource: keepValue('raidso-comment-media-source', raidSoSettings.commentMediaSource, RAIDSO_DEFAULTS.commentMediaSource),
+                channelPointMediaSource: keepValue('raidso-channel-point-media-source', raidSoSettings.channelPointMediaSource, RAIDSO_DEFAULTS.channelPointMediaSource),
+                firstCommentMediaSource: keepValue('raidso-first-comment-media-source', raidSoSettings.firstCommentMediaSource, RAIDSO_DEFAULTS.firstCommentMediaSource),
                 raidSoundFile: keepValue('raidso-raid-sound-file', raidSoSettings.raidSoundFile, RAIDSO_DEFAULTS.raidSoundFile),
                 raidVolume: keepVolume('raidso-raid-volume', raidSoSettings.raidVolume, RAIDSO_DEFAULTS.raidVolume),
                 commentSoundFile: keepValue('raidso-comment-sound-file', raidSoSettings.commentSoundFile, RAIDSO_DEFAULTS.commentSoundFile),
@@ -3705,8 +3755,192 @@
             return { src: raidSoSettings.firstCommentSoundFile, volume: raidSoSettings.firstCommentVolume, label: r.firstCommentSound };
         }
 
+        async function sha256Base64(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return btoa(String.fromCharCode(...hashArray));
+        }
+
+        async function fetchObsMediaSources() {
+            const host = (document.getElementById('raidso-obs-ws-host')?.value || raidSoSettings.obsWsHost || 'localhost').trim();
+            const port = (document.getElementById('raidso-obs-ws-port')?.value || raidSoSettings.obsWsPort || '4455').trim();
+            const password = document.getElementById('raidso-obs-ws-password')?.value ?? raidSoSettings.obsWsPassword ?? '';
+            const statusEl = document.getElementById('raidso-obs-ws-status');
+            const r = raidSoText();
+
+            if (statusEl) statusEl.textContent = '...';
+
+            return new Promise((resolve) => {
+                let ws;
+                try {
+                    ws = new WebSocket(`ws://${host}:${port}`);
+                } catch (e) {
+                    if (statusEl) statusEl.textContent = r.obsWsStatusError || 'Connection Error';
+                    resolve([]);
+                    return;
+                }
+
+                const timeoutTimer = setTimeout(() => {
+                    try { ws.close(); } catch (e) {}
+                    if (statusEl) statusEl.textContent = r.obsWsStatusError || 'Connection Error';
+                    resolve([]);
+                }, 5000);
+
+                ws.onmessage = async (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.op === 0) {
+                            const authData = msg.d?.authentication;
+                            let authResponse = undefined;
+                            if (authData) {
+                                const secret = await sha256Base64(password + authData.salt);
+                                authResponse = await sha256Base64(secret + authData.challenge);
+                            }
+                            const identifyMsg = { op: 1, d: { rpcVersion: 1 } };
+                            if (authResponse) identifyMsg.d.authentication = authResponse;
+                            ws.send(JSON.stringify(identifyMsg));
+                        } else if (msg.op === 2) {
+                            ws.send(JSON.stringify({
+                                op: 6,
+                                d: { requestType: "GetInputList", requestId: "req_get_inputs" }
+                            }));
+                        } else if (msg.op === 7 && msg.d?.requestId === "req_get_inputs") {
+                            clearTimeout(timeoutTimer);
+                            const inputs = msg.d?.responseData?.inputs || [];
+                            raidSoState.obsMediaSources = inputs.map(i => i.inputName);
+                            if (statusEl) statusEl.textContent = r.obsWsStatusConn || 'Connected';
+                            updateObsMediaSourceDropdowns();
+                            try { ws.close(); } catch (e) {}
+                            resolve(raidSoState.obsMediaSources);
+                        }
+                    } catch (err) {
+                        clearTimeout(timeoutTimer);
+                        if (statusEl) statusEl.textContent = r.obsWsStatusError || 'Error';
+                        try { ws.close(); } catch (e) {}
+                        resolve([]);
+                    }
+                };
+
+                ws.onerror = () => {
+                    clearTimeout(timeoutTimer);
+                    if (statusEl) statusEl.textContent = r.obsWsStatusError || 'Error';
+                    resolve([]);
+                };
+            });
+        }
+
+        async function triggerObsMediaSource(inputName, label) {
+            const host = (raidSoSettings.obsWsHost || 'localhost').trim();
+            const port = (raidSoSettings.obsWsPort || '4455').trim();
+            const password = raidSoSettings.obsWsPassword || '';
+            const r = raidSoText();
+
+            if (!inputName) {
+                raidSoLog(`${label} ${r.obsMediaSourceNone || 'No source selected'}`, 'warn');
+                return false;
+            }
+
+            return new Promise((resolve) => {
+                let ws;
+                try {
+                    ws = new WebSocket(`ws://${host}:${port}`);
+                } catch (e) {
+                    raidSoLog(`${label} OBS WebSocket Connection Error: ${e.message}`, 'warn');
+                    resolve(false);
+                    return;
+                }
+
+                const timeoutTimer = setTimeout(() => {
+                    try { ws.close(); } catch (e) {}
+                    raidSoLog(`${label} OBS WebSocket Timeout`, 'warn');
+                    resolve(false);
+                }, 4000);
+
+                ws.onmessage = async (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.op === 0) {
+                            const authData = msg.d?.authentication;
+                            let authResponse = undefined;
+                            if (authData) {
+                                const secret = await sha256Base64(password + authData.salt);
+                                authResponse = await sha256Base64(secret + authData.challenge);
+                            }
+                            const identifyMsg = { op: 1, d: { rpcVersion: 1 } };
+                            if (authResponse) identifyMsg.d.authentication = authResponse;
+                            ws.send(JSON.stringify(identifyMsg));
+                        } else if (msg.op === 2) {
+                            ws.send(JSON.stringify({
+                                op: 6,
+                                d: {
+                                    requestType: "TriggerMediaInputAction",
+                                    requestId: "req_trigger_media",
+                                    requestData: {
+                                        inputName: inputName,
+                                        mediaAction: "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART"
+                                    }
+                                }
+                            }));
+                        } else if (msg.op === 7 && msg.d?.requestId === "req_trigger_media") {
+                            clearTimeout(timeoutTimer);
+                            const success = msg.d?.requestStatus?.result;
+                            if (success) {
+                                raidSoLog(`${label} OBS Media Source "${inputName}" restarted`);
+                            } else {
+                                const comment = msg.d?.requestStatus?.comment || 'Failed';
+                                raidSoLog(`${label} OBS Media Source "${inputName}" error: ${comment}`, 'warn');
+                            }
+                            try { ws.close(); } catch (e) {}
+                            resolve(success);
+                        }
+                    } catch (err) {
+                        clearTimeout(timeoutTimer);
+                        raidSoLog(`${label} OBS WebSocket Error: ${err.message}`, 'warn');
+                        try { ws.close(); } catch (e) {}
+                        resolve(false);
+                    }
+                };
+
+                ws.onerror = () => {
+                    clearTimeout(timeoutTimer);
+                    raidSoLog(`${label} OBS WebSocket Connection Error`, 'warn');
+                    resolve(false);
+                };
+            });
+        }
+
+        function updateObsMediaSourceDropdowns() {
+            const kinds = ['raid', 'comment', 'channel-point', 'first-comment'];
+            kinds.forEach(k => {
+                const select = document.getElementById(`raidso-${k}-media-source`);
+                if (!select) return;
+                const settingKey = k === 'first-comment' ? 'firstCommentMediaSource'
+                                 : k === 'channel-point' ? 'channelPointMediaSource'
+                                 : `${k}MediaSource`;
+                const currentVal = select.value || raidSoSettings[settingKey] || '';
+                const sources = raidSoState.obsMediaSources || [];
+                const r = raidSoText();
+                let html = `<option value="">${raidSoEscape(r.obsMediaSourceNone || 'None')}</option>`;
+                sources.forEach(srcName => {
+                    html += `<option value="${raidSoEscape(srcName)}"${srcName === currentVal ? ' selected' : ''}>${raidSoEscape(srcName)}</option>`;
+                });
+                select.innerHTML = html;
+            });
+        }
+
         function playRaidSoSound(kind, options = {}) {
             const cfg = raidSoSoundConfig(kind);
+            const method = raidSoSettings.soundPlaybackMethod || 'browser';
+            if (method === 'obs_mediasource') {
+                const mediaSource = kind === 'raid' ? raidSoSettings.raidMediaSource
+                                  : kind === 'comment' ? raidSoSettings.commentMediaSource
+                                  : kind === 'channelPoint' ? raidSoSettings.channelPointMediaSource
+                                  : raidSoSettings.firstCommentMediaSource;
+                triggerObsMediaSource(mediaSource, cfg.label);
+                return;
+            }
             if (!cfg.src) return;
             if (!options.overlap && raidSoState.audio) {
                 raidSoState.audio.pause();
@@ -4924,9 +5158,41 @@ function clampRaidSoVolume(value, fallback = 80) {
             return Math.max(0, Math.min(100, num));
         }
 
-function raidSoSoundControlsHtml(kind, title, file, volume) {
+function handleRaidSoPlaybackMethodChange(val) {
+            raidSoSettings.soundPlaybackMethod = val;
+            saveRaidSoSettings(false);
+            renderRaidShoutOutPanel();
+        }
+        window.handleRaidSoPlaybackMethodChange = handleRaidSoPlaybackMethodChange;
+        window.fetchObsMediaSources = fetchObsMediaSources;
+
+        function raidSoSoundControlsHtml(kind, title, file, volume) {
             const id = kind === 'first' ? 'first-comment' : (kind === 'channelPoint' ? 'channel-point' : kind);
+            const settingKey = kind === 'first' ? 'firstCommentMediaSource' : (kind === 'channelPoint' ? 'channelPointMediaSource' : `${kind}MediaSource`);
             const r = raidSoText();
+            const isObs = (raidSoSettings.soundPlaybackMethod || 'browser') === 'obs_mediasource';
+            const mediaSourceVal = raidSoSettings[settingKey] || '';
+            const sources = raidSoState.obsMediaSources || [];
+
+            if (isObs) {
+                let optionsHtml = `<option value="">${raidSoEscape(r.obsMediaSourceNone || 'None')}</option>`;
+                if (mediaSourceVal && !sources.includes(mediaSourceVal)) {
+                    optionsHtml += `<option value="${raidSoEscape(mediaSourceVal)}" selected>${raidSoEscape(mediaSourceVal)}</option>`;
+                }
+                sources.forEach(srcName => {
+                    optionsHtml += `<option value="${raidSoEscape(srcName)}"${srcName === mediaSourceVal ? ' selected' : ''}>${raidSoEscape(srcName)}</option>`;
+                });
+
+                return `<div>
+                    <div style="font-weight:bold; color:var(--command-accent); margin-bottom:8px;">${raidSoEscape(title)}</div>
+                    <span class="field-label">${raidSoEscape(r.obsMediaSourceLabel || 'OBS Media Source')}</span>
+                    <select id="raidso-${id}-media-source" style="width:100%; background:var(--bg-base); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:8px;" onchange="saveRaidSoSettings(false)">
+                        ${optionsHtml}
+                    </select>
+                    <button type="button" class="btn-outline" style="width:100%; margin-top:8px;" onclick="testRaidSoSound('${kind}')">${raidSoEscape(r.playSound.replace('{title}', title))}</button>
+                </div>`;
+            }
+
             const soundOptions = getRaidSoSoundFiles(file);
             const volumeValue = clampRaidSoVolume(volume);
             return `<div>
@@ -4937,7 +5203,7 @@ function raidSoSoundControlsHtml(kind, title, file, volume) {
                 </select>
                 <span class="field-label">${raidSoEscape(r.volume)}</span>
                 <input type="range" id="raidso-${id}-volume" min="0" max="100" step="1" value="${volumeValue}" oninput="collectRaidSoSettings()" onchange="saveRaidSoSettings(false)">
-                <button class="btn-outline" style="width:100%; margin-top:8px;" onclick="testRaidSoSound('${kind}')">${raidSoEscape(r.playSound.replace('{title}', title))}</button>
+                <button type="button" class="btn-outline" style="width:100%; margin-top:8px;" onclick="testRaidSoSound('${kind}')">${raidSoEscape(r.playSound.replace('{title}', title))}</button>
             </div>`;
         }
 

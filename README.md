@@ -1,6 +1,6 @@
 # TwitchManager
 
-[日本語](README.md) | [English](README.en.md)
+[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
@@ -8,7 +8,7 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 
 > TwitchManagerは、配信者の活動を少しでも支えたいという思いから、個人が善意で開発・無償公開しているツールです。TwitchおよびOBS Studioの公式ツールではありません。
 >
-> 開発を応援していただける方向けに、無料版と機能・内容が同じ[BOOTH支援版](https://toumei2suisai.booth.pm/items/8654630)を用意しています。
+> 無料版と機能・内容が同じ支援版をBOOTHで公開しています。開発を応援していただける場合は、[TwitchManager 支援版（中身は一緒）](https://toumei2suisai.booth.pm/items/8654630)をご利用ください。支援は任意であり、無料版の利用条件や機能に影響しません。
 
 **UI対応言語:** 日本語 / English / 简体中文
 

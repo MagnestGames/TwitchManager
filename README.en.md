@@ -1,133 +1,123 @@
 # TwitchManager
 
-[日本語](README.md) | [English](README.en.md)
+[日本語](README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager brings stream information, raids, notifications, and viewer records into one dock](docs/wiki-mock/images/twitchmanager-overview.png)
+![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](docs/wiki-mock/images/twitchmanager-overview.png)
 
-TwitchManager is a custom OBS Studio browser dock for preparing and managing Twitch streams, receiving notifications, and keeping viewer records in one place.
+A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.
 
-> TwitchManager is independently developed and shared free of charge in good faith, with the hope of supporting streamers. It is not an official Twitch or OBS Studio product.
+> TwitchManager is an independently developed tool created and shared free of charge in good faith, with the hope of supporting streamers. It is not an official Twitch or OBS Studio product.
 >
-> If you would like to support continued development, a [BOOTH support edition](https://toumei2suisai.booth.pm/items/8654630) with the same features and contents as the free edition is available.
+> If you would like to support its continued development, a voluntary support edition with the same contents as the free edition is available on BOOTH. Support is optional and does not affect the features or terms of the free edition.
 
-**UI languages:** 日本語 / English / 简体中文
+**UI Supported Languages:** Japanese / English / Simplified Chinese
 
-The latest version is available from [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest).
+The latest version is available on [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest).
 
-## Main features
+## Main Features
 
-### Stream titles and categories
+### Stream Title & Category
+Save frequently used titles and categories as presets. Reflect saved presets to Twitch before streaming to reduce setup time.
 
-Save frequently used title and category pairs.  
-Apply them to Twitch before a stream and avoid entering the same information again.
+### Automatic Raid Shoutout & ID Logging
+Automatically introduce raiding channels upon receiving a raid. Supports executing official `/shoutout` and logging raiding Twitch IDs.
 
-### Automatic raid introductions and ID records
+### Chat & Raid Notification Sounds
+Play sound alerts for chat, first-time chat, and raid events. Stay informed of critical viewer interactions without constantly watching the screen.
 
-Automatically introduce a channel when it raids you.  
-Run the official `/shoutout` command and record the raider's Twitch ID.
+### Streamer & Viewer Management
+- **Supporter List** — Record first-timers, raids, follows, Bits, subscriptions, chat activity, and channel point redemptions.
+- **Subscriber & VIP List Fetching** — View channel subscribers and VIPs in a consolidated list.
+- **ID List** — Save and manage streamer IDs for raids and shoutouts.
 
-### Chat and raid notification sounds
-
-Play sounds for chats, first-time chatters, and incoming raids.  
-Notice important activity without watching the screen continuously.
-
-### Streamer and viewer management
-
-- **Supporter list** — Records first-time chatters, raids, follows, Bits, subscriptions, chats, and channel point redemptions.
-- **Subscriber and VIP lists** — Retrieves your channel's subscribers and VIPs.
-- **ID list** — Saves and manages streamer IDs used for raids and introductions.
-
-### Other stream support
-
-- Send `/raid` and automatically post the destination channel URL.
-- Manage predictions, polls, chat modes, clips, and VIPs.
-- Keep birthdays, anniversaries, memos, and backups of settings and lists.
+### Additional Streaming Support
+- Automatic `/raid` command and raid destination URL sending.
+- Manage predictions, polls, chat settings, clips, and VIP status.
+- Birthdays & anniversaries tracker, notes, and full settings/list backup & restore.
 
 ## Download
 
-Open the [latest release](https://github.com/MagnestGames/TwitchManager/releases/latest) and download the installer for your operating system from **Assets**.
+Download the installer for your operating system from the "Assets" section on the [Latest Release Page](https://github.com/MagnestGames/TwitchManager/releases/latest).
 
-| OS | File to download |
+| OS | File to Download |
 | --- | --- |
 | Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
-| macOS 11 or later | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
+| macOS 11+ | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
-`Source code (zip)` and `Source code (tar.gz)` are not installers. You can verify a download with the corresponding `.sha256` file in the same release.
+`Source code (zip)` and `Source code (tar.gz)` are not installers. If needed, check your downloaded file against the `.sha256` checksum file in the same release.
 
 ## Installation
 
 ### Windows 11
 
 1. Open `TwitchManager-Windows11-Setup.exe`.
-2. Confirm the installation folder and select **Install**.
-3. On the completion screen, confirm that the OBS dock URL was copied.
+2. Confirm destination and click "Install".
+3. Verify that the OBS URL has been copied to your clipboard on the completion screen.
 
-By default, TwitchManager is installed in the `TwitchManager` folder under your Windows **Documents** folder. The OBS dock URL is also saved in `OBS_Dock_URL.txt` in the installation folder.
+By default, it installs to the `TwitchManager` folder inside Windows **Documents**. The OBS URL can also be found in `OBS_Dock_URL.txt` inside the installation folder.
 
 ### macOS
 
-1. Open `TwitchManager-macOS.pkg` and install it.
-2. Open **Add TwitchManager to OBS** in `/Applications/TwitchManager`.
-3. Confirm that the OBS dock URL was copied.
+1. Open `TwitchManager-macOS.pkg` to install.
+2. Run "Add TwitchManager to OBS" located in `/Applications/TwitchManager`.
+3. Confirm that the OBS URL is copied to your clipboard.
 
-The URL is also available in `/Applications/TwitchManager/OBS_Dock_URL.txt`.
+The OBS URL is also stored in `/Applications/TwitchManager/OBS_Dock_URL.txt`.
 
 ## Updating
 
-Create a backup from the **Other** tab, then run the latest installer again. On Windows, choose the existing TwitchManager installation folder. On macOS, install the new package in the same location.
+Back up your settings via the "Misc" tab, then run the installer for the latest release again. On Windows, select your current TwitchManager install path; on macOS, install the updated package over the existing installation.
 
-When installed in the same location, the URL registered in OBS normally does not need to be changed.
+When installing to the same location, you usually do not need to update the URL registered in OBS Studio.
 
-## Add TwitchManager to OBS Studio
+## Adding to OBS Studio
 
-1. In OBS Studio, open **Docks > Custom Browser Docks**.
+1. In OBS Studio, open "Docks" -> "Custom Browser Docks..." from the top menu.
 
-   ![OBS Studio Docks menu](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+   ![OBS Studio Docks Menu](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
 
-2. Add a row with **+** if necessary.
-3. Enter `TwitchManager` as the dock name.
-4. Paste the OBS dock URL copied by the installer into the URL field.
-5. Select **Apply**.
+2. Add a new row with "+" if necessary.
+3. Enter `TwitchManager` as the Dock Name.
+4. Paste the OBS URL copied during installation into the URL field.
+5. Click "Apply".
 
-![Custom Browser Dock settings example](docs/wiki-mock/images/obs-custom-browser-dock-settings.png)
+![Custom Browser Dock Settings Example](docs/wiki-mock/images/obs-custom-browser-dock-settings.png)
 
-You can drag the dock to your preferred position. If text or buttons are clipped, make the dock wider.
+You can drag the added dock to any position in OBS. If text or buttons are cut off, widen the dock window.
 
-## Twitch authentication
+## Twitch Authentication
 
-Open the gear icon in the upper-right corner of TwitchManager and configure Twitch authentication.
+Open the gear icon (Settings) in the top-right of TwitchManager to configure Twitch Authentication.
 
-[Authentication guide (Wiki, Japanese)](https://github.com/MagnestGames/TwitchManager/wiki/Authentication)
+[Authentication Guide (Wiki)](https://github.com/MagnestGames/TwitchManager/wiki/Authentication)
 
-## Application screenshot
+## Screenshot
 
-![TwitchManager dock](docs/wiki-mock/images/twitch-manager-dock.png)
+![TwitchManager Dock Interface](docs/wiki-mock/images/twitch-manager-dock.png)
 
-## Data storage and backups
+## Data Storage & Backup
 
-Settings and lists are stored in the OBS or browser environment displaying TwitchManager. Before moving to another PC, clearing the OBS cache, or reinstalling, copy a backup from the **Other** tab.
+Settings and lists are stored locally within OBS / browser storage. Before migrating PCs, clearing OBS cache, or reinstalling, copy your backup from the "Misc" tab.
 
-Never post your access token in a stream, GitHub issue, or social media message.
+Do not share your Access Token in streams, GitHub Issues, or social media.
 
-## Supported environments
+## System Requirements
 
-| OS | Supported version |
+| OS | Supported Version |
 | --- | --- |
 | Windows | Windows 11 |
 | macOS | macOS 11 or later |
 
-TwitchManager uses OBS Studio's **Custom Browser Docks** feature.
+Requires OBS Studio's "Custom Browser Docks" feature.
 
-## Help
+## Troubleshooting & Support
 
-The Wiki is currently available in Japanese:
-
-- [Installation and OBS setup](https://github.com/MagnestGames/TwitchManager/wiki/Getting-Started)
-- [Frequently asked questions](https://github.com/MagnestGames/TwitchManager/wiki/Q&A)
+- [Installation & Adding to OBS](https://github.com/MagnestGames/TwitchManager/wiki/Getting-Started)
+- [Frequently Asked Questions (Q&A)](https://github.com/MagnestGames/TwitchManager/wiki/Q&A)
 - [Troubleshooting](https://github.com/MagnestGames/TwitchManager/wiki/Troubleshooting)
-- [Report a bug](https://github.com/MagnestGames/TwitchManager/issues)
+- [Report an Issue](https://github.com/MagnestGames/TwitchManager/issues)
 
-When reporting a bug, include your operating system, OBS Studio and TwitchManager versions, reproduction steps, and any displayed error. Do not include secrets such as access tokens.
+When reporting an issue, please include your OS, versions of OBS Studio and TwitchManager, reproduction steps, and any error messages displayed. Do not include access tokens or private credentials.
 
 ## License
 
