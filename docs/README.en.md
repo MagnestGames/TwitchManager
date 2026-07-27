@@ -2,7 +2,7 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](docs/wiki-mock/images/twitchmanager-overview.png)
+![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
 A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.
 
@@ -74,14 +74,14 @@ When installing to the same location, you usually do not need to update the URL 
 
 1. In OBS Studio, open "Docks" -> "Custom Browser Docks..." from the top menu.
 
-   ![OBS Studio Docks Menu](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+   ![OBS Studio Docks Menu](wiki-mock/images/obs-custom-browser-dock-menu.png)
 
 2. Add a new row with "+" if necessary.
 3. Enter `TwitchManager` as the Dock Name.
 4. Paste the OBS URL copied during installation into the URL field.
 5. Click "Apply".
 
-![Custom Browser Dock Settings Example](docs/wiki-mock/images/obs-custom-browser-dock-settings.png)
+![Custom Browser Dock Settings Example](wiki-mock/images/obs-custom-browser-dock-settings.png)
 
 You can drag the added dock to any position in OBS. If text or buttons are cut off, widen the dock window.
 
@@ -93,7 +93,7 @@ Open the gear icon (Settings) in the top-right of TwitchManager to configure Twi
 
 ## Screenshot
 
-![TwitchManager Dock Interface](docs/wiki-mock/images/twitch-manager-dock.png)
+![TwitchManager Dock Interface](wiki-mock/images/twitch-manager-dock.png)
 
 ## Data Storage & Backup
 

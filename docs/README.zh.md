@@ -2,7 +2,7 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](docs/wiki-mock/images/twitchmanager-overview.png)
+![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](wiki-mock/images/twitchmanager-overview.png)
 
 这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
 
@@ -74,14 +74,14 @@ OBS URL 亦保存在 `/Applications/TwitchManager/OBS_Dock_URL.txt` 中。
 
 1. 在 OBS Studio 顶部菜单中打开 “面板” -> “自定义浏览器面板...”。
 
-   ![OBS Studio 面板菜单](docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+   ![OBS Studio 面板菜单](wiki-mock/images/obs-custom-browser-dock-menu.png)
 
 2. 如有需要，点击 “+” 添加新行。
 3. 面板名称输入 `TwitchManager`。
 4. 将安装时复制的 OBS URL 粘贴至 URL 栏中。
 5. 点击 “应用”。
 
-![自定义浏览器面板设置示例](docs/wiki-mock/images/obs-custom-browser-dock-settings.png)
+![自定义浏览器面板设置示例](wiki-mock/images/obs-custom-browser-dock-settings.png)
 
 您可以将添加的面板拖拽至 OBS 的任意位置。如果文字或按钮显示不全，请拉宽面板窗口。
 
@@ -93,7 +93,7 @@ OBS URL 亦保存在 `/Applications/TwitchManager/OBS_Dock_URL.txt` 中。
 
 ## 界面截图
 
-![TwitchManager 面板界面](docs/wiki-mock/images/twitch-manager-dock.png)
+![TwitchManager 面板界面](wiki-mock/images/twitch-manager-dock.png)
 
 ## 数据存储与备份
 
