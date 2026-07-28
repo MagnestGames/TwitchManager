@@ -460,15 +460,9 @@
     </div>
 
     <div id="cp-tab" class="tab-content">
-        <details class="tab-help">
-            <summary class="tab-help-summary"><span data-i18n="infoSummary">ヘルプ</span></summary>
-            <div class="tab-help-body">
-                <p data-i18n="cpTab.help">チャンネルポイントの取得・新規作成・編集・有効化/無効化（ON/OFF）およびグループ化一括操作を行えます。</p>
-            </div>
-        </details>
-
-        <div style="padding: 4px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 6px;">
+        <!-- Fixed Header Toolbar -->
+        <div style="position: sticky; top: 0; z-index: 10; background: var(--bg-body, #121214); padding: 8px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="font-size: 11px; color: var(--text-muted); flex-shrink: 0;" id="cp-status-summary">
                     <span data-i18n="cpTab.status">取得状態:</span> <strong id="cp-total-count">0個</strong>
                 </div>
@@ -487,6 +481,7 @@
                     <button type="button" class="btn-primary" onclick="openCpRewardModal()" style="height: 26px; padding: 0 5px; font-size: 10.5px; display: inline-flex; align-items: center; border-radius: 5px; box-sizing: border-box; flex-shrink: 0;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span data-i18n="cpTab.createCp">チャネポ作成</span></button>
                 </div>
             </div>
+        </div>
 
             <!-- Notice & External Dashboard Link -->
             <div style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
