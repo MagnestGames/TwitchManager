@@ -997,7 +997,8 @@ const I18N_DATA = {
                 "badgeStreamStart": "⚡配信開始",
                 "badgeRaid": "⚡レイド",
                 "badgeObsScene": "⚡",
-                "badgeAutoOff": "⏱️{min}分OFF"
+                "badgeAutoOff": "⏱️{min}分OFF",
+                "cantModifyExternalReward": "Twitch仕様制限: Web画面や他ツールで作成されたポイントはアプリからON/OFFできません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。"
             }
         },
         "twitch": {
@@ -2271,7 +2272,8 @@ const I18N_DATA = {
                 "badgeStreamStart": "⚡Stream",
                 "badgeRaid": "⚡Raid",
                 "badgeObsScene": "⚡",
-                "badgeAutoOff": "⏱️{min}m OFF"
+                "badgeAutoOff": "⏱️{min}m OFF",
+                "cantModifyExternalReward": "Twitch API Limit: Rewards created outside this tool cannot be toggled. Only rewards created within this tool can be modified."
             }
         },
         "twitch": {
@@ -3545,7 +3547,8 @@ const I18N_DATA = {
                 "badgeStreamStart": "⚡开播",
                 "badgeRaid": "⚡Raid",
                 "badgeObsScene": "⚡",
-                "badgeAutoOff": "⏱️{min}分OFF"
+                "badgeAutoOff": "⏱️{min}分OFF",
+                "cantModifyExternalReward": "Twitch API限制: 在Web或第三方工具创建的积分无法在此切换。仅能操作在本工具中创建的积分。"
             }
         },
         "twitch": {

@@ -5771,7 +5771,12 @@ async function toggleCustomRewardEnabled(rewardId, isEnabled) {
     } catch (e) {
         console.error('toggleCustomRewardEnabled error:', e);
         const failPrefix = langMap[currentLang]?.ui?.cpTab?.toggleFail || '切替失敗:';
-        showToast(`${failPrefix} ${e.message}`, 'warn');
+        let errMsg = e.message || '';
+        if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
+            const externalText = langMap[currentLang]?.ui?.cpTab?.cantModifyExternalReward || 'Twitch仕様制限: Web等で作成されたポイントはアプリから変更できません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。';
+            errMsg = externalText;
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
         return false;
     }
 }
