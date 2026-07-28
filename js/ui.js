@@ -5654,9 +5654,33 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ==========================================================================
    CP (Channel Points) Management & Grouping Implementation
    ========================================================================== */
+function loadAppRewardIdsFromStorage() {
+    try {
+        const saved = localStorage.getItem('cp_app_reward_ids_v1');
+        return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveAppRewardIdsToStorage() {
+    try {
+        localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(cpState.appRewardIds || []));
+    } catch (e) {}
+}
+
+function markRewardAsAppCreated(rewardId) {
+    if (!cpState.appRewardIds) cpState.appRewardIds = [];
+    if (rewardId && !cpState.appRewardIds.includes(rewardId)) {
+        cpState.appRewardIds.push(rewardId);
+        saveAppRewardIdsToStorage();
+    }
+}
+
 let cpState = {
     rewards: [],
     groups: [],
+    appRewardIds: loadAppRewardIdsFromStorage(),
     isLoading: false,
     sortBy: localStorage.getItem('cp_sort_by_v1') || 'default',
     modalSortBy: localStorage.getItem('cp_modal_sort_by_v1') || 'default',
@@ -5664,9 +5688,12 @@ let cpState = {
 };
 
 function isAppCreatedReward(reward) {
+    if (!reward || !reward.id) return false;
     const activeClientId = getEffectiveTwitchClientId();
-    if (!reward || !reward.client_id || !activeClientId) return false;
-    return reward.client_id.trim().toLowerCase() === activeClientId.trim().toLowerCase();
+    if (reward.client_id && activeClientId && reward.client_id.trim().toLowerCase() === activeClientId.trim().toLowerCase()) {
+        return true;
+    }
+    return Boolean(cpState.appRewardIds && cpState.appRewardIds.includes(reward.id));
 }
 
 function getSortedCpRewards(rewards, sortBy) {
@@ -5877,8 +5904,16 @@ async function recreateCpReward(rewardId) {
 
     try {
         const broadcasterId = await ensureCpAuth();
+        let createTitle = targetReward.title;
+        
+        // If exact title already exists, append (アプリ) to avoid Twitch CREATE_CUSTOM_REWARD_DUPLICATE_REWARD error
+        const existingTitles = cpState.rewards.map(r => r.title);
+        if (existingTitles.includes(createTitle)) {
+            createTitle = `${targetReward.title} (アプリ)`;
+        }
+
         const payload = {
-            title: targetReward.title,
+            title: createTitle,
             cost: targetReward.cost,
             prompt: targetReward.prompt || '',
             background_color: targetReward.background_color || '#9146FF',
@@ -5897,28 +5932,17 @@ async function recreateCpReward(rewardId) {
             payload.global_cooldown_seconds = targetReward.global_cooldown_setting.global_cooldown_seconds || 0;
         }
 
-        let res = null;
-        let titleWasSuffixed = false;
-        try {
-            res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        } catch (postErr) {
-            if (postErr.message && (postErr.message.includes('DUPLICATE_REWARD') || postErr.message.includes('duplicate'))) {
-                payload.title = `${targetReward.title} (アプリ)`;
-                titleWasSuffixed = true;
-                res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-            } else {
-                throw postErr;
-            }
-        }
+        const res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
 
         const newReward = res.data?.[0];
-        const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', name);
+        if (newReward) {
+            markRewardAsAppCreated(newReward.id);
+        }
+
+        const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', createTitle);
         showToast(succMsg);
 
         if (newReward) {
@@ -5934,36 +5958,12 @@ async function recreateCpReward(rewardId) {
             if (updatedGroups) saveCpGroupsToStorage();
         }
 
-        const delConfirmMsg = (langMap[currentLang]?.ui?.cpTab?.deleteOldConfirm || "【確認】Web等で作成された元のチャンネルポイント「{name}」を削除しますか？\n（※削除すると重複登録を防げます）").replace('{name}', name);
-        if (confirm(delConfirmMsg)) {
-            try {
-                await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
-                    method: 'DELETE'
-                });
-                if (titleWasSuffixed && newReward) {
-                    try {
-                        await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${newReward.id}`, {
-                            method: 'PATCH',
-                            body: JSON.stringify({ title: targetReward.title })
-                        });
-                    } catch (renameErr) {
-                        console.warn('Could not restore original title after deletion:', renameErr);
-                    }
-                }
-            } catch (delErr) {
-                console.warn('Could not delete original external reward via API:', delErr);
-            }
-        }
-
+        showToast('※ Twitch仕様制限により、Web作成の元ポイントはTwitch管理画面から削除してください。', 'info');
         await fetchTwitchCustomRewards();
     } catch (e) {
         console.error('recreateCpReward error:', e);
         const failPrefix = langMap[currentLang]?.ui?.cpTab?.recreateFail || '再作成失敗:';
-        let errMsg = e.message || '';
-        if (errMsg.includes('DUPLICATE_REWARD')) {
-            errMsg = '同名のポイントが既にTwitch上に存在します';
-        }
-        showToast(`${failPrefix} ${errMsg}`, 'warn');
+        showToast(`${failPrefix} ${e.message}`, 'warn');
     }
 }
 
@@ -6020,10 +6020,7 @@ async function saveCpReward() {
             method = 'PATCH';
         }
 
-        await raidSoHelix(endpoint, {
-            method: method,
-            body: JSON.stringify(payload)
-        });
+        const resData = await raidSoHelix(endpoint, { method: method, body: JSON.stringify(payload) }); if (resData?.data?.[0]?.id) markRewardAsAppCreated(resData.data[0].id);
         showToast(langMap[currentLang]?.ui?.cpTab?.saveSuccess || 'チャンネルポイントを保存しました');
         closeModal('cpRewardModal');
         await fetchTwitchCustomRewards();
