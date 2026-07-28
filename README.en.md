@@ -52,7 +52,7 @@ Open the [latest release](https://github.com/MagnestGames/TwitchManager/releases
 | Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
 | macOS 11 or later | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
-`Source code (zip)` and `Source code (tar.gz)` are not installers. You can verify a download with the corresponding `.sha256` file in the same release.
+`Source code (zip)` and `Source code (tar.gz)` are not installers.
 
 ## Installation
 

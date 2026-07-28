@@ -44,7 +44,7 @@ Download the installer for your operating system from the "Assets" section on th
 | Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
 | macOS 11+ | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
-`Source code (zip)` and `Source code (tar.gz)` are not installers. If needed, check your downloaded file against the `.sha256` checksum file in the same release.
+`Source code (zip)` and `Source code (tar.gz)` are not installers.
 
 ## Installation
 

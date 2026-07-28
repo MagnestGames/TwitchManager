@@ -44,4 +44,3 @@
 
 > 若使用 ZIP 版本，請勿將 `TwitchManagerDock.html` 單獨取出，請保留原本的資料夾結構與附帶檔案。
 
-> SHA256 校驗碼已附於各 Release 的 Assets 列表中。

@@ -33,9 +33,7 @@ $workflowRequirements = @(
     'installer/macos/build-installer\.sh',
     'installer/macos/test-installer\.sh',
     'TwitchManager-Windows11-Setup\.exe',
-    'TwitchManager-Windows11-Setup\.sha256',
     'TwitchManager-macOS\.pkg',
-    'TwitchManager-macOS\.sha256',
     'actions/checkout@v7',
     'actions/upload-artifact@v7',
     'actions/download-artifact@v8',
@@ -77,13 +75,16 @@ if ($releaseBody -match '未署名|コード署名|### できること|### 代�
     throw "Release description contains unnecessary explanatory text."
 }
 foreach ($workflowReference in @(
-    "dist/TwitchManager-Windows11-Setup.sha256",
-    "dist/TwitchManager-macOS.sha256",
+    "sha256sum dist/TwitchManager-Windows11-Setup.exe",
+    "sha256sum dist/TwitchManager-macOS.pkg",
     "{{WINDOWS_SHA256}}",
     "{{MACOS_SHA256}}")) {
     if ($workflow -notmatch [regex]::Escape($workflowReference)) {
         throw "Release workflow checksum reference is missing: $workflowReference"
     }
+}
+if ($workflow -match 'TwitchManager-(Windows11-Setup|macOS)\.sha256') {
+    throw "Release workflow must not distribute .sha256 files."
 }
 if ($releaseBody -notmatch 'wiki/Getting-Started') {
     throw "Installation guidance is missing."
