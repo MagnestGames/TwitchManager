@@ -5838,6 +5838,15 @@ async function triggerCpAutoOn(triggerType, detail = {}) {
     }
 }
 
+function openTwitchCpDashboard() {
+    const login = settings.broadcasterLogin || settings.username || settings.channel || '';
+    let url = 'https://dashboard.twitch.tv/viewer-rewards/channel-points/rewards';
+    if (login) {
+        url = `https://dashboard.twitch.tv/u/${encodeURIComponent(login.trim().toLowerCase())}/viewer-rewards/channel-points/rewards`;
+    }
+    window.open(url, '_blank');
+}
+
 async function toggleAllCpRewards(targetState) {
     if (!cpState.rewards || cpState.rewards.length === 0) {
         const noRewardsMsg = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
