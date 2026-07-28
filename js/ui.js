@@ -5897,10 +5897,25 @@ async function recreateCpReward(rewardId) {
             payload.global_cooldown_seconds = targetReward.global_cooldown_setting.global_cooldown_seconds || 0;
         }
 
-        const res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        let res = null;
+        let titleWasSuffixed = false;
+        try {
+            res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        } catch (postErr) {
+            if (postErr.message && (postErr.message.includes('DUPLICATE_REWARD') || postErr.message.includes('duplicate'))) {
+                payload.title = `${targetReward.title} (アプリ)`;
+                titleWasSuffixed = true;
+                res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                throw postErr;
+            }
+        }
 
         const newReward = res.data?.[0];
         const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', name);
@@ -5925,6 +5940,16 @@ async function recreateCpReward(rewardId) {
                 await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
                     method: 'DELETE'
                 });
+                if (titleWasSuffixed && newReward) {
+                    try {
+                        await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${newReward.id}`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ title: targetReward.title })
+                        });
+                    } catch (renameErr) {
+                        console.warn('Could not restore original title after deletion:', renameErr);
+                    }
+                }
             } catch (delErr) {
                 console.warn('Could not delete original external reward via API:', delErr);
             }
@@ -5934,7 +5959,11 @@ async function recreateCpReward(rewardId) {
     } catch (e) {
         console.error('recreateCpReward error:', e);
         const failPrefix = langMap[currentLang]?.ui?.cpTab?.recreateFail || '再作成失敗:';
-        showToast(`${failPrefix} ${e.message}`, 'warn');
+        let errMsg = e.message || '';
+        if (errMsg.includes('DUPLICATE_REWARD')) {
+            errMsg = '同名のポイントが既にTwitch上に存在します';
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
     }
 }
 
@@ -6001,7 +6030,11 @@ async function saveCpReward() {
     } catch (e) {
         console.error('saveCpReward error:', e);
         const failPrefix = langMap[currentLang]?.ui?.cpTab?.saveFail || '保存失敗:';
-        showToast(`${failPrefix} ${e.message}`, 'warn');
+        let errMsg = e.message || '';
+        if (errMsg.includes('DUPLICATE_REWARD')) {
+            errMsg = '同名のチャンネルポイントが既にTwitch上に存在します。タイトルを変更するか (アプリ) などの識別名を追加してください。';
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
     }
 }
 
