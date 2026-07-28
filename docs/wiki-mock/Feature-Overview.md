@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Feature-Overview-EN) | [🇨🇳 繁體中文](Feature-Overview-ZH)
+
+---
+
 # 機能一覧
 
 | タブ | できること |

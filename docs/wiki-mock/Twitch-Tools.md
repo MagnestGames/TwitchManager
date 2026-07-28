@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Twitch-Tools-EN) | [🇨🇳 繁體中文](Twitch-Tools-ZH)
+
+---
+
 # Twitch連携機能
 
 「Twitch」タブには、配信中と配信後に使うTwitch連携機能があります。

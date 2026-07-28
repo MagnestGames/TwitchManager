@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Memo-and-Other-EN) | [🇨🇳 繁體中文](Memo-and-Other-ZH)
+
+---
+
 # メモ帳・その他
 
 ## メモ帳
