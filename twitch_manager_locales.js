@@ -1007,7 +1007,11 @@ const I18N_DATA = {
                 "recreateConfirm": "「{name}」と同じ設定で本ツール上に新しいチャンネルポイントを再作成しますか？\n（再作成後はアプリから一括ON/OFFや自動化が可能になります）",
                 "deleteOldConfirm": "【確認】Web等で作成された元のチャンネルポイント「{name}」を削除しますか？\n（※削除すると重複登録を防げます）",
                 "recreateSuccess": "「{name}」を本ツール管理下として再作成しました！",
-                "recreateFail": "再作成失敗:"
+                "recreateFail": "再作成失敗:",
+                "loadTemplateLabel": "既存ポイントから設定を読み込む:",
+                "selectTemplatePlaceholder": "-- 既存のチャンネルポイントを選択 --",
+                "loadTemplateHint": "※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。",
+                "templateLoadedToast": "「{name}」の設定を読み込みました！"
             }
         },
         "twitch": {
@@ -2291,7 +2295,11 @@ const I18N_DATA = {
                 "recreateConfirm": "Recreate '{name}' with exact same settings under this app?\n(This will enable batch ON/OFF and automation control.)",
                 "deleteOldConfirm": "Delete the original external reward '{name}' to prevent duplicates on stream?",
                 "recreateSuccess": "Successfully recreated '{name}' under app control!",
-                "recreateFail": "Recreation failed:"
+                "recreateFail": "Recreation failed:",
+                "loadTemplateLabel": "Load settings from existing reward:",
+                "selectTemplatePlaceholder": "-- Select an existing Channel Point --",
+                "loadTemplateHint": "※ Auto-fills title, cost, description, and theme color from selected reward.",
+                "templateLoadedToast": "Loaded settings from '{name}'!"
             }
         },
         "twitch": {
@@ -3575,7 +3583,11 @@ const I18N_DATA = {
                 "recreateConfirm": "是否使用相同设置在本工具中重新创建“{name}”？\n（重新创建后将支持一括ON/OFF与自动化控制）",
                 "deleteOldConfirm": "是否删除原本在Web等处创建的“{name}”以防止重复？",
                 "recreateSuccess": "已成功将“{name}”重新创建为应用托管积分！",
-                "recreateFail": "再创建失败:"
+                "recreateFail": "再创建失败:",
+                "loadTemplateLabel": "从已有积分导入设置:",
+                "selectTemplatePlaceholder": "-- 选择已有渠道积分 --",
+                "loadTemplateHint": "※ 自动导入所选积分的标题、消费、说明及主题颜色。",
+                "templateLoadedToast": "已导入“{name}”的设置！"
             }
         },
         "twitch": {

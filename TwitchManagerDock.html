@@ -485,7 +485,6 @@
                     <button type="button" class="btn-secondary" onclick="fetchTwitchCustomRewards()" style="height: 26px; padding: 0 5px; font-size: 10.5px; display: inline-flex; align-items: center; border-radius: 5px; box-sizing: border-box; flex-shrink: 0;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg><span data-i18n="cpTab.fetchLatest">最新取得</span></button>
                     <button type="button" class="btn-secondary" onclick="openCpGroupModal()" style="height: 26px; padding: 0 5px; font-size: 10.5px; display: inline-flex; align-items: center; border-radius: 5px; box-sizing: border-box; flex-shrink: 0;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span data-i18n="cpTab.newGroup">新規グループ</span></button>
                     <button type="button" class="btn-primary" onclick="openCpRewardModal()" style="height: 26px; padding: 0 5px; font-size: 10.5px; display: inline-flex; align-items: center; border-radius: 5px; box-sizing: border-box; flex-shrink: 0;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg><span data-i18n="cpTab.createCp">チャネポ作成</span></button>
-                    <button type="button" class="btn-secondary" onclick="batchRecreateCpRewards()" style="height: 26px; padding: 0 5px; font-size: 10.5px; display: inline-flex; align-items: center; border-radius: 5px; box-sizing: border-box; flex-shrink: 0; background: rgba(145,70,255,0.15); border: 1px solid var(--twitch-purple); color: #c084fc;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg><span data-i18n="cpTab.batchRecreateBtn">一括アプリ管理化</span></button>
                 </div>
             </div>
 
@@ -828,6 +827,15 @@
             <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
             <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
             <input type="hidden" id="cp-reward-edit-id">
+
+            <!-- Template Loader Block (Shown when creating new reward) -->
+            <div id="cp-reward-template-wrapper" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 10px; border-radius: 6px;">
+                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color: #c084fc;" data-i18n="cpTab.loadTemplateLabel">既存ポイントから設定を読み込む:</label>
+                <select id="cp-reward-template-select" onchange="applyCpRewardTemplate(this.value)" style="display:block; width:100%; padding:5px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-item); color:var(--text-main); cursor:pointer; box-sizing:border-box;">
+                    <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
+                </select>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
+            </div>
             <div style="margin-bottom: 10px;">
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
                 <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">

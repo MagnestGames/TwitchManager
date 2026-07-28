@@ -5918,38 +5918,6 @@ async function recreateCpReward(rewardId) {
     }
 }
 
-async function batchRecreateCpRewards() {
-    if (!cpState.rewards || cpState.rewards.length === 0) {
-        showToast(langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。', 'warn');
-        return;
-    }
-    const confirmMsg = '取得したチャンネルポイントをすべて本ツール管理下（アプリ作成版）として一括再作成しますか？';
-    if (!confirm(confirmMsg)) return;
-
-    let count = 0;
-    const broadcasterId = await ensureCpAuth();
-    for (const r of cpState.rewards) {
-        try {
-            const payload = {
-                title: r.title,
-                cost: r.cost,
-                prompt: r.prompt || '',
-                background_color: r.background_color || '#9146FF',
-                is_user_input_required: !!r.is_user_input_required
-            };
-            await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            count++;
-        } catch (e) {
-            console.warn(`Failed batch recreate for ${r.title}:`, e);
-        }
-    }
-    showToast(`${count}件のチャンネルポイントを本ツール管理下として一括再作成しました`);
-    await fetchTwitchCustomRewards();
-}
-
 async function toggleAllCpRewards(targetState) {
     if (!cpState.rewards || cpState.rewards.length === 0) {
         const noRewardsMsg = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
@@ -6134,6 +6102,25 @@ function deleteCpGroup(groupId) {
     showToast(langMap[currentLang]?.ui?.cpTab?.groupDeleteSuccess || 'グループを削除しました');
 }
 
+function applyCpRewardTemplate(selectedRewardId) {
+    if (!selectedRewardId) return;
+    const targetReward = cpState.rewards.find(r => r.id === selectedRewardId);
+    if (!targetReward) return;
+
+    const titleInput = document.getElementById('cp-reward-title-input');
+    const costInput = document.getElementById('cp-reward-cost-input');
+    const promptInput = document.getElementById('cp-reward-prompt-input');
+    const colorInput = document.getElementById('cp-reward-color-input');
+
+    if (titleInput) titleInput.value = targetReward.title || '';
+    if (costInput) costInput.value = targetReward.cost || 50;
+    if (promptInput) promptInput.value = targetReward.prompt || '';
+    if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
+
+    const toastMsg = (langMap[currentLang]?.ui?.cpTab?.templateLoadedToast || "「{name}」の設定を読み込みました！").replace('{name}', targetReward.title || '');
+    showToast(toastMsg);
+}
+
 function openCpRewardModal(rewardId = null) {
     const editIdInput = document.getElementById('cp-reward-edit-id');
     const titleInput = document.getElementById('cp-reward-title-input');
@@ -6141,6 +6128,8 @@ function openCpRewardModal(rewardId = null) {
     const promptInput = document.getElementById('cp-reward-prompt-input');
     const colorInput = document.getElementById('cp-reward-color-input');
     const modalTitle = document.getElementById('cp-reward-modal-title');
+    const tplWrapper = document.getElementById('cp-reward-template-wrapper');
+    const tplSelect = document.getElementById('cp-reward-template-select');
 
     if (!editIdInput || !titleInput || !costInput) return;
 
@@ -6156,6 +6145,7 @@ function openCpRewardModal(rewardId = null) {
         costInput.value = targetReward.cost || 50;
         if (promptInput) promptInput.value = targetReward.prompt || '';
         if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
+        if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = langMap[currentLang]?.ui?.cpTab?.rewardModalTitleNew || '新しいチャンネルポイントを作成';
         editIdInput.value = '';
@@ -6163,6 +6153,17 @@ function openCpRewardModal(rewardId = null) {
         costInput.value = 50;
         if (promptInput) promptInput.value = '';
         if (colorInput) colorInput.value = '#9146FF';
+        
+        if (tplWrapper && tplSelect) {
+            tplWrapper.style.display = 'block';
+            const placeholder = langMap[currentLang]?.ui?.cpTab?.selectTemplatePlaceholder || '-- 既存のチャンネルポイントを選択 --';
+            let optionsHtml = `<option value="">${raidSoEscape(placeholder)}</option>`;
+            (cpState.rewards || []).forEach(r => {
+                optionsHtml += `<option value="${raidSoEscape(r.id)}">${raidSoEscape(r.title)} (${r.cost}pt)</option>`;
+            });
+            tplSelect.innerHTML = optionsHtml;
+            tplSelect.value = '';
+        }
     }
     openModal('cpRewardModal');
 }
