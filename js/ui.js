@@ -5663,15 +5663,35 @@ let cpState = {
     autoOffTimers: {}
 };
 
+function isAppCreatedReward(reward) {
+    const activeClientId = getEffectiveTwitchClientId();
+    if (!reward || !reward.client_id || !activeClientId) return false;
+    return reward.client_id.trim().toLowerCase() === activeClientId.trim().toLowerCase();
+}
+
 function getSortedCpRewards(rewards, sortBy) {
     const list = [...(rewards || [])];
     switch (sortBy) {
+        case 'app_first':
+            return list.sort((a, b) => {
+                const aApp = isAppCreatedReward(a) ? 1 : 0;
+                const bApp = isAppCreatedReward(b) ? 1 : 0;
+                if (aApp !== bApp) return bApp - aApp;
+                return (a.title || '').localeCompare(b.title || '', 'ja');
+            });
+        case 'external_first':
+            return list.sort((a, b) => {
+                const aApp = isAppCreatedReward(a) ? 1 : 0;
+                const bApp = isAppCreatedReward(b) ? 1 : 0;
+                if (aApp !== bApp) return aApp - bApp;
+                return (a.title || '').localeCompare(a.title || '', 'ja');
+            });
         case 'cost_asc':
             return list.sort((a, b) => (a.cost || 0) - (b.cost || 0));
         case 'cost_desc':
             return list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
         case 'name_asc':
-            return list.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'ja'));
+            return list.sort((a, b) => (a.title || '').localeCompare(a.title || '', 'ja'));
         case 'name_desc':
             return list.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'ja'));
         case 'default':
@@ -6252,6 +6272,8 @@ function renderCpTable() {
     const editText = langMap[currentLang]?.ui?.cpTab?.edit || '編集';
     const recreateText = langMap[currentLang]?.ui?.cpTab?.recreateBtn || 'アプリ管理化';
     const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
+    const appBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeAppCreated || 'アプリ作成';
+    const extBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeExternalCreated || 'Web/他作成';
 
     sortedRewards.forEach(r => {
         const isEnabled = r.is_enabled;
@@ -6263,13 +6285,21 @@ function renderCpTable() {
             groupTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px;">${raidSoEscape(g.name)}</span>`;
         });
 
+        const isAppOwned = isAppCreatedReward(r);
+        const sourceBadgeHtml = isAppOwned
+            ? `<span style="font-size:9px; font-weight:bold; padding:1px 5px; border-radius:3px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; margin-left:5px; flex-shrink:0;">${raidSoEscape(appBadgeText)}</span>`
+            : `<span style="font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-muted); margin-left:5px; flex-shrink:0;">${raidSoEscape(extBadgeText)}</span>`;
+
         html += `
         <tr style="border-bottom:1px solid var(--border-color);">
             <td style="padding:8px 6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
                     <div style="width:16px; height:16px; border-radius:3px; background:${color}; flex-shrink:0;"></div>
                     <div>
-                        <div style="font-weight:bold;">${raidSoEscape(r.title)}</div>
+                        <div style="font-weight:bold; display:flex; align-items:center;">
+                            <span>${raidSoEscape(r.title)}</span>
+                            ${sourceBadgeHtml}
+                        </div>
                         <div style="font-size:10px; color:var(--twitch-purple);">${r.cost} pt</div>
                     </div>
                 </div>
@@ -6279,7 +6309,12 @@ function renderCpTable() {
                 <span style="font-size:10px; font-weight:bold; color:${isEnabled ? '#00f59b' : '#ff4f4d'};">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
             </td>
             <td style="padding:8px 6px;">
-                <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="cursor:pointer;">
+                <label style="position:relative; display:inline-flex; align-items:center; cursor:pointer; user-select:none;" title="${isEnabled ? 'ON (有効)' : 'OFF (無効)'}">
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="position:absolute; opacity:0; width:0; height:0;">
+                    <span style="display:inline-block; width:34px; height:18px; background-color:${isEnabled ? '#00c875' : 'rgba(255,255,255,0.15)'}; border:1px solid ${isEnabled ? '#00f59b' : 'var(--border-color)'}; border-radius:10px; transition:0.2s; position:relative;">
+                        <span style="position:absolute; top:2px; left:${isEnabled ? '18px' : '2px'}; width:12px; height:12px; background:#fff; border-radius:50%; transition:0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.3);"></span>
+                    </span>
+                </label>
             </td>
             <td style="padding:8px 6px; text-align:right;">
                 <button type="button" class="btn-secondary" onclick="recreateCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:#c084fc; border:1px solid var(--twitch-purple); display:inline-flex; align-items:center; margin-right:3px;" title="アプリ管理化 (同じ設定で再作成)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>${raidSoEscape(recreateText)}</button>

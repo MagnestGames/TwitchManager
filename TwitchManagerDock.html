@@ -467,8 +467,10 @@
                     <span data-i18n="cpTab.status">取得状態:</span> <strong id="cp-total-count">0個</strong>
                 </div>
                 <div style="display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: hidden;">
-                    <select id="cp-sort-select" onchange="changeCpSortOrder(this.value)" style="height: 26px; width: 100px; max-width: 100px; padding: 0 4px; font-size: 10.5px; border-radius: 5px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer; box-sizing: border-box; flex-shrink: 0; text-overflow: ellipsis; white-space: nowrap;">
+                    <select id="cp-sort-select" onchange="changeCpSortOrder(this.value)" style="height: 26px; width: 110px; max-width: 110px; padding: 0 4px; font-size: 10.5px; border-radius: 5px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer; box-sizing: border-box; flex-shrink: 0; text-overflow: ellipsis; white-space: nowrap;">
                         <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
+                        <option value="app_first" data-i18n="cpTab.sortAppFirst">本ツール作成優先</option>
+                        <option value="external_first" data-i18n="cpTab.sortExternalFirst">Web/他作成優先</option>
                         <option value="cost_asc" data-i18n="cpTab.sortCostAsc">コスト昇順 (安い順)</option>
                         <option value="cost_desc" data-i18n="cpTab.sortCostDesc">コスト降順 (高い順)</option>
                         <option value="name_asc" data-i18n="cpTab.sortNameAsc">名前昇順 (あ-ん/A-Z)</option>

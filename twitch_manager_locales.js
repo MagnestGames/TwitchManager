@@ -1011,7 +1011,11 @@ const I18N_DATA = {
                 "loadTemplateLabel": "既存ポイントから設定を読み込む:",
                 "selectTemplatePlaceholder": "-- 既存のチャンネルポイントを選択 --",
                 "loadTemplateHint": "※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。",
-                "templateLoadedToast": "「{name}」の設定を読み込みました！"
+                "templateLoadedToast": "「{name}」の設定を読み込みました！",
+                "sortAppFirst": "本ツール作成優先",
+                "sortExternalFirst": "Web/他作成優先",
+                "badgeAppCreated": "アプリ作成",
+                "badgeExternalCreated": "Web/他作成"
             }
         },
         "twitch": {
@@ -2299,7 +2303,11 @@ const I18N_DATA = {
                 "loadTemplateLabel": "Load settings from existing reward:",
                 "selectTemplatePlaceholder": "-- Select an existing Channel Point --",
                 "loadTemplateHint": "※ Auto-fills title, cost, description, and theme color from selected reward.",
-                "templateLoadedToast": "Loaded settings from '{name}'!"
+                "templateLoadedToast": "Loaded settings from '{name}'!",
+                "sortAppFirst": "App-created First",
+                "sortExternalFirst": "External First",
+                "badgeAppCreated": "App Created",
+                "badgeExternalCreated": "External"
             }
         },
         "twitch": {
@@ -3587,7 +3595,11 @@ const I18N_DATA = {
                 "loadTemplateLabel": "从已有积分导入设置:",
                 "selectTemplatePlaceholder": "-- 选择已有渠道积分 --",
                 "loadTemplateHint": "※ 自动导入所选积分的标题、消费、说明及主题颜色。",
-                "templateLoadedToast": "已导入“{name}”的设置！"
+                "templateLoadedToast": "已导入“{name}”的设置！",
+                "sortAppFirst": "本工具创建优先",
+                "sortExternalFirst": "Web/其他创建优先",
+                "badgeAppCreated": "应用创建",
+                "badgeExternalCreated": "Web/其他创建"
             }
         },
         "twitch": {
