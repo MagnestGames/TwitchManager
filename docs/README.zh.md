@@ -44,7 +44,7 @@
 | Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
 | macOS 11+ | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
-`Source code (zip)` 和 `Source code (tar.gz)` 并非安装程序。如需校验，请对比同版本中的 `.sha256` 校验文件。
+`Source code (zip)` 和 `Source code (tar.gz)` 并非安装程序。
 
 ## 安装
 
