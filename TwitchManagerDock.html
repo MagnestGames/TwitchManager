@@ -462,11 +462,11 @@
     <div id="cp-tab" class="tab-content">
         <!-- Fixed Header Toolbar -->
         <div style="position: sticky; top: 0; z-index: 10; background: var(--bg-body, #121214); padding: 8px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <div style="font-size: 11px; color: var(--text-muted); flex-shrink: 0;" id="cp-status-summary">
                     <span data-i18n="cpTab.status">取得状態:</span> <strong id="cp-total-count">0個</strong>
                 </div>
-                <div style="display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: hidden;">
+                <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
                     <select id="cp-sort-select" onchange="changeCpSortOrder(this.value)" style="height: 26px; width: 110px; max-width: 110px; padding: 0 4px; font-size: 10.5px; border-radius: 5px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer; box-sizing: border-box; flex-shrink: 0; text-overflow: ellipsis; white-space: nowrap;">
                         <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
                         <option value="app_first" data-i18n="cpTab.sortAppFirst">本ツール作成優先</option>
