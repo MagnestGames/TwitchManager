@@ -1001,7 +1001,13 @@ const I18N_DATA = {
                 "cantModifyExternalReward": "Twitch仕様制限: Web画面や他ツールで作成されたポイントはアプリからON/OFFできません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。",
                 "apiLimitNotice": "一括ON/OFFやアプリからの設定変更が可能なのは、本ツールから作成したチャンネルポイントのみです（Twitch APIの仕様制限）。",
                 "openTwitchDashboard": "Twitch CP管理画面を開く",
-                "customIconNotice": "チャンネルポイント画像の設定は、Twitch上でのみ設定可能です。"
+                "customIconNotice": "チャンネルポイント画像の設定は、Twitch上でのみ設定可能です。",
+                "recreateBtn": "アプリ管理化(再作成)",
+                "batchRecreateBtn": "一括アプリ管理化",
+                "recreateConfirm": "「{name}」と同じ設定で本ツール上に新しいチャンネルポイントを再作成しますか？\n（再作成後はアプリから一括ON/OFFや自動化が可能になります）",
+                "deleteOldConfirm": "【確認】Web等で作成された元のチャンネルポイント「{name}」を削除しますか？\n（※削除すると重複登録を防げます）",
+                "recreateSuccess": "「{name}」を本ツール管理下として再作成しました！",
+                "recreateFail": "再作成失敗:"
             }
         },
         "twitch": {
@@ -2279,7 +2285,13 @@ const I18N_DATA = {
                 "cantModifyExternalReward": "Twitch API Limit: Rewards created outside this tool cannot be toggled. Only rewards created within this tool can be modified.",
                 "apiLimitNotice": "Only channel points created within this tool can be toggled or modified (Twitch API restriction).",
                 "openTwitchDashboard": "Open Twitch CP Dashboard",
-                "customIconNotice": "Channel point custom icons can only be configured directly on Twitch."
+                "customIconNotice": "Channel point custom icons can only be configured directly on Twitch.",
+                "recreateBtn": "Recreate via App",
+                "batchRecreateBtn": "Batch Recreate via App",
+                "recreateConfirm": "Recreate '{name}' with exact same settings under this app?\n(This will enable batch ON/OFF and automation control.)",
+                "deleteOldConfirm": "Delete the original external reward '{name}' to prevent duplicates on stream?",
+                "recreateSuccess": "Successfully recreated '{name}' under app control!",
+                "recreateFail": "Recreation failed:"
             }
         },
         "twitch": {
@@ -3557,7 +3569,13 @@ const I18N_DATA = {
                 "cantModifyExternalReward": "Twitch API限制: 在Web或第三方工具创建的积分无法在此切换。仅能操作在本工具中创建的积分。",
                 "apiLimitNotice": "仅在本工具中创建的渠道积分才能进行一括ON/OFF及修改（Twitch API限制）。",
                 "openTwitchDashboard": "打开Twitch CP管理页面",
-                "customIconNotice": "渠道积分的图标仅可在Twitch网页端进行设置。"
+                "customIconNotice": "渠道积分的图标仅可在Twitch网页端进行设置。",
+                "recreateBtn": "应用托管(再创建)",
+                "batchRecreateBtn": "一括应用托管",
+                "recreateConfirm": "是否使用相同设置在本工具中重新创建“{name}”？\n（重新创建后将支持一括ON/OFF与自动化控制）",
+                "deleteOldConfirm": "是否删除原本在Web等处创建的“{name}”以防止重复？",
+                "recreateSuccess": "已成功将“{name}”重新创建为应用托管积分！",
+                "recreateFail": "再创建失败:"
             }
         },
         "twitch": {

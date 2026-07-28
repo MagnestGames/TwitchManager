@@ -5847,6 +5847,109 @@ function openTwitchCpDashboard() {
     window.open(url, '_blank');
 }
 
+async function recreateCpReward(rewardId) {
+    const targetReward = cpState.rewards.find(r => r.id === rewardId);
+    if (!targetReward) return;
+
+    const name = targetReward.title || '報酬';
+    const confirmMsg = (langMap[currentLang]?.ui?.cpTab?.recreateConfirm || "「{name}」と同じ設定で本ツール上に新しいチャンネルポイントを再作成しますか？\n（再作成後はアプリから一括ON/OFFや自動化が可能になります）").replace('{name}', name);
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const payload = {
+            title: targetReward.title,
+            cost: targetReward.cost,
+            prompt: targetReward.prompt || '',
+            background_color: targetReward.background_color || '#9146FF',
+            is_user_input_required: !!targetReward.is_user_input_required
+        };
+        if (targetReward.max_per_stream_setting) {
+            payload.is_max_per_stream_enabled = !!targetReward.max_per_stream_setting.is_enabled;
+            payload.max_per_stream = targetReward.max_per_stream_setting.max_per_stream || 0;
+        }
+        if (targetReward.max_per_user_per_stream_setting) {
+            payload.is_max_per_user_per_stream_enabled = !!targetReward.max_per_user_per_stream_setting.is_enabled;
+            payload.max_per_user_per_stream = targetReward.max_per_user_per_stream_setting.max_per_user_per_stream || 0;
+        }
+        if (targetReward.global_cooldown_setting) {
+            payload.is_global_cooldown_enabled = !!targetReward.global_cooldown_setting.is_enabled;
+            payload.global_cooldown_seconds = targetReward.global_cooldown_setting.global_cooldown_seconds || 0;
+        }
+
+        const res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const newReward = res.data?.[0];
+        const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', name);
+        showToast(succMsg);
+
+        if (newReward) {
+            let updatedGroups = false;
+            cpState.groups.forEach(g => {
+                if (g.rewardIds && g.rewardIds.includes(rewardId)) {
+                    if (!g.rewardIds.includes(newReward.id)) {
+                        g.rewardIds.push(newReward.id);
+                        updatedGroups = true;
+                    }
+                }
+            });
+            if (updatedGroups) saveCpGroupsToStorage();
+        }
+
+        const delConfirmMsg = (langMap[currentLang]?.ui?.cpTab?.deleteOldConfirm || "【確認】Web等で作成された元のチャンネルポイント「{name}」を削除しますか？\n（※削除すると重複登録を防げます）").replace('{name}', name);
+        if (confirm(delConfirmMsg)) {
+            try {
+                await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+                    method: 'DELETE'
+                });
+            } catch (delErr) {
+                console.warn('Could not delete original external reward via API:', delErr);
+            }
+        }
+
+        await fetchTwitchCustomRewards();
+    } catch (e) {
+        console.error('recreateCpReward error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.recreateFail || '再作成失敗:';
+        showToast(`${failPrefix} ${e.message}`, 'warn');
+    }
+}
+
+async function batchRecreateCpRewards() {
+    if (!cpState.rewards || cpState.rewards.length === 0) {
+        showToast(langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。', 'warn');
+        return;
+    }
+    const confirmMsg = '取得したチャンネルポイントをすべて本ツール管理下（アプリ作成版）として一括再作成しますか？';
+    if (!confirm(confirmMsg)) return;
+
+    let count = 0;
+    const broadcasterId = await ensureCpAuth();
+    for (const r of cpState.rewards) {
+        try {
+            const payload = {
+                title: r.title,
+                cost: r.cost,
+                prompt: r.prompt || '',
+                background_color: r.background_color || '#9146FF',
+                is_user_input_required: !!r.is_user_input_required
+            };
+            await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            count++;
+        } catch (e) {
+            console.warn(`Failed batch recreate for ${r.title}:`, e);
+        }
+    }
+    showToast(`${count}件のチャンネルポイントを本ツール管理下として一括再作成しました`);
+    await fetchTwitchCustomRewards();
+}
+
 async function toggleAllCpRewards(targetState) {
     if (!cpState.rewards || cpState.rewards.length === 0) {
         const noRewardsMsg = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
@@ -6133,7 +6236,7 @@ function renderCpTable() {
     if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
     if (!tbody) return;
 
-    if (totalEl) totalEl.textContent = `${cpState.rewards.length}`;
+    if (totalEl) totalEl.textContent = `${cpState.rewards.length}個`;
 
     if (cpState.rewards.length === 0) {
         const noRewardText = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
@@ -6146,6 +6249,7 @@ function renderCpTable() {
     const enabledText = langMap[currentLang]?.ui?.cpTab?.statusEnabled || '有効 (ON)';
     const disabledText = langMap[currentLang]?.ui?.cpTab?.statusDisabled || '無効 (OFF)';
     const editText = langMap[currentLang]?.ui?.cpTab?.edit || '編集';
+    const recreateText = langMap[currentLang]?.ui?.cpTab?.recreateBtn || 'アプリ管理化';
     const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
 
     sortedRewards.forEach(r => {
@@ -6177,61 +6281,9 @@ function renderCpTable() {
                 <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="cursor:pointer;">
             </td>
             <td style="padding:8px 6px; text-align:right;">
-                <button type="button" class="btn-secondary" onclick="openCpRewardModal('${r.id}')" style="padding:2px 6px; font-size:10px; display:inline-flex; align-items:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>${raidSoEscape(editText)}</button>
+                <button type="button" class="btn-secondary" onclick="recreateCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:#c084fc; border:1px solid var(--twitch-purple); display:inline-flex; align-items:center; margin-right:3px;" title="アプリ管理化 (同じ設定で再作成)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>${raidSoEscape(recreateText)}</button>
+                <button type="button" class="btn-secondary" onclick="openCpRewardModal('${r.id}')" style="padding:2px 6px; font-size:10px; display:inline-flex; align-items:center; margin-right:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>${raidSoEscape(editText)}</button>
                 <button type="button" class="btn-secondary" onclick="deleteCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </td>
-        </tr>`;
-    });
-    tbody.innerHTML = html;
-}
-
-function renderCpTable() {
-    const tbody = document.getElementById('cp-rewards-tbody');
-    const totalEl = document.getElementById('cp-total-count');
-    const mainSortSelect = document.getElementById('cp-sort-select');
-    if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
-    if (!tbody) return;
-
-    if (totalEl) totalEl.textContent = `${cpState.rewards.length}個`;
-
-    if (cpState.rewards.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">チャンネルポイントが取得されていません。「最新取得」をクリックしてください。</td></tr>`;
-        return;
-    }
-
-    let html = '';
-    const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
-    sortedRewards.forEach(r => {
-        const isEnabled = r.is_enabled;
-        const color = r.background_color || '#9146FF';
-        const assignedGroups = cpState.groups.filter(g => g.rewardIds && g.rewardIds.includes(r.id));
-        let groupTagsHtml = '';
-        assignedGroups.forEach(g => {
-            const isShared = assignedGroups.length > 1;
-            groupTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px;">${raidSoEscape(g.name)}</span>`;
-        });
-
-        html += `
-        <tr style="border-bottom:1px solid var(--border-color);">
-            <td style="padding:8px 6px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <div style="width:16px; height:16px; border-radius:3px; background:${color}; flex-shrink:0;"></div>
-                    <div>
-                        <div style="font-weight:bold;">${raidSoEscape(r.title)}</div>
-                        <div style="font-size:10px; color:var(--twitch-purple);">${r.cost} pt</div>
-                    </div>
-                </div>
-            </td>
-            <td style="padding:8px 6px;">${groupTagsHtml || '<span style="color:var(--text-muted);">-</span>'}</td>
-            <td style="padding:8px 6px;">
-                <span style="font-size:10px; font-weight:bold; color:${isEnabled ? '#00f59b' : '#ff4f4d'};">${isEnabled ? '有効 (ON)' : '無効 (OFF)'}</span>
-            </td>
-            <td style="padding:8px 6px;">
-                <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="cursor:pointer;">
-            </td>
-            <td style="padding:8px 6px; text-align:right;">
-                <button type="button" class="btn-secondary" onclick="openCpRewardModal('${r.id}')" style="padding:2px 6px; font-size:10px; display:inline-flex; align-items:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>編集</button>
-                <button type="button" class="btn-secondary" onclick="deleteCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="削除"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </td>
         </tr>`;
     });
