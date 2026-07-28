@@ -95,7 +95,6 @@ jobs:
           name: TwitchManager-Windows11-Installer-${{ needs.metadata.outputs.version }}
           path: |
             dist/TwitchManager-Windows11-Setup.exe
-            dist/TwitchManager-Windows11-Setup.sha256
           if-no-files-found: error
 
   build-macos:
@@ -122,7 +121,6 @@ jobs:
           name: TwitchManager-macOS-Installer-${{ needs.metadata.outputs.version }}
           path: |
             dist/TwitchManager-macOS.pkg
-            dist/TwitchManager-macOS.sha256
           if-no-files-found: error
 
   publish:
@@ -154,8 +152,8 @@ jobs:
         run: |
           set -euo pipefail
           body_path="$RUNNER_TEMP/release-body-ja.md"
-          windows_sha256="$(awk '{print $1}' dist/TwitchManager-Windows11-Setup.sha256)"
-          macos_sha256="$(awk '{print $1}' dist/TwitchManager-macOS.sha256)"
+          windows_sha256="$(sha256sum dist/TwitchManager-Windows11-Setup.exe | awk '{print           }')"
+          macos_sha256="$(sha256sum dist/TwitchManager-macOS.pkg | awk '{print           }')"
           sed \
             -e "s/{{WINDOWS_SHA256}}/$windows_sha256/g" \
             -e "s/{{MACOS_SHA256}}/$macos_sha256/g" \
@@ -173,9 +171,7 @@ jobs:
           title="TwitchManager $RELEASE_VERSION"
           assets=(
             "dist/TwitchManager-Windows11-Setup.exe"
-            "dist/TwitchManager-Windows11-Setup.sha256"
             "dist/TwitchManager-macOS.pkg"
-            "dist/TwitchManager-macOS.sha256"
           )
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then

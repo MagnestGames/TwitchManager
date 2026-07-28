@@ -44,4 +44,3 @@ The default installation path is `/Applications/TwitchManager`. Supported on mac
 
 > If using the ZIP version, do not move `TwitchManagerDock.html` out of its folder. Keep all included files in the original directory structure.
 
-> SHA256 checksums are attached under Assets in each GitHub Release.

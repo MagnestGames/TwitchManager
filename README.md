@@ -52,7 +52,7 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 | Windows 11 | [`TwitchManager-Windows11-Setup.exe`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-Windows11-Setup.exe) |
 | macOS 11以降 | [`TwitchManager-macOS.pkg`](https://github.com/MagnestGames/TwitchManager/releases/latest/download/TwitchManager-macOS.pkg) |
 
-`Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。必要に応じて、同じリリースにある`.sha256`ファイルでダウンロードしたファイルを確認できます。
+`Source code (zip)`と`Source code (tar.gz)`はインストーラーではありません。
 
 ## インストール
 
