@@ -6300,7 +6300,6 @@ function renderCpTable() {
     const enabledText = langMap[currentLang]?.ui?.cpTab?.statusEnabled || '有効 (ON)';
     const disabledText = langMap[currentLang]?.ui?.cpTab?.statusDisabled || '無効 (OFF)';
     const editText = langMap[currentLang]?.ui?.cpTab?.edit || '編集';
-    const recreateText = langMap[currentLang]?.ui?.cpTab?.recreateBtn || 'アプリ管理化';
     const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
     const appBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeAppCreated || 'アプリ作成';
     const extBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeExternalCreated || 'Web/他作成';
@@ -6347,7 +6346,6 @@ function renderCpTable() {
                 </label>
             </td>
             <td style="padding:8px 6px; text-align:right;">
-                <button type="button" class="btn-secondary" onclick="recreateCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:#c084fc; border:1px solid var(--twitch-purple); display:inline-flex; align-items:center; margin-right:3px;" title="アプリ管理化 (同じ設定で再作成)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>${raidSoEscape(recreateText)}</button>
                 <button type="button" class="btn-secondary" onclick="openCpRewardModal('${r.id}')" style="padding:2px 6px; font-size:10px; display:inline-flex; align-items:center; margin-right:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>${raidSoEscape(editText)}</button>
                 <button type="button" class="btn-secondary" onclick="deleteCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </td>
