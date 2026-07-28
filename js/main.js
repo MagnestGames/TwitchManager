@@ -449,7 +449,12 @@
 
     const originalOpenModal = openModal;
     openModal = function openModalV5(id) {
-        const result = typeof originalOpenModal === 'function' ? originalOpenModal.apply(this, arguments) : document.getElementById(id)?.classList.add('modal-open');
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = 'flex';
+            el.classList.add('modal-open');
+        }
+        const result = typeof originalOpenModal === 'function' ? originalOpenModal.apply(this, arguments) : undefined;
         if (id === 'settingModal') {
             setupDateFormatSelect();
             updateSettingsAuthStatus();
