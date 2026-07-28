@@ -999,8 +999,9 @@ const I18N_DATA = {
                 "badgeObsScene": "⚡",
                 "badgeAutoOff": "⏱️{min}分OFF",
                 "cantModifyExternalReward": "Twitch仕様制限: Web画面や他ツールで作成されたポイントはアプリからON/OFFできません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。",
-                "apiLimitNotice": "一括ON/OFFやアプリからの設定変更が可能なのは、本ツールから作成したチャンネルポイントのみです（Twitch APIの仕様制限）。チャンネルポイント画像の設定は、Twitch上でのみ設定可能です。",
-                "openTwitchDashboard": "Twitch CP管理画面を開く"
+                "apiLimitNotice": "一括ON/OFFやアプリからの設定変更が可能なのは、本ツールから作成したチャンネルポイントのみです（Twitch APIの仕様制限）。",
+                "openTwitchDashboard": "Twitch CP管理画面を開く",
+                "customIconNotice": "チャンネルポイント画像の設定は、Twitch上でのみ設定可能です。"
             }
         },
         "twitch": {
@@ -2276,8 +2277,9 @@ const I18N_DATA = {
                 "badgeObsScene": "⚡",
                 "badgeAutoOff": "⏱️{min}m OFF",
                 "cantModifyExternalReward": "Twitch API Limit: Rewards created outside this tool cannot be toggled. Only rewards created within this tool can be modified.",
-                "apiLimitNotice": "Note: Only channel points created within this tool can be toggled or modified (Twitch API restriction). Channel point custom icons can only be configured directly on Twitch.",
-                "openTwitchDashboard": "Open Twitch CP Dashboard"
+                "apiLimitNotice": "Only channel points created within this tool can be toggled or modified (Twitch API restriction).",
+                "openTwitchDashboard": "Open Twitch CP Dashboard",
+                "customIconNotice": "Channel point custom icons can only be configured directly on Twitch."
             }
         },
         "twitch": {
@@ -3553,8 +3555,9 @@ const I18N_DATA = {
                 "badgeObsScene": "⚡",
                 "badgeAutoOff": "⏱️{min}分OFF",
                 "cantModifyExternalReward": "Twitch API限制: 在Web或第三方工具创建的积分无法在此切换。仅能操作在本工具中创建的积分。",
-                "apiLimitNotice": "注意: 仅在本工具中创建的渠道积分才能进行一括ON/OFF及修改（Twitch API限制）。渠道积分的图标仅可在Twitch网页端进行设置。",
-                "openTwitchDashboard": "打开Twitch CP管理页面"
+                "apiLimitNotice": "仅在本工具中创建的渠道积分才能进行一括ON/OFF及修改（Twitch API限制）。",
+                "openTwitchDashboard": "打开Twitch CP管理页面",
+                "customIconNotice": "渠道积分的图标仅可在Twitch网页端进行设置。"
             }
         },
         "twitch": {
