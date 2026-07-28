@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Getting-Started-EN) | [🇨🇳 繁體中文](Getting-Started-ZH)
+
+---
+
 # インストールとOBSへの追加
 
 ## インストール

@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Commands-EN) | [🇨🇳 繁體中文](Commands-ZH)
+
+---
+
 # コマンド
 
 配信中によく使うTwitchコマンドをカテゴリ別にまとめています。
@@ -29,6 +33,6 @@ BAN、タイムアウト、MOD、VIP、監視、制限、ブロック、ウィ�
 
 ![インタラクションコマンド](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-interaction.png)
 
-投票、予測、ピン留め、Shoutoutを操作します。詳細な予測・投票は[Twitch連携機能](Twitch-Tools)、紹介文は[通知と紹介](Raid-and-Notifications)を使います。
+投票、予測、ピン留め、Shoutoutを操作します。詳細な予測・投票は[Twitch](Twitch-Tools)、紹介文は[通知と紹介](Raid-and-Notifications)を使います。
 
 > BAN、レイド、広告、権限変更は実行前に対象と内容を確認してください。レイド開始には`channel:manage:raids`権限が必要です。

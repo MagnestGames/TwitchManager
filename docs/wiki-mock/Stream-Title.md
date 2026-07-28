@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Stream-Title-EN) | [🇨🇳 繁體中文](Stream-Title-ZH)
+
+---
+
 # タイトル管理
 
 配信タイトルとカテゴリをカードとして保存し、Twitchへ反映します。

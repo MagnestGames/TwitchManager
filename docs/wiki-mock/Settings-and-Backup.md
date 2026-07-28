@@ -1,3 +1,7 @@
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Settings-and-Backup-EN) | [🇨🇳 繁體中文](Settings-and-Backup-ZH)
+
+---
+
 # 設定・バックアップ
 
 右上の歯車で共通設定を変更します。
