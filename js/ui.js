@@ -3150,6 +3150,17 @@
         }
 
         async function handleRaidSoRaid(event) {
+            const isOutbound = String(event.from_broadcaster_user_id || '') === String(settings.userId || '');
+            if (isOutbound) {
+                const targetLogin = event.to_broadcaster_user_login;
+                const timeDiff = Date.now() - (raidSoState.lastOutboundRaidAt || 0);
+                const isDuplicate = raidSoState.lastOutboundRaidTarget === (targetLogin || '').toLowerCase() && timeDiff < 60000;
+                if (raidSoSettings.autoSendRaidUrlEnabled && !isDuplicate) {
+                    await handleRaidSoOutboundRaidEvent(event);
+                }
+                return;
+            }
+
             raidSoLog(`${langMap[currentLang].logs.logRaidDetected} ${event.from_broadcaster_user_name} / ${event.viewers || 0} viewers`);
             if (raidSoSettings.raidSoundEnabled) playRaidSoSound('raid');
             if (!raidSoSettings.autoIntroEnabled) return;
