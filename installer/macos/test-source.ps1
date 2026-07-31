@@ -10,6 +10,7 @@ $launcherScript = Join-Path $PSScriptRoot "app\TwitchManager"
 $infoPlist = Join-Path $PSScriptRoot "app\Info.plist"
 $storageScript = Join-Path $repositoryRoot "js\storage.js"
 $uiScript = Join-Path $repositoryRoot "js\ui.js"
+$logoFile = Join-Path $repositoryRoot "assets\branding\TwitchManager-logo.png"
 $defaultSoundFiles = @(
     "chat_1.wav",
     "chat_2.wav",
@@ -28,6 +29,7 @@ $requiredFiles = @(
     $launcherScript,
     $infoPlist,
     (Join-Path $repositoryRoot "TwitchManagerDock.html"),
+    $logoFile,
     $storageScript,
     $uiScript
 )
@@ -125,7 +127,7 @@ New-Item -ItemType Directory -Path $preparedRoot -Force | Out-Null
 foreach ($fileName in @("TwitchManagerDock.html", "creators.json", "twitch_manager_locales.js", "twitch_manager.css")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $fileName) -Destination $preparedRoot
 }
-foreach ($directoryName in @("js", "sounds")) {
+foreach ($directoryName in @("assets", "js", "sounds")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $directoryName) -Destination $preparedRoot -Recurse
 }
 
@@ -149,6 +151,7 @@ $preparedFiles = @(
     (Join-Path $preparedRoot "creators.json"),
     (Join-Path $preparedRoot "twitch_manager_locales.js"),
     (Join-Path $preparedRoot "twitch_manager.css"),
+    (Join-Path $preparedRoot "assets\branding\TwitchManager-logo.png"),
     (Join-Path $preparedRoot "js\ui.js"),
     $preparedUrlPath,
     (Join-Path $preparedApp "Info.plist"),

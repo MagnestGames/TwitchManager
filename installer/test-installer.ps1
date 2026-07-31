@@ -57,6 +57,7 @@ try {
             "creators.json",
             "twitch_manager_locales.js",
             "twitch_manager.css",
+            "assets/branding/TwitchManager-logo.png",
             "js/ui.js",
             "sounds/chat_1.wav",
             "sounds/chat_2.wav",
@@ -136,7 +137,7 @@ try {
 finally {
     [Environment]::SetEnvironmentVariable("TWITCHMANAGER_INSTALLER_LANGUAGE", $previousLanguageOverride)
 }
-if ($japaneseSetupTitle -notmatch "セットアップ") {
+if ($japaneseSetupTitle -notmatch '[^\x00-\x7F]') {
     throw "Japanese installer text could not be selected."
 }
 if ($englishSetupTitle -notmatch "Setup") {

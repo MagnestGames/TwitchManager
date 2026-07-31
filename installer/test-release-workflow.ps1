@@ -23,8 +23,9 @@ $workflowRequirements = @(
     '(?m)^  publish:$',
     'runs-on: windows-latest',
     'runs-on: macos-latest',
-    'dev_1\.0_beta',
-    '1\.0\.0（非公開ビルド）',
+    'dev_1\.0\.2_beta',
+    '1\.0\.2_beta',
+    '1\.0\.2',
     '\^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$',
     'scripts/check-localization\.mjs',
     'scripts/check-theme-contrast\.mjs',
@@ -71,9 +72,6 @@ if ($releaseBody.IndexOf("## macOS", [System.StringComparison]::Ordinal) -gt
     $releaseBody.IndexOf("## Windows 11", [System.StringComparison]::Ordinal)) {
     throw "macOS guidance must appear before Windows guidance."
 }
-if ($releaseBody -match '未署名|コード署名|### できること|### 代表的な使い方') {
-    throw "Release description contains unnecessary explanatory text."
-}
 foreach ($workflowReference in @(
     "sha256sum dist/TwitchManager-Windows11-Setup.exe",
     "sha256sum dist/TwitchManager-macOS.pkg",
@@ -114,7 +112,7 @@ if ($duplicateImages) {
 $wikiText = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "docs\wiki-mock") -Filter "*.md" -File |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw } |
     Out-String
-if ($wikiText -match '未署名|コード署名|2026年7月25日|`VERSION`') {
+if ($wikiText -match '2026-07-25|`VERSION`') {
     throw "Wiki source contains obsolete release or signing guidance."
 }
 

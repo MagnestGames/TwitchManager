@@ -2,6 +2,10 @@
 
 [日本語](README.md) | [English](docs/README.en.md) | [简体中文](docs/README.zh.md)
 
+![TwitchManagerロゴ](assets/branding/TwitchManager-logo.png)
+
+ロゴを配信画面や紹介素材で使う場合は、[TwitchManager-logo.png](assets/branding/TwitchManager-logo.png)をダウンロードしてください。Windows版・macOS版のインストール先にも`assets/branding`フォルダとして同梱されます。
+
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。

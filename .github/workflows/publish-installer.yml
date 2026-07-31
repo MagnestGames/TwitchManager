@@ -3,13 +3,13 @@ name: Build and publish Windows 11 and macOS installers
 on:
   push:
     branches:
-      - "dev_1.0_beta"
+      - "dev_1.0.2_beta"
     tags:
       - "v*"
   workflow_dispatch:
     inputs:
       tag:
-        description: "ビルドするバージョン（例: 1.0_beta / 1.0.0（非公開ビルド） / v1.0.0（公開））"
+        description: "ビルドするバージョン（例: 1.0.2_beta / 1.0.2（非公開ビルド） / v1.0.2（公開））"
         required: true
         type: string
 
@@ -36,8 +36,8 @@ jobs:
           set -euo pipefail
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             tag="$INPUT_TAG"
-          elif [[ "$REF_NAME" == "dev_1.0_beta" ]]; then
-            tag="1.0_beta"
+          elif [[ "$REF_NAME" == "dev_1.0.2_beta" ]]; then
+            tag="1.0.2_beta"
           else
             tag="$REF_NAME"
           fi
@@ -46,10 +46,10 @@ jobs:
             publish="true"
           elif [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             publish="false"
-          elif [[ "$tag" =~ ^[0-9]+\.[0-9]+_beta$ ]]; then
+          elif [[ "$tag" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?_beta$ ]]; then
             publish="false"
           else
-            echo "バージョンは 1.0_beta、1.0.0（非公開ビルド）、v1.0.0（公開）のいずれかの形式で指定してください: $tag" >&2
+            echo "バージョンは 1.0.2_beta、1.0.2（非公開ビルド）、v1.0.2（公開）のいずれかの形式で指定してください: $tag" >&2
             exit 1
           fi
 
@@ -152,8 +152,8 @@ jobs:
         run: |
           set -euo pipefail
           body_path="$RUNNER_TEMP/release-body-ja.md"
-          windows_sha256="$(sha256sum dist/TwitchManager-Windows11-Setup.exe | awk '{print           }')"
-          macos_sha256="$(sha256sum dist/TwitchManager-macOS.pkg | awk '{print           }')"
+          windows_sha256="$(sha256sum dist/TwitchManager-Windows11-Setup.exe | awk '{print $1}')"
+          macos_sha256="$(sha256sum dist/TwitchManager-macOS.pkg | awk '{print $1}')"
           sed \
             -e "s/{{WINDOWS_SHA256}}/$windows_sha256/g" \
             -e "s/{{MACOS_SHA256}}/$macos_sha256/g" \

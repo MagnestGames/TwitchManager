@@ -28,6 +28,7 @@ required_entries=(
   "Applications/TwitchManager/creators.json"
   "Applications/TwitchManager/twitch_manager_locales.js"
   "Applications/TwitchManager/twitch_manager.css"
+  "Applications/TwitchManager/assets/branding/TwitchManager-logo.png"
   "Applications/TwitchManager/js/ui.js"
   "Applications/TwitchManager/sounds/chat_1.wav"
   "Applications/TwitchManager/sounds/chat_2.wav"

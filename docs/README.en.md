@@ -2,6 +2,10 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
+![TwitchManager logo](../assets/branding/TwitchManager-logo.png)
+
+To use the logo in stream layouts or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). It is also included in the `assets/branding` folder of Windows and macOS installations.
+
 ![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
 A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.

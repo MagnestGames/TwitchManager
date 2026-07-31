@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-version="${1:-1.0.1}"
+version="${1:-1.0.2}"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
 output_directory="${2:-$repository_root/dist}"
@@ -58,7 +58,7 @@ for file_name in "${root_files[@]}"; do
   cp "$source_path" "$install_root/"
 done
 
-for directory_name in js sounds; do
+for directory_name in assets js sounds; do
   source_path="$repository_root/$directory_name"
   if [[ -d "$source_path" ]]; then
     cp -R "$source_path" "$install_root/"

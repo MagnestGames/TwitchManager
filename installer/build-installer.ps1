@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.1",
+    [string]$Version = "1.0.2",
     [string]$OutputDirectory = ""
 )
 
@@ -36,7 +36,7 @@ foreach ($file in $rootFiles) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $file) -Destination $payloadRoot
 }
 
-$directories = @("js", "sounds")
+$directories = @("assets", "js", "sounds")
 foreach ($directory in $directories) {
     $source = Join-Path $repositoryRoot $directory
     if (Test-Path -LiteralPath $source) {

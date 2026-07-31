@@ -2,6 +2,10 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
+![TwitchManager 徽标](../assets/branding/TwitchManager-logo.png)
+
+如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
+
 ![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](wiki-mock/images/twitchmanager-overview.png)
 
 这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
