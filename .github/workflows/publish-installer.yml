@@ -73,6 +73,10 @@ jobs:
         shell: pwsh
         run: node scripts/check-theme-contrast.mjs
 
+      - name: Verify update notifications
+        shell: pwsh
+        run: node scripts/test-update-check.mjs
+
       - name: Build Windows 11 installer
         shell: pwsh
         run: ./installer/build-installer.ps1 -Version "${{ needs.metadata.outputs.version }}"

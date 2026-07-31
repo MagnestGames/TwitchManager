@@ -43,6 +43,15 @@ const I18N_DATA = {
                 "fetchingTwitch": "Twitchから取得しています...",
                 "pushingTwitch": "Twitchへ反映しています..."
             },
+            "updateNotification": {
+                "title": "TwitchManagerのアップデート",
+                "message": "新しいバージョンが公開されています。リリースページを確認しますか？",
+                "currentVersion": "現在のバージョン",
+                "latestVersion": "最新バージョン",
+                "confirm": "確認",
+                "skip": "スキップ",
+                "skipNote": "スキップすると、このバージョンについては再通知しません。さらに新しいバージョンが公開された場合は再びお知らせします。"
+            },
             "dateFormatOptions": {
                 "MM/DD": "MM/DD（例: 05/12）",
                 "M/D": "M/D（例: 5/12）",
@@ -1321,6 +1330,15 @@ const I18N_DATA = {
                 "fetchingTwitch": "Fetching from Twitch...",
                 "pushingTwitch": "Applying to Twitch..."
             },
+            "updateNotification": {
+                "title": "TwitchManager Update",
+                "message": "A new version is available. Would you like to view the release page?",
+                "currentVersion": "Current version",
+                "latestVersion": "Latest version",
+                "confirm": "Check",
+                "skip": "Skip",
+                "skipNote": "Skipping hides this version permanently. You will be notified again when a newer version is released."
+            },
             "dateFormatOptions": {
                 "MM/DD": "MM/DD (e.g. 05/12)",
                 "M/D": "M/D (e.g. 5/12)",
@@ -2598,6 +2616,15 @@ const I18N_DATA = {
                 "input": "输入",
                 "fetchingTwitch": "正在从 Twitch 获取...",
                 "pushingTwitch": "正在应用到 Twitch..."
+            },
+            "updateNotification": {
+                "title": "TwitchManager 更新",
+                "message": "发现新版本。是否查看发布页面？",
+                "currentVersion": "当前版本",
+                "latestVersion": "最新版本",
+                "confirm": "查看",
+                "skip": "跳过",
+                "skipNote": "跳过后将不再提示此版本。发布更新的版本时会再次通知。"
             },
             "dateFormatOptions": {
                 "MM/DD": "MM/DD（例: 05/12）",

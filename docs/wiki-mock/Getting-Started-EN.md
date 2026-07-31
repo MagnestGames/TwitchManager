@@ -21,6 +21,15 @@ The default installation path is the `TwitchManager` folder inside your Windows 
 
 The default installation path is `/Applications/TwitchManager`. Supported on macOS 11 or later.
 
+## Update Notifications
+
+TwitchManager checks for the latest stable release at startup. When a newer version is available, a dialog shows the installed and latest versions.
+
+- **Check**: Opens the matching GitHub release page.
+- **Skip**: Stops notifications for that version. A later release will be shown again.
+
+The network check runs at most once every 24 hours. If the check fails, TwitchManager starts normally without displaying an error dialog. Create a backup from the **Other** tab before installing an update.
+
 ## Adding to OBS Studio
 
 1. In OBS Studio, open **Docks** -> **Custom Browser Docks...** from the top menu.

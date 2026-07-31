@@ -29,6 +29,7 @@ $workflowRequirements = @(
     '\^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+\$',
     'scripts/check-localization\.mjs',
     'scripts/check-theme-contrast\.mjs',
+    'scripts/test-update-check\.mjs',
     'installer/build-installer\.ps1',
     'installer/test-installer\.ps1',
     'installer/macos/build-installer\.sh',

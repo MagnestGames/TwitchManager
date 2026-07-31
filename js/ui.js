@@ -306,7 +306,7 @@
                 inputEl.placeholder = options.placeholder || "";
                 btnCancel.style.display = (options.type === 'confirm' || options.type === 'prompt') ? 'block' : 'none';
                 actionsEl?.classList.toggle('single-action', options.type !== 'confirm' && options.type !== 'prompt');
-                btnCancel.innerText = langMap[currentLang]?.cancel || langMap.ja.cancel;
+                btnCancel.innerText = options.cancelText || langMap[currentLang]?.cancel || langMap.ja.cancel;
                 btnOk.innerText = options.okText || "OK";
 
                 if (options.type === 'prompt') {
@@ -370,9 +370,39 @@
                 type: 'confirm',
                 title: options.title || langMap[currentLang].alerts.confirm,
                 messageHtml: options.messageHtml || dialogGuideHtml(options),
-                message: options.message || ''
+                message: options.message || '',
+                okText: options.okText || '',
+                cancelText: options.cancelText || ''
             });
         }
+
+        async function showUpdateNotificationIfAvailable() {
+            const updater = window.TwitchManagerUpdate;
+            if (!updater) return;
+            const result = await updater.checkForUpdate();
+            if (result.status !== 'available') return;
+            updater.markNotified(result.release.version);
+
+            const copy = langMap[currentLang]?.updateNotification || langMap.ja.updateNotification;
+            const currentVersion = updater.currentVersion();
+            const messageHtml = `<div style="display:grid; gap:12px;">
+                <p style="margin:0;">${raidSoEscape(copy.message)}</p>
+                <div style="display:grid; grid-template-columns:auto 1fr; gap:6px 12px; background:var(--bg-base); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+                    <strong>${raidSoEscape(copy.currentVersion)}</strong><span>${raidSoEscape(currentVersion)}</span>
+                    <strong>${raidSoEscape(copy.latestVersion)}</strong><span>${raidSoEscape(result.release.version)}</span>
+                </div>
+                <p style="margin:0; color:var(--text-muted); font-size:12px;">${raidSoEscape(copy.skipNote)}</p>
+            </div>`;
+            const confirmed = await customConfirm({
+                title: copy.title,
+                messageHtml,
+                okText: copy.confirm,
+                cancelText: copy.skip
+            });
+            if (confirmed) updater.openRelease(result.release.url);
+            else updater.skipVersion(result.release.version);
+        }
+        window.showUpdateNotificationIfAvailable = showUpdateNotificationIfAvailable;
         async function customPrompt(messageOrOptions, defaultValue = "") {
             const options = typeof messageOrOptions === 'object'
                 ? messageOrOptions
@@ -4394,6 +4424,7 @@
             }
 
             setTimeout(() => syncRaidSoConnection(false), 0);
+            setTimeout(() => showUpdateNotificationIfAvailable(), 1200);
             setTimeout(initSyncHeights, 150);
             applyInitialViewFromLocation();
             updateTodayDateDisplay();
