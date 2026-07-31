@@ -45,7 +45,7 @@ function parseMarkdown(md, baseImgDir) {
     });
 
     // HTMLへのライン単位変換
-    const lines = md.split('\n');
+    const lines = md.replace(/\r\n?/g, '\n').split('\n');
     let html = '';
     let inCode = false;
     let codeLang = '';

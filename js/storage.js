@@ -349,6 +349,17 @@ const langMap = {
         const RAIDSO_CUSTOM_TEMPLATES_KEY = 'stream_raidso_custom_templates_v1';
         const RAIDSO_LOG_STORAGE_KEY = 'stream_operation_logs_v16';
         const RAIDSO_LOG_LIMIT = 200;
+        const REMOVED_RAIDSO_OBS_SETTING_KEYS = Object.freeze([
+            'soundPlaybackMethod',
+            'obsWsHost',
+            'obsWsPort',
+            'obsWsPassword',
+            'obsWsIncludeInBackup',
+            'raidMediaSource',
+            'commentMediaSource',
+            'channelPointMediaSource',
+            'firstCommentMediaSource'
+        ]);
         const RAIDSO_EVENTSUB_WS = 'wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=30';
         const TWITCH_TOKEN_GENERATOR_URL = 'https://twitchtokengenerator.com/';
         // アクセストークン検証時にTwitchからclient_idを取得します。必要な場合のみ内部で保持します。
@@ -442,13 +453,23 @@ const langMap = {
             return lines.join('\n');
         }
 
+        function removeDeprecatedRaidSoObsSettings(source) {
+            const cleaned = source && typeof source === 'object' && !Array.isArray(source) ? { ...source } : {};
+            REMOVED_RAIDSO_OBS_SETTING_KEYS.forEach(key => delete cleaned[key]);
+            return cleaned;
+        }
+
         function loadRaidSoSettings() {
             try {
-                const loaded = { ...RAIDSO_DEFAULTS, ...(JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}')) };
+                const loaded = removeDeprecatedRaidSoObsSettings({
+                    ...RAIDSO_DEFAULTS,
+                    ...(JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}'))
+                });
                 if (loaded.firstCommentSoundFile === 'sounds/legacy-default.wav') {
                     loaded.firstCommentSoundFile = RAIDSO_DEFAULTS.firstCommentSoundFile;
                 }
                 loaded.excludedUsers = expandDefaultExcludedUsers(loaded.excludedUsers);
+                localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(loaded));
                 return loaded;
             } catch (e) {
                 return { ...RAIDSO_DEFAULTS };
@@ -470,6 +491,7 @@ const langMap = {
 
         function saveRaidSoSettings(show = true) {
             collectRaidSoSettings();
+            raidSoSettings = removeDeprecatedRaidSoObsSettings(raidSoSettings);
             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
             const excludedInput = document.getElementById('raidso-excluded-users');
             if (excludedInput && excludedInput.value !== raidSoSettings.excludedUsers) {

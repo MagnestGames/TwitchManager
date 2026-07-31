@@ -46,37 +46,18 @@ You can save separate templates for incoming raids, manual shoutouts, and outgoi
 
 In outgoing raid templates, `{url}` is replaced with the raided channel's URL.
 
-## Sound Alerts & Playback Modes
+## Sound Alerts
 
-Configure sound toggle, audio file, and volume for Raids, Chat Comments, Channel Point Redemptions, and First-time Chat Messages.
-Choose a global playback mode: **"Audio File (Browser)"** or **"OBS Media Source (obs-websocket)"**.
+Configure the sound toggle, audio file, and volume for Raids, Chat Comments, Channel Point Redemptions, and First-time Chat Messages. Sounds play directly in TwitchManager.
 
 ![Sound Alert Settings](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
 
-### 1. Audio File (Browser Playback)
+### External Sound Folder Setup
 
-Plays audio files directly within the OBS Dock browser container.
-
-#### External Sound Folder Setup:
 1. Click **"Select Sound Folder"**.
 2. Pick the folder containing your audio files.
 3. Select sound files for each event, preview, and save.
 
 *Recommended formats: `.wav` or `.mp3`. Due to browser security policies, you may need to re-select the folder after reloading the page or restarting OBS.*
-
-### 2. OBS Media Source (obs-websocket 5.x)
-
-Triggers (restarts) a Media Source inside OBS via obs-websocket. Ideal if you want to route sound alerts through OBS's Audio Mixer or dedicated audio tracks.
-
-#### Setup Steps:
-1. Set the global playback mode to **"OBS Media Source (obs-websocket)"**.
-2. Enter the WebSocket Host (default: `localhost`), Port (default: `4455`), and Password.
-3. Click **"Fetch OBS Sources"** to test connection.
-4. Select the target OBS Media Source from the dropdown for each event type.
-5. Click **"Test"** to verify the Media Source restarts from the beginning in OBS.
-
-#### Notes & Preventing Double Playback:
-- **Preventing Double Audio**: When using OBS Media Source mode, TwitchManager disables browser-side `Audio.play()` and sends play requests exclusively to OBS.
-- **Audio Monitoring**: If your OBS Media Source is set to "Monitor and Output" or "Monitor Only" in OBS, you will hear the alert in your desktop audio/headphones. Adjust monitoring settings inside OBS Audio Mixer if needed.
 
 To mute alerts for bot accounts, register their Twitch IDs under **"Muted Users"**.
