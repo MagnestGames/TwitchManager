@@ -6,6 +6,9 @@ on:
       - "dev_1.0.2_beta"
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - "dev_1.0.2_beta"
   workflow_dispatch:
     inputs:
       tag:
@@ -36,6 +39,8 @@ jobs:
           set -euo pipefail
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             tag="$INPUT_TAG"
+          elif [[ "$EVENT_NAME" == "pull_request" ]]; then
+            tag="1.0.2_beta"
           elif [[ "$REF_NAME" == "dev_1.0.2_beta" ]]; then
             tag="1.0.2_beta"
           else
@@ -76,6 +81,10 @@ jobs:
       - name: Verify update notifications
         shell: pwsh
         run: node scripts/test-update-check.mjs
+
+      - name: Verify OBS audio routing and listener arrivals
+        shell: pwsh
+        run: node scripts/test-audio-features.mjs
 
       - name: Build Windows 11 installer
         shell: pwsh
