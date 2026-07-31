@@ -378,6 +378,7 @@ const langMap = {
             'channel:manage:raids',
             'clips:edit',
             'moderator:read:followers',
+            'moderator:read:chatters',
             'moderator:manage:announcements',
             'moderator:manage:chat_messages',
             'moderator:manage:chat_settings',

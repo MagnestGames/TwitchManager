@@ -6,6 +6,8 @@
 
 如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
 
+任何人均可在直播画面、社交媒体、视频或文章中，无需事先许可地转载和再分发此徽标，商业与非商业用途均可。但请勿将其表述为 Twitch 或 OBS Studio 的官方或认可素材。
+
 ![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](wiki-mock/images/twitchmanager-overview.png)
 
 这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
@@ -28,6 +30,7 @@
 
 ### 聊天与突袭通知音
 为聊天消息、首次发言及突袭事件播放声音提示。无需时刻盯紧屏幕即可掌握观众互动。
+所有通知音都可以汇总到一个 OBS 浏览器源播放，无需额外设置 obs-websocket。请在通知音设置的“将所有通知音发送到 OBS”中复制 URL。
 
 ### 主播与观众管理
 - **支持者列表** — 自动记录首次发言、突袭、关注、Bits 赞赏、订阅、聊天互动及频道积分兑换。
@@ -58,7 +61,7 @@
 2. 确认安装路径并点击 "Install"。
 3. 完成界面将自动将 OBS URL 复制至剪贴板。
 
-默认安装位置为 Windows **文档** 文件夹下的 `TwitchManager` 目录。OBS URL 也可从安装目录下的 `OBS_Dock_URL.txt` 中获取。
+默认安装位置为 Windows **文档** 文件夹下的 `TwitchManager` 目录。面板 URL 位于 `OBS_Dock_URL.txt`，通知音浏览器源 URL 位于 `OBS_Audio_Source_URL.txt`。
 
 ### macOS
 
@@ -66,7 +69,7 @@
 2. 运行位于 `/Applications/TwitchManager` 的 "Add TwitchManager to OBS"。
 3. 确认 OBS URL 已复制至剪贴板。
 
-OBS URL 亦保存在 `/Applications/TwitchManager/OBS_Dock_URL.txt` 中。
+面板 URL 保存在 `/Applications/TwitchManager/OBS_Dock_URL.txt`，通知音浏览器源 URL 保存在 `OBS_Audio_Source_URL.txt`。
 
 ## 更新
 

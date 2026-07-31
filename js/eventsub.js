@@ -456,6 +456,9 @@
                         updatePostPreview();
                     }
                 }
+                if (typeof pollRaidSoListenerArrivals === 'function') {
+                    pollRaidSoListenerArrivals(currentStreamId);
+                }
                 if (!_esWs) connectEventSub();
             } catch (err) {
                 console.error("Stream check failed:", err);

@@ -30,6 +30,9 @@ function releaseResponse(version = 'v1.0.3') {
 
 assert.deepEqual(update.parseVersion('v1.2.3'), [1, 2, 3, 0]);
 assert.deepEqual(update.parseVersion('1.2.3_beta'), [1, 2, 3, 0]);
+assert.equal(update.isBetaVersion('1.0.2_beta'), true);
+assert.equal(update.isBetaVersion('1.0.2-beta.3'), true);
+assert.equal(update.isBetaVersion('1.0.2'), false);
 assert.equal(update.parseVersion('latest'), null);
 assert.equal(update.compareVersions('1.0.10', '1.0.2'), 1);
 assert.equal(update.compareVersions('1.0.2', '1.0.2_beta'), 0);
@@ -63,9 +66,19 @@ assert.equal(cached.status, 'available');
 assert.equal(cached.source, 'cache');
 assert.equal(fetchCount, 1);
 
-assert.equal(update.markNotified('v1.0.3', storage, 100002), true);
+assert.equal(update.deferVersion('v1.0.3', storage, 100002), true);
 const deferred = await update.checkForUpdate({ currentVersion: '1.0.2', storage, now: 100003 });
 assert.equal(deferred.status, 'deferred');
+const deferredUntil = 100002 + update.constants.DEFER_INTERVAL_MS;
+const stillDeferred = await update.checkForUpdate({ currentVersion: '1.0.2', storage, now: deferredUntil - 1 });
+assert.equal(stillDeferred.status, 'deferred');
+const availableAgain = await update.checkForUpdate({
+    currentVersion: '1.0.2',
+    storage,
+    now: deferredUntil,
+    fetchImpl: async () => releaseResponse()
+});
+assert.equal(availableAgain.status, 'available');
 
 assert.equal(update.skipVersion('v1.0.3', storage), true);
 const skipped = await update.checkForUpdate({ currentVersion: '1.0.2', storage, now: 100004 });
@@ -89,6 +102,19 @@ const current = await update.checkForUpdate({
     fetchImpl: async () => releaseResponse('v1.0.3')
 });
 assert.equal(current.status, 'current');
+
+let betaFetchCount = 0;
+const beta = await update.checkForUpdate({
+    currentVersion: '1.0.2_beta',
+    storage: createStorage(),
+    fetchImpl: async () => {
+        betaFetchCount += 1;
+        return releaseResponse('v1.0.3');
+    }
+});
+assert.equal(beta.status, 'unavailable');
+assert.equal(beta.reason, 'beta-build');
+assert.equal(betaFetchCount, 0);
 
 const failedStorage = createStorage();
 let failedFetchCount = 0;

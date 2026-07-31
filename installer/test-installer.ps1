@@ -54,12 +54,14 @@ try {
         $entryNames = @($archive.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
         $requiredEntries = @(
             "TwitchManagerDock.html",
+            "TwitchManagerAudio.html",
             "creators.json",
             "twitch_manager_version.js",
             "twitch_manager_locales.js",
             "twitch_manager.css",
             "assets/branding/TwitchManager-logo.png",
             "js/update-check.js",
+            "js/audio-source.js",
             "js/ui.js",
             "sounds/chat_1.wav",
             "sounds/chat_2.wav",

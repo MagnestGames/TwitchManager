@@ -31,6 +31,7 @@ $requiredFiles = @(
     $launcherScript,
     $infoPlist,
     (Join-Path $repositoryRoot "TwitchManagerDock.html"),
+    (Join-Path $repositoryRoot "TwitchManagerAudio.html"),
     $logoFile,
     $storageScript,
     $uiScript,
@@ -128,7 +129,7 @@ if (Test-Path -LiteralPath $sourceTestRoot) {
 
 $preparedRoot = Join-Path $sourceTestRoot "payload\Applications\TwitchManager"
 New-Item -ItemType Directory -Path $preparedRoot -Force | Out-Null
-foreach ($fileName in @("TwitchManagerDock.html", "creators.json", "twitch_manager_version.js", "twitch_manager_locales.js", "twitch_manager.css")) {
+foreach ($fileName in @("TwitchManagerDock.html", "TwitchManagerAudio.html", "creators.json", "twitch_manager_version.js", "twitch_manager_locales.js", "twitch_manager.css")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $fileName) -Destination $preparedRoot
 }
 foreach ($directoryName in @("assets", "js", "sounds")) {
@@ -144,6 +145,11 @@ $preparedUrlPath = Join-Path $preparedRoot "OBS_Dock_URL.txt"
     $preparedUrlPath,
     "file:///Applications/TwitchManager/TwitchManagerDock.html`n",
     [System.Text.UTF8Encoding]::new($false))
+$preparedAudioUrlPath = Join-Path $preparedRoot "OBS_Audio_Source_URL.txt"
+[System.IO.File]::WriteAllText(
+    $preparedAudioUrlPath,
+    "file:///Applications/TwitchManager/TwitchManagerAudio.html`n",
+    [System.Text.UTF8Encoding]::new($false))
 
 $preparedApp = Join-Path $preparedRoot "TwitchManagerをOBSに追加.app\Contents"
 New-Item -ItemType Directory -Path (Join-Path $preparedApp "MacOS") -Force | Out-Null
@@ -156,14 +162,17 @@ Copy-Item -LiteralPath $launcherScript -Destination (Join-Path $preparedApp "Mac
 
 $preparedFiles = @(
     (Join-Path $preparedRoot "TwitchManagerDock.html"),
+    (Join-Path $preparedRoot "TwitchManagerAudio.html"),
     (Join-Path $preparedRoot "creators.json"),
     (Join-Path $preparedRoot "twitch_manager_version.js"),
     (Join-Path $preparedRoot "twitch_manager_locales.js"),
     (Join-Path $preparedRoot "twitch_manager.css"),
     (Join-Path $preparedRoot "assets\branding\TwitchManager-logo.png"),
     (Join-Path $preparedRoot "js\update-check.js"),
+    (Join-Path $preparedRoot "js\audio-source.js"),
     (Join-Path $preparedRoot "js\ui.js"),
     $preparedUrlPath,
+    $preparedAudioUrlPath,
     (Join-Path $preparedApp "Info.plist"),
     (Join-Path $preparedApp "MacOS\TwitchManager")
 )

@@ -6,6 +6,8 @@
 
 To use the logo in stream layouts or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). It is also included in the `assets/branding` folder of Windows and macOS installations.
 
+Anyone may copy and redistribute this logo without prior permission in stream layouts, social posts, videos, or articles, for commercial or noncommercial use. Do not present it as an official or endorsed Twitch or OBS Studio asset.
+
 ![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
 A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.
@@ -28,6 +30,7 @@ Automatically introduce raiding channels upon receiving a raid. Supports executi
 
 ### Chat & Raid Notification Sounds
 Play sound alerts for chat, first-time chat, and raid events. Stay informed of critical viewer interactions without constantly watching the screen.
+All notification sounds can be routed through one OBS Browser Source without additional obs-websocket setup. Copy its URL from “Send all sounds to OBS” in Notification Sounds.
 
 ### Streamer & Viewer Management
 - **Supporter List** — Record first-timers, raids, follows, Bits, subscriptions, chat activity, and channel point redemptions.
@@ -58,7 +61,7 @@ Download the installer for your operating system from the "Assets" section on th
 2. Confirm destination and click "Install".
 3. Verify that the OBS URL has been copied to your clipboard on the completion screen.
 
-By default, it installs to the `TwitchManager` folder inside Windows **Documents**. The OBS URL can also be found in `OBS_Dock_URL.txt` inside the installation folder.
+By default, it installs to the `TwitchManager` folder inside Windows **Documents**. The dock URL is in `OBS_Dock_URL.txt`, and the notification-audio Browser Source URL is in `OBS_Audio_Source_URL.txt`.
 
 ### macOS
 
@@ -66,7 +69,7 @@ By default, it installs to the `TwitchManager` folder inside Windows **Documents
 2. Run "Add TwitchManager to OBS" located in `/Applications/TwitchManager`.
 3. Confirm that the OBS URL is copied to your clipboard.
 
-The OBS URL is also stored in `/Applications/TwitchManager/OBS_Dock_URL.txt`.
+The dock URL is stored in `/Applications/TwitchManager/OBS_Dock_URL.txt`, and the notification-audio Browser Source URL is in `OBS_Audio_Source_URL.txt`.
 
 ## Updating
 

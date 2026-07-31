@@ -32,6 +32,7 @@ New-Item -ItemType Directory -Path $payloadRoot | Out-Null
 
 $rootFiles = @(
     "TwitchManagerDock.html",
+    "TwitchManagerAudio.html",
     "creators.json",
     "twitch_manager_version.js",
     "twitch_manager_locales.js",

@@ -6,6 +6,8 @@
 
 ロゴを配信画面や紹介素材で使う場合は、[TwitchManager-logo.png](assets/branding/TwitchManager-logo.png)をダウンロードしてください。Windows版・macOS版のインストール先にも`assets/branding`フォルダとして同梱されます。
 
+このロゴは、配信画面、SNS、動画、記事などへ、個人・法人、商用・非商用を問わず事前連絡なしで転載・再配布できます。ただし、TwitchまたはOBS Studioの公式製品・公認素材であると誤認させる使い方はしないでください。
+
 ![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
@@ -34,6 +36,7 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 
 チャット、初チャット、レイド受信を音で通知します。  
 配信中に画面を見続けなくても、大切な反応に気づきやすくなります。
+通知音は、obs-websocketを追加設定せず、1本のOBSブラウザソースへまとめられます。通知音設定の「OBSへ通知音をまとめる」からURLをコピーしてください。
 
 ### 配信者・視聴者管理
 
@@ -66,7 +69,7 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 2. インストール先を確認し、「インストール」を押します。
 3. 完了画面で、OBS用URLがコピーされたことを確認します。
 
-既定では、Windowsの**ドキュメント**フォルダ内の`TwitchManager`にインストールされます。OBS用URLは、インストール先の`OBS_Dock_URL.txt`でも確認できます。
+既定では、Windowsの**ドキュメント**フォルダ内の`TwitchManager`にインストールされます。OBSドック用URLは`OBS_Dock_URL.txt`、通知音用ブラウザソースURLは`OBS_Audio_Source_URL.txt`で確認できます。
 
 ### macOS
 
@@ -74,11 +77,11 @@ OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録を�
 2. `/Applications/TwitchManager`にある「TwitchManagerをOBSに追加」を開きます。
 3. OBS用URLがコピーされたことを確認します。
 
-OBS用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`でも確認できます。
+OBSドック用URLは`/Applications/TwitchManager/OBS_Dock_URL.txt`、通知音用ブラウザソースURLは`OBS_Audio_Source_URL.txt`でも確認できます。
 
 ## アップデート
 
-TwitchManagerは起動時に最新の安定版を確認し、新しいバージョンがある場合は通知します。「確認」でGitHubのリリースページを開き、「スキップ」でそのバージョンの通知を停止できます。さらに新しいバージョンが公開された場合は再び通知します。
+TwitchManagerは安定版の起動時に最新リリースを確認し、新しいバージョンがある場合は通知します。「確認」でGitHubのリリースページを開き、「3日後に通知」で3日間保留し、「スキップ」でそのバージョンの通知を停止できます。beta版では通知を表示しません。
 
 「その他」タブでバックアップを取ってから、最新リリースのインストーラーをもう一度実行してください。Windowsでは現在のTwitchManagerインストール先を指定し、macOSでは同じパッケージをインストールします。
 

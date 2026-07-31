@@ -291,6 +291,7 @@
                 const msgEl = document.getElementById('cd-message');
                 const inputEl = document.getElementById('cd-input');
                 const btnCancel = document.getElementById('cd-btn-cancel');
+                const btnNeutral = document.getElementById('cd-btn-neutral');
                 const btnOk = document.getElementById('cd-btn-ok');
                 const actionsEl = document.getElementById('cd-actions');
 
@@ -304,9 +305,13 @@
 
                 inputEl.style.display = options.type === 'prompt' ? 'block' : 'none';
                 inputEl.placeholder = options.placeholder || "";
-                btnCancel.style.display = (options.type === 'confirm' || options.type === 'prompt') ? 'block' : 'none';
-                actionsEl?.classList.toggle('single-action', options.type !== 'confirm' && options.type !== 'prompt');
+                const hasCancel = options.type === 'confirm' || options.type === 'prompt' || options.type === 'choice';
+                btnCancel.style.display = hasCancel ? 'block' : 'none';
+                btnNeutral.style.display = options.type === 'choice' ? 'block' : 'none';
+                actionsEl?.classList.toggle('single-action', !hasCancel);
+                actionsEl?.classList.toggle('three-actions', options.type === 'choice');
                 btnCancel.innerText = options.cancelText || langMap[currentLang]?.cancel || langMap.ja.cancel;
+                btnNeutral.innerText = options.neutralText || '';
                 btnOk.innerText = options.okText || "OK";
 
                 if (options.type === 'prompt') {
@@ -319,6 +324,7 @@
                     overlay.classList.remove('show');
                     btnOk.onclick = null;
                     btnCancel.onclick = null;
+                    btnNeutral.onclick = null;
                     overlay.onclick = null;
                     inputEl.onkeydown = null;
                     inputEl.placeholder = "";
@@ -341,10 +347,17 @@
 
                 btnOk.onclick = () => { closeDialog(); resolve(options.type === 'prompt' ? inputEl.value : true); };
                 btnCancel.onclick = () => { closeDialog(); resolve(options.type === 'prompt' ? null : false); };
+                if (options.type === 'choice') {
+                    btnOk.onclick = () => { closeDialog(); resolve('confirm'); };
+                    btnNeutral.onclick = () => { closeDialog(); resolve('remind'); };
+                    btnCancel.onclick = () => { closeDialog(); resolve('skip'); };
+                }
                 // オーバーレイ外クリックで閉じる（prompt/confirm以外の場合はOK扱い、それ以外はキャンセル扱い）
                 overlay.onclick = (e) => {
                     if (e.target === overlay) {
-                        if (options.type === 'confirm' || options.type === 'prompt') {
+                        if (options.type === 'choice') {
+                            closeDialog(); resolve('remind');
+                        } else if (options.type === 'confirm' || options.type === 'prompt') {
                             closeDialog(); resolve(options.type === 'prompt' ? null : false);
                         } else {
                             closeDialog(); resolve(true);
@@ -376,12 +389,23 @@
             });
         }
 
+        async function customChoice(options) {
+            return await showCustomDialog({
+                type: 'choice',
+                title: options.title,
+                messageHtml: options.messageHtml || '',
+                message: options.message || '',
+                okText: options.okText || '',
+                neutralText: options.neutralText || '',
+                cancelText: options.cancelText || ''
+            });
+        }
+
         async function showUpdateNotificationIfAvailable() {
             const updater = window.TwitchManagerUpdate;
             if (!updater) return;
             const result = await updater.checkForUpdate();
             if (result.status !== 'available') return;
-            updater.markNotified(result.release.version);
 
             const copy = langMap[currentLang]?.updateNotification || langMap.ja.updateNotification;
             const currentVersion = updater.currentVersion();
@@ -393,14 +417,16 @@
                 </div>
                 <p style="margin:0; color:var(--text-muted); font-size:12px;">${raidSoEscape(copy.skipNote)}</p>
             </div>`;
-            const confirmed = await customConfirm({
+            const choice = await customChoice({
                 title: copy.title,
                 messageHtml,
                 okText: copy.confirm,
+                neutralText: copy.remindLater,
                 cancelText: copy.skip
             });
-            if (confirmed) updater.openRelease(result.release.url);
-            else updater.skipVersion(result.release.version);
+            if (choice === 'confirm') updater.openRelease(result.release.url);
+            else if (choice === 'skip') updater.skipVersion(result.release.version);
+            else updater.deferVersion(result.release.version);
         }
         window.showUpdateNotificationIfAvailable = showUpdateNotificationIfAvailable;
         async function customPrompt(messageOrOptions, defaultValue = "") {
@@ -2499,6 +2525,9 @@
             channelPointVolume: 60,
             firstCommentSoundFile: "sounds/first_1.wav",
             firstCommentVolume: 80,
+            obsAudioEnabled: false,
+            listenerArrivalEnabled: false,
+            listenerEntries: [],
             soundFiles: [...RAIDSO_DEFAULT_SOUND_FILES],
             excludedUsers: typeof DEFAULT_EXCLUDED_BOT_USERS_TEXT !== 'undefined'
                 ? DEFAULT_EXCLUDED_BOT_USERS_TEXT
@@ -2519,6 +2548,11 @@
             audio: null,
             audioPool: [],
             soundObjectUrls: new Map(),
+            audioChannel: null,
+            listenerPreviousIds: new Set(),
+            listenerBaselineReady: false,
+            listenerPolling: false,
+            listenerBackoffUntil: 0,
             activeSuggestInputId: "",
             seenChatters: new Set(),
             subscriptions: { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false },
@@ -2645,12 +2679,21 @@
             </div>`;
         }
 
-        function openTwitchStreamSettings() {
+        function twitchStreamSettingsUrl() {
             const login = (settings && (settings.userLogin || settings.username)) || '';
-            const url = login
+            return login
                 ? `https://dashboard.twitch.tv/u/${encodeURIComponent(login.trim().toLowerCase())}/settings/stream`
                 : 'https://dashboard.twitch.tv/settings/stream';
-            window.open(url, '_blank');
+        }
+
+        function openTwitchStreamSettings() {
+            const link = document.createElement('a');
+            link.href = twitchStreamSettingsUrl();
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer external';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         }
         window.openTwitchStreamSettings = openTwitchStreamSettings;
 
@@ -2694,9 +2737,9 @@
                 <div class="category-box command-feature-box tw-section" id="raidso-box-open-settings">
                     <div class="category-name" onclick="twToggle('raidso-box-open-settings')"><span>${raidSoEscape(r.openRaidSettingsTitle || 'Twitch レイド受付設定')}</span></div>
                     <div class="tw-body">
-                        <button type="button" class="btn-outline" onclick="openTwitchStreamSettings()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:8px 12px; font-weight:600;">
+                        <a class="btn-outline raidso-external-link" href="${raidSoEscape(twitchStreamSettingsUrl())}" target="_blank" rel="noopener noreferrer external">
                             <span>⚙️ ${raidSoEscape(r.openRaidSettings || 'Twitchのレイド受付設定を開く')}</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -2754,6 +2797,7 @@
                     <div class="tw-body">
                         <div class="raidso-actions" style="margin-bottom:12px;">
                             <button type="button" class="btn-outline" style="width:100%;" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
+                            <button type="button" class="btn-outline raidso-audio-guide-button" onclick="openObsAudioSetup()"><span>🔊 ${raidSoEscape(r.obsAudioSetup)}</span><span class="raidso-fox-mark" aria-label="${raidSoEscape(r.foxAria)}">🦊</span></button>
                             <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory directory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
                         </div>
                         ${raidSoSoundBlockHtml('raid', r.raidSound, r.raidSoundToggle, s.raidSoundEnabled, s.raidSoundFile, s.raidVolume)}
@@ -2765,6 +2809,7 @@
                             <summary>${raidSoEscape(r.excludedUsers)}</summary>
                             <textarea id="raidso-excluded-users" style="min-height:80px;">${raidSoEscape(s.excludedUsers)}</textarea>
                         </details>
+                        ${s.listenerArrivalEnabled ? raidSoListenerSettingsHtml(r, s) : ''}
                     </div>
                 </div>`;
             renderRaidSoStatus();
@@ -2824,6 +2869,104 @@
             </div>`;
         }
 
+        function raidSoListenerSettingsHtml(r, s) {
+            const entries = Array.isArray(s.listenerEntries) ? s.listenerEntries : [];
+            const sounds = getRaidSoSoundFiles();
+            const options = selected => sounds.map(file => `<option value="${raidSoEscape(file)}"${raidSoSelected(file, selected)}>${raidSoEscape(raidSoSoundFileLabel(file))}</option>`).join('');
+            return `<section class="raidso-listener-settings">
+                <div class="raidso-listener-heading"><span class="raidso-fox-mark" aria-hidden="true">🦊</span><strong>${raidSoEscape(r.listenerTitle)}</strong></div>
+                <p>${raidSoEscape(r.listenerDelayNote)}</p>
+                <div class="raidso-listener-add">
+                    <label><span class="field-label">${raidSoEscape(r.listenerIdLabel)}</span><input id="raidso-listener-id" type="text" placeholder="${raidSoEscape(r.listenerIdPlaceholder)}"></label>
+                    <label><span class="field-label">${raidSoEscape(r.listenerSoundLabel)}</span><select id="raidso-listener-sound">${options(sounds[0] || '')}</select></label>
+                    <button type="button" class="btn-secondary" onclick="addRaidSoListener()">${raidSoEscape(r.listenerAdd)}</button>
+                </div>
+                <div class="raidso-listener-list">
+                    ${entries.length ? entries.map(entry => `<div class="raidso-listener-row">
+                        <div class="raidso-listener-person"><strong>${raidSoEscape(entry.displayName || entry.login || entry.userId)}</strong><small>${raidSoEscape(entry.login || entry.userId)}</small></div>
+                        <select aria-label="${raidSoEscape(r.listenerSoundLabel)}" onchange="updateRaidSoListenerSound('${raidSoEscape(entry.userId)}', this.value)">${options(entry.soundFile)}</select>
+                        <button type="button" class="btn-secondary raidso-listener-remove" aria-label="${raidSoEscape(r.listenerRemove)}" onclick="removeRaidSoListener('${raidSoEscape(entry.userId)}')">×</button>
+                    </div>`).join('') : `<div class="raidso-listener-empty">${raidSoEscape(r.listenerEmpty)}</div>`}
+                </div>
+            </section>`;
+        }
+
+        function setObsAudioEnabled(enabled) {
+            raidSoSettings.obsAudioEnabled = Boolean(enabled);
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            showToast(doneText());
+        }
+
+        function setListenerArrivalEnabled(enabled) {
+            raidSoSettings.listenerArrivalEnabled = Boolean(enabled);
+            raidSoState.listenerBaselineReady = false;
+            raidSoState.listenerPreviousIds = new Set();
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            renderRaidShoutOutPanel();
+            showToast(doneText());
+        }
+
+        function getObsAudioSourceUrl() {
+            return new URL('TwitchManagerAudio.html', window.location.href).href;
+        }
+
+        function copyObsAudioSourceUrl() {
+            return copyTextToClipboard(getObsAudioSourceUrl(), doneText());
+        }
+
+        async function openObsAudioSetup() {
+            const r = raidSoText();
+            const url = getObsAudioSourceUrl();
+            const html = `<div class="raidso-audio-guide">
+                <p>${raidSoEscape(r.obsAudioIntro)}</p>
+                <ol><li>${raidSoEscape(r.obsAudioStep1)}</li><li>${raidSoEscape(r.obsAudioStep2)}</li><li>${raidSoEscape(r.obsAudioStep3)}</li></ol>
+                <label class="field-label">${raidSoEscape(r.audioSourceUrl)}</label>
+                <div class="raidso-audio-url"><code>${raidSoEscape(url)}</code><button type="button" class="btn-secondary" onclick="copyObsAudioSourceUrl()">${raidSoEscape(r.copyAudioSourceUrl)}</button></div>
+                ${raidSoSwitchHtml('raidso-obs-audio-enabled', r.obsAudioOutputToggle, raidSoSettings.obsAudioEnabled, 'setObsAudioEnabled(this.checked)')}
+                <p class="raidso-guide-note">${raidSoEscape(r.obsAudioDirectHint)}</p>
+                <details class="raidso-easter-egg">
+                    <summary><span class="raidso-fox-mark" aria-hidden="true">🦊</span><span>${raidSoEscape(r.foxHint)}</span></summary>
+                    <div class="raidso-easter-body"><p>${raidSoEscape(r.listenerIntro)}</p>${raidSoSwitchHtml('raidso-listener-arrival-enabled', r.listenerEnable, raidSoSettings.listenerArrivalEnabled, 'setListenerArrivalEnabled(this.checked)')}</div>
+                </details>
+            </div>`;
+            await showCustomDialog({ type: 'alert', title: r.obsAudioSetupTitle, messageHtml: html });
+        }
+
+        async function addRaidSoListener() {
+            const r = raidSoText();
+            const raw = document.getElementById('raidso-listener-id')?.value.trim() || '';
+            const soundFile = document.getElementById('raidso-listener-sound')?.value || getRaidSoSoundFiles()[0] || '';
+            if (!raw) return showToast(r.listenerResolveFailed, 'error');
+            try {
+                ensureRaidSoBaseSettings();
+                const normalized = normalizeRaidSoLogin(raw);
+                const query = /^\d+$/.test(raw) ? `id=${encodeURIComponent(raw)}` : `login=${encodeURIComponent(normalized)}`;
+                const result = await raidSoHelix(`/users?${query}`);
+                const user = result?.data?.[0];
+                if (!user) throw new Error(r.listenerResolveFailed);
+                const entries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
+                if (entries.some(entry => entry.userId === String(user.id))) return showToast(r.listenerDuplicate, 'error');
+                raidSoSettings.listenerEntries = [...entries, { userId: String(user.id), login: user.login, displayName: user.display_name, soundFile }];
+                localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+                renderRaidShoutOutPanel();
+                showToast(r.listenerAdded);
+            } catch (error) {
+                showToast(error.message || r.listenerResolveFailed, 'error');
+            }
+        }
+
+        function updateRaidSoListenerSound(userId, soundFile) {
+            raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => entry.userId === String(userId) ? { ...entry, soundFile } : entry);
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            showToast(doneText());
+        }
+
+        function removeRaidSoListener(userId) {
+            raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).filter(entry => entry.userId !== String(userId));
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            renderRaidShoutOutPanel();
+        }
+
         function collectRaidSoSettings() {
             const roleInputs = Array.from(document.querySelectorAll('.raidso-role:checked'));
             const keepValue = (id, currentValue, defaultValue) => document.getElementById(id)?.value ?? currentValue ?? defaultValue;
@@ -2854,6 +2997,9 @@
                 channelPointVolume: keepVolume('raidso-channel-point-volume', raidSoSettings.channelPointVolume, RAIDSO_DEFAULTS.channelPointVolume),
                 firstCommentSoundFile: keepValue('raidso-first-comment-sound-file', raidSoSettings.firstCommentSoundFile, RAIDSO_DEFAULTS.firstCommentSoundFile),
                 firstCommentVolume: keepVolume('raidso-first-comment-volume', raidSoSettings.firstCommentVolume, RAIDSO_DEFAULTS.firstCommentVolume),
+                obsAudioEnabled: document.getElementById('raidso-obs-audio-enabled')?.checked ?? raidSoSettings.obsAudioEnabled,
+                listenerArrivalEnabled: document.getElementById('raidso-listener-arrival-enabled')?.checked ?? raidSoSettings.listenerArrivalEnabled,
+                listenerEntries: Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [],
                 soundFiles: getRaidSoSoundFiles(),
                 excludedUsers: typeof expandDefaultExcludedUsers === 'function'
                     ? expandDefaultExcludedUsers(document.getElementById('raidso-excluded-users')?.value || '')
@@ -3792,17 +3938,30 @@
 
 
 
-        function playRaidSoSound(kind, options = {}) {
-            const cfg = raidSoSoundConfig(kind);
+        function sendRaidSoObsAudio(message) {
+            if (!raidSoState.audioChannel && 'BroadcastChannel' in window) {
+                raidSoState.audioChannel = new BroadcastChannel('twitchmanager-audio-v1');
+            }
+            raidSoState.audioChannel?.postMessage(message);
+            try { localStorage.setItem('twitchmanager_audio_event_v1', JSON.stringify(message)); } catch (_) {}
+        }
+
+        function playRaidSoAudioConfig(cfg, options = {}) {
             if (!cfg.src) return;
+            const src = getRaidSoSoundPlaybackUrl(cfg.src);
+            const volume = Math.max(0, Math.min(1, Number(cfg.volume) / 100));
+            if (raidSoSettings.obsAudioEnabled) {
+                sendRaidSoObsAudio({ type: 'play', eventId: `${Date.now()}-${Math.random().toString(36).slice(2)}`, src, volume, overlap: Boolean(options.overlap) });
+                raidSoLog(`${cfg.label}${langMap[currentLang].logs.logAudioPlayed}`);
+                return;
+            }
             if (!options.overlap && raidSoState.audio) {
                 raidSoState.audio.pause();
                 raidSoState.audio.currentTime = 0;
             }
-            const src = getRaidSoSoundPlaybackUrl(cfg.src);
             const audio = new Audio(src);
             audio.preload = 'auto';
-            audio.volume = Math.max(0, Math.min(1, Number(cfg.volume) / 100));
+            audio.volume = volume;
             if (!options.overlap) raidSoState.audio = audio;
             else {
                 raidSoState.audioPool.push(audio);
@@ -3818,9 +3977,73 @@
                 });
         }
 
+        function playRaidSoSound(kind, options = {}) {
+            playRaidSoAudioConfig(raidSoSoundConfig(kind), options);
+        }
+
         function testRaidSoSound(kind) {
             saveRaidSoSettings(false);
             playRaidSoSound(kind);
+        }
+
+        const RAIDSO_LISTENER_PLAYED_KEY = 'stream_listener_played_v1';
+
+        function loadRaidSoListenerPlayed() {
+            try {
+                const value = JSON.parse(localStorage.getItem(RAIDSO_LISTENER_PLAYED_KEY) || '{}');
+                return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+            } catch (_) { return {}; }
+        }
+
+        async function fetchRaidSoChatters() {
+            const ids = new Set();
+            let cursor = '';
+            do {
+                const query = new URLSearchParams({ broadcaster_id: settings.userId, moderator_id: settings.userId, first: '1000' });
+                if (cursor) query.set('after', cursor);
+                const page = await raidSoHelix(`/chat/chatters?${query.toString()}`);
+                (page?.data || []).forEach(item => ids.add(String(item.user_id || '')));
+                cursor = String(page?.pagination?.cursor || '');
+            } while (cursor);
+            ids.delete('');
+            return ids;
+        }
+
+        async function pollRaidSoListenerArrivals(streamId) {
+            if (!streamId || !raidSoSettings.listenerArrivalEnabled) {
+                raidSoState.listenerBaselineReady = false;
+                raidSoState.listenerPreviousIds = new Set();
+                return;
+            }
+            const entries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
+            if (!entries.length || raidSoState.listenerPolling || Date.now() < raidSoState.listenerBackoffUntil) return;
+            raidSoState.listenerPolling = true;
+            try {
+                const currentIds = await fetchRaidSoChatters();
+                if (!raidSoState.listenerBaselineReady) {
+                    raidSoState.listenerPreviousIds = currentIds;
+                    raidSoState.listenerBaselineReady = true;
+                    return;
+                }
+                const played = loadRaidSoListenerPlayed();
+                entries.forEach(entry => {
+                    const userId = String(entry.userId || '');
+                    if (!userId || !currentIds.has(userId) || raidSoState.listenerPreviousIds.has(userId) || played[userId] === streamId) return;
+                    playRaidSoAudioConfig({ src: entry.soundFile, volume: 80, label: entry.displayName || entry.login || userId }, { overlap: true });
+                    played[userId] = streamId;
+                    raidSoLog(raidSoText().listenerTriggered.replace('{name}', entry.displayName || entry.login || userId));
+                });
+                const keepStreamIds = new Set([streamId]);
+                Object.keys(played).forEach(userId => { if (!keepStreamIds.has(played[userId])) delete played[userId]; });
+                localStorage.setItem(RAIDSO_LISTENER_PLAYED_KEY, JSON.stringify(played));
+                raidSoState.listenerPreviousIds = currentIds;
+                raidSoState.listenerBackoffUntil = 0;
+            } catch (error) {
+                raidSoState.listenerBackoffUntil = Date.now() + 5 * 60 * 1000;
+                raidSoLog(`${raidSoText().listenerPermissionError}: ${error.message}`, 'warn');
+            } finally {
+                raidSoState.listenerPolling = false;
+            }
         }
 
         async function manualRaidSoIntroduce(sendChat) {
@@ -5470,6 +5693,29 @@ let cpState = {
     autoOffTimers: {}
 };
 
+function cpCopy(key, vars = {}) {
+    const copy = langMap[currentLang]?.cpTab || langMap.ja.cpTab;
+    return String(copy[key] ?? langMap.ja.cpTab[key] ?? '').replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
+}
+
+const CP_DEFAULT_GROUP_KEYS = Object.freeze({
+    g_horror: 'defaultGroupHorror',
+    g_morning: 'defaultGroupMorning',
+    g_afk: 'defaultGroupAfk'
+});
+
+function cpGroupName(group) {
+    return group?.defaultNameKey ? cpCopy(group.defaultNameKey) : String(group?.name || '');
+}
+
+function migrateCpDefaultGroup(group) {
+    if (!group || group.defaultNameKey || !CP_DEFAULT_GROUP_KEYS[group.id]) return group;
+    const key = CP_DEFAULT_GROUP_KEYS[group.id];
+    const knownNames = Object.values(langMap).map(copy => copy?.cpTab?.[key]).filter(Boolean);
+    if (knownNames.includes(group.name)) return { ...group, name: '', defaultNameKey: key };
+    return group;
+}
+
 function isAppCreatedReward(reward) {
     if (!reward || !reward.id) return false;
     const activeClientId = getEffectiveTwitchClientId();
@@ -5527,12 +5773,12 @@ function loadCpGroupsFromStorage() {
     try {
         const saved = localStorage.getItem('cp_groups_v1');
         if (saved) {
-            cpState.groups = JSON.parse(saved);
+            cpState.groups = JSON.parse(saved).map(migrateCpDefaultGroup);
         } else {
             cpState.groups = [
-                { id: 'g_horror', name: 'ホラゲー用', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
-                { id: 'g_morning', name: '朝配信セット', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
-                { id: 'g_afk', name: '離席中・休憩', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 }
+                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
+                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
+                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 }
             ];
             saveCpGroupsToStorage();
         }
@@ -5564,7 +5810,7 @@ async function ensureCpAuth() {
 async function fetchTwitchCustomRewards() {
     cpState.isLoading = true;
     const tbody = document.getElementById('cp-rewards-tbody');
-    const loadingText = langMap[currentLang]?.ui?.cpTab?.loading || '読み込み中...';
+    const loadingText = cpCopy('loading');
     if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">${raidSoEscape(loadingText)}</td></tr>`;
 
     try {
@@ -5573,10 +5819,10 @@ async function fetchTwitchCustomRewards() {
         cpState.rewards = data.data || [];
         loadCpGroupsFromStorage();
         renderCpTab();
-        showToast(langMap[currentLang]?.ui?.cpTab?.fetchSuccess || 'チャンネルポイント一覧を取得しました');
+        showToast(cpCopy('fetchSuccess'));
     } catch (e) {
         console.error('fetchTwitchCustomRewards error:', e);
-        const failPrefix = langMap[currentLang]?.ui?.cpTab?.fetchFail || '取得失敗:';
+        const failPrefix = cpCopy('fetchFail');
         if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
         showToast(`${failPrefix} ${e.message}`, 'warn');
     } finally {
@@ -5600,10 +5846,10 @@ async function toggleCustomRewardEnabled(rewardId, isEnabled) {
         return true;
     } catch (e) {
         console.error('toggleCustomRewardEnabled error:', e);
-        const failPrefix = langMap[currentLang]?.ui?.cpTab?.toggleFail || '切替失敗:';
+        const failPrefix = cpCopy('toggleFail');
         let errMsg = e.message || '';
         if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
-            const externalText = langMap[currentLang]?.ui?.cpTab?.cantModifyExternalReward || 'Twitch仕様制限: Web等で作成されたポイントはアプリから変更できません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。';
+            const externalText = cpCopy('cantModifyExternalReward');
             errMsg = externalText;
         }
         showToast(`${failPrefix} ${errMsg}`, 'warn');
@@ -5614,7 +5860,7 @@ async function toggleCustomRewardEnabled(rewardId, isEnabled) {
 async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
     const group = cpState.groups.find(g => g.id === groupId);
     if (!group || !group.rewardIds || group.rewardIds.length === 0) {
-        if (!isAutomatic) showToast(langMap[currentLang]?.ui?.cpTab?.unassigned || '対象のポイントがグループに設定されていません', 'warn');
+        if (!isAutomatic) showToast(cpCopy('unassigned'), 'warn');
         return;
     }
     const uniqueIds = Array.from(new Set(group.rewardIds));
@@ -5624,8 +5870,8 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
         if (ok) successCount++;
     }
     const stateStr = targetState ? 'ON' : 'OFF';
-    const tagMsg = isAutomatic ? ' (自動)' : '';
-    showToast(`「${group.name}」 ${successCount}/${uniqueIds.length} -> ${stateStr}${tagMsg}`);
+    const tagMsg = isAutomatic ? cpCopy('automaticSuffix') : '';
+    showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: uniqueIds.length, state: stateStr, automatic: tagMsg }));
 
     // Auto-OFF timer management
     if (targetState) {
@@ -5639,7 +5885,7 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
             cpState.autoOffTimers[groupId] = setTimeout(async () => {
                 await batchToggleCpGroup(groupId, false, true);
             }, delayMs);
-            showToast(`「${group.name}」 ${autoOffMin}分後に自動OFF`);
+            showToast(cpCopy('autoOffScheduled', { name: cpGroupName(group), minutes: autoOffMin }));
         }
     } else {
         if (cpState.autoOffTimers[groupId]) {
@@ -5682,7 +5928,7 @@ async function recreateCpReward(rewardId) {
     if (!targetReward) return;
 
     const name = targetReward.title || '報酬';
-    const confirmMsg = (langMap[currentLang]?.ui?.cpTab?.recreateConfirm || "「{name}」と同じ設定で本ツール上に新しいチャンネルポイントを再作成しますか？\n（再作成後はアプリから一括ON/OFFや自動化が可能になります）").replace('{name}', name);
+    const confirmMsg = cpCopy('recreateConfirm', { name });
     if (!confirm(confirmMsg)) return;
 
     try {
@@ -5725,7 +5971,7 @@ async function recreateCpReward(rewardId) {
             markRewardAsAppCreated(newReward.id);
         }
 
-        const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', createTitle);
+        const succMsg = cpCopy('recreateSuccess', { name: createTitle });
         showToast(succMsg);
 
         if (newReward) {
@@ -5741,25 +5987,23 @@ async function recreateCpReward(rewardId) {
             if (updatedGroups) saveCpGroupsToStorage();
         }
 
-        showToast('※ Twitch仕様制限により、Web作成の元ポイントはTwitch管理画面から削除してください。', 'info');
+        showToast(cpCopy('externalDeleteNotice'), 'info');
         await fetchTwitchCustomRewards();
     } catch (e) {
         console.error('recreateCpReward error:', e);
-        const failPrefix = langMap[currentLang]?.ui?.cpTab?.recreateFail || '再作成失敗:';
+        const failPrefix = cpCopy('recreateFail');
         showToast(`${failPrefix} ${e.message}`, 'warn');
     }
 }
 
 async function toggleAllCpRewards(targetState) {
     if (!cpState.rewards || cpState.rewards.length === 0) {
-        const noRewardsMsg = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
+        const noRewardsMsg = cpCopy('noRewards');
         showToast(noRewardsMsg, 'warn');
         return;
     }
     const stateStr = targetState ? 'ON' : 'OFF';
-    const confirmMsg = targetState 
-        ? 'すべてのチャンネルポイントを一括で【有効 (ON)】にしますか？' 
-        : 'すべてのチャンネルポイントを一括で【無効 (OFF)】にしますか？';
+    const confirmMsg = cpCopy(targetState ? 'toggleAllOnConfirm' : 'toggleAllOffConfirm');
     if (!confirm(confirmMsg)) return;
 
     let successCount = 0;
@@ -5772,7 +6016,7 @@ async function toggleAllCpRewards(targetState) {
             successCount++;
         }
     }
-    showToast(`すべてのチャンネルポイント ${successCount}/${totalCount} 件を ${stateStr} にしました`);
+    showToast(cpCopy('toggleAllResult', { success: successCount, total: totalCount, state: stateStr }));
 }
 
 async function saveCpReward() {
@@ -5783,7 +6027,7 @@ async function saveCpReward() {
     const color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
 
     if (!title) {
-        showToast(langMap[currentLang]?.ui?.cpTab?.enterRewardName || '報酬名を入力してください', 'warn');
+        showToast(cpCopy('enterRewardName'), 'warn');
         return;
     }
 
@@ -5804,33 +6048,33 @@ async function saveCpReward() {
         }
 
         const resData = await raidSoHelix(endpoint, { method: method, body: JSON.stringify(payload) }); if (resData?.data?.[0]?.id) markRewardAsAppCreated(resData.data[0].id);
-        showToast(langMap[currentLang]?.ui?.cpTab?.saveSuccess || 'チャンネルポイントを保存しました');
+        showToast(cpCopy('saveSuccess'));
         closeModal('cpRewardModal');
         await fetchTwitchCustomRewards();
     } catch (e) {
         console.error('saveCpReward error:', e);
-        const failPrefix = langMap[currentLang]?.ui?.cpTab?.saveFail || '保存失敗:';
+        const failPrefix = cpCopy('saveFail');
         let errMsg = e.message || '';
         if (errMsg.includes('DUPLICATE_REWARD')) {
-            errMsg = '同名のチャンネルポイントが既にTwitch上に存在します。タイトルを変更するか (アプリ) などの識別名を追加してください。';
+            errMsg = cpCopy('duplicateRewardName');
         }
         showToast(`${failPrefix} ${errMsg}`, 'warn');
     }
 }
 
 async function deleteCpReward(rewardId) {
-    const confirmMsg = langMap[currentLang]?.ui?.cpTab?.deleteConfirm || 'このチャンネルポイントを削除しますか？';
+    const confirmMsg = cpCopy('deleteConfirm');
     if (!confirm(confirmMsg)) return;
     try {
         const broadcasterId = await ensureCpAuth();
         await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
             method: 'DELETE'
         });
-        showToast(langMap[currentLang]?.ui?.cpTab?.deleteSuccess || 'チャンネルポイントを削除しました');
+        showToast(cpCopy('deleteSuccess'));
         await fetchTwitchCustomRewards();
     } catch (e) {
         console.error('deleteCpReward error:', e);
-        const failPrefix = langMap[currentLang]?.ui?.cpTab?.deleteFail || '削除失敗:';
+        const failPrefix = cpCopy('deleteFail');
         showToast(`${failPrefix} ${e.message}`, 'warn');
     }
 }
@@ -5847,7 +6091,7 @@ function openCpGroupModal(groupId = null) {
     }
 
     editIdInput.value = targetGroup ? targetGroup.id : '';
-    nameInput.value = targetGroup ? targetGroup.name : '';
+    nameInput.value = targetGroup ? cpGroupName(targetGroup) : '';
 
     const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
     const autoRaidCheck = document.getElementById('cp-group-auto-raid');
@@ -5866,7 +6110,7 @@ function openCpGroupModal(groupId = null) {
     let html = '';
     const sortedList = getSortedCpRewards(cpState.rewards, cpState.modalSortBy);
     if (sortedList.length === 0) {
-        const noRewardText = langMap[currentLang]?.ui?.cpTab?.noRewards || '登録されたポイントがありません。「最新取得」を実行してください。';
+        const noRewardText = cpCopy('noRewards');
         html = `<div style="color:var(--text-muted); padding:8px; text-align:left;">${raidSoEscape(noRewardText)}</div>`;
     } else {
         sortedList.forEach(r => {
@@ -5886,7 +6130,7 @@ function saveCpGroup() {
     const editId = document.getElementById('cp-group-edit-id')?.value;
     const name = document.getElementById('cp-group-name-input')?.value?.trim();
     if (!name) {
-        showToast(langMap[currentLang]?.ui?.cpTab?.enterGroupName || 'グループ名を入力してください', 'warn');
+        showToast(cpCopy('enterGroupName'), 'warn');
         return;
     }
     const checkedNodes = document.querySelectorAll('.cp-group-reward-check:checked');
@@ -5901,6 +6145,7 @@ function saveCpGroup() {
         const idx = cpState.groups.findIndex(g => g.id === editId);
         if (idx !== -1) {
             cpState.groups[idx].name = name;
+            delete cpState.groups[idx].defaultNameKey;
             cpState.groups[idx].rewardIds = selectedRewardIds;
             cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
             cpState.groups[idx].autoOnRaid = autoOnRaid;
@@ -5923,16 +6168,16 @@ function saveCpGroup() {
     saveCpGroupsToStorage();
     closeModal('cpGroupModal');
     renderCpTab();
-    showToast(langMap[currentLang]?.ui?.cpTab?.groupSaveSuccess || 'グループを保存しました');
+    showToast(cpCopy('groupSaveSuccess'));
 }
 
 function deleteCpGroup(groupId) {
-    const confirmMsg = langMap[currentLang]?.ui?.cpTab?.groupDeleteConfirm || 'このグループを削除しますか？';
+    const confirmMsg = cpCopy('groupDeleteConfirm');
     if (!confirm(confirmMsg)) return;
     cpState.groups = cpState.groups.filter(g => g.id !== groupId);
     saveCpGroupsToStorage();
     renderCpTab();
-    showToast(langMap[currentLang]?.ui?.cpTab?.groupDeleteSuccess || 'グループを削除しました');
+    showToast(cpCopy('groupDeleteSuccess'));
 }
 
 function applyCpRewardTemplate(selectedRewardId) {
@@ -5950,7 +6195,7 @@ function applyCpRewardTemplate(selectedRewardId) {
     if (promptInput) promptInput.value = targetReward.prompt || '';
     if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
 
-    const toastMsg = (langMap[currentLang]?.ui?.cpTab?.templateLoadedToast || "「{name}」の設定を読み込みました！").replace('{name}', targetReward.title || '');
+    const toastMsg = cpCopy('templateLoadedToast', { name: targetReward.title || '' });
     showToast(toastMsg);
 }
 
@@ -5972,7 +6217,7 @@ function openCpRewardModal(rewardId = null) {
     }
 
     if (targetReward) {
-        if (modalTitle) modalTitle.textContent = langMap[currentLang]?.ui?.cpTab?.rewardModalTitleEdit || 'チャンネルポイントの編集';
+        if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleEdit');
         editIdInput.value = targetReward.id;
         titleInput.value = targetReward.title || '';
         costInput.value = targetReward.cost || 50;
@@ -5980,7 +6225,7 @@ function openCpRewardModal(rewardId = null) {
         if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
-        if (modalTitle) modalTitle.textContent = langMap[currentLang]?.ui?.cpTab?.rewardModalTitleNew || '新しいチャンネルポイントを作成';
+        if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
         editIdInput.value = '';
         titleInput.value = '';
         costInput.value = 50;
@@ -5989,7 +6234,7 @@ function openCpRewardModal(rewardId = null) {
         
         if (tplWrapper && tplSelect) {
             tplWrapper.style.display = 'block';
-            const placeholder = langMap[currentLang]?.ui?.cpTab?.selectTemplatePlaceholder || '-- 既存のチャンネルポイントを選択 --';
+            const placeholder = cpCopy('selectTemplatePlaceholder');
             let optionsHtml = `<option value="">${raidSoEscape(placeholder)}</option>`;
             (cpState.rewards || []).forEach(r => {
                 optionsHtml += `<option value="${raidSoEscape(r.id)}">${raidSoEscape(r.title)} (${r.cost}pt)</option>`;
@@ -6011,17 +6256,17 @@ function renderCpGroups() {
     if (!container) return;
 
     if (!cpState.groups || cpState.groups.length === 0) {
-        const noGroupText = langMap[currentLang]?.ui?.cpTab?.noGroups || 'グループが登録されていません。「新規グループ」から作成できます。';
+        const noGroupText = cpCopy('noGroups');
         container.innerHTML = `<div style="font-size:11px; color:var(--text-muted); grid-column: 1/-1;">${raidSoEscape(noGroupText)}</div>`;
         return;
     }
 
     let html = '';
-    const bOnText = langMap[currentLang]?.ui?.cpTab?.batchOn || '一括ON';
-    const bOffText = langMap[currentLang]?.ui?.cpTab?.batchOff || '一括OFF';
-    const unassignedText = langMap[currentLang]?.ui?.cpTab?.unassigned || 'ポイント未割り当て';
-    const settingAria = langMap[currentLang]?.ui?.tips?.settings || '設定';
-    const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
+    const bOnText = cpCopy('batchOn');
+    const bOffText = cpCopy('batchOff');
+    const unassignedText = cpCopy('unassigned');
+    const settingAria = langMap[currentLang]?.tips?.settings || langMap.ja.tips.settings;
+    const deleteAria = langMap[currentLang]?.delete || langMap.ja.delete;
 
     cpState.groups.forEach(g => {
         const rewardCount = (g.rewardIds || []).length;
@@ -6035,26 +6280,26 @@ function renderCpGroups() {
         });
 
         let autoBadgesHtml = '';
-        const bStream = langMap[currentLang]?.ui?.cpTab?.badgeStreamStart || '⚡配信開始';
-        const bRaid = langMap[currentLang]?.ui?.cpTab?.badgeRaid || '⚡レイド';
+        const bStream = cpCopy('badgeStreamStart');
+        const bRaid = cpCopy('badgeRaid');
         if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
         if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
         if (g.autoOnObsScene) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#60a5fa; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">⚡${raidSoEscape(g.autoOnObsScene)}</span>`;
-        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">⏱️${g.autoOffMinutes}分OFF</span>`;
+        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
         html += `
         <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <strong style="font-size:12px;">${raidSoEscape(g.name)}</strong>
+                    <strong style="font-size:12px;">${raidSoEscape(cpGroupName(g))}</strong>
                     <span style="font-size:10px; color:var(--text-muted);">${rewardCount}</span>
                 </div>
                 ${autoBadgesHtml ? `<div style="margin-bottom:4px;">${autoBadgesHtml}</div>` : ''}
                 <div style="margin-bottom:8px;">${rewardTagsHtml || `<span style="font-size:10px; color:var(--text-muted);">${raidSoEscape(unassignedText)}</span>`}</div>
             </div>
             <div style="display:flex; gap:4px;">
-                <button type="button" class="btn-primary" onclick="batchToggleCpGroup('${g.id}', true)" style="flex:1; padding:3px 6px; font-size:10px; background:#00c875; color:#000;">${raidSoEscape(bOnText)}</button>
-                <button type="button" class="btn-secondary" onclick="batchToggleCpGroup('${g.id}', false)" style="flex:1; padding:3px 6px; font-size:10px; background:#e93d3a; color:#fff;">${raidSoEscape(bOffText)}</button>
+                <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
+                <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
@@ -6070,22 +6315,22 @@ function renderCpTable() {
     if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
     if (!tbody) return;
 
-    if (totalEl) totalEl.textContent = `${cpState.rewards.length}個`;
+    if (totalEl) totalEl.textContent = cpCopy('count', { count: cpState.rewards.length });
 
     if (cpState.rewards.length === 0) {
-        const noRewardText = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
+        const noRewardText = cpCopy('noRewards');
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">${raidSoEscape(noRewardText)}</td></tr>`;
         return;
     }
 
     let html = '';
     const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
-    const enabledText = langMap[currentLang]?.ui?.cpTab?.statusEnabled || '有効 (ON)';
-    const disabledText = langMap[currentLang]?.ui?.cpTab?.statusDisabled || '無効 (OFF)';
-    const editText = langMap[currentLang]?.ui?.cpTab?.edit || '編集';
-    const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
-    const appBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeAppCreated || 'アプリ作成';
-    const extBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeExternalCreated || 'Web/他作成';
+    const enabledText = cpCopy('statusEnabled');
+    const disabledText = cpCopy('statusDisabled');
+    const editText = cpCopy('edit');
+    const deleteAria = langMap[currentLang]?.delete || langMap.ja.delete;
+    const appBadgeText = cpCopy('badgeAppCreated');
+    const extBadgeText = cpCopy('badgeExternalCreated');
 
     sortedRewards.forEach(r => {
         const isEnabled = r.is_enabled;
@@ -6094,7 +6339,7 @@ function renderCpTable() {
         let groupTagsHtml = '';
         assignedGroups.forEach(g => {
             const isShared = assignedGroups.length > 1;
-            groupTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px;">${raidSoEscape(g.name)}</span>`;
+            groupTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px;">${raidSoEscape(cpGroupName(g))}</span>`;
         });
 
         const isAppOwned = isAppCreatedReward(r);
@@ -6121,11 +6366,9 @@ function renderCpTable() {
                 <span style="font-size:10px; font-weight:bold; color:${isEnabled ? '#00f59b' : '#ff4f4d'};">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
             </td>
             <td style="padding:8px 6px;">
-                <label style="position:relative; display:inline-flex; align-items:center; cursor:pointer; user-select:none;" title="${isEnabled ? 'ON (有効)' : 'OFF (無効)'}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="position:absolute; opacity:0; width:0; height:0;">
-                    <span style="display:inline-block; width:34px; height:18px; background-color:${isEnabled ? '#00c875' : 'rgba(255,255,255,0.15)'}; border:1px solid ${isEnabled ? '#00f59b' : 'var(--border-color)'}; border-radius:10px; transition:0.2s; position:relative;">
-                        <span style="position:absolute; top:2px; left:${isEnabled ? '18px' : '2px'}; width:12px; height:12px; background:#fff; border-radius:50%; transition:0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.3);"></span>
-                    </span>
+                <label class="cp-reward-toggle" title="${raidSoEscape(isEnabled ? enabledText : disabledText)}">
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)">
+                    <span class="cp-reward-toggle-track"></span>
                 </label>
             </td>
             <td style="padding:8px 6px; text-align:right;">

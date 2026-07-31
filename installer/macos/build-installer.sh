@@ -49,6 +49,7 @@ mkdir -p "$install_root"
 
 root_files=(
   "TwitchManagerDock.html"
+  "TwitchManagerAudio.html"
   "creators.json"
   "twitch_manager_version.js"
   "twitch_manager_locales.js"
@@ -73,7 +74,9 @@ for directory_name in assets js sounds; do
 done
 
 dock_url="file:///Applications/TwitchManager/TwitchManagerDock.html"
+audio_url="file:///Applications/TwitchManager/TwitchManagerAudio.html"
 printf '%s\n' "$dock_url" > "$install_root/OBS_Dock_URL.txt"
+printf '%s\n' "$audio_url" > "$install_root/OBS_Audio_Source_URL.txt"
 printf '%s\n' "TwitchManagerInstaller-macOS-v1" > "$install_root/.twitchmanager-install"
 
 helper_app="$install_root/TwitchManagerをOBSに追加.app"

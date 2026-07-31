@@ -8,6 +8,7 @@
     const NOTIFIED_KEY = 'stream_update_last_notified_v1';
     const SKIPPED_VERSION_KEY = 'stream_update_skipped_version_v1';
     const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+    const DEFER_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000;
     const FAILURE_RETRY_MS = 60 * 60 * 1000;
     const REQUEST_TIMEOUT_MS = 7000;
 
@@ -26,6 +27,10 @@
             if (difference !== 0) return difference > 0 ? 1 : -1;
         }
         return 0;
+    }
+
+    function isBetaVersion(value) {
+        return /(?:^|[._+-])beta(?:[._-]?\d*)?(?:$|[._+-])/i.test(String(value || '').trim());
     }
 
     function readStorage(storage, key) {
@@ -61,8 +66,12 @@
     function parseNotification(value) {
         try {
             const notification = JSON.parse(value || '{}');
-            if (!parseVersion(notification.version) || !Number.isFinite(notification.notifiedAt)) return null;
-            return notification;
+            if (!parseVersion(notification.version)) return null;
+            if (Number.isFinite(notification.deferredUntil)) return notification;
+            if (Number.isFinite(notification.notifiedAt)) {
+                return { ...notification, deferredUntil: notification.notifiedAt + DEFER_INTERVAL_MS };
+            }
+            return null;
         } catch (error) {
             return null;
         }
@@ -109,6 +118,11 @@
         const now = Number.isFinite(options.now) ? options.now : Date.now();
         const installedVersion = String(options.currentVersion || currentVersion()).trim();
         if (!parseVersion(installedVersion)) return { status: 'unavailable', reason: 'invalid-current-version' };
+        if (isBetaVersion(installedVersion)) return { status: 'unavailable', reason: 'beta-build' };
+        const pendingNotification = parseNotification(readStorage(storage, NOTIFIED_KEY));
+        if (!options.force && pendingNotification && now < pendingNotification.deferredUntil) {
+            return { status: 'deferred', reason: 'remind-later' };
+        }
 
         let release = null;
         let source = 'network';
@@ -138,22 +152,24 @@
         if (readStorage(storage, SKIPPED_VERSION_KEY) === release.version) {
             return { status: 'skipped', release, source };
         }
-        const notification = parseNotification(readStorage(storage, NOTIFIED_KEY));
-        if (!options.force && notification?.version === release.version && now - notification.notifiedAt < CHECK_INTERVAL_MS) {
-            return { status: 'deferred', release, source };
-        }
         return { status: 'available', release, source };
     }
 
-    function markNotified(version, storage = root.localStorage, now = Date.now()) {
+    function deferVersion(version, storage = root.localStorage, now = Date.now()) {
         if (!parseVersion(version) || !Number.isFinite(now)) return false;
-        writeStorage(storage, NOTIFIED_KEY, JSON.stringify({ version: String(version).trim(), notifiedAt: now }));
+        writeStorage(storage, NOTIFIED_KEY, JSON.stringify({
+            version: String(version).trim(),
+            deferredUntil: now + DEFER_INTERVAL_MS
+        }));
         return true;
     }
+
+    const markNotified = deferVersion;
 
     function skipVersion(version, storage = root.localStorage) {
         if (!parseVersion(version)) return false;
         writeStorage(storage, SKIPPED_VERSION_KEY, String(version).trim());
+        removeStorage(storage, NOTIFIED_KEY);
         return true;
     }
 
@@ -170,7 +186,9 @@
         checkForUpdate,
         compareVersions,
         currentVersion,
+        deferVersion,
         fetchLatestRelease,
+        isBetaVersion,
         markNotified,
         openRelease,
         parseVersion,
@@ -178,6 +196,7 @@
         constants: Object.freeze({
             CACHE_KEY,
             CHECK_INTERVAL_MS,
+            DEFER_INTERVAL_MS,
             FAILURE_KEY,
             FAILURE_RETRY_MS,
             LATEST_RELEASE_API,
