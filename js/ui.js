@@ -220,14 +220,18 @@
             const tn = document.getElementById('tab-navigation');
             if (tn) {
                 tn.innerHTML = '';
-                const defaultTids = ['main-tab', 'raid-tab', 'twitch-tab', 'cmd-tab', 'friends-tab', 'memo-tab', 'misc-tab'];
+                const defaultTids = ['main-tab', 'raid-tab', 'twitch-tab', 'cmd-tab', 'friends-tab', 'cp-tab', 'memo-tab', 'misc-tab'];
                 let tids = [...defaultTids];
                 try {
                     const savedOrder = JSON.parse(localStorage.getItem('stream_tab_order_v16'));
                     if (savedOrder && Array.isArray(savedOrder)) {
                         const filteredSaved = savedOrder.filter(id => defaultTids.includes(id));
                         const missing = defaultTids.filter(id => !filteredSaved.includes(id));
-                        tids = [...filteredSaved, ...missing];
+                        tids = [...filteredSaved];
+                        missing.forEach(mId => {
+                            const defIdx = defaultTids.indexOf(mId);
+                            tids.splice(Math.min(defIdx, tids.length), 0, mId);
+                        });
                     }
                 } catch (e) {}
 
@@ -244,7 +248,10 @@
             }
 
             // 描画更新
-            render(); renderFriends(); renderMemo();
+            render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab();
+            if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
+                fetchTwitchCustomRewards();
+            }
             restoreTwitchListCaches();
             ensureDefaultTwitchPresets();
             updatePollPresetDropdown();
@@ -431,6 +438,12 @@
                 tabButton.classList.add('active');
                 tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
+            if (id === 'cp-tab' && typeof renderCpTab === 'function') {
+                renderCpTab();
+                if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
+                    fetchTwitchCustomRewards();
+                }
+            }
             initSortable();
         }
 
@@ -496,8 +509,18 @@
             }
         }
 
-        function openModal(id) { document.getElementById(id).classList.add('modal-open'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('modal-open'); }
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'flex';
+            el.classList.add('modal-open');
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'none';
+            el.classList.remove('modal-open');
+        }
 
         // 非セキュアコンテキスト（file:///やOBSドック）向け：ブラウザ制限を回避するため、完全に同期処理でコピーを実行
         function writeClipboardTextSync(value) {
@@ -5627,3 +5650,706 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(initDynamicCategories, 500);
     setTimeout(checkBackupReminder, 1000);
 });
+
+/* ==========================================================================
+   CP (Channel Points) Management & Grouping Implementation
+   ========================================================================== */
+function loadAppRewardIdsFromStorage() {
+    try {
+        const saved = localStorage.getItem('cp_app_reward_ids_v1');
+        return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveAppRewardIdsToStorage() {
+    try {
+        localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(cpState.appRewardIds || []));
+    } catch (e) {}
+}
+
+function markRewardAsAppCreated(rewardId) {
+    if (!cpState.appRewardIds) cpState.appRewardIds = [];
+    if (rewardId && !cpState.appRewardIds.includes(rewardId)) {
+        cpState.appRewardIds.push(rewardId);
+        saveAppRewardIdsToStorage();
+    }
+}
+
+let cpState = {
+    rewards: [],
+    groups: [],
+    appRewardIds: loadAppRewardIdsFromStorage(),
+    isLoading: false,
+    sortBy: localStorage.getItem('cp_sort_by_v1') || 'default',
+    modalSortBy: localStorage.getItem('cp_modal_sort_by_v1') || 'default',
+    autoOffTimers: {}
+};
+
+function isAppCreatedReward(reward) {
+    if (!reward || !reward.id) return false;
+    const activeClientId = getEffectiveTwitchClientId();
+    if (reward.client_id && activeClientId && reward.client_id.trim().toLowerCase() === activeClientId.trim().toLowerCase()) {
+        return true;
+    }
+    return Boolean(cpState.appRewardIds && cpState.appRewardIds.includes(reward.id));
+}
+
+function getSortedCpRewards(rewards, sortBy) {
+    const list = [...(rewards || [])];
+    switch (sortBy) {
+        case 'app_first':
+            return list.sort((a, b) => {
+                const aApp = isAppCreatedReward(a) ? 1 : 0;
+                const bApp = isAppCreatedReward(b) ? 1 : 0;
+                if (aApp !== bApp) return bApp - aApp;
+                return (a.title || '').localeCompare(b.title || '', 'ja');
+            });
+        case 'external_first':
+            return list.sort((a, b) => {
+                const aApp = isAppCreatedReward(a) ? 1 : 0;
+                const bApp = isAppCreatedReward(b) ? 1 : 0;
+                if (aApp !== bApp) return aApp - bApp;
+                return (a.title || '').localeCompare(a.title || '', 'ja');
+            });
+        case 'cost_asc':
+            return list.sort((a, b) => (a.cost || 0) - (b.cost || 0));
+        case 'cost_desc':
+            return list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
+        case 'name_asc':
+            return list.sort((a, b) => (a.title || '').localeCompare(a.title || '', 'ja'));
+        case 'name_desc':
+            return list.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'ja'));
+        case 'default':
+        default:
+            return list;
+    }
+}
+
+function changeCpSortOrder(val) {
+    cpState.sortBy = val;
+    try { localStorage.setItem('cp_sort_by_v1', val); } catch (e) {}
+    renderCpTable();
+}
+
+function changeCpModalSortOrder(val) {
+    cpState.modalSortBy = val;
+    try { localStorage.setItem('cp_modal_sort_by_v1', val); } catch (e) {}
+    const activeGroupId = document.getElementById('cp-group-edit-id')?.value || null;
+    openCpGroupModal(activeGroupId);
+}
+
+function loadCpGroupsFromStorage() {
+    try {
+        const saved = localStorage.getItem('cp_groups_v1');
+        if (saved) {
+            cpState.groups = JSON.parse(saved);
+        } else {
+            cpState.groups = [
+                { id: 'g_horror', name: 'ホラゲー用', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
+                { id: 'g_morning', name: '朝配信セット', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
+                { id: 'g_afk', name: '離席中・休憩', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 }
+            ];
+            saveCpGroupsToStorage();
+        }
+    } catch (e) {
+        cpState.groups = [];
+    }
+}
+
+function saveCpGroupsToStorage() {
+    try {
+        localStorage.setItem('cp_groups_v1', JSON.stringify(cpState.groups));
+    } catch (e) {}
+}
+
+async function ensureCpAuth() {
+    const token = cleanRaidSoToken();
+    if (!token) {
+        throw new Error(langMap[currentLang]?.alerts?.requireToken || 'アクセストークンが未設定です。設定(⚙)で保存してください。');
+    }
+    if (!settings.userId || !getEffectiveTwitchClientId()) {
+        const authData = await refreshTwitchAuthFromToken(false);
+        if (!authData || !settings.userId) {
+            throw new Error(langMap[currentLang]?.alerts?.requireBroadcaster || '連携先のチャンネルを確認できませんでした。トークンと設定を確認してください。');
+        }
+    }
+    return settings.userId;
+}
+
+async function fetchTwitchCustomRewards() {
+    cpState.isLoading = true;
+    const tbody = document.getElementById('cp-rewards-tbody');
+    const loadingText = langMap[currentLang]?.ui?.cpTab?.loading || '読み込み中...';
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">${raidSoEscape(loadingText)}</td></tr>`;
+
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`);
+        cpState.rewards = data.data || [];
+        loadCpGroupsFromStorage();
+        renderCpTab();
+        showToast(langMap[currentLang]?.ui?.cpTab?.fetchSuccess || 'チャンネルポイント一覧を取得しました');
+    } catch (e) {
+        console.error('fetchTwitchCustomRewards error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.fetchFail || '取得失敗:';
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
+        showToast(`${failPrefix} ${e.message}`, 'warn');
+    } finally {
+        cpState.isLoading = false;
+    }
+}
+
+async function toggleCustomRewardEnabled(rewardId, isEnabled) {
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_enabled: isEnabled })
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab();
+        return true;
+    } catch (e) {
+        console.error('toggleCustomRewardEnabled error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.toggleFail || '切替失敗:';
+        let errMsg = e.message || '';
+        if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
+            const externalText = langMap[currentLang]?.ui?.cpTab?.cantModifyExternalReward || 'Twitch仕様制限: Web等で作成されたポイントはアプリから変更できません。本ツールの「＋ チャネポ作成」で作成したポイントのみ操作可能です。';
+            errMsg = externalText;
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
+        return false;
+    }
+}
+
+async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) {
+        if (!isAutomatic) showToast(langMap[currentLang]?.ui?.cpTab?.unassigned || '対象のポイントがグループに設定されていません', 'warn');
+        return;
+    }
+    const uniqueIds = Array.from(new Set(group.rewardIds));
+    let successCount = 0;
+    for (const rId of uniqueIds) {
+        const ok = await toggleCustomRewardEnabled(rId, targetState);
+        if (ok) successCount++;
+    }
+    const stateStr = targetState ? 'ON' : 'OFF';
+    const tagMsg = isAutomatic ? ' (自動)' : '';
+    showToast(`「${group.name}」 ${successCount}/${uniqueIds.length} -> ${stateStr}${tagMsg}`);
+
+    // Auto-OFF timer management
+    if (targetState) {
+        if (cpState.autoOffTimers[groupId]) {
+            clearTimeout(cpState.autoOffTimers[groupId]);
+            delete cpState.autoOffTimers[groupId];
+        }
+        const autoOffMin = parseInt(group.autoOffMinutes || 0, 10);
+        if (autoOffMin > 0) {
+            const delayMs = autoOffMin * 60 * 1000;
+            cpState.autoOffTimers[groupId] = setTimeout(async () => {
+                await batchToggleCpGroup(groupId, false, true);
+            }, delayMs);
+            showToast(`「${group.name}」 ${autoOffMin}分後に自動OFF`);
+        }
+    } else {
+        if (cpState.autoOffTimers[groupId]) {
+            clearTimeout(cpState.autoOffTimers[groupId]);
+            delete cpState.autoOffTimers[groupId];
+        }
+    }
+}
+
+async function triggerCpAutoOn(triggerType, detail = {}) {
+    if (!cpState.groups || cpState.groups.length === 0) return;
+    for (const g of cpState.groups) {
+        let shouldTrigger = false;
+        if (triggerType === 'stream_start' && g.autoOnStreamStart) {
+            shouldTrigger = true;
+        } else if (triggerType === 'raid' && g.autoOnRaid) {
+            shouldTrigger = true;
+        } else if (triggerType === 'obs_scene' && g.autoOnObsScene && detail.sceneName) {
+            if (g.autoOnObsScene.trim().toLowerCase() === detail.sceneName.trim().toLowerCase()) {
+                shouldTrigger = true;
+            }
+        }
+        if (shouldTrigger) {
+            await batchToggleCpGroup(g.id, true, true);
+        }
+    }
+}
+
+function openTwitchCpDashboard() {
+    const login = settings.broadcasterLogin || settings.username || settings.channel || '';
+    let url = 'https://dashboard.twitch.tv/viewer-rewards/channel-points/rewards';
+    if (login) {
+        url = `https://dashboard.twitch.tv/u/${encodeURIComponent(login.trim().toLowerCase())}/viewer-rewards/channel-points/rewards`;
+    }
+    window.open(url, '_blank');
+}
+
+async function recreateCpReward(rewardId) {
+    const targetReward = cpState.rewards.find(r => r.id === rewardId);
+    if (!targetReward) return;
+
+    const name = targetReward.title || '報酬';
+    const confirmMsg = (langMap[currentLang]?.ui?.cpTab?.recreateConfirm || "「{name}」と同じ設定で本ツール上に新しいチャンネルポイントを再作成しますか？\n（再作成後はアプリから一括ON/OFFや自動化が可能になります）").replace('{name}', name);
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const broadcasterId = await ensureCpAuth();
+        let createTitle = targetReward.title;
+        
+        // If exact title already exists, append (アプリ) to avoid Twitch CREATE_CUSTOM_REWARD_DUPLICATE_REWARD error
+        const existingTitles = cpState.rewards.map(r => r.title);
+        if (existingTitles.includes(createTitle)) {
+            createTitle = `${targetReward.title} (アプリ)`;
+        }
+
+        const payload = {
+            title: createTitle,
+            cost: targetReward.cost,
+            prompt: targetReward.prompt || '',
+            background_color: targetReward.background_color || '#9146FF',
+            is_user_input_required: !!targetReward.is_user_input_required
+        };
+        if (targetReward.max_per_stream_setting) {
+            payload.is_max_per_stream_enabled = !!targetReward.max_per_stream_setting.is_enabled;
+            payload.max_per_stream = targetReward.max_per_stream_setting.max_per_stream || 0;
+        }
+        if (targetReward.max_per_user_per_stream_setting) {
+            payload.is_max_per_user_per_stream_enabled = !!targetReward.max_per_user_per_stream_setting.is_enabled;
+            payload.max_per_user_per_stream = targetReward.max_per_user_per_stream_setting.max_per_user_per_stream || 0;
+        }
+        if (targetReward.global_cooldown_setting) {
+            payload.is_global_cooldown_enabled = !!targetReward.global_cooldown_setting.is_enabled;
+            payload.global_cooldown_seconds = targetReward.global_cooldown_setting.global_cooldown_seconds || 0;
+        }
+
+        const res = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const newReward = res.data?.[0];
+        if (newReward) {
+            markRewardAsAppCreated(newReward.id);
+        }
+
+        const succMsg = (langMap[currentLang]?.ui?.cpTab?.recreateSuccess || "「{name}」を本ツール管理下として再作成しました！").replace('{name}', createTitle);
+        showToast(succMsg);
+
+        if (newReward) {
+            let updatedGroups = false;
+            cpState.groups.forEach(g => {
+                if (g.rewardIds && g.rewardIds.includes(rewardId)) {
+                    if (!g.rewardIds.includes(newReward.id)) {
+                        g.rewardIds.push(newReward.id);
+                        updatedGroups = true;
+                    }
+                }
+            });
+            if (updatedGroups) saveCpGroupsToStorage();
+        }
+
+        showToast('※ Twitch仕様制限により、Web作成の元ポイントはTwitch管理画面から削除してください。', 'info');
+        await fetchTwitchCustomRewards();
+    } catch (e) {
+        console.error('recreateCpReward error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.recreateFail || '再作成失敗:';
+        showToast(`${failPrefix} ${e.message}`, 'warn');
+    }
+}
+
+async function toggleAllCpRewards(targetState) {
+    if (!cpState.rewards || cpState.rewards.length === 0) {
+        const noRewardsMsg = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
+        showToast(noRewardsMsg, 'warn');
+        return;
+    }
+    const stateStr = targetState ? 'ON' : 'OFF';
+    const confirmMsg = targetState 
+        ? 'すべてのチャンネルポイントを一括で【有効 (ON)】にしますか？' 
+        : 'すべてのチャンネルポイントを一括で【無効 (OFF)】にしますか？';
+    if (!confirm(confirmMsg)) return;
+
+    let successCount = 0;
+    const totalCount = cpState.rewards.length;
+    for (const r of cpState.rewards) {
+        if (r.is_enabled !== targetState) {
+            const ok = await toggleCustomRewardEnabled(r.id, targetState);
+            if (ok) successCount++;
+        } else {
+            successCount++;
+        }
+    }
+    showToast(`すべてのチャンネルポイント ${successCount}/${totalCount} 件を ${stateStr} にしました`);
+}
+
+async function saveCpReward() {
+    const editId = document.getElementById('cp-reward-edit-id')?.value;
+    const title = document.getElementById('cp-reward-title-input')?.value?.trim();
+    const cost = parseInt(document.getElementById('cp-reward-cost-input')?.value || '50', 10);
+    const prompt = document.getElementById('cp-reward-prompt-input')?.value?.trim();
+    const color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
+
+    if (!title) {
+        showToast(langMap[currentLang]?.ui?.cpTab?.enterRewardName || '報酬名を入力してください', 'warn');
+        return;
+    }
+
+    const payload = {
+        title: title,
+        cost: cost,
+        prompt: prompt,
+        background_color: color
+    };
+
+    try {
+        const broadcasterId = await ensureCpAuth();
+        let endpoint = `/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`;
+        let method = 'POST';
+        if (editId) {
+            endpoint += `&id=${editId}`;
+            method = 'PATCH';
+        }
+
+        const resData = await raidSoHelix(endpoint, { method: method, body: JSON.stringify(payload) }); if (resData?.data?.[0]?.id) markRewardAsAppCreated(resData.data[0].id);
+        showToast(langMap[currentLang]?.ui?.cpTab?.saveSuccess || 'チャンネルポイントを保存しました');
+        closeModal('cpRewardModal');
+        await fetchTwitchCustomRewards();
+    } catch (e) {
+        console.error('saveCpReward error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.saveFail || '保存失敗:';
+        let errMsg = e.message || '';
+        if (errMsg.includes('DUPLICATE_REWARD')) {
+            errMsg = '同名のチャンネルポイントが既にTwitch上に存在します。タイトルを変更するか (アプリ) などの識別名を追加してください。';
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
+    }
+}
+
+async function deleteCpReward(rewardId) {
+    const confirmMsg = langMap[currentLang]?.ui?.cpTab?.deleteConfirm || 'このチャンネルポイントを削除しますか？';
+    if (!confirm(confirmMsg)) return;
+    try {
+        const broadcasterId = await ensureCpAuth();
+        await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'DELETE'
+        });
+        showToast(langMap[currentLang]?.ui?.cpTab?.deleteSuccess || 'チャンネルポイントを削除しました');
+        await fetchTwitchCustomRewards();
+    } catch (e) {
+        console.error('deleteCpReward error:', e);
+        const failPrefix = langMap[currentLang]?.ui?.cpTab?.deleteFail || '削除失敗:';
+        showToast(`${failPrefix} ${e.message}`, 'warn');
+    }
+}
+
+function openCpGroupModal(groupId = null) {
+    const editIdInput = document.getElementById('cp-group-edit-id');
+    const nameInput = document.getElementById('cp-group-name-input');
+    const checklist = document.getElementById('cp-group-rewards-checklist');
+    if (!editIdInput || !nameInput || !checklist) return;
+
+    let targetGroup = null;
+    if (groupId) {
+        targetGroup = cpState.groups.find(g => g.id === groupId);
+    }
+
+    editIdInput.value = targetGroup ? targetGroup.id : '';
+    nameInput.value = targetGroup ? targetGroup.name : '';
+
+    const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
+    const autoRaidCheck = document.getElementById('cp-group-auto-raid');
+    const autoSceneInput = document.getElementById('cp-group-auto-obs-scene');
+    const autoOffMinInput = document.getElementById('cp-group-auto-off-min');
+
+    if (autoStreamCheck) autoStreamCheck.checked = targetGroup ? !!targetGroup.autoOnStreamStart : false;
+    if (autoRaidCheck) autoRaidCheck.checked = targetGroup ? !!targetGroup.autoOnRaid : false;
+    if (autoSceneInput) autoSceneInput.value = targetGroup ? (targetGroup.autoOnObsScene || '') : '';
+    if (autoOffMinInput) autoOffMinInput.value = targetGroup ? (targetGroup.autoOffMinutes || 0) : 0;
+
+    const modalSortSelect = document.getElementById('cp-modal-sort-select');
+    if (modalSortSelect) modalSortSelect.value = cpState.modalSortBy;
+
+    const selectedIds = new Set(targetGroup ? targetGroup.rewardIds : []);
+    let html = '';
+    const sortedList = getSortedCpRewards(cpState.rewards, cpState.modalSortBy);
+    if (sortedList.length === 0) {
+        const noRewardText = langMap[currentLang]?.ui?.cpTab?.noRewards || '登録されたポイントがありません。「最新取得」を実行してください。';
+        html = `<div style="color:var(--text-muted); padding:8px; text-align:left;">${raidSoEscape(noRewardText)}</div>`;
+    } else {
+        sortedList.forEach(r => {
+            const checked = selectedIds.has(r.id) ? 'checked' : '';
+            html += `<label style="display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; padding: 6px 10px; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; width: 100%; box-sizing: border-box; transition: 0.15s;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                <input type="checkbox" class="cp-group-reward-check" value="${raidSoEscape(r.id)}" ${checked} style="margin: 0; flex-shrink: 0; cursor: pointer; width: 15px; height: 15px; accent-color: var(--twitch-purple);">
+                <span style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); font-weight: 500;">${raidSoEscape(r.title)}</span>
+                <span style="color: var(--twitch-purple); font-weight: bold; font-size: 11px; flex-shrink: 0; margin-left: 6px;">(${r.cost} pt)</span>
+            </label>`;
+        });
+    }
+    checklist.innerHTML = html;
+    openModal('cpGroupModal');
+}
+
+function saveCpGroup() {
+    const editId = document.getElementById('cp-group-edit-id')?.value;
+    const name = document.getElementById('cp-group-name-input')?.value?.trim();
+    if (!name) {
+        showToast(langMap[currentLang]?.ui?.cpTab?.enterGroupName || 'グループ名を入力してください', 'warn');
+        return;
+    }
+    const checkedNodes = document.querySelectorAll('.cp-group-reward-check:checked');
+    const selectedRewardIds = Array.from(checkedNodes).map(node => node.value);
+
+    const autoOnStreamStart = !!document.getElementById('cp-group-auto-stream-start')?.checked;
+    const autoOnRaid = !!document.getElementById('cp-group-auto-raid')?.checked;
+    const autoOnObsScene = document.getElementById('cp-group-auto-obs-scene')?.value?.trim() || '';
+    const autoOffMinutes = parseInt(document.getElementById('cp-group-auto-off-min')?.value || '0', 10) || 0;
+
+    if (editId) {
+        const idx = cpState.groups.findIndex(g => g.id === editId);
+        if (idx !== -1) {
+            cpState.groups[idx].name = name;
+            cpState.groups[idx].rewardIds = selectedRewardIds;
+            cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
+            cpState.groups[idx].autoOnRaid = autoOnRaid;
+            cpState.groups[idx].autoOnObsScene = autoOnObsScene;
+            cpState.groups[idx].autoOffMinutes = autoOffMinutes;
+        }
+    } else {
+        const newGroup = {
+            id: 'g_' + Date.now(),
+            name: name,
+            rewardIds: selectedRewardIds,
+            autoOnStreamStart: autoOnStreamStart,
+            autoOnRaid: autoOnRaid,
+            autoOnObsScene: autoOnObsScene,
+            autoOffMinutes: autoOffMinutes
+        };
+        cpState.groups.push(newGroup);
+    }
+
+    saveCpGroupsToStorage();
+    closeModal('cpGroupModal');
+    renderCpTab();
+    showToast(langMap[currentLang]?.ui?.cpTab?.groupSaveSuccess || 'グループを保存しました');
+}
+
+function deleteCpGroup(groupId) {
+    const confirmMsg = langMap[currentLang]?.ui?.cpTab?.groupDeleteConfirm || 'このグループを削除しますか？';
+    if (!confirm(confirmMsg)) return;
+    cpState.groups = cpState.groups.filter(g => g.id !== groupId);
+    saveCpGroupsToStorage();
+    renderCpTab();
+    showToast(langMap[currentLang]?.ui?.cpTab?.groupDeleteSuccess || 'グループを削除しました');
+}
+
+function applyCpRewardTemplate(selectedRewardId) {
+    if (!selectedRewardId) return;
+    const targetReward = cpState.rewards.find(r => r.id === selectedRewardId);
+    if (!targetReward) return;
+
+    const titleInput = document.getElementById('cp-reward-title-input');
+    const costInput = document.getElementById('cp-reward-cost-input');
+    const promptInput = document.getElementById('cp-reward-prompt-input');
+    const colorInput = document.getElementById('cp-reward-color-input');
+
+    if (titleInput) titleInput.value = targetReward.title || '';
+    if (costInput) costInput.value = targetReward.cost || 50;
+    if (promptInput) promptInput.value = targetReward.prompt || '';
+    if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
+
+    const toastMsg = (langMap[currentLang]?.ui?.cpTab?.templateLoadedToast || "「{name}」の設定を読み込みました！").replace('{name}', targetReward.title || '');
+    showToast(toastMsg);
+}
+
+function openCpRewardModal(rewardId = null) {
+    const editIdInput = document.getElementById('cp-reward-edit-id');
+    const titleInput = document.getElementById('cp-reward-title-input');
+    const costInput = document.getElementById('cp-reward-cost-input');
+    const promptInput = document.getElementById('cp-reward-prompt-input');
+    const colorInput = document.getElementById('cp-reward-color-input');
+    const modalTitle = document.getElementById('cp-reward-modal-title');
+    const tplWrapper = document.getElementById('cp-reward-template-wrapper');
+    const tplSelect = document.getElementById('cp-reward-template-select');
+
+    if (!editIdInput || !titleInput || !costInput) return;
+
+    let targetReward = null;
+    if (rewardId) {
+        targetReward = cpState.rewards.find(r => r.id === rewardId);
+    }
+
+    if (targetReward) {
+        if (modalTitle) modalTitle.textContent = langMap[currentLang]?.ui?.cpTab?.rewardModalTitleEdit || 'チャンネルポイントの編集';
+        editIdInput.value = targetReward.id;
+        titleInput.value = targetReward.title || '';
+        costInput.value = targetReward.cost || 50;
+        if (promptInput) promptInput.value = targetReward.prompt || '';
+        if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
+        if (tplWrapper) tplWrapper.style.display = 'none';
+    } else {
+        if (modalTitle) modalTitle.textContent = langMap[currentLang]?.ui?.cpTab?.rewardModalTitleNew || '新しいチャンネルポイントを作成';
+        editIdInput.value = '';
+        titleInput.value = '';
+        costInput.value = 50;
+        if (promptInput) promptInput.value = '';
+        if (colorInput) colorInput.value = '#9146FF';
+        
+        if (tplWrapper && tplSelect) {
+            tplWrapper.style.display = 'block';
+            const placeholder = langMap[currentLang]?.ui?.cpTab?.selectTemplatePlaceholder || '-- 既存のチャンネルポイントを選択 --';
+            let optionsHtml = `<option value="">${raidSoEscape(placeholder)}</option>`;
+            (cpState.rewards || []).forEach(r => {
+                optionsHtml += `<option value="${raidSoEscape(r.id)}">${raidSoEscape(r.title)} (${r.cost}pt)</option>`;
+            });
+            tplSelect.innerHTML = optionsHtml;
+            tplSelect.value = '';
+        }
+    }
+    openModal('cpRewardModal');
+}
+
+function renderCpTab() {
+    renderCpGroups();
+    renderCpTable();
+}
+
+function renderCpGroups() {
+    const container = document.getElementById('cp-groups-container');
+    if (!container) return;
+
+    if (!cpState.groups || cpState.groups.length === 0) {
+        const noGroupText = langMap[currentLang]?.ui?.cpTab?.noGroups || 'グループが登録されていません。「新規グループ」から作成できます。';
+        container.innerHTML = `<div style="font-size:11px; color:var(--text-muted); grid-column: 1/-1;">${raidSoEscape(noGroupText)}</div>`;
+        return;
+    }
+
+    let html = '';
+    const bOnText = langMap[currentLang]?.ui?.cpTab?.batchOn || '一括ON';
+    const bOffText = langMap[currentLang]?.ui?.cpTab?.batchOff || '一括OFF';
+    const unassignedText = langMap[currentLang]?.ui?.cpTab?.unassigned || 'ポイント未割り当て';
+    const settingAria = langMap[currentLang]?.ui?.tips?.settings || '設定';
+    const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
+
+    cpState.groups.forEach(g => {
+        const rewardCount = (g.rewardIds || []).length;
+        let rewardTagsHtml = '';
+        (g.rewardIds || []).forEach(rId => {
+            const rewardObj = cpState.rewards.find(r => r.id === rId);
+            const rTitle = rewardObj ? rewardObj.title : rId;
+            const sharedCount = cpState.groups.filter(grp => grp.rewardIds.includes(rId)).length;
+            const isShared = sharedCount > 1;
+            rewardTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
+        });
+
+        let autoBadgesHtml = '';
+        const bStream = langMap[currentLang]?.ui?.cpTab?.badgeStreamStart || '⚡配信開始';
+        const bRaid = langMap[currentLang]?.ui?.cpTab?.badgeRaid || '⚡レイド';
+        if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
+        if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
+        if (g.autoOnObsScene) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#60a5fa; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">⚡${raidSoEscape(g.autoOnObsScene)}</span>`;
+        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">⏱️${g.autoOffMinutes}分OFF</span>`;
+
+        html += `
+        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <strong style="font-size:12px;">${raidSoEscape(g.name)}</strong>
+                    <span style="font-size:10px; color:var(--text-muted);">${rewardCount}</span>
+                </div>
+                ${autoBadgesHtml ? `<div style="margin-bottom:4px;">${autoBadgesHtml}</div>` : ''}
+                <div style="margin-bottom:8px;">${rewardTagsHtml || `<span style="font-size:10px; color:var(--text-muted);">${raidSoEscape(unassignedText)}</span>`}</div>
+            </div>
+            <div style="display:flex; gap:4px;">
+                <button type="button" class="btn-primary" onclick="batchToggleCpGroup('${g.id}', true)" style="flex:1; padding:3px 6px; font-size:10px; background:#00c875; color:#000;">${raidSoEscape(bOnText)}</button>
+                <button type="button" class="btn-secondary" onclick="batchToggleCpGroup('${g.id}', false)" style="flex:1; padding:3px 6px; font-size:10px; background:#e93d3a; color:#fff;">${raidSoEscape(bOffText)}</button>
+                <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+                <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function renderCpTable() {
+    const tbody = document.getElementById('cp-rewards-tbody');
+    const totalEl = document.getElementById('cp-total-count');
+    const mainSortSelect = document.getElementById('cp-sort-select');
+    if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
+    if (!tbody) return;
+
+    if (totalEl) totalEl.textContent = `${cpState.rewards.length}個`;
+
+    if (cpState.rewards.length === 0) {
+        const noRewardText = langMap[currentLang]?.ui?.cpTab?.noRewards || 'チャンネルポイントが取得されていません。「最新取得」をクリックしてください。';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">${raidSoEscape(noRewardText)}</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
+    const enabledText = langMap[currentLang]?.ui?.cpTab?.statusEnabled || '有効 (ON)';
+    const disabledText = langMap[currentLang]?.ui?.cpTab?.statusDisabled || '無効 (OFF)';
+    const editText = langMap[currentLang]?.ui?.cpTab?.edit || '編集';
+    const deleteAria = langMap[currentLang]?.ui?.delete || '削除';
+    const appBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeAppCreated || 'アプリ作成';
+    const extBadgeText = langMap[currentLang]?.ui?.cpTab?.badgeExternalCreated || 'Web/他作成';
+
+    sortedRewards.forEach(r => {
+        const isEnabled = r.is_enabled;
+        const color = r.background_color || '#9146FF';
+        const assignedGroups = cpState.groups.filter(g => g.rewardIds && g.rewardIds.includes(r.id));
+        let groupTagsHtml = '';
+        assignedGroups.forEach(g => {
+            const isShared = assignedGroups.length > 1;
+            groupTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px;">${raidSoEscape(g.name)}</span>`;
+        });
+
+        const isAppOwned = isAppCreatedReward(r);
+        const sourceBadgeHtml = isAppOwned
+            ? `<span style="font-size:9px; font-weight:bold; padding:1px 5px; border-radius:3px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; margin-left:5px; flex-shrink:0;">${raidSoEscape(appBadgeText)}</span>`
+            : `<span style="font-size:9px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-muted); margin-left:5px; flex-shrink:0;">${raidSoEscape(extBadgeText)}</span>`;
+
+        html += `
+        <tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:8px 6px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="width:16px; height:16px; border-radius:3px; background:${color}; flex-shrink:0;"></div>
+                    <div>
+                        <div style="font-weight:bold; display:flex; align-items:center;">
+                            <span>${raidSoEscape(r.title)}</span>
+                            ${sourceBadgeHtml}
+                        </div>
+                        <div style="font-size:10px; color:var(--twitch-purple);">${r.cost} pt</div>
+                    </div>
+                </div>
+            </td>
+            <td style="padding:8px 6px;">${groupTagsHtml || '<span style="color:var(--text-muted);">-</span>'}</td>
+            <td style="padding:8px 6px;">
+                <span style="font-size:10px; font-weight:bold; color:${isEnabled ? '#00f59b' : '#ff4f4d'};">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
+            </td>
+            <td style="padding:8px 6px;">
+                <label style="position:relative; display:inline-flex; align-items:center; cursor:pointer; user-select:none;" title="${isEnabled ? 'ON (有効)' : 'OFF (無効)'}">
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)" style="position:absolute; opacity:0; width:0; height:0;">
+                    <span style="display:inline-block; width:34px; height:18px; background-color:${isEnabled ? '#00c875' : 'rgba(255,255,255,0.15)'}; border:1px solid ${isEnabled ? '#00f59b' : 'var(--border-color)'}; border-radius:10px; transition:0.2s; position:relative;">
+                        <span style="position:absolute; top:2px; left:${isEnabled ? '18px' : '2px'}; width:12px; height:12px; background:#fff; border-radius:50%; transition:0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.3);"></span>
+                    </span>
+                </label>
+            </td>
+            <td style="padding:8px 6px; text-align:right;">
+                <button type="button" class="btn-secondary" onclick="openCpRewardModal('${r.id}')" style="padding:2px 6px; font-size:10px; display:inline-flex; align-items:center; margin-right:3px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>${raidSoEscape(editText)}</button>
+                <button type="button" class="btn-secondary" onclick="deleteCpReward('${r.id}')" style="padding:2px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
