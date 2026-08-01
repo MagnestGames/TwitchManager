@@ -86,6 +86,10 @@ jobs:
         shell: pwsh
         run: node scripts/test-audio-features.mjs
 
+      - name: Verify refined UI structure
+        shell: pwsh
+        run: node scripts/test-ui-refinements.mjs
+
       - name: Build Windows 11 installer
         shell: pwsh
         run: ./installer/build-installer.ps1 -Version "${{ needs.metadata.outputs.version }}"

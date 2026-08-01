@@ -32,6 +32,7 @@ $workflowRequirements = @(
     'scripts/check-theme-contrast\.mjs',
     'scripts/test-update-check\.mjs',
     'scripts/test-audio-features\.mjs',
+    'scripts/test-ui-refinements\.mjs',
     'installer/build-installer\.ps1',
     'installer/test-installer\.ps1',
     'installer/macos/build-installer\.sh',
