@@ -2,9 +2,9 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
-
 A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.
+
+![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
 > TwitchManager is an independently developed tool created and shared free of charge in good faith, with the hope of supporting streamers. It is not an official Twitch or OBS Studio product.
 >
