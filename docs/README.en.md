@@ -2,19 +2,6 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager logo](../assets/branding/TwitchManager-logo.png)
-
-To use the logo in a stream layout or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). You may also use it as an optional banner on stream layouts and web pages. It is included in the `assets/branding` folder of Windows and macOS installations.
-
-Anyone may display, copy, and redistribute the logo without prior permission in stream layouts, social posts, videos, articles, and other materials, for commercial or noncommercial use. Credit is optional. If you include credit, these two lines are enough:
-
-```text
-TwitchManager
-https://github.com/MagnestGames/TwitchManager
-```
-
-Do not present the logo as an official or endorsed Twitch or OBS Studio asset. See [Logo Usage and Credits](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits) for details.
-
 ![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
 A custom browser dock for OBS Studio that brings together stream preparation, management, notifications, and viewer tracking for Twitch broadcasts.
@@ -140,6 +127,21 @@ Requires OBS Studio's "Custom Browser Docks" feature.
 - [Report an Issue](https://github.com/MagnestGames/TwitchManager/issues)
 
 When reporting an issue, please include your OS, versions of OBS Studio and TwitchManager, reproduction steps, and any error messages displayed. Do not include access tokens or private credentials.
+
+## Creddit
+
+![TwitchManager logo](../assets/branding/TwitchManager-logo.png)
+
+To use the logo in a stream layout or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). You may also use it as an optional banner on stream layouts and web pages. It is included in the `assets/branding` folder of Windows and macOS installations.
+
+Anyone may display, copy, and redistribute the logo without prior permission in stream layouts, social posts, videos, articles, and other materials, for commercial or noncommercial use. Credit is optional. If you include credit, these two lines are enough:
+
+```text
+TwitchManager
+https://github.com/MagnestGames/TwitchManager
+```
+
+Do not present the logo as an official or endorsed Twitch or OBS Studio asset. See [Logo Usage and Credits](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits) for details.
 
 ## License
 
