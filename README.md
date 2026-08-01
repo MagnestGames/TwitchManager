@@ -2,21 +2,6 @@
 
 [日本語](README.md) | [English](docs/README.en.md) | [简体中文](docs/README.zh.md)
 
-![TwitchManagerロゴ](assets/branding/TwitchManager-logo.png)
-
-ロゴを配信画面や紹介素材で使う場合は、[TwitchManager-logo.png](assets/branding/TwitchManager-logo.png)をダウンロードしてください。配信画面やWebページなどのバナーとしても任意で使用できます。Windows版・macOS版のインストール先にも`assets/branding`フォルダとして同梱されます。
-
-このロゴは、配信画面、SNS、動画、記事などへ、個人・法人、商用・非商用を問わず事前連絡なしで掲載・転載・再配布できます。クレジット表記は任意です。表記する場合は、次の2行だけで構いません。
-
-```text
-TwitchManager
-https://github.com/MagnestGames/TwitchManager
-```
-
-TwitchまたはOBS Studioの公式製品・公認素材であると誤認させる使い方はしないでください。詳しくは[ロゴの利用とクレジット（Wiki）](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)を参照してください。
-
-![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
-
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
 > TwitchManagerは、配信者の活動を少しでも支えたいという思いから、個人が善意で開発・無償公開しているツールです。TwitchおよびOBS Studioの公式ツールではありません。
@@ -145,6 +130,26 @@ OBS Studioの「カスタムブラウザドック」を使用します。
 - [不具合を報告する](https://github.com/MagnestGames/TwitchManager/issues)
 
 不具合報告には、OS、OBS StudioとTwitchManagerのバージョン、再現手順、表示されたエラーを記載してください。アクセストークンなどの秘密情報は貼り付けないでください。
+
+## クレジット表記
+
+![TwitchManagerロゴ](assets/branding/TwitchManager-logo.png)
+
+ロゴを配信画面や紹介素材で使う場合は、[TwitchManager-logo.png](assets/branding/TwitchManager-logo.png)をダウンロードしてください。配信画面やWebページなどのバナーとしても任意で使用できます。Windows版・macOS版のインストール先にも`assets/branding`フォルダとして同梱されます。
+
+このロゴは、配信画面、SNS、動画、記事などへ、個人・法人、商用・非商用を問わず事前連絡なしで掲載・転載・再配布できます。
+クレジット表記は任意です。
+
+```text
+TwitchManager
+https://github.com/MagnestGames/TwitchManager
+```
+
+TwitchまたはOBS Studioの公式製品・公認素材であると誤認させる使い方はしないでください。
+詳しくは[ロゴの利用とクレジット（Wiki）](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)を参照してください。
+
+![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
+
 
 ## ライセンス
 
