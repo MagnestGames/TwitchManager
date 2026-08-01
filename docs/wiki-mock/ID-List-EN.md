@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](ID-List) | **🇺🇸 English** | [🇨🇳 繁體中文](ID-List-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](ID-List) | **🇺🇸 English** | [🇨🇳 简体中文](ID-List-ZH)
 
 ---
 
@@ -6,7 +6,7 @@
 
 Organize information about fellow streamers, collab partners, and raid candidates into manageable cards.
 
-![ID List Management](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-management.png)
+![ID List Management](images/features/id-list-management.png)
 
 ## Stored Information
 
@@ -25,8 +25,8 @@ Sort options include: Name, Group, Last Shoutout Date, Shoutout Count, and Birth
 
 Registered dates will trigger top notification alerts and populate the anniversary calendar.
 
-![Birthday Notification](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-birthday-popover.png)
+![Birthday Notification](images/features/id-list-birthday-popover.png)
 
-![Anniversary Calendar](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-calendar.png)
+![Anniversary Calendar](images/features/id-list-calendar.png)
 
 *Remember to periodically create a [Data Backup](Settings-and-Backup-EN) of your ID List.*

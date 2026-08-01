@@ -4,15 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TwitchManager Audio</title>
-  <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-    html, body { margin: 0; min-height: 100%; background: transparent; color: #eee; }
-    .status { display: inline-flex; gap: 8px; align-items: center; margin: 8px; padding: 6px 10px; border-radius: 999px; background: rgba(20, 16, 32, .72); font-size: 12px; opacity: .72; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #42d392; box-shadow: 0 0 8px rgba(66, 211, 146, .8); }
-  </style>
+  <meta http-equiv="refresh" content="0; url=TwitchManagerDock.html?audio-source=1">
+  <style>html, body { margin: 0; min-height: 100%; background: transparent; }</style>
 </head>
 <body>
-  <div class="status" role="status"><span class="dot"></span><span id="status-text">通知音ソースは待機中です</span></div>
-  <script src="js/audio-source.js"></script>
+  <script>
+    const target = new URL('TwitchManagerDock.html', location.href);
+    target.searchParams.set('audio-source', '1');
+    location.replace(target.href);
+  </script>
 </body>
 </html>

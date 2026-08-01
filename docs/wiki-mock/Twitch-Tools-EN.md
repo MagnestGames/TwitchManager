@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Twitch-Tools) | **🇺🇸 English** | [🇨🇳 繁體中文](Twitch-Tools-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Twitch-Tools) | **🇺🇸 English** | [🇨🇳 简体中文](Twitch-Tools-ZH)
 
 ---
 
@@ -10,7 +10,7 @@ The **"Twitch"** tab provides tools for managing Twitch interactions during and 
 
 Tracks first-time chatters, incoming raids, new followers, Bits cheers, subscriptions, sub gifts, chat activity, and Channel Point redemptions. Allows copying a formatted thank-you summary with one click.
 
-![Supporter List](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-supporter-list.png)
+![Supporter List](images/features/twitch-supporter-list.png)
 
 Channel Point redemptions log custom rewards as well as Twitch automatic rewards (Gigantify Emotes, Message Effects, Celebrations, Highlighted Messages). Bits used via Power-ups are also calculated into the Bits total.
 
@@ -18,7 +18,7 @@ You can exclude unwanted categories or bot accounts and configure automatic list
 
 ## Predictions & Polls
 
-![Predictions & Polls](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-prediction-poll.png)
+![Predictions & Polls](images/features/twitch-prediction-poll.png)
 
 - **Predictions**: 2 to 10 options, duration 30 to 1800 seconds.
 - **Polls**: Up to 5 options, duration 15 to 1800 seconds.
@@ -26,25 +26,25 @@ You can exclude unwanted categories or bot accounts and configure automatic list
 
 ## Chat Control Settings
 
-![Chat Control Settings](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-chat-control.png)
+![Chat Control Settings](images/features/twitch-chat-control.png)
 
 Easily toggle chat modes: Clear Chat, Emote-Only, Subscribers-Only, Unique Chat (r9k), Followers-Only, and Slow Mode.
 
 ## API Tools & Clips
 
-![API Tools & Clips](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-api-clips.png)
+![API Tools & Clips](images/features/twitch-api-clips.png)
 
 Create stream markers and send chat announcements. Clips can be created, fetched, and saved to your favorites.
 
 ## Collab Multi-stream URLs
 
-![Collab Multi-stream URLs](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-collab-url.png)
+![Collab Multi-stream URLs](images/features/twitch-collab-url.png)
 
 Generate multi-view URLs (`multistre.am` or `TwitchTheater`) using multiple Twitch IDs.
 
 ## Subscribers & VIPs
 
-![Subscribers & VIPs](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-subscribers-vip.png)
+![Subscribers & VIPs](images/features/twitch-subscribers-vip.png)
 
 Fetch subscriber list. View VIP lists and slot usage, and add or remove VIPs by entering Twitch login IDs.
 

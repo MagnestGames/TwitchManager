@@ -5,7 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TwitchManagerDock</title>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
+        if (twitchManagerAudioSourceMode) document.documentElement.classList.add('audio-source-mode');
+        else document.write('<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"><\/script>');
+    </script>
+    <style>
+        html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
+        html.audio-source-mode body { visibility: hidden; }
+    </style>
 
     <link rel="stylesheet" href="twitch_manager.css">
 </head>
@@ -800,10 +808,6 @@
                         <input type="checkbox" id="cp-group-auto-raid" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
                         <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnRaid">レイド受け取り時に自動ON</span>
                     </label>
-                    <div style="text-align: left;">
-                        <label style="display: block; margin-bottom: 4px; font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOnObsScene">指定OBSシーン切替時に自動ON:</label>
-                        <input type="text" id="cp-group-auto-obs-scene" placeholder="例: 雑談, ゲーム画面" data-i18n-placeholder="cpTab.autoOnObsScenePlaceholder" class="cd-input-field" style="display: block; width: 100%; padding: 5px 8px; font-size: 11.5px; box-sizing: border-box; text-align: left;">
-                    </div>
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;">
                         <label style="font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOffMinutes">ONにしてから自動OFF (分):</label>
                         <div style="display: inline-flex; align-items: center; gap: 6px;">
@@ -876,14 +880,26 @@
         </div>
     </div>
 
-    <script src="twitch_manager_version.js"></script>
-    <script src="twitch_manager_locales.js"></script>
-    <script src="js/update-check.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/eventsub.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/main.js"></script>
+    <script>
+        if (twitchManagerAudioSourceMode) {
+            document.body.innerHTML = '<div id="status-text" role="status"></div>';
+            const audioSourceScript = document.createElement('script');
+            audioSourceScript.src = 'js/audio-source.js';
+            document.body.appendChild(audioSourceScript);
+        } else {
+            const appScripts = [
+                'twitch_manager_version.js',
+                'twitch_manager_locales.js',
+                'js/update-check.js',
+                'js/storage.js',
+                'js/api.js',
+                'js/eventsub.js',
+                'js/ui.js',
+                'js/main.js'
+            ];
+            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+        }
+    </script>
 
 </body>
 

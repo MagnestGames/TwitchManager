@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Feature-Overview) | **🇺🇸 English** | [🇨🇳 繁體中文](Feature-Overview-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Feature-Overview) | **🇺🇸 English** | [🇨🇳 简体中文](Feature-Overview-ZH)
 
 ---
 

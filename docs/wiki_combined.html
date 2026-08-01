@@ -306,11 +306,12 @@
 
     <!-- 表紙 -->
     <div class="cover-page">
-        <div class="cover-logo-badge">OBS Studio Plugin</div>
+        <div class="cover-logo-badge">OBS Studio Custom Browser Dock</div>
         <h1 class="cover-title">TwitchManager</h1>
         <div class="cover-subtitle">公式ユーザーマニュアル &amp; 統合Wikiドキュメント</div>
         <div class="cover-divider"></div>
         <div class="cover-meta">
+            Version: 1.0.2<br>
             発行日: 2026年8月<br>
             対応言語: 日本語 (Japanese)<br>
             ドキュメント形式: 統合PDFマニュアル
@@ -322,30 +323,32 @@
         <h2 class="toc-title">目次 (Table of Contents)</h2>
         <ul class="toc-list">
             <li><a href="#section-home"><span class="toc-num">1.</span> ホーム</a></li>
-<li><a href="#section-getting-started"><span class="toc-num">2.</span> インストールとOBSへの追加</a></li>
-<li><a href="#section-authentication"><span class="toc-num">3.</span> Twitch認証</a></li>
-<li><a href="#section-feature-overview"><span class="toc-num">4.</span> 機能一覧</a></li>
-<li><a href="#section-stream-title"><span class="toc-num">5.</span> 配信タイトル・カテゴリ設定</a></li>
-<li><a href="#section-raid-and-notifications"><span class="toc-num">6.</span> 通知とRaid・紹介</a></li>
-<li><a href="#section-twitch-tools"><span class="toc-num">7.</span> Twitchツール・管理</a></li>
-<li><a href="#section-commands"><span class="toc-num">8.</span> チャットコマンド設定</a></li>
-<li><a href="#section-id-list"><span class="toc-num">9.</span> IDリスト</a></li>
-<li><a href="#section-memo-and-other"><span class="toc-num">10.</span> メモ帳・その他</a></li>
-<li><a href="#section-settings-and-backup"><span class="toc-num">11.</span> 設定・バックアップ</a></li>
-<li><a href="#section-troubleshooting"><span class="toc-num">12.</span> トラブルシューティング</a></li>
-<li><a href="#section-q&a"><span class="toc-num">13.</span> よくある質問 (Q&A)</a></li>
+<li><a href="#section-release-history"><span class="toc-num">2.</span> 更新履歴</a></li>
+<li><a href="#section-getting-started"><span class="toc-num">3.</span> インストールとOBSへの追加</a></li>
+<li><a href="#section-authentication"><span class="toc-num">4.</span> Twitch認証</a></li>
+<li><a href="#section-feature-overview"><span class="toc-num">5.</span> 機能一覧</a></li>
+<li><a href="#section-stream-title"><span class="toc-num">6.</span> 配信タイトル・カテゴリ設定</a></li>
+<li><a href="#section-raid-and-notifications"><span class="toc-num">7.</span> 通知とRaid・紹介</a></li>
+<li><a href="#section-twitch-tools"><span class="toc-num">8.</span> Twitchツール・管理</a></li>
+<li><a href="#section-commands"><span class="toc-num">9.</span> チャットコマンド設定</a></li>
+<li><a href="#section-id-list"><span class="toc-num">10.</span> IDリスト</a></li>
+<li><a href="#section-memo-and-other"><span class="toc-num">11.</span> メモ帳・その他</a></li>
+<li><a href="#section-settings-and-backup"><span class="toc-num">12.</span> 設定・バックアップ</a></li>
+<li><a href="#section-logo-and-credits"><span class="toc-num">13.</span> ロゴの利用とクレジット</a></li>
+<li><a href="#section-troubleshooting"><span class="toc-num">14.</span> トラブルシューティング</a></li>
+<li><a href="#section-q&a"><span class="toc-num">15.</span> よくある質問 (Q&A)</a></li>
 
         </ul>
     </div>
 
     <!-- ドキュメント本文 -->
-    
+
         <section class="wiki-chapter" id="section-home">
             <div class="chapter-header">
                 <span class="chapter-badge">Chapter 1</span>
                 <span class="chapter-filename">Home.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#home-en">🇺🇸 English</a> | <a href="#home-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-home-en">🇺🇸 English</a> | <a href="#section-home-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="twitchmanager">TwitchManager</h1>
 <p>OBSのドックから、Twitchの配信準備・配信中の操作・情報管理をまとめて行うローカルツールです。</p>
@@ -355,21 +358,79 @@
 <li>配信中: レイド紹介、送信レイド、通知音、予測・投票、チャット操作</li>
 <li>配信後: サポーター・ポイント引き換え集計、ログ、バックアップ</li>
 </ul>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png" target="_blank">TwitchManagerドック</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/twitch-manager-dock.png" alt="TwitchManagerドック" /><span class="img-caption">TwitchManagerドック</span></div>
 <h2 id="">はじめる</h2>
-<p>1. <a href="#getting-started">インストールしてOBSへ追加</a></p>
-<p>2. <a href="#authentication">Twitch認証を設定</a></p>
-<p>3. <a href="#feature-overview">機能一覧を確認</a></p>
+<p>1. <a href="#section-getting-started">インストールしてOBSへ追加</a></p>
+<p>2. <a href="#section-authentication">Twitch認証を設定</a></p>
+<p>3. <a href="#section-feature-overview">機能一覧を確認</a></p>
+<h2 id="102">1.0.2の主な更新</h2>
+<ul>
+<li>TwitchManagerの音声を1本のOBSブラウザソースへまとめて出力</li>
+<li>指定したリスナーを配信ごとに一度だけ音で知らせる「お出迎え通知」</li>
+<li>安定版のアップデート通知</li>
+<li>チャンネルポイント管理、レイド受付設定、ダーク／ライトテーマの改善</li>
+</ul>
+<p>詳しくは<a href="#section-release-history">更新履歴</a>を参照してください。</p>
 <blockquote>データはPC内に保存されます。キャッシュ削除やPC移行の前にバックアップしてください。</blockquote>
 
         </section>
-        
-        <section class="wiki-chapter" id="section-getting-started">
+
+        <section class="wiki-chapter" id="section-release-history">
             <div class="chapter-header">
                 <span class="chapter-badge">Chapter 2</span>
+                <span class="chapter-filename">Release-History.md</span>
+            </div>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong></blockquote>
+<p>---</p>
+<h1 id="">更新履歴</h1>
+<p>TwitchManagerの主な変更を、新しいバージョンから順に掲載します。</p>
+<h2 id="102202681">1.0.2（2026年8月1日）</h2>
+<h3 id="">新機能</h3>
+<ul>
+<li><a href="#section-raid-and-notifications">OBSブラウザソースへ音声をまとめる機能</a>を追加しました。TwitchManagerの音声をOBSの音声ミキサーで1本にまとめて扱えます。</li>
+<li><a href="#section-raid-and-notifications">お出迎え通知</a>を追加しました。指定したリスナーが配信のチャット参加者一覧に現れたとき、配信ごとに一度だけ通知音を鳴らせます。</li>
+<li><a href="#section-getting-started">アップデート通知</a>を追加しました。安定版では「確認」「3日後に通知」「スキップ」から選べます。</li>
+<li>TwitchManagerロゴを配布し、配信画面やバナーなどで任意に使えるようにしました。</li>
+<li>サポーターリストへ、チャンネルポイントのカスタム報酬・自動報酬、Power-upで使われたBitsの記録と、配信ごとの過去ログを追加しました。</li>
+</ul>
+<h3 id="">機能改善</h3>
+<ul>
+<li><a href="#section-twitch-tools">チャンネルポイント管理</a>を、報酬名を読みやすく、狭い画面でも操作しやすい表示へ変更しました。</li>
+<li>チャンネルポイント報酬へ、グループ一括ON/OFF、全件ON/OFF、並べ替え、既存報酬からの設定読み込み、配信開始・受信レイド時の自動ON、時間指定の自動OFFを追加しました。Twitch APIで変更できない外部作成報酬は、誤操作しないよう明確に区別します。</li>
+<li>お出迎え通知のID入力で、レイド紹介などの履歴から候補を選べるようにしました。</li>
+<li>レイド受付設定URLをコピーし、PCの既定のブラウザで開ける案内へ変更しました。</li>
+<li>日付表示プリセットと、表示設定からレイド受付設定を含む機能ブロックを表示・非表示にする設定を追加しました。</li>
+<li>ダークモードとライトモードのボタン、スイッチ、配色、狭幅表示を調整しました。</li>
+<li>日本語・英語・簡体字の表示と用語を見直しました。</li>
+</ul>
+<h3 id="">不具合修正</h3>
+<ul>
+<li>送信レイド時の紹介処理とレイド先URLの案内を修正しました。</li>
+<li>OBSブラウザソース出力を有効にしたとき、TwitchManager本体との二重再生を避けるよう通知音の経路を統一しました。</li>
+<li>途中まで実装されていたobs-websocket設定を削除しました。</li>
+<li>チャンネルポイント一覧などで発生していた文字の縦表示、はみ出し、操作ボタンの不揃いを修正しました。</li>
+<li>EventSubの再接続・重複通知、配信開始判定、更新通知と復元画面のダイアログ競合を修正しました。</li>
+<li>バックアップから別アカウントの認証情報を持ち込まないようにし、空の認証情報を保存したときは接続を安全に停止するよう修正しました。</li>
+</ul>
+<h3 id="">インストーラー・ドキュメント</h3>
+<ul>
+<li>Windows 11用インストーラーとmacOS 11以降用パッケージへ、OBS音声ブラウザソースとURL案内を同梱しました。</li>
+<li>配布物はインストーラー本体へ集約し、個別のSHA256ファイル配布を終了しました。ハッシュ値はリリース本文で確認できます。</li>
+<li>READMEとWikiへ、追加機能、更新方法、ロゴの利用方法を掲載しました。</li>
+<li>構文、ローカライズ、テーマ、主要機能、インストーラー構成の検証を拡充しました。</li>
+</ul>
+<h3 id="">アップデート前の確認</h3>
+<p>「その他」タブでバックアップを作成してから、最新のインストーラーを実行してください。同じ場所へ上書きインストールした場合、OBSへ登録済みのドックURLは通常そのまま利用できます。</p>
+<p>過去の配布物は<a href="https://github.com/MagnestGames/TwitchManager/releases" target="_blank">GitHub Releases</a>で確認できます。</p>
+
+        </section>
+
+        <section class="wiki-chapter" id="section-getting-started">
+            <div class="chapter-header">
+                <span class="chapter-badge">Chapter 3</span>
                 <span class="chapter-filename">Getting-Started.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#getting-started-en">🇺🇸 English</a> | <a href="#getting-started-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-getting-started-en">🇺🇸 English</a> | <a href="#section-getting-started-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="obs">インストールとOBSへの追加</h1>
 <h2 id="">インストール</h2>
@@ -384,6 +445,7 @@
 <p>既定のインストール先は<code>/Applications/TwitchManager</code>です。対応環境はmacOS 11以降です。</p>
 <h2 id="">アップデート通知</h2>
 <p>TwitchManagerは起動時に最新の安定版を確認します。新しいバージョンがある場合は、現在の版と最新の版を表示するダイアログが開きます。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/update-notification-dialog.png" alt="アップデート通知ダイアログ" /><span class="img-caption">アップデート通知ダイアログ</span></div>
 <ul>
 <li>「確認」: GitHubの対象リリースページを開きます。</li>
 <li>「3日後に通知」: 3日間保留し、期限後に同じ更新を再び通知します。</li>
@@ -392,7 +454,7 @@
 <p>確認は最大でも24時間に1回です。beta版では通知を表示しません。通信できない場合も通常どおり起動し、エラーダイアログは表示しません。更新前に「その他」タブからバックアップを作成してください。</p>
 <h2 id="obs">OBSへ追加する</h2>
 <p>1. OBS Studioの「ドック」から「カスタムブラウザドック」を開きます。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-menu.png" target="_blank">OBSのドックメニュー</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/obs-custom-browser-dock-menu.png" alt="OBSのドックメニュー" /><span class="img-caption">OBSのドックメニュー</span></div>
 <p>2. ドック名に<code>TwitchManager</code>と入力します。</p>
 <p>3. URL欄にOBS用URLを貼り付けます。URLは次のいずれかの方法で取得できます。</p>
 <ul>
@@ -400,27 +462,27 @@
 <li><code>TwitchManagerDock.html</code>をブラウザで開き、アドレスバーに表示されたURLをコピーします。</li>
 </ul>
 <p>4. 「適用」を押します。</p>
-<img src="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="カスタムブラウザドックの設定例" width="700">
+<img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="カスタムブラウザドックの設定例" width="700">
 <p>5. 追加されたドックをドラッグして配置し、文字やボタンが読める幅に調整します。</p>
-<p>6. 右上の歯車から<a href="#authentication">Twitch認証</a>を設定します。</p>
+<p>6. 右上の歯車から<a href="#section-authentication">Twitch認証</a>を設定します。</p>
 <blockquote>ZIP版を使用する場合は、HTMLファイルだけを取り出さず、同梱ファイルを同じフォルダ構成のまま配置してください。</blockquote>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-authentication">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 3</span>
+                <span class="chapter-badge">Chapter 4</span>
                 <span class="chapter-filename">Authentication.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#authentication-en">🇺🇸 English</a> | <a href="#authentication-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-authentication-en">🇺🇸 English</a> | <a href="#section-authentication-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="twitch">Twitch認証</h1>
 <p>Twitchへの反映、イベント検知、チャット操作などを使うにはアクセストークンが必要です。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png" target="_blank">Twitch認証設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/settings-authentication.png" alt="Twitch認証設定" /><span class="img-caption">Twitch認証設定</span></div>
 <h2 id="">設定手順</h2>
 <p>1. 右上の歯車を開きます。</p>
 <p>2. 「Twitch Token GeneratorのURLをコピー」を押します。</p>
-<p>3. 通常のブラウザでURLを開き、Custom Scope Tokenを作成します。</p>
+<p>3. 既定のブラウザでURLを開き、Custom Scope Tokenを作成します。</p>
 <p>4. ACCESS TOKENをTwitchManagerへ貼り付けて保存します。</p>
 <p>5. 連携アカウントが表示されたことを確認します。</p>
 <h2 id="">主な権限</h2>
@@ -429,34 +491,35 @@
 <tr><td>タイトル・カテゴリ</td><td>channel:manage:broadcast</td></tr>
 <tr><td>チャット</td><td>user:read:chat / user:write:chat</td></tr>
 <tr><td>通知</td><td>bits:read / channel:read:subscriptions / channel:read:redemptions</td></tr>
+<tr><td>お出迎え通知</td><td>moderator:read:chatters</td></tr>
 <tr><td>予測・投票</td><td>channel:manage:predictions / channel:manage:polls</td></tr>
 <tr><td>レイド・チャンネル紹介</td><td>channel:manage:raids / moderator:manage:shoutouts</td></tr>
 <tr><td>チャット管理</td><td>moderator:manage:announcements / moderator:manage:chat_settings</td></tr>
 <tr><td>クリップ・VIP</td><td>clips:edit / channel:read:vips / channel:manage:vips</td></tr>
 </table>
-<p>権限不足の場合は、該当機能だけが失敗します。ポイント引き換え履歴には<code>channel:read:redemptions</code>、<code>/raid</code>の実行には<code>channel:manage:raids</code>が必要です。新しい機能を使うときや認証エラーが出たときは、必要な権限（Scope）を付けてトークンを再発行してください。</p>
+<p>権限不足の場合は、該当機能だけが失敗します。ポイント引き換え履歴には<code>channel:read:redemptions</code>、<code>/raid</code>の実行には<code>channel:manage:raids</code>、お出迎え通知には<code>moderator:read:chatters</code>が必要です。新しい機能を使うときや認証エラーが出たときは、必要な権限（Scope）を付けてトークンを再発行してください。</p>
 <h2 id="">注意</h2>
 <ul>
 <li>アクセストークンを配信画面、Issue、SNSへ載せないでください。</li>
 <li>流出が疑われる場合は「Twitch認証を解除」して再発行してください。</li>
-<li>通常ブラウザとOBSドックは保存領域が異なる場合があります。配信で使うOBSドック側で設定してください。</li>
+<li>既定のブラウザとOBSドックは保存領域が異なる場合があります。配信で使うOBSドック側で設定してください。</li>
 </ul>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-feature-overview">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 4</span>
+                <span class="chapter-badge">Chapter 5</span>
                 <span class="chapter-filename">Feature-Overview.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#feature-overview-en">🇺🇸 English</a> | <a href="#feature-overview-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-feature-overview-en">🇺🇸 English</a> | <a href="#section-feature-overview-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">機能一覧</h1>
 <table class="doc-table">
 <tr><th>タブ</th><th>できること</th></tr>
 <tr><td>タイトル</td><td>タイトル・カテゴリの保存、同期、反映</td></tr>
-<tr><td>通知と紹介</td><td>レイド紹介、送信レイド、紹介文、通知音</td></tr>
-<tr><td>Twitch</td><td>サポーター・ポイント引き換え集計、予測・投票、チャット、クリップ、VIP</td></tr>
+<tr><td>通知と紹介</td><td>レイド紹介、送信レイド、紹介文、通知音、OBS音声出力、お出迎え通知</td></tr>
+<tr><td>Twitch</td><td>チャンネルポイント管理、サポーター・ポイント引き換え集計、予測・投票、チャット、クリップ、VIP</td></tr>
 <tr><td>コマンド</td><td>配信・チャット・ユーザー管理</td></tr>
 <tr><td>IDリスト</td><td>配信者ID、SNS、タグ、誕生日・記念日</td></tr>
 <tr><td>メモ帳</td><td>配信メモの保存</td></tr>
@@ -468,20 +531,21 @@
 <li>配信中: 通知と紹介、送信レイド、Twitch、コマンド</li>
 <li>配信後: サポーターリスト、ポイント引き換え・イベントログ、バックアップ</li>
 </ul>
-<p>Twitchへの反映やイベント検知には<a href="#authentication">Twitch認証</a>が必要です。表示する機能は<a href="#settings-and-backup">設定</a>から絞り込めます。</p>
+<p>Twitchへの反映やイベント検知には<a href="#section-authentication">Twitch認証</a>が必要です。表示する機能は<a href="#section-settings-and-backup">設定</a>から絞り込めます。</p>
+<p>安定版は起動時に新しいリリースを確認します。詳しくは<a href="#section-getting-started">インストールとOBSへの追加</a>の「アップデート通知」を参照してください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-stream-title">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 5</span>
+                <span class="chapter-badge">Chapter 6</span>
                 <span class="chapter-filename">Stream-Title.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#stream-title-en">🇺🇸 English</a> | <a href="#stream-title-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-stream-title-en">🇺🇸 English</a> | <a href="#section-stream-title-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">タイトル管理</h1>
 <p>配信タイトルとカテゴリをカードとして保存し、Twitchへ反映します。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/title-management.png" target="_blank">タイトル管理</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/title-management.png" alt="タイトル管理" /><span class="img-caption">タイトル管理</span></div>
 <h2 id="">カードを作る</h2>
 <p>1. 「＋ テンプレートを追加」で、ゲームや企画のまとまりを作ります。</p>
 <p>2. テンプレート右上の「＋」でカードを追加します。</p>
@@ -497,15 +561,15 @@
 <p>カード名は鉛筆ボタンで変更できます。削除と並び替えは、誤操作を防ぐため配信前に行ってください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-raid-and-notifications">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 6</span>
+                <span class="chapter-badge">Chapter 7</span>
                 <span class="chapter-filename">Raid-and-Notifications.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#raid-and-notifications-en">🇺🇸 English</a> | <a href="#raid-and-notifications-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-raid-and-notifications-en">🇺🇸 English</a> | <a href="#section-raid-and-notifications-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
-<h1 id="">通知と紹介・通知音</h1>
+<h1 id="">通知と紹介</h1>
 <p>「通知と紹介」タブでは、チャンネル紹介、レイド時の自動処理、紹介文、通知音を設定します。</p>
 <h2 id="">手動紹介・レイド開始</h2>
 <p>Twitch IDまたはチャンネルURLを入力し、次の操作を行います。</p>
@@ -514,10 +578,10 @@
 <li><code>/raid</code>: 入力したチャンネルへのレイドを開始</li>
 <li>「紹介文を送信」: 保存した手動紹介文をチャットへ送信</li>
 </ul>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png" target="_blank">手動チャンネル紹介</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/twitch-manager-dock.png" alt="手動チャンネル紹介" /><span class="img-caption">手動チャンネル紹介</span></div>
 <p>IDリストに登録済みの配信者は入力候補に表示されます。<code>/raid</code>を押す前に、入力したTwitch IDと配信先を必ず確認してください。</p>
 <h2 id="">自動レイド紹介</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-auto-introduction.png" target="_blank">レイド紹介設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/raid-auto-introduction.png" alt="レイド紹介設定" /><span class="img-caption">レイド紹介設定</span></div>
 <ul>
 <li>レイド受信後に紹介文を自動送信</li>
 <li>送信までの待ち時間を0～600秒で指定</li>
@@ -528,7 +592,7 @@
 </ul>
 <h2 id="">紹介文</h2>
 <p>受信レイド用、手動紹介用、送信レイド用の文面を別々に保存できます。送信レイド用の文面は、<code>/raid</code>実行後にレイド先URLを案内するときに使います。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-message-templates.png" target="_blank">紹介文テンプレート</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/raid-message-templates.png" alt="紹介文テンプレート" /><span class="img-caption">紹介文テンプレート</span></div>
 <table class="doc-table">
 <tr><th>記法</th><th>内容</th></tr>
 <tr><td>{displayName}</td><td>表示名</td></tr>
@@ -539,61 +603,95 @@
 <tr><td>{title}</td><td>直近のタイトル</td></tr>
 </table>
 <p>送信レイド用の文面では<code>{url}</code>がレイド先のチャンネルURLに置き換わります。</p>
+<h2 id="">レイド受付設定</h2>
+<p>「Twitchのレイド受付設定」から設定URLをコピーし、PCの既定のブラウザで開きます。Twitchへのログインが必要な場合も、普段使っているブラウザでそのまま認証できます。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/raid-reception-settings-link.png" alt="レイド受付設定URL" /><span class="img-caption">レイド受付設定URL</span></div>
 <h2 id="">通知音</h2>
-<p>レイド、コメント、ポイント引換、初回コメントごとに、オン・オフ、音源、音量を設定します。通知音はTwitchManager上で直接再生されます。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png" target="_blank">通知音の基本設定</a></p>
+<p>レイド、コメント、ポイント引き換え、初回コメントごとに、オン・オフ、音源、音量を設定します。「OBSへ通知音をまとめる」が無効な場合は、TwitchManager本体から再生します。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/notification-sounds.png" alt="通知音の基本設定" /><span class="img-caption">通知音の基本設定</span></div>
 <h3 id="">外部サウンドフォルダ</h3>
 <p>1. 「音声フォルダを選択」を押します。</p>
 <p>2. 音源が入ったフォルダを選びます。</p>
 <p>3. 各通知の音源を選び、試聴して保存します。</p>
-<p>推奨形式はwavまたはmp3です。ページ再読み込みやOBS再起動後は、ブラウザの制限により同じフォルダを再選択する必要があります。</p>
+<p>推奨形式はwavまたはmp3です。ページの再読み込みやOBS再起動後は、ブラウザの制限により同じフォルダを再選択する必要があります。</p>
 <p>自動応答用アカウントなどへ通知音を鳴らしたくない場合は、「通知音を鳴らさないユーザー」にTwitchログインIDを登録します。</p>
+<h3 id="obs">🔊 OBSへ通知音をまとめる</h3>
+<p>TwitchManagerの音声を、1本のOBSブラウザソースから再生できます。通知ごとに別々のソースを作る必要はありません。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/notification-sounds-obs-browser-source.png" alt="OBSブラウザソースの設定" /><span class="img-caption">OBSブラウザソースの設定</span></div>
+<p>1. 通知音設定の「🔊 OBSへ通知音をまとめる」を開きます。</p>
+<p>2. 表示されたブラウザソースURLをコピーします。</p>
+<p>3. OBSでブラウザソースを1つ追加し、コピーしたURLを貼り付けます。</p>
+<p>4. 「通知音をOBSブラウザソースから出す」を有効にします。</p>
+<p>5. 通知音を試聴し、OBSの音声ミキサーへ1回だけ入力されることを確認します。</p>
+<p>有効時はOBSブラウザソースから、無効時はTwitchManager本体から再生します。OBS側で配信者自身も音を聞く場合は、音声モニタリングを必要に応じて設定してください。同じブラウザソースを複数追加したり、OBSのモニタリング音声をデスクトップ音声でも取り込んだりすると、二重に聞こえる場合があります。</p>
+<h3 id="">お出迎え通知</h3>
+<p>「🔊 OBSへ通知音をまとめる」の説明画面にある狐アイコンを押すと、「お出迎え通知」を有効にできます。有効にすると、通知音設定の下部へTwitch IDと通知音の登録欄が表示されます。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/notification-sounds-welcome-notification.png" alt="お出迎え通知の設定" /><span class="img-caption">お出迎え通知の設定</span></div>
+<p>1. 「お出迎え通知」を有効にします。</p>
+<p>2. Twitch ID、ログイン名、またはチャンネルURLを入力します。レイド紹介などの履歴にあるIDは候補から選べます。</p>
+<p>3. 通知音を選び、「追加」を押します。</p>
+<p>指定したリスナーが配信のチャット参加者一覧に現れると、コメントをしていなくても、その配信で一度だけ通知音を鳴らします。配信開始時からチャット参加者一覧にいるリスナーには、開始直後の誤通知を避けるため鳴らしません。一度鳴ったリスナーが退出して戻っても、同じ配信では再び鳴りません。</p>
+<blockquote>参加者一覧を定期的に確認するため、入室から通知まで数分かかる場合があります。</blockquote>
+<blockquote>遊び心のある機能です。相手がコメントせずに視聴していることが分かる場合があるため、配信の雰囲気や相手との関係に合わせてご利用ください。</blockquote>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-twitch-tools">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 7</span>
+                <span class="chapter-badge">Chapter 8</span>
                 <span class="chapter-filename">Twitch-Tools.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#twitch-tools-en">🇺🇸 English</a> | <a href="#twitch-tools-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-twitch-tools-en">🇺🇸 English</a> | <a href="#section-twitch-tools-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="twitch">Twitch連携機能</h1>
 <p>「Twitch」タブには、配信中と配信後に使うTwitch連携機能があります。</p>
+<h2 id="">チャンネルポイント管理</h2>
+<p>チャンネルポイント報酬を取得し、状態の確認、オン・オフ、編集、削除、グループ分けを行います。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/channel-points-management.png" alt="チャンネルポイント管理" /><span class="img-caption">チャンネルポイント管理</span></div>
+<p>報酬名を中心に確認でき、作成元は短いラベルで表示されます。案内文は必要なときだけ展開できます。狭い画面では各報酬がカード表示へ切り替わります。</p>
+<ul>
+<li>全件またはグループ単位で、報酬を一括ON/OFF</li>
+<li>報酬名、コスト、作成元による並べ替え</li>
+<li>既存報酬の設定を新規作成画面へ読み込み</li>
+<li>配信開始時または受信レイド時にグループを自動ON</li>
+<li>ONから指定時間後にグループを自動OFF</li>
+</ul>
+<p>同じ報酬を複数グループへ登録している場合、別の自動化グループで使用中の報酬は意図せずOFFにしないよう保護されます。</p>
+<blockquote>Twitch APIの制限により、一括オン・オフやTwitchManagerからの編集・削除を行えるのは、TwitchManagerで作成したカスタム報酬だけです。Twitchで作成した報酬の画像などは、Twitchの管理画面で設定してください。</blockquote>
 <h2 id="">サポーターリスト</h2>
 <p>初見、レイド、フォロー、Bits、サブスク、ギフト、チャット、チャンネルポイント引き換えを集計し、お礼文としてコピーします。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-supporter-list.png" target="_blank">サポーターリスト</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-supporter-list.png" alt="サポーターリスト" /><span class="img-caption">サポーターリスト</span></div>
 <p>ポイント引き換えには、カスタム報酬に加えて、スタンプ巨大化、メッセージエフェクト、画面全体のお祝い、メッセージ強調などの自動報酬も記録されます。Twitchのパワーアップで使われたBitsも「ビッツ（Cheer）」へ反映されます。</p>
 <p>不要な項目と自動応答用アカウントを除外し、配信開始時の自動リセットを設定できます。「過去ログを開く」から、保存された以前の集計を確認できます。</p>
 <h2 id="">予測・投票</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-prediction-poll.png" target="_blank">予測と投票</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-prediction-poll.png" alt="予測と投票" /><span class="img-caption">予測と投票</span></div>
 <ul>
 <li>予測: 2～10件の選択肢、30～1800秒</li>
 <li>投票: 最大5件の選択肢、15～1800秒</li>
 <li>作成、取得、終了、プリセット保存</li>
 </ul>
 <h2 id="">チャット設定</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-chat-control.png" target="_blank">チャット設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-chat-control.png" alt="チャット設定" /><span class="img-caption">チャット設定</span></div>
 <p>チャットクリア、エモート限定、サブスク限定、重複制限、フォロー限定、スローモードを操作します。</p>
 <h2 id="api">API操作・クリップ</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-api-clips.png" target="_blank">API操作とクリップ</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-api-clips.png" alt="API操作とクリップ" /><span class="img-caption">API操作とクリップ</span></div>
 <p>配信マーカーと告知を作成できます。クリップは作成、一覧取得、お気に入り登録に対応します。</p>
 <h2 id="url">コラボURL</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-collab-url.png" target="_blank">コラボURL生成</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-collab-url.png" alt="コラボURL生成" /><span class="img-caption">コラボURL生成</span></div>
 <p>複数のTwitch IDから、multistre.amまたはTwitchTheaterの同時視聴URLを生成します。</p>
 <h2 id="vip">サブスクライバー・VIP</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-subscribers-vip.png" target="_blank">サブスクライバーとVIP</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/twitch-subscribers-vip.png" alt="サブスクライバーとVIP" /><span class="img-caption">サブスクライバーとVIP</span></div>
 <p>サブスクライバー一覧を取得できます。VIPは一覧と利用枠を取得し、ログインIDで追加・削除します。</p>
-<p>機能ごとに必要な権限（Scope）が異なります。失敗する場合は<a href="#authentication">Twitch認証</a>とイベントログを確認してください。</p>
+<p>機能ごとに必要な権限（Scope）が異なります。失敗する場合は<a href="#section-authentication">Twitch認証</a>とイベントログを確認してください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-commands">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 8</span>
+                <span class="chapter-badge">Chapter 9</span>
                 <span class="chapter-filename">Commands.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#commands-en">🇺🇸 English</a> | <a href="#commands-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-commands-en">🇺🇸 English</a> | <a href="#section-commands-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">コマンド</h1>
 <p>配信中によく使うTwitchコマンドをカテゴリ別にまとめています。</p>
@@ -603,31 +701,31 @@
 </ul>
 <p>直接実行にはTwitch認証と対応する権限（Scope）が必要です。</p>
 <h2 id="">配信管理</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-stream.png" target="_blank">配信管理コマンド</a></p>
-<p>タイトル、カテゴリ、マーカー、レイド、広告を操作します。レイド先へのURL案内も自動で送りたい場合は、<a href="#raid-and-notifications">通知と紹介</a>の<code>/raid</code>ボタンを使います。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/commands-stream.png" alt="配信管理コマンド" /><span class="img-caption">配信管理コマンド</span></div>
+<p>タイトル、カテゴリ、マーカー、レイド、広告を操作します。レイド先へのURL案内も自動で送りたい場合は、<a href="#section-raid-and-notifications">通知と紹介</a>の<code>/raid</code>ボタンを使います。</p>
 <h2 id="">チャット設定</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-chat.png" target="_blank">チャット設定コマンド</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/commands-chat.png" alt="チャット設定コマンド" /><span class="img-caption">チャット設定コマンド</span></div>
 <p>告知、クリア、チャットモード、フォロー限定、スローモードを操作します。</p>
 <h2 id="">ユーザー管理</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-users.png" target="_blank">ユーザー管理コマンド</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/commands-users.png" alt="ユーザー管理コマンド" /><span class="img-caption">ユーザー管理コマンド</span></div>
 <p>BAN、タイムアウト、MOD、VIP、監視、制限、ブロック、ウィスパーを操作します。</p>
 <h2 id="">インタラクション</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-interaction.png" target="_blank">インタラクションコマンド</a></p>
-<p>投票、予測、ピン留め、Shoutoutを操作します。詳細な予測・投票は<a href="#twitch-tools">Twitch</a>、紹介文は<a href="#raid-and-notifications">通知と紹介</a>を使います。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/commands-interaction.png" alt="インタラクションコマンド" /><span class="img-caption">インタラクションコマンド</span></div>
+<p>投票、予測、ピン留め、Shoutoutを操作します。詳細な予測・投票は<a href="#section-twitch-tools">Twitch</a>、紹介文は<a href="#section-raid-and-notifications">通知と紹介</a>を使います。</p>
 <blockquote>BAN、レイド、広告、権限変更は実行前に対象と内容を確認してください。レイド開始には<code>channel:manage:raids</code>権限が必要です。</blockquote>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-id-list">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 9</span>
+                <span class="chapter-badge">Chapter 10</span>
                 <span class="chapter-filename">ID-List.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#id-list-en">🇺🇸 English</a> | <a href="#id-list-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-id-list-en">🇺🇸 English</a> | <a href="#section-id-list-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="id">IDリスト</h1>
 <p>コラボ相手やレイド先候補の情報をカードで管理します。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-management.png" target="_blank">IDリスト</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/id-list-management.png" alt="IDリスト" /><span class="img-caption">IDリスト</span></div>
 <h2 id="">登録できる情報</h2>
 <ul>
 <li>表示名、Twitch ID</li>
@@ -641,23 +739,23 @@
 <p>並び順は、名前、グループ、直近の紹介、紹介回数、誕生日から選べます。Twitch IDは表示名ではなくログインIDで揃えてください。</p>
 <h2 id="">誕生日・記念日</h2>
 <p>登録した日付は、画面上部の通知とカレンダーに表示されます。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-birthday-popover.png" target="_blank">誕生日・記念日の通知</a></p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-calendar.png" target="_blank">記念日カレンダー</a></p>
-<p>IDリストは定期的に<a href="#settings-and-backup">バックアップ</a>してください。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/id-list-birthday-popover.png" alt="誕生日・記念日の通知" /><span class="img-caption">誕生日・記念日の通知</span></div>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/id-list-calendar.png" alt="記念日カレンダー" /><span class="img-caption">記念日カレンダー</span></div>
+<p>IDリストは定期的に<a href="#section-settings-and-backup">バックアップ</a>してください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-memo-and-other">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 10</span>
+                <span class="chapter-badge">Chapter 11</span>
                 <span class="chapter-filename">Memo-and-Other.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#memo-and-other-en">🇺🇸 English</a> | <a href="#memo-and-other-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-memo-and-other-en">🇺🇸 English</a> | <a href="#section-memo-and-other-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">メモ帳・その他</h1>
 <h2 id="">メモ帳</h2>
 <p>配信準備や進行内容を複数のカードへ保存します。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/memo-pad.png" target="_blank">メモ帳</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/memo-pad.png" alt="メモ帳" /><span class="img-caption">メモ帳</span></div>
 <p>「＋」で追加し、ロック解除中に並び替えます。不要なカードは削除モードで削除します。</p>
 <p>使用例:</p>
 <ul>
@@ -667,7 +765,7 @@
 <li>次回配信の作業</li>
 </ul>
 <h2 id="">バックアップ・復元</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png" target="_blank">バックアップと復元</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/backup-restore-logs.png" alt="バックアップと復元" /><span class="img-caption">バックアップと復元</span></div>
 <ul>
 <li>バックアップ: 保存データをコピーしてテキストファイルへ保管</li>
 <li>復元: バックアップJSONを読み込み、上書きまたはマージ</li>
@@ -677,45 +775,69 @@
 <p>認証、通知、レイド紹介、コマンドなどの動作を確認できます。問い合わせ時はトークンや個人情報が含まれていないか確認してから共有してください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-settings-and-backup">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 11</span>
+                <span class="chapter-badge">Chapter 12</span>
                 <span class="chapter-filename">Settings-and-Backup.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#settings-and-backup-en">🇺🇸 English</a> | <a href="#settings-and-backup-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-settings-and-backup-en">🇺🇸 English</a> | <a href="#section-settings-and-backup-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">設定・バックアップ</h1>
 <p>右上の歯車で共通設定を変更します。</p>
 <h2 id="twitch">Twitch認証</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png" target="_blank">Twitch認証設定</a></p>
-<p>トークンの保存、連携アカウントの確認、認証解除を行います。詳しくは<a href="#authentication">Twitch認証</a>を参照してください。</p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/settings-authentication.png" alt="Twitch認証設定" /><span class="img-caption">Twitch認証設定</span></div>
+<p>トークンの保存、連携アカウントの確認、認証解除を行います。詳しくは<a href="#section-authentication">Twitch認証</a>を参照してください。</p>
 <h2 id="">表示設定</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-display.png" target="_blank">表示設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/settings-display.png" alt="表示設定" /><span class="img-caption">表示設定</span></div>
 <p>日付形式、文字サイズ、行間を変更できます。日付形式は画面上部と {date} のコピーに反映されます。</p>
 <h2 id="">配信管理</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-stream-management.png" target="_blank">配信管理設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/settings-stream-management.png" alt="配信管理設定" /><span class="img-caption">配信管理設定</span></div>
 <ul>
 <li>配信開始時に3分広告を自動実行</li>
 <li>紹介・レイドメッセージを20分間自動ピン留め</li>
 </ul>
 <p>自動広告は初期設定ではオフです。必要な場合のみ有効にし、Twitch側の設定と重複しないことを確認してください。</p>
 <h2 id="">機能ブロックの表示</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/category-display-settings.png" target="_blank">機能ブロックの表示設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/category-display-settings.png" alt="機能ブロックの表示設定" /><span class="img-caption">機能ブロックの表示設定</span></div>
 <p>「通知と紹介」「Twitch」「コマンド」の各機能を表示・非表示にできます。非表示にしても保存データは削除されません。</p>
 <h2 id="">バックアップ</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png" target="_blank">バックアップと復元</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/backup-restore-logs.png" alt="バックアップと復元" /><span class="img-caption">バックアップと復元</span></div>
 <p>「その他」タブの「コピー」で保存データを退避します。OBS更新、PC移行、キャッシュ削除、復元の前に作成してください。</p>
 <p>データはOBSまたはブラウザ内にローカル保存されます。通常ブラウザとOBSで内容が異なる場合は、片方でバックアップし、もう片方で復元します。</p>
 
         </section>
-        
+
+        <section class="wiki-chapter" id="section-logo-and-credits">
+            <div class="chapter-header">
+                <span class="chapter-badge">Chapter 13</span>
+                <span class="chapter-filename">Logo-and-Credits.md</span>
+            </div>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong></blockquote>
+<p>---</p>
+<h1 id="">ロゴの利用とクレジット</h1>
+<h2 id="">ロゴをダウンロード</h2>
+<a href="https://github.com/MagnestGames/TwitchManager/raw/release_1.0.2/assets/branding/TwitchManager-logo.png" target="_blank">TwitchManager-logo.png</a>をダウンロードして利用できます。Windows版・macOS版のインストール先にも、`assets/branding/TwitchManager-logo.png`として同梱されています。
+<h2 id="">利用できる範囲</h2>
+<p>TwitchManagerロゴは、配信画面やWebページのバナー、SNS、動画、記事、紹介素材などへ任意で使用できます。個人・法人、商用・非商用を問わず、事前連絡なしで掲載・転載・再配布できます。</p>
+<h2 id="">クレジット表記</h2>
+<p>クレジット表記は任意です。表記する場合は、プロダクト名とGitHubのURLだけで構いません。</p>
+<pre><code class="language-text">TwitchManager
+https://github.com/MagnestGames/TwitchManager</code></pre>
+<h2 id="">注意事項</h2>
+<ul>
+<li>TwitchまたはOBS Studioの公式製品・公認素材であると誤認させる使い方はしないでください。</li>
+<li>ロゴは、リポジトリの<a href="https://github.com/MagnestGames/TwitchManager/blob/release_1.0.2/LICENSE" target="_blank">MIT License</a>に基づいて配布しています。</li>
+</ul>
+
+        </section>
+
         <section class="wiki-chapter" id="section-troubleshooting">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 12</span>
+                <span class="chapter-badge">Chapter 14</span>
                 <span class="chapter-filename">Troubleshooting.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#troubleshooting-en">🇺🇸 English</a> | <a href="#troubleshooting-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-troubleshooting-en">🇺🇸 English</a> | <a href="#section-troubleshooting-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="">トラブルシューティング</h1>
 <p>問題が起きたら「その他」タブのイベントログを確認し、再設定前にバックアップを作成してください。</p>
@@ -724,6 +846,9 @@
 <tr><td>OBSに表示されない</td><td>カスタムブラウザドックのURLと設置場所</td></tr>
 <tr><td>Twitch操作が失敗する</td><td>連携アカウント、トークン、Scope</td></tr>
 <tr><td>外部サウンドが鳴らない</td><td>音声フォルダの再選択</td></tr>
+<tr><td>OBSブラウザソースから音が出ない</td><td>出力設定、ブラウザソース、音声ミキサー</td></tr>
+<tr><td>通知音が二重に聞こえる</td><td>ブラウザソースの数、音声モニタリング</td></tr>
+<tr><td>お出迎え通知が鳴らない</td><td>配信状態、権限、登録ID、検出待ち時間</td></tr>
 <tr><td>OBSと通常ブラウザで内容が違う</td><td>保存領域とバックアップ</td></tr>
 <tr><td>レイドや通知を検知しない</td><td>認証、EventSub、機能のスイッチ</td></tr>
 </table>
@@ -735,32 +860,46 @@
 <li>「ドック」メニューでTwitchManagerが有効か確認する</li>
 </ul>
 <h2 id="twitch">Twitch機能が動かない</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png" target="_blank">認証状態</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/settings-authentication.png" alt="認証状態" /><span class="img-caption">認証状態</span></div>
 <p>1. 設定画面の連携アカウントを確認します。</p>
 <p>2. 必要な権限（Scope）を付けてトークンを再発行します。</p>
 <p>3. イベントログの認証・権限エラーを確認します。</p>
 <p>ポイント引き換え履歴には<code>channel:read:redemptions</code>、レイド開始には<code>channel:manage:raids</code>が必要です。</p>
 <p>タイトル反映後にOBS標準の配信情報だけが古い場合は、そのドックを再読み込みします。</p>
 <h2 id="">外部サウンドが鳴らない</h2>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png" target="_blank">通知音設定</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/notification-sounds.png" alt="通知音設定" /><span class="img-caption">通知音設定</span></div>
 <p>1. 「音声フォルダを選択」から同じフォルダを再選択します。</p>
 <p>2. 各通知の音源を選び直します。</p>
 <p>3. 試聴して保存します。</p>
 <p>再読み込みやOBS再起動後は再選択が必要です。それでも鳴らない場合は、スイッチ、音量、除外ID、OBSの音声ミキサーを確認し、wavまたはmp3で試してください。</p>
+<h2 id="obs">OBSブラウザソースから音が出ない</h2>
+<p>1. 「🔊 OBSへ通知音をまとめる」を開き、「通知音をOBSブラウザソースから出す」が有効か確認します。</p>
+<p>2. OBSへ登録したURLが、画面に表示されたブラウザソースURLと一致するか確認します。</p>
+<p>3. OBSの音声ミキサーで、対象のブラウザソースがミュートされていないか確認します。</p>
+<p>4. ブラウザソースを非表示にしたとき終了する設定を使っている場合は、ソースを表示してから再度試聴します。</p>
+<p>通知音が二重に聞こえる場合は、同じブラウザソースを複数追加していないか確認してください。配信者向けの音声モニタリングをデスクトップ音声でも取り込んでいる場合は、OBSの音声経路も見直します。</p>
+<h2 id="">お出迎え通知が鳴らない</h2>
+<ul>
+<li>配信中であることを確認します。オフライン中の参加者は通知対象になりません。</li>
+<li>トークンに<code>moderator:read:chatters</code>権限があることを確認します。</li>
+<li>Twitch IDが登録され、「お出迎え通知」が有効になっていることを確認します。</li>
+<li>入室から通知まで数分待ちます。</li>
+<li>配信開始時から参加者一覧にいた場合や、同じ配信ですでに一度鳴った場合は通知しません。</li>
+</ul>
 <h2 id="">データが消えた</h2>
 <p>キャッシュやサイトデータを削除すると、ローカル保存も消えることがあります。バックアップがある場合は「その他」タブから復元します。</p>
-<p>!<a href="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png" target="_blank">バックアップと復元</a></p>
+<div class="img-container"><img src="file:///C:/Users/kagom/OneDrive/ドキュメント/RaidShoutOut_OBS/.codex-worktrees/release-1.0.2/docs/wiki-mock/images/features/backup-restore-logs.png" alt="バックアップと復元" /><span class="img-caption">バックアップと復元</span></div>
 <h2 id="">解決しない場合</h2>
 <p>OS、OBSのバージョン、発生手順、時刻、スクリーンショット、イベントログを控えてください。アクセストークンや個人情報は共有しないでください。</p>
 
         </section>
-        
+
         <section class="wiki-chapter" id="section-q&a">
             <div class="chapter-header">
-                <span class="chapter-badge">Chapter 13</span>
+                <span class="chapter-badge">Chapter 15</span>
                 <span class="chapter-filename">Q&A.md</span>
             </div>
-            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#qa-en">🇺🇸 English</a> | <a href="#qa-zh">🇨🇳 繁體中文</a></blockquote>
+            <blockquote>🌐 <strong>Language / 語言:</strong> <strong>🇯🇵 日本語</strong> | <a href="#section-qa-en">🇺🇸 English</a> | <a href="#section-qa-zh">🇨🇳 简体中文</a></blockquote>
 <p>---</p>
 <h1 id="qa">Q&A</h1>
 <h2 id="">タイトルや設定が消えました</h2>
@@ -771,11 +910,17 @@
 <p>OBS標準の配信情報ドックを再読み込みするか、Ctrl+Rを押してください。</p>
 <h2 id="">別のサウンドフォルダを使えますか</h2>
 <p>使えます。「音声フォルダを選択」から設定してください。OBS再起動や再読み込み後は同じフォルダの再選択が必要です。</p>
+<h2 id="twitchmanagerobs">TwitchManagerの音声をOBSでまとめて扱えますか</h2>
+<p>扱えます。通知音設定の「🔊 OBSへ通知音をまとめる」からURLをコピーし、OBSへブラウザソースを1つ追加してください。有効時はOBSブラウザソースから、無効時はTwitchManager本体から再生します。</p>
+<h2 id="">お出迎え通知は、コメントしていないリスナーにも反応しますか</h2>
+<p>反応します。Twitchの参加者一覧を定期的に確認するため、入室から通知まで数分かかる場合があります。配信開始時から参加者一覧にいた場合や、同じ配信ですでに一度通知した場合は鳴りません。</p>
+<h2 id="">アップデート通知を後回しにできますか</h2>
+<p>「3日後に通知」を選ぶと、同じ更新を3日後にもう一度通知します。「スキップ」はそのバージョンだけを通知しない設定です。さらに新しいバージョンが公開されると、再び通知します。beta版ではアップデート通知を表示しません。</p>
 <h2 id="obs">通常ブラウザの設定がOBSへ反映されません</h2>
 <p>保存領域が異なる場合があります。片方でバックアップし、もう片方で復元してください。</p>
 
         </section>
-        
+
 
 </body>
 </html>

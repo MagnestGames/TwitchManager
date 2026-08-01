@@ -74,7 +74,7 @@ for directory_name in assets js sounds; do
 done
 
 dock_url="file:///Applications/TwitchManager/TwitchManagerDock.html"
-audio_url="file:///Applications/TwitchManager/TwitchManagerAudio.html"
+audio_url="${dock_url}?audio-source=1"
 printf '%s\n' "$dock_url" > "$install_root/OBS_Dock_URL.txt"
 printf '%s\n' "$audio_url" > "$install_root/OBS_Audio_Source_URL.txt"
 printf '%s\n' "TwitchManagerInstaller-macOS-v1" > "$install_root/.twitchmanager-install"

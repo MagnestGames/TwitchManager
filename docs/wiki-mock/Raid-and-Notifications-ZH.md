@@ -1,63 +1,87 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Raid-and-Notifications) | [🇺🇸 English](Raid-and-Notifications-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Raid-and-Notifications) | [🇺🇸 English](Raid-and-Notifications-EN) | **🇨🇳 简体中文**
 
 ---
 
-# 通知與 Raid 介紹・音效設定
+# 通知与介绍
 
-在 **「通知與介紹」** 分頁中，可以設定頻道宣傳、Raid 自動處理、介紹文模板及通知音效。
+在 **“通知与介绍”** 选项卡中，可以设置频道介绍、Raid 自动处理、介绍文模板和通知音。
 
-## 手動介紹與發射 Raid
+## 手动介绍与发起 Raid
 
-輸入 Twitch ID 或頻道網址後，可執行以下操作：
+输入 Twitch ID 或频道 URL 后，可执行以下操作：
 
-- `/shoutout`: 執行 Twitch 官方頻道介紹。
-- `/raid`: 開始 Raid 至指定頻道。
-- **「發送介紹文」**: 將預存的手動介紹文發送至聊天室。
+- `/shoutout`: 执行 Twitch 官方频道介绍。
+- `/raid`: 向指定频道发起 Raid。
+- **“发送介绍文”**：将保存的手动介绍文发送到聊天中。
 
-![手動頻道介紹介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png)
+![手动频道介绍界面](images/twitch-manager-dock.png)
 
-已在 ID 列表中註冊的實況主會顯示於自動完成選單中。在點擊 `/raid` 前，請務必確認輸入的 Twitch ID。
+已在 ID 列表中注册的主播会显示在自动补全列表中。点击 `/raid` 前，请务必确认输入的 Twitch ID 和 Raid 目标。
 
-## 自動 Raid 介紹
+## 自动 Raid 介绍
 
-![自動 Raid 介紹設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-auto-introduction.png)
+![自动 Raid 介绍设置](images/features/raid-auto-introduction.png)
 
-- 收到 Raid 後自動發送介紹文。
-- 設定發送延遲時間 (0 至 600 秒)。
-- 同時自動觸發 Twitch 官方 `/shoutout`。
-- 手動執行 `/raid` 時，自動在聊天室張貼 Raid 目標頻道網址。
-- 支援透過指令 (如 `!so`) 發送介紹文。
-- 可限定指令權限 (實況主、MOD、VIP、訂閱者、所有人)。
+- 收到 Raid 后自动发送介绍文。
+- 设置发送延迟时间（0 至 600 秒）。
+- 同时自动触发 Twitch 官方 `/shoutout`。
+- 手动执行 `/raid` 时，自动在聊天室发送 Raid 目标频道 URL。
+- 支持通过命令（如 `!so`）发送介绍文。
+- 可将命令权限限制为主播、MOD、VIP、订阅者或所有人。
 
-## 介紹文模板
+## 介绍文模板
 
-可分別儲存接收 Raid、手動介紹及發送 Raid 的介紹文。發送 Raid 介紹文用於執行 `/raid` 後在聊天室附上目標頻道連結。
+可以分别保存接收 Raid、手动介绍和发送 Raid 时使用的介绍文。发送 Raid 介绍文用于在执行 `/raid` 后，将目标频道链接发送到聊天中。
 
-![介紹文模板設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/raid-message-templates.png)
+![介绍文模板设置](images/features/raid-message-templates.png)
 
-| 變數 | 說明 |
+| 变量 | 说明 |
 | --- | --- |
-| `{displayName}` | 顯示名稱 |
+| `{displayName}` | 显示名称 |
 | `{username}` | Twitch ID |
-| `{viewers}` | Raid 人數 |
-| `{url}` | 頻道網址 |
-| `{game}` | 最近分類 |
-| `{title}` | 最近標題 |
+| `{viewers}` | Raid 人数 |
+| `{url}` | 频道 URL |
+| `{game}` | 最近分类 |
+| `{title}` | 最近标题 |
 
-發送 Raid 的模板中，`{url}` 會自動替換為 Raid 目標頻道的網址。
+在发送 Raid 的模板中，`{url}` 会自动替换为 Raid 目标频道的 URL。
+
+## Raid 接收设置
+
+从 **“Twitch Raid 接收设置”** 复制设置 URL，然后使用电脑的默认浏览器打开。即使 Twitch 要求登录，也可以直接在常用浏览器中完成验证。
 
 ## 通知音效
 
-可針對 Raid、聊天留言、點數兌換與首次留言個別設定開關、音源與音量。通知音效會直接在 TwitchManager 中播放。
+可以分别设置 Raid、聊天消息、频道积分兑换和首次发言的开关、音频文件与音量。默认情况下，通知音从 TwitchManager 播放；启用 OBS 输出后，所有通知音会通过同一个 OBS 浏览器源播放。
 
-![通知音效基本設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
+![通知音效基本设置](images/features/notification-sounds.png)
 
-### 外部音效資料夾設定
+### 外部音频文件夹
 
-1. 點擊 **「選擇音效資料夾」**。
-2. 選擇儲存音效的資料夾。
-3. 指定各通知事件的音效，試聽後儲存。
+1. 点击 **“选择音频文件夹”**。
+2. 选择保存通知音的文件夹。
+3. 为各个通知事件选择声音，试听后保存。
 
-*推薦格式為 `.wav` 或 `.mp3`。受限於瀏覽器安全政策，重新載入頁面或重啟 OBS 後可能需要重新選擇資料夾。*
+推荐使用 `.wav` 或 `.mp3`。受浏览器安全策略限制，重新加载页面或重启 OBS 后，可能需要再次选择文件夹。
 
-若不希望自動回應機器人帳號觸發音效，可將其 Twitch ID 新增至 **「不播放音效的使用者」**。
+如果不希望机器人账号触发通知音，请将其 Twitch ID 添加到 **“不播放通知音的用户”**。
+
+### 🔊 通过 OBS 统一播放通知音
+
+1. 在通知音设置中打开 **“🔊 通过 OBS 统一播放通知音”**。
+2. 复制显示的浏览器源 URL。
+3. 在 OBS 中添加一个浏览器源，并粘贴该 URL。
+4. 启用 **“通过 OBS 浏览器源播放通知音”**。
+5. 试听通知音，并确认声音只进入一次 OBS 音频混音器。
+
+启用后，通知音从 OBS 浏览器源播放；禁用后，则从 TwitchManager 播放。请勿重复添加同一个浏览器源。如果又将监听输出作为桌面音频采集，也可能导致声音重复。
+
+### 欢迎通知
+
+点击 **“🔊 通过 OBS 统一播放通知音”** 说明中的狐狸图标，即可启用欢迎通知。启用后，通知音设置下方会显示 Twitch ID 和通知音的添加项。
+
+请输入 Twitch ID、登录名或频道 URL。Raid 介绍等历史记录中的 ID 会显示为候选项。当指定观众出现在直播的聊天参与者列表中时，即使没有发言，每场直播也只会播放一次所选通知音。
+
+> 观众进入直播间后，可能需要几分钟才会收到通知。
+
+> 这是一个偏娱乐的小功能。它可能会让你知道有人正在默默观看，请结合直播氛围以及与对方的关系谨慎使用。

@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Twitch-Tools-EN) | [🇨🇳 繁體中文](Twitch-Tools-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Twitch-Tools-EN) | [🇨🇳 简体中文](Twitch-Tools-ZH)
 
 ---
 
@@ -6,11 +6,29 @@
 
 「Twitch」タブには、配信中と配信後に使うTwitch連携機能があります。
 
+## チャンネルポイント管理
+
+チャンネルポイント報酬を取得し、状態の確認、オン・オフ、編集、削除、グループ分けを行います。
+
+![チャンネルポイント管理](images/features/channel-points-management.png)
+
+報酬名を中心に確認でき、作成元は短いラベルで表示されます。案内文は必要なときだけ展開できます。狭い画面では各報酬がカード表示へ切り替わります。
+
+- 全件またはグループ単位で、報酬を一括ON/OFF
+- 報酬名、コスト、作成元による並べ替え
+- 既存報酬の設定を新規作成画面へ読み込み
+- 配信開始時または受信レイド時にグループを自動ON
+- ONから指定時間後にグループを自動OFF
+
+同じ報酬を複数グループへ登録している場合、別の自動化グループで使用中の報酬は意図せずOFFにしないよう保護されます。
+
+> Twitch APIの制限により、一括オン・オフやTwitchManagerからの編集・削除を行えるのは、TwitchManagerで作成したカスタム報酬だけです。Twitchで作成した報酬の画像などは、Twitchの管理画面で設定してください。
+
 ## サポーターリスト
 
 初見、レイド、フォロー、Bits、サブスク、ギフト、チャット、チャンネルポイント引き換えを集計し、お礼文としてコピーします。
 
-![サポーターリスト](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-supporter-list.png)
+![サポーターリスト](images/features/twitch-supporter-list.png)
 
 ポイント引き換えには、カスタム報酬に加えて、スタンプ巨大化、メッセージエフェクト、画面全体のお祝い、メッセージ強調などの自動報酬も記録されます。Twitchのパワーアップで使われたBitsも「ビッツ（Cheer）」へ反映されます。
 
@@ -18,7 +36,7 @@
 
 ## 予測・投票
 
-![予測と投票](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-prediction-poll.png)
+![予測と投票](images/features/twitch-prediction-poll.png)
 
 - 予測: 2～10件の選択肢、30～1800秒
 - 投票: 最大5件の選択肢、15～1800秒
@@ -26,25 +44,25 @@
 
 ## チャット設定
 
-![チャット設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-chat-control.png)
+![チャット設定](images/features/twitch-chat-control.png)
 
 チャットクリア、エモート限定、サブスク限定、重複制限、フォロー限定、スローモードを操作します。
 
 ## API操作・クリップ
 
-![API操作とクリップ](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-api-clips.png)
+![API操作とクリップ](images/features/twitch-api-clips.png)
 
 配信マーカーと告知を作成できます。クリップは作成、一覧取得、お気に入り登録に対応します。
 
 ## コラボURL
 
-![コラボURL生成](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-collab-url.png)
+![コラボURL生成](images/features/twitch-collab-url.png)
 
 複数のTwitch IDから、multistre.amまたはTwitchTheaterの同時視聴URLを生成します。
 
 ## サブスクライバー・VIP
 
-![サブスクライバーとVIP](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-subscribers-vip.png)
+![サブスクライバーとVIP](images/features/twitch-subscribers-vip.png)
 
 サブスクライバー一覧を取得できます。VIPは一覧と利用枠を取得し、ログインIDで追加・削除します。
 

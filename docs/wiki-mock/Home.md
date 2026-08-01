@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Home-EN) | [🇨🇳 繁體中文](Home-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Home-EN) | [🇨🇳 简体中文](Home-ZH)
 
 ---
 
@@ -12,12 +12,21 @@ OBSのドックから、Twitchの配信準備・配信中の操作・情報管�
 - 配信中: レイド紹介、送信レイド、通知音、予測・投票、チャット操作
 - 配信後: サポーター・ポイント引き換え集計、ログ、バックアップ
 
-![TwitchManagerドック](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png)
+![TwitchManagerドック](images/twitch-manager-dock.png)
 
 ## はじめる
 
 1. [インストールしてOBSへ追加](Getting-Started)
 2. [Twitch認証を設定](Authentication)
 3. [機能一覧を確認](Feature-Overview)
+
+## 1.0.2の主な更新
+
+- TwitchManagerの音声を1本のOBSブラウザソースへまとめて出力
+- 指定したリスナーを配信ごとに一度だけ音で知らせる「お出迎え通知」
+- 安定版のアップデート通知
+- チャンネルポイント管理、レイド受付設定、ダーク／ライトテーマの改善
+
+詳しくは[更新履歴](Release-History)を参照してください。
 
 > データはPC内に保存されます。キャッシュ削除やPC移行の前にバックアップしてください。

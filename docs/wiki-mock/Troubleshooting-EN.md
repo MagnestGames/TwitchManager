@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Troubleshooting) | **🇺🇸 English** | [🇨🇳 繁體中文](Troubleshooting-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Troubleshooting) | **🇺🇸 English** | [🇨🇳 简体中文](Troubleshooting-ZH)
 
 ---
 
@@ -23,7 +23,7 @@ When encountering issues, check the Event Log under the "Others" tab and make a 
 
 ## Twitch Integration Features Not Working
 
-![Authentication Status](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
+![Authentication Status](images/features/settings-authentication.png)
 
 1. Verify that your linked Twitch username appears in Settings.
 2. Regenerate an Access Token with all necessary **Scopes** checked.
@@ -35,7 +35,7 @@ If Twitch's native OBS Stream Information dock doesn't reflect title updates imm
 
 ## External Sound Alerts Not Playing
 
-![Sound Settings](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
+![Sound Settings](images/features/notification-sounds.png)
 
 1. Click **"Select Sound Folder"** and re-select your audio folder.
 2. Select sound files for each event type.
@@ -47,7 +47,7 @@ If Twitch's native OBS Stream Information dock doesn't reflect title updates imm
 
 Clearing browser cache or site data can clear local storage. Restore your data from a previously exported backup file under the "Others" tab.
 
-![Backup and Restore](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![Backup and Restore](images/features/backup-restore-logs.png)
 
 ## Still Need Help?
 

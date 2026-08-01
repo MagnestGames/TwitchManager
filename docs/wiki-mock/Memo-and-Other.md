@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Memo-and-Other-EN) | [🇨🇳 繁體中文](Memo-and-Other-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Memo-and-Other-EN) | [🇨🇳 简体中文](Memo-and-Other-ZH)
 
 ---
 
@@ -8,7 +8,7 @@
 
 配信準備や進行内容を複数のカードへ保存します。
 
-![メモ帳](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/memo-pad.png)
+![メモ帳](images/features/memo-pad.png)
 
 「＋」で追加し、ロック解除中に並び替えます。不要なカードは削除モードで削除します。
 
@@ -21,7 +21,7 @@
 
 ## バックアップ・復元
 
-![バックアップと復元](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![バックアップと復元](images/features/backup-restore-logs.png)
 
 - バックアップ: 保存データをコピーしてテキストファイルへ保管
 - 復元: バックアップJSONを読み込み、上書きまたはマージ

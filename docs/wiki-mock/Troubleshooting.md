@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Troubleshooting-EN) | [🇨🇳 繁體中文](Troubleshooting-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Troubleshooting-EN) | [🇨🇳 简体中文](Troubleshooting-ZH)
 
 ---
 
@@ -11,6 +11,9 @@
 | OBSに表示されない | カスタムブラウザドックのURLと設置場所 |
 | Twitch操作が失敗する | 連携アカウント、トークン、Scope |
 | 外部サウンドが鳴らない | 音声フォルダの再選択 |
+| OBSブラウザソースから音が出ない | 出力設定、ブラウザソース、音声ミキサー |
+| 通知音が二重に聞こえる | ブラウザソースの数、音声モニタリング |
+| お出迎え通知が鳴らない | 配信状態、権限、登録ID、検出待ち時間 |
 | OBSと通常ブラウザで内容が違う | 保存領域とバックアップ |
 | レイドや通知を検知しない | 認証、EventSub、機能のスイッチ |
 
@@ -23,7 +26,7 @@
 
 ## Twitch機能が動かない
 
-![認証状態](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
+![認証状態](images/features/settings-authentication.png)
 
 1. 設定画面の連携アカウントを確認します。
 2. 必要な権限（Scope）を付けてトークンを再発行します。
@@ -35,7 +38,7 @@
 
 ## 外部サウンドが鳴らない
 
-![通知音設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
+![通知音設定](images/features/notification-sounds.png)
 
 1. 「音声フォルダを選択」から同じフォルダを再選択します。
 2. 各通知の音源を選び直します。
@@ -43,11 +46,28 @@
 
 再読み込みやOBS再起動後は再選択が必要です。それでも鳴らない場合は、スイッチ、音量、除外ID、OBSの音声ミキサーを確認し、wavまたはmp3で試してください。
 
+## OBSブラウザソースから音が出ない
+
+1. 「🔊 OBSへ通知音をまとめる」を開き、「通知音をOBSブラウザソースから出す」が有効か確認します。
+2. OBSへ登録したURLが、画面に表示されたブラウザソースURLと一致するか確認します。
+3. OBSの音声ミキサーで、対象のブラウザソースがミュートされていないか確認します。
+4. ブラウザソースを非表示にしたとき終了する設定を使っている場合は、ソースを表示してから再度試聴します。
+
+通知音が二重に聞こえる場合は、同じブラウザソースを複数追加していないか確認してください。配信者向けの音声モニタリングをデスクトップ音声でも取り込んでいる場合は、OBSの音声経路も見直します。
+
+## お出迎え通知が鳴らない
+
+- 配信中であることを確認します。オフライン中の参加者は通知対象になりません。
+- トークンに`moderator:read:chatters`権限があることを確認します。
+- Twitch IDが登録され、「お出迎え通知」が有効になっていることを確認します。
+- 入室から通知まで数分待ちます。
+- 配信開始時から参加者一覧にいた場合や、同じ配信ですでに一度鳴った場合は通知しません。
+
 ## データが消えた
 
 キャッシュやサイトデータを削除すると、ローカル保存も消えることがあります。バックアップがある場合は「その他」タブから復元します。
 
-![バックアップと復元](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![バックアップと復元](images/features/backup-restore-logs.png)
 
 ## 解決しない場合
 

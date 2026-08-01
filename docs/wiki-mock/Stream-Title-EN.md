@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Stream-Title) | **🇺🇸 English** | [🇨🇳 繁體中文](Stream-Title-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Stream-Title) | **🇺🇸 English** | [🇨🇳 简体中文](Stream-Title-ZH)
 
 ---
 
@@ -6,7 +6,7 @@
 
 Save stream titles and game categories as cards for easy management and quick synchronization with Twitch.
 
-![Stream Title Management](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/title-management.png)
+![Stream Title Management](images/features/title-management.png)
 
 ## Creating Cards
 

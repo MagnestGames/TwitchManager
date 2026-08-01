@@ -1,11 +1,30 @@
+# TwitchManager 1.0.2
+
+通知音、レイド紹介、チャンネルポイント管理を中心に、配信中の操作と安定性を改善したリリースです。
+
+## 主な変更
+
+- 🔊 TwitchManagerの通知音を、1本のOBSブラウザソースから再生できるようになりました。音声ソースが利用できない場合は、本体再生へ自動で切り替わります。
+- 「お出迎え通知」を追加しました。指定したリスナーが配信のチャット参加者一覧に現れたとき、コメントの有無にかかわらず配信ごとに一度だけ音を鳴らせます。
+- 安定版へアップデート通知を追加しました。「確認」「3日後に通知」「スキップ」から選べます。beta版では表示しません。
+- チャンネルポイント報酬の作成・編集・ON/OFF、グループ一括操作、自動ON/OFF、並び替え、狭い画面での表示を改善しました。
+- サポーターリストで、チャンネルポイントの自動報酬、Power-upのBits、配信ごとの過去ログを記録できるようになりました。
+- 日付表示プリセットと、機能ブロックの表示・非表示設定を追加しました。
+- Twitchのレイド受付設定URLをコピーし、既定のブラウザで開けるようにしました。
+- 送信レイド後の紹介、EventSubの重複通知、通知音の連続再生、設定復元などの競合と不具合を修正しました。
+- Twitch APIで変更できない外部作成のチャンネルポイント報酬を誤操作しないよう保護し、バックアップへ別アカウントの認証情報を混在させないようにしました。
+- ダーク／ライトテーマ、日本語・英語・簡体字、README、Wiki、ロゴ配布情報を見直しました。
+
+アップデート前に、TwitchManagerのバックアップ機能で設定を保存しておくことをおすすめします。
+
 ## macOS
 
-ダウンロード: `TwitchManager-macOS.pkg`
-SHA256: `{{MACOS_SHA256}}`
+- ダウンロード: `TwitchManager-macOS.pkg`
+- SHA256: `{{MACOS_SHA256}}`
 
 ## Windows 11
 
-ダウンロード: `TwitchManager-Windows11-Setup.exe`
-SHA256: `{{WINDOWS_SHA256}}`
+- ダウンロード: `TwitchManager-Windows11-Setup.exe`
+- SHA256: `{{WINDOWS_SHA256}}`
 
-[インストール方法](https://github.com/MagnestGames/TwitchManager/wiki/Getting-Started)
+[インストール方法](https://github.com/MagnestGames/TwitchManager/wiki/Getting-Started) / [更新履歴](https://github.com/MagnestGames/TwitchManager/wiki/Release-History)

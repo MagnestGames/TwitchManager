@@ -4,21 +4,28 @@
 
 ![TwitchManager 徽标](../assets/branding/TwitchManager-logo.png)
 
-如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
+如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。您也可以选择将其用作直播画面或网页中的横幅。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
 
-任何人均可在直播画面、社交媒体、视频或文章中，无需事先许可地转载和再分发此徽标，商业与非商业用途均可。但请勿将其表述为 Twitch 或 OBS Studio 的官方或认可素材。
+任何人均可在直播画面、社交媒体、视频、文章等素材中，无需事先许可地展示、转载和再分发此徽标，商业与非商业用途均可。署名并非强制要求；如需标注，以下两行即可：
+
+```text
+TwitchManager
+https://github.com/MagnestGames/TwitchManager
+```
+
+请勿将其表述为 Twitch 或 OBS Studio 的官方或认可素材。详情请参阅[徽标使用与署名说明](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)。
 
 ![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](wiki-mock/images/twitchmanager-overview.png)
 
 这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
 
-> TwitchManager 是一款旨在支持主播活动的个人善意开发并免费公开的工具。本工具并非 Twitch 或 OBS Studio 的官方产品。
+> TwitchManager 由个人出于支持主播的初衷开发并免费发布。本工具并非 Twitch 或 OBS Studio 的官方产品。
 >
-> 如果您希望支持持续开发，BOOTH 上提供内容相同的自愿赞助版。赞助完全自愿，不会影响免费版的功能或使用条件。
+> 如果您希望支持持续开发，可在 BOOTH 获取 [TwitchManager 赞助版（内容相同）](https://toumei2suisai.booth.pm/items/8654630)。赞助完全自愿，不会影响免费版的功能或使用条件。
 
-**界面支持语言：** 日本语 / English / 简体中文
+**界面支持语言：** 日语 / 英语 / 简体中文
 
-最新版本已在 [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest) 发布。
+最新版本已在 [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest) 发布。您也可以查看[更新记录](../CHANGELOG.md)。
 
 ## 主要功能
 
@@ -29,8 +36,10 @@
 收到突袭（Raid）时，可自动发送频道介绍文案。支持同时执行官方 `/shoutout` 指令及记录对方 Twitch ID。
 
 ### 聊天与突袭通知音
-为聊天消息、首次发言及突袭事件播放声音提示。无需时刻盯紧屏幕即可掌握观众互动。
-所有通知音都可以汇总到一个 OBS 浏览器源播放，无需额外设置 obs-websocket。请在通知音设置的“将所有通知音发送到 OBS”中复制 URL。
+为聊天消息、首次发言、突袭及频道积分兑换播放声音提示。无需时刻盯紧屏幕即可掌握重要的观众互动。
+TwitchManager 的音频可以汇总到一个 OBS 浏览器源中播放。请在通知音设置的“🔊 通过 OBS 统一播放通知音”中复制 URL。
+
+启用“欢迎通知”后，当指定观众出现在直播的聊天参与者列表中时，每场直播可播放一次通知音。即使对方没有发言也可以检测到，但从进入直播间到收到通知可能需要几分钟。
 
 ### 主播与观众管理
 - **支持者列表** — 自动记录首次发言、突袭、关注、Bits 赞赏、订阅、聊天互动及频道积分兑换。
@@ -73,7 +82,13 @@
 
 ## 更新
 
-请先在“其他”选项卡中备份设置，然后重新运行最新版本的安装程序。Windows 上请选择当前的 TwitchManager 安装路径；macOS 上直接覆盖安装新软件包。
+稳定版会在启动时检查最新发布版本。有可用更新时，弹窗会提供以下三个选项：
+
+- **查看** — 打开对应的 GitHub Release 页面。
+- **3天后提醒** — 暂缓本次通知，并在三天后再次提醒。
+- **跳过** — 不再提醒该版本；发布更新版本后仍会再次通知。
+
+Beta 版不会显示更新通知。更新前，请先在“其他”选项卡中备份设置，然后重新运行最新版本的安装程序。Windows 上请选择当前的 TwitchManager 安装路径；macOS 上直接覆盖安装新软件包。
 
 安装在同一位置时，通常无需更新在 OBS Studio 中已注册的 URL。
 
@@ -128,4 +143,4 @@
 
 ## 许可协议
 
-[MIT License](LICENSE)
+[MIT License](../LICENSE)

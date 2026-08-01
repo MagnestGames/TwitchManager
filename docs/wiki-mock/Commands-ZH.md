@@ -1,38 +1,38 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Commands) | [🇺🇸 English](Commands-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Commands) | [🇺🇸 English](Commands-EN) | **🇨🇳 简体中文**
 
 ---
 
-# 指令設定
+# 指令设置
 
-分類整理開播中常用的 Twitch 指令，方便快速操作。
+按类别整理直播中常用的 Twitch 命令，方便快速操作。
 
-- **標有 ✦ 的按鈕**: 透過 Twitch API 直接執行。
-- **其他按鈕**: 複製指令模板至剪貼簿，方便貼入聊天室並填寫參數。
+- **带有 ✦ 的按钮**：通过 Twitch API 直接执行。
+- **其他按钮**：将命令模板复制到剪贴板，方便粘贴到聊天室并填写参数。
 
-直接執行需完成 [Twitch 身份驗證](Authentication-ZH) 並取得相對應的 API 權限 (Scope)。
+直接执行前，需要完成 [Twitch 身份验证](Authentication-ZH) 并获取相应的 API 权限 (Scope)。
 
-## 實況管理
+## 直播管理
 
-![實況管理指令](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-stream.png)
+![直播管理指令](images/features/commands-stream.png)
 
-操作實況標題、分類、實況標記、Raid 及播送廣告。若要在 Raid 時自動於聊天室貼出目標網址，請使用 [通知與 Raid 介紹](Raid-and-Notifications-ZH) 中的 `/raid` 按鈕。
+可操作直播标题、分类、直播标记、Raid 和广告。若要在 Raid 时自动向聊天室发送目标频道 URL，请使用 [通知与 Raid 介绍](Raid-and-Notifications-ZH) 中的 `/raid` 按钮。
 
-## 聊天室設定
+## 聊天室设置
 
-![聊天室設定指令](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-chat.png)
+![聊天室设置指令](images/features/commands-chat.png)
 
-操作聊天室公告、清空聊天室、聊天模式、僅限追隨者與慢速模式。
+操作聊天室公告、清空聊天室、聊天模式、仅限关注者与慢速模式。
 
-## 使用者管理
+## 用户管理
 
-![使用者管理指令](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-users.png)
+![用户管理命令](images/features/commands-users.png)
 
-快速執行 Ban、暫時禁言 (Timeout)、MOD、VIP、監控、限制、封鎖與私訊 (Whisper)。
+可快速执行封禁 (Ban)、临时禁言 (Timeout)、MOD、VIP、监控、限制、屏蔽和私信 (Whisper) 等操作。
 
-## 互動指令
+## 互动指令
 
-![互動指令介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/commands-interaction.png)
+![互动指令界面](images/features/commands-interaction.png)
 
-操作投票、預測、釘選訊息與 Shoutout。詳細預測與投票請使用 [Twitch 工具](Twitch-Tools-ZH)，介紹文請使用 [通知與 Raid 介紹](Raid-and-Notifications-ZH)。
+可操作投票、预测、置顶消息和 Shoutout。预测与投票的详细功能位于 [Twitch 工具](Twitch-Tools-ZH)，介绍文设置位于 [通知与 Raid 介绍](Raid-and-Notifications-ZH)。
 
-> 執行 Ban、Raid、廣告與權限變更前，請務必確認目標對象與內容。開始 Raid 需要 `channel:manage:raids` 權限。
+> 执行 Ban、Raid、广告与权限变更前，请务必确认目标对象与内容。开始 Raid 需要 `channel:manage:raids` 权限。

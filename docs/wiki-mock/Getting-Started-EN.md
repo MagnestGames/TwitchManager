@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Getting-Started) | **🇺🇸 English** | [🇨🇳 繁體中文](Getting-Started-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Getting-Started) | **🇺🇸 English** | [🇨🇳 简体中文](Getting-Started-ZH)
 
 ---
 
@@ -35,7 +35,7 @@ The network check runs at most once every 24 hours. Update notices are disabled 
 
 1. In OBS Studio, open **Docks** -> **Custom Browser Docks...** from the top menu.
 
-![OBS Dock Menu](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+![OBS Dock Menu](images/obs-custom-browser-dock-menu.png)
 
 2. Set the Dock Name to `TwitchManager`.
 
@@ -46,7 +46,7 @@ The network check runs at most once every 24 hours. Update notices are disabled 
 
 4. Click **Apply**.
 
-<img src="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="Custom Browser Dock Settings Example" width="700">
+<img src="images/obs-custom-browser-dock-settings.png" alt="Custom Browser Dock Settings Example" width="700">
 
 5. Drag the newly created dock to embed it into OBS, adjusting its width so buttons and text are clearly visible.
 

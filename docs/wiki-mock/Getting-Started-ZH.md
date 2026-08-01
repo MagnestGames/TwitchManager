@@ -1,56 +1,56 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Getting-Started) | [🇺🇸 English](Getting-Started-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Getting-Started) | [🇺🇸 English](Getting-Started-EN) | **🇨🇳 简体中文**
 
 ---
 
-# 安裝與新增至 OBS
+# 安装与添加至 OBS
 
-## 安裝步驟
+## 安装步骤
 
 ### Windows 11
 
-1. 開啟 [GitHub 最新 Release 頁面](https://github.com/MagnestGames/TwitchManager/releases/latest)。
-2. 從 Assets 下載 `TwitchManager-Windows11-Setup.exe` 並執行。
-3. 完成安裝精靈。
+1. 打开 [GitHub 最新发布页面](https://github.com/MagnestGames/TwitchManager/releases/latest)。
+2. 从 Assets 下载并运行 `TwitchManager-Windows11-Setup.exe`。
+3. 按照安装向导完成安装。
 
-預設安裝路徑為 Windows「文件」資料夾內的 `TwitchManager`。
+默认安装路径为 Windows“文档”文件夹中的 `TwitchManager`。
 
 ### macOS
 
-1. 開啟 [GitHub 最新 Release 頁面](https://github.com/MagnestGames/TwitchManager/releases/latest)。
-2. 下載 `TwitchManager-macOS.pkg` 並進行安裝。
+1. 打开 [GitHub 最新发布页面](https://github.com/MagnestGames/TwitchManager/releases/latest)。
+2. 下载 `TwitchManager-macOS.pkg` 并进行安装。
 
-預設安裝路徑為 `/Applications/TwitchManager`。支援 macOS 11 或更新版本。
+默认安装路径为 `/Applications/TwitchManager`。支持 macOS 11 或更高版本。
 
 ## 更新通知
 
-TwitchManager 會在啟動時檢查最新穩定版本。發現新版本時，對話框會顯示目前版本與最新版本。
+TwitchManager 会在启动时检查最新稳定版本。发现新版本时，对话框会显示目前版本与最新版本。
 
-- **查看**：開啟對應的 GitHub 發布頁面。
-- **3天後提醒**：暫停提示三天，期限過後再次提示相同更新。
-- **跳過**：不再提示此版本。發布更新的版本時會再次通知。
+- **查看**：打开对应的 GitHub 发布页面。
+- **3 天后提醒**：暂停提示三天，到期后再次提示同一更新。
+- **跳过**：不再提示此版本。发布更高版本后会再次通知。
 
-網路檢查最多每24小時執行一次。beta 版本不顯示更新通知。檢查失敗時，TwitchManager 仍會正常啟動且不顯示錯誤對話框。安裝更新前，請先從「其他」分頁建立備份。
+网络检查最多每 24 小时执行一次。beta 版本不显示更新通知。检查失败时，TwitchManager 仍会正常启动，也不会显示错误对话框。安装更新前，请先从“其他”选项卡创建备份。
 
-## 新增至 OBS Studio
+## 添加至 OBS Studio
 
-1. 在 OBS Studio 上方選單選擇 **「Dock」** -> **「自訂瀏覽器 Dock...」**。
+1. 在 OBS Studio 上方菜单选择 **「Dock」** -> **「自定义浏览器 Dock...」**。
 
-![OBS Dock 選單](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+![OBS Dock 菜单](images/obs-custom-browser-dock-menu.png)
 
-2. 在 Dock 名稱輸入 `TwitchManager`。
+2. 在 Dock 名称输入 `TwitchManager`。
 
-3. 在 URL 欄位貼上 OBS 專用 URL。可透過以下方式取得 URL：
+3. 在 URL 字段粘贴 OBS 专用 URL。可通过以下方式获取 URL：
 
-   - Windows 環境：使用安裝完成時自動複製的 URL，或開啟 `OBS_Dock_URL.txt` 取得。
-   - 使用瀏覽器開啟 `TwitchManagerDock.html`，並複製網址列的完整 URL。
+   - Windows：使用安装完成时自动复制的 URL，或打开 `OBS_Dock_URL.txt` 获取。
+   - 使用浏览器打开 `TwitchManagerDock.html`，并复制地址栏中的完整 URL。
 
-4. 點擊 **「套用」**。
+4. 点击 **「应用」**。
 
-<img src="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="自訂瀏覽器 Dock 設定範例" width="700">
+<img src="images/obs-custom-browser-dock-settings.png" alt="自定义浏览器 Dock 设置范例" width="700">
 
-5. 拖曳新新增的 Dock 放置於 OBS 介面中，並調整適當寬度以利閱讀文字與按鈕。
+5. 将新添加的 Dock 拖到合适位置，并调整宽度，确保文字和按钮显示完整。
 
-6. 點擊右上角齒輪設定 [Twitch 身份驗證](Authentication-ZH)。
+6. 点击右上角的齿轮图标，设置 [Twitch 身份验证](Authentication-ZH)。
 
-> 若使用 ZIP 版本，請勿將 `TwitchManagerDock.html` 單獨取出，請保留原本的資料夾結構與附帶檔案。
+> 若使用 ZIP 版本，请勿将 `TwitchManagerDock.html` 单独取出，请保留原本的文件夹结构与附带文件。
 

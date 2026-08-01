@@ -4327,7 +4327,7 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
     z-index: 10;
     padding: 8px 0;
     margin-bottom: 10px;
-    background: var(--bg-body, #121214);
+    background: var(--bg-base);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -4448,6 +4448,11 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
 .cp-reward-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .cp-reward-icon-button { width: 28px; min-width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 .cp-reward-icon-button.is-delete { color: var(--accent-red); }
+.cp-reward-icon-button:disabled,
+.cp-reward-toggle.is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
 
 .cp-toggle-action.is-enable,
 .cp-toggle-action.is-disable,
@@ -4519,6 +4524,10 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
     box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.28);
 }
 
+.cp-reward-toggle input:disabled + .cp-reward-toggle-track {
+    filter: grayscale(0.35);
+}
+
 .raidso-external-link {
     width: 100%;
     display: flex;
@@ -4544,6 +4553,7 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
     gap: 8px;
     padding: 7px 10px;
 }
+.raidso-audio-guide-icon { flex: 0 0 auto; line-height: 1; }
 
 .raidso-fox-mark {
     width: 24px;
@@ -4575,6 +4585,12 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
 .raidso-listener-add { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) auto; gap: 7px; align-items: end; margin: 10px 0; }
 .raidso-listener-add label { min-width: 0; }
 .raidso-listener-add input, .raidso-listener-add select, .raidso-listener-row select { width: 100%; box-sizing: border-box; }
+.raidso-listener-add-button {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-border) !important;
+}
+.raidso-listener-add-button:hover { background: var(--button-primary-hover-bg) !important; }
 .raidso-listener-list { display: grid; gap: 6px; }
 .raidso-listener-row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(120px, 1fr) 30px; gap: 7px; align-items: center; padding: 6px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-base); }
 .raidso-listener-person { min-width: 0; display: flex; flex-direction: column; }

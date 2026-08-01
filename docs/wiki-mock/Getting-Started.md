@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Getting-Started-EN) | [🇨🇳 繁體中文](Getting-Started-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](Getting-Started-EN) | [🇨🇳 简体中文](Getting-Started-ZH)
 
 ---
 
@@ -25,6 +25,8 @@
 
 TwitchManagerは起動時に最新の安定版を確認します。新しいバージョンがある場合は、現在の版と最新の版を表示するダイアログが開きます。
 
+![アップデート通知ダイアログ](images/features/update-notification-dialog.png)
+
 - 「確認」: GitHubの対象リリースページを開きます。
 - 「3日後に通知」: 3日間保留し、期限後に同じ更新を再び通知します。
 - 「スキップ」: そのバージョンについては再通知しません。さらに新しい版が公開された場合は再び通知します。
@@ -35,7 +37,7 @@ TwitchManagerは起動時に最新の安定版を確認します。新しいバ�
 
 1. OBS Studioの「ドック」から「カスタムブラウザドック」を開きます。
 
-![OBSのドックメニュー](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+![OBSのドックメニュー](images/obs-custom-browser-dock-menu.png)
 
 2. ドック名に`TwitchManager`と入力します。
 
@@ -46,7 +48,7 @@ TwitchManagerは起動時に最新の安定版を確認します。新しいバ�
 
 4. 「適用」を押します。
 
-<img src="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="カスタムブラウザドックの設定例" width="700">
+<img src="images/obs-custom-browser-dock-settings.png" alt="カスタムブラウザドックの設定例" width="700">
 
 5. 追加されたドックをドラッグして配置し、文字やボタンが読める幅に調整します。
 

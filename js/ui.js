@@ -284,7 +284,7 @@
             return `<div class="dialog-guide">${body}${note}</div>`;
         }
 
-        function showCustomDialog(options) {
+        function presentCustomDialog(options) {
             return new Promise((resolve) => {
                 const overlay = document.getElementById('custom-dialog-overlay');
                 const titleEl = document.getElementById('cd-title');
@@ -332,6 +332,10 @@
                     btnOk.style.display = '';
                     actionsEl.style.display = '';
                 };
+                const resolveWith = value => {
+                    closeDialog();
+                    resolve(value);
+                };
 
                 const closeTopBtn = document.getElementById('cd-btn-close-top');
                 // alert型は右上×ボタンに置き換え、下部OKを非表示
@@ -345,22 +349,22 @@
                     actionsEl.style.display = '';
                 }
 
-                btnOk.onclick = () => { closeDialog(); resolve(options.type === 'prompt' ? inputEl.value : true); };
-                btnCancel.onclick = () => { closeDialog(); resolve(options.type === 'prompt' ? null : false); };
+                btnOk.onclick = () => resolveWith(options.type === 'prompt' ? inputEl.value : true);
+                btnCancel.onclick = () => resolveWith(options.type === 'prompt' ? null : false);
                 if (options.type === 'choice') {
-                    btnOk.onclick = () => { closeDialog(); resolve('confirm'); };
-                    btnNeutral.onclick = () => { closeDialog(); resolve('remind'); };
-                    btnCancel.onclick = () => { closeDialog(); resolve('skip'); };
+                    btnOk.onclick = () => resolveWith('confirm');
+                    btnNeutral.onclick = () => resolveWith('remind');
+                    btnCancel.onclick = () => resolveWith('skip');
                 }
                 // オーバーレイ外クリックで閉じる（prompt/confirm以外の場合はOK扱い、それ以外はキャンセル扱い）
                 overlay.onclick = (e) => {
                     if (e.target === overlay) {
                         if (options.type === 'choice') {
-                            closeDialog(); resolve('remind');
+                            resolveWith('remind');
                         } else if (options.type === 'confirm' || options.type === 'prompt') {
-                            closeDialog(); resolve(options.type === 'prompt' ? null : false);
+                            resolveWith(options.type === 'prompt' ? null : false);
                         } else {
-                            closeDialog(); resolve(true);
+                            resolveWith(true);
                         }
                     }
                 };
@@ -370,7 +374,25 @@
                 }
 
                 overlay.classList.add('show');
+                if (typeof options.onOpen === 'function') {
+                    try {
+                        options.onOpen({ resolveWith });
+                    } catch (error) {
+                        console.error('Custom dialog setup failed:', error);
+                        resolveWith(false);
+                    }
+                }
             });
+        }
+
+        let customDialogTail = Promise.resolve();
+        function showCustomDialog(options) {
+            const result = customDialogTail.then(
+                () => presentCustomDialog(options),
+                () => presentCustomDialog(options)
+            );
+            customDialogTail = result.catch(() => {});
+            return result;
         }
 
         async function customAlert(message) { await showCustomDialog({ type: 'alert', message: message }); }
@@ -1394,16 +1416,11 @@
                 </div>
             `;
 
-            showCustomDialog({
+            await showCustomDialog({
                 title: uiText('idList.tagDialogTitle', { name: targetFriend.name || uiText('idList.unnamed') }),
                 type: 'alert',
-                messageHtml: dialogHtml
-            });
-
-            setTimeout(() => {
-                const closeTopBtn = document.getElementById('cd-btn-close-top');
-                if (closeTopBtn) closeTopBtn.style.display = 'none';
-
+                messageHtml: dialogHtml,
+                onOpen: ({ resolveWith }) => {
                 const btnSubmit = document.getElementById('edit-tags-submit');
                 if (btnSubmit) {
                     btnSubmit.onclick = () => {
@@ -1437,7 +1454,7 @@
                         // 各グループの friends 配列を更新する
                         (friendsConfig || []).forEach(cat => {
                             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
-                            
+
                             const myIdx = (cat.friends || []).findIndex(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
                             const shouldBelong = selectedGroupNames.includes(cat.name);
 
@@ -1455,10 +1472,11 @@
 
                         renderFriends();
                         saveFriendsLocal(false);
-                        if (closeTopBtn) closeTopBtn.click();
+                        resolveWith(true);
                     };
                 }
-            }, 50);
+                }
+            });
         }
         window.showEditFriendTagsDialog = showEditFriendTagsDialog;
 
@@ -2504,6 +2522,13 @@
             localStorage.removeItem('stream_memo_merged_into_friends_v1');
         }
 
+        const RAIDSO_AUDIO_CHANNEL_NAME = 'twitchmanager-audio-v1';
+        const RAIDSO_AUDIO_STORAGE_KEY = 'twitchmanager_audio_event_v1';
+        const RAIDSO_AUDIO_READY_KEY = 'twitchmanager_audio_ready_v1';
+        const RAIDSO_AUDIO_PING_KEY = 'twitchmanager_audio_ping_v1';
+        const RAIDSO_AUDIO_RESULT_KEY = 'twitchmanager_audio_result_v1';
+        const RAIDSO_AUDIO_READY_TTL_MS = 15000;
+
         const RAIDSO_DEFAULTS = {
             autoIntroEnabled: true,
             autoIntroWaitSeconds: 10,
@@ -2549,10 +2574,15 @@
             audioPool: [],
             soundObjectUrls: new Map(),
             audioChannel: null,
+            audioChannelInitialized: false,
+            audioSourceReadyUntil: 0,
+            pendingObsAudio: new Map(),
             listenerPreviousIds: new Set(),
             listenerBaselineReady: false,
+            listenerStreamId: '',
             listenerPolling: false,
             listenerBackoffUntil: 0,
+            eventMessageIds: new Set(),
             activeSuggestInputId: "",
             seenChatters: new Set(),
             subscriptions: { raid: false, outboundRaid: false, chat: false, reward: false, autoReward: false },
@@ -2560,6 +2590,23 @@
             nextOfficialShoutoutAt: 0,
             logs: loadRaidSoLogs()
         };
+
+        window.addEventListener('storage', event => {
+            if (event.key !== RAIDSO_STORAGE_KEY || !event.newValue) return;
+            try {
+                raidSoSettings = {
+                    ...RAIDSO_DEFAULTS,
+                    ...removeDeprecatedRaidSoObsSettings(JSON.parse(event.newValue))
+                };
+                raidSoState.listenerBaselineReady = false;
+                raidSoState.listenerPreviousIds = new Set();
+                raidSoState.listenerStreamId = '';
+                if (document.getElementById('raidso-container')) renderRaidShoutOutPanel();
+                syncRaidSoConnection(false);
+            } catch (error) {
+                console.warn('Failed to synchronize notification settings:', error);
+            }
+        });
 
         function raidSoEscape(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -2805,7 +2852,7 @@
                     <div class="tw-body">
                         <div class="raidso-actions" style="margin-bottom:12px;">
                             <button type="button" class="btn-outline" style="width:100%;" onclick="openRaidSoSoundFolder()">${raidSoEscape(r.openSoundFolder)}</button>
-                            <button type="button" class="btn-outline raidso-audio-guide-button" onclick="openObsAudioSetup()"><span>${raidSoEscape(r.obsAudioSetup)}</span></button>
+                            <button type="button" class="btn-outline raidso-audio-guide-button" onclick="openObsAudioSetup()"><span class="raidso-audio-guide-icon" aria-hidden="true">🔊</span><span>${raidSoEscape(r.obsAudioSetup)}</span></button>
                             <input type="file" id="raidso-sound-folder-picker" accept="audio/*,.wav,.mp3,.ogg,.m4a,.aac,.flac,.webm" webkitdirectory directory multiple style="display:none;" onchange="replaceRaidSoSoundFilesFromFolder(this)">
                         </div>
                         ${raidSoSoundBlockHtml('raid', r.raidSound, r.raidSoundToggle, s.raidSoundEnabled, s.raidSoundFile, s.raidVolume)}
@@ -2887,7 +2934,7 @@
                 <div class="raidso-listener-add">
                     <label><span class="field-label">${raidSoEscape(r.listenerIdLabel)}</span>${raidSoSuggestInputHtml('raidso-listener-id', r.listenerIdPlaceholder)}</label>
                     <label><span class="field-label">${raidSoEscape(r.listenerSoundLabel)}</span><select id="raidso-listener-sound">${options(sounds[0] || '')}</select></label>
-                    <button type="button" class="btn-secondary" onclick="addRaidSoListener()">${raidSoEscape(r.listenerAdd)}</button>
+                    <button type="button" class="btn-primary raidso-listener-add-button" onclick="addRaidSoListener()">${raidSoEscape(r.listenerAdd)}</button>
                 </div>
                 <div class="raidso-listener-list">
                     ${entries.length ? entries.map(entry => `<div class="raidso-listener-row">
@@ -2909,13 +2956,18 @@
             raidSoSettings.listenerArrivalEnabled = Boolean(enabled);
             raidSoState.listenerBaselineReady = false;
             raidSoState.listenerPreviousIds = new Set();
+            raidSoState.listenerStreamId = '';
             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
             renderRaidShoutOutPanel();
             showToast(doneText());
         }
 
         function getObsAudioSourceUrl() {
-            return new URL('TwitchManagerAudio.html', window.location.href).href;
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            url.searchParams.set('audio-source', '1');
+            return url.href;
         }
 
         function copyObsAudioSourceUrl() {
@@ -3219,6 +3271,14 @@
                 return;
             }
             if (messageType === 'notification') {
+                const messageId = String(packet.metadata?.message_id || '');
+                if (messageId) {
+                    if (raidSoState.eventMessageIds.has(messageId)) return;
+                    raidSoState.eventMessageIds.add(messageId);
+                    if (raidSoState.eventMessageIds.size > 500) {
+                        raidSoState.eventMessageIds.delete(raidSoState.eventMessageIds.values().next().value);
+                    }
+                }
                 const type = packet.metadata.subscription_type;
                 const event = packet.payload.event;
                 if (type === 'channel.raid') await handleRaidSoRaid(event);
@@ -3950,30 +4010,20 @@
 
 
 
-        function sendRaidSoObsAudio(message) {
-            if (!raidSoState.audioChannel && 'BroadcastChannel' in window) {
-                raidSoState.audioChannel = new BroadcastChannel('twitchmanager-audio-v1');
-            }
-            raidSoState.audioChannel?.postMessage(message);
-            try { localStorage.setItem('twitchmanager_audio_event_v1', JSON.stringify(message)); } catch (_) {}
+        function markRaidSoAudioSourceReady(message) {
+            const announcedAt = Number(message?.at);
+            if (message?.type !== 'ready' || !Number.isFinite(announcedAt) || Math.abs(Date.now() - announcedAt) > RAIDSO_AUDIO_READY_TTL_MS * 2) return;
+            raidSoState.audioSourceReadyUntil = Date.now() + RAIDSO_AUDIO_READY_TTL_MS;
         }
 
-        function playRaidSoAudioConfig(cfg, options = {}) {
-            if (!cfg.src) return;
-            const src = getRaidSoSoundPlaybackUrl(cfg.src);
-            const volume = Math.max(0, Math.min(1, Number(cfg.volume) / 100));
-            if (raidSoSettings.obsAudioEnabled) {
-                sendRaidSoObsAudio({ type: 'play', eventId: `${Date.now()}-${Math.random().toString(36).slice(2)}`, src, volume, overlap: Boolean(options.overlap) });
-                raidSoLog(`${cfg.label}${langMap[currentLang].logs.logAudioPlayed}`);
-                return;
-            }
+        function playRaidSoAudioDirect(cfg, options = {}) {
             if (!options.overlap && raidSoState.audio) {
                 raidSoState.audio.pause();
                 raidSoState.audio.currentTime = 0;
             }
-            const audio = new Audio(src);
+            const audio = new Audio(cfg.src);
             audio.preload = 'auto';
-            audio.volume = volume;
+            audio.volume = cfg.volume;
             if (!options.overlap) raidSoState.audio = audio;
             else {
                 raidSoState.audioPool.push(audio);
@@ -3987,6 +4037,83 @@
                     const hint = e.name === 'NotAllowedError' ? langMap[currentLang].logs.warnBrowserLimit : e.message;
                     raidSoLog(`${cfg.label} ${I18N_DATA[currentLang]?.ui?.jsMsgs?.audioPlayErr} ${hint}`, 'warn');
                 });
+        }
+
+        function handleRaidSoAudioSourceMessage(message) {
+            if (message?.type === 'ready') {
+                markRaidSoAudioSourceReady(message);
+                return;
+            }
+            if (message?.type !== 'played' && message?.type !== 'failed') return;
+            const pending = raidSoState.pendingObsAudio.get(String(message.eventId || ''));
+            if (!pending) return;
+            clearTimeout(pending.timer);
+            raidSoState.pendingObsAudio.delete(String(message.eventId));
+            if (message.type === 'played') {
+                raidSoLog(`${pending.cfg.label}${langMap[currentLang].logs.logAudioPlayed}`);
+                return;
+            }
+            raidSoLog(raidSoText().obsAudioFallback, 'warn');
+            playRaidSoAudioDirect(pending.cfg, pending.options);
+        }
+
+        function ensureRaidSoAudioChannel() {
+            if (raidSoState.audioChannelInitialized) return;
+            raidSoState.audioChannelInitialized = true;
+            if ('BroadcastChannel' in window) {
+                try {
+                    raidSoState.audioChannel = new BroadcastChannel(RAIDSO_AUDIO_CHANNEL_NAME);
+                    raidSoState.audioChannel.addEventListener('message', event => handleRaidSoAudioSourceMessage(event.data));
+                } catch (_) {
+                    raidSoState.audioChannel = null;
+                }
+            }
+            window.addEventListener('storage', event => {
+                if (!event.newValue || (event.key !== RAIDSO_AUDIO_READY_KEY && event.key !== RAIDSO_AUDIO_RESULT_KEY)) return;
+                try { handleRaidSoAudioSourceMessage(JSON.parse(event.newValue)); } catch (_) {}
+            });
+            try { markRaidSoAudioSourceReady(JSON.parse(localStorage.getItem(RAIDSO_AUDIO_READY_KEY) || '{}')); } catch (_) {}
+        }
+
+        function pingRaidSoAudioSource() {
+            ensureRaidSoAudioChannel();
+            const ping = { type: 'ping', at: Date.now(), nonce: Math.random().toString(36).slice(2) };
+            raidSoState.audioChannel?.postMessage(ping);
+            try { localStorage.setItem(RAIDSO_AUDIO_PING_KEY, JSON.stringify(ping)); } catch (_) {}
+        }
+
+        function sendRaidSoObsAudio(message, cfg, options) {
+            ensureRaidSoAudioChannel();
+            if (Date.now() >= raidSoState.audioSourceReadyUntil) {
+                pingRaidSoAudioSource();
+                return false;
+            }
+            const timer = setTimeout(() => {
+                const pending = raidSoState.pendingObsAudio.get(message.eventId);
+                if (!pending) return;
+                raidSoState.pendingObsAudio.delete(message.eventId);
+                raidSoLog(raidSoText().obsAudioFallback, 'warn');
+                playRaidSoAudioDirect(pending.cfg, pending.options);
+            }, 2500);
+            raidSoState.pendingObsAudio.set(message.eventId, { cfg, options, timer });
+            raidSoState.audioChannel?.postMessage(message);
+            try { localStorage.setItem(RAIDSO_AUDIO_STORAGE_KEY, JSON.stringify(message)); } catch (_) {}
+            return true;
+        }
+
+        function playRaidSoAudioConfig(cfg, options = {}) {
+            if (!cfg.src) return;
+            const directConfig = {
+                src: getRaidSoSoundPlaybackUrl(cfg.src),
+                volume: Math.max(0, Math.min(1, Number(cfg.volume) / 100)),
+                label: cfg.label
+            };
+            if (raidSoSettings.obsAudioEnabled) {
+                const eventId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                if (sendRaidSoObsAudio({ type: 'play', eventId, src: directConfig.src, volume: directConfig.volume, overlap: Boolean(options.overlap) }, directConfig, options)) return;
+                raidSoLog(raidSoText().obsAudioFallback, 'warn');
+            }
+            playRaidSoAudioDirect(directConfig, options);
         }
 
         function playRaidSoSound(kind, options = {}) {
@@ -4025,27 +4152,38 @@
             if (!streamId || !raidSoSettings.listenerArrivalEnabled) {
                 raidSoState.listenerBaselineReady = false;
                 raidSoState.listenerPreviousIds = new Set();
+                raidSoState.listenerStreamId = '';
                 return;
+            }
+            const normalizedStreamId = String(streamId);
+            if (raidSoState.listenerStreamId !== normalizedStreamId) {
+                raidSoState.listenerStreamId = normalizedStreamId;
+                raidSoState.listenerBaselineReady = false;
+                raidSoState.listenerPreviousIds = new Set();
+                raidSoState.listenerBackoffUntil = 0;
             }
             const entries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
             if (!entries.length || raidSoState.listenerPolling || Date.now() < raidSoState.listenerBackoffUntil) return;
             raidSoState.listenerPolling = true;
             try {
                 const currentIds = await fetchRaidSoChatters();
+                if (!raidSoSettings.listenerArrivalEnabled || raidSoState.listenerStreamId !== normalizedStreamId) return;
+                const currentEntries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
+                if (!currentEntries.length) return;
                 if (!raidSoState.listenerBaselineReady) {
                     raidSoState.listenerPreviousIds = currentIds;
                     raidSoState.listenerBaselineReady = true;
                     return;
                 }
                 const played = loadRaidSoListenerPlayed();
-                entries.forEach(entry => {
+                currentEntries.forEach(entry => {
                     const userId = String(entry.userId || '');
-                    if (!userId || !currentIds.has(userId) || raidSoState.listenerPreviousIds.has(userId) || played[userId] === streamId) return;
+                    if (!userId || !currentIds.has(userId) || raidSoState.listenerPreviousIds.has(userId) || played[userId] === normalizedStreamId) return;
                     playRaidSoAudioConfig({ src: entry.soundFile, volume: 80, label: entry.displayName || entry.login || userId }, { overlap: true });
-                    played[userId] = streamId;
+                    played[userId] = normalizedStreamId;
                     raidSoLog(raidSoText().listenerTriggered.replace('{name}', entry.displayName || entry.login || userId));
                 });
-                const keepStreamIds = new Set([streamId]);
+                const keepStreamIds = new Set([normalizedStreamId]);
                 Object.keys(played).forEach(userId => { if (!keepStreamIds.has(played[userId])) delete played[userId]; });
                 localStorage.setItem(RAIDSO_LISTENER_PLAYED_KEY, JSON.stringify(played));
                 raidSoState.listenerPreviousIds = currentIds;
@@ -4184,7 +4322,7 @@
                 .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
                 .map((cat, idx) => `<option value="${idx}">${raidSoEscape(cat.name)}</option>`)
                 .join('');
-            
+
             const uncategorizedText = E.uncategorized || '未分類';
             const optionUncategorized = `<option value="uncategorized">${raidSoEscape(uncategorizedText)}</option>`;
 
@@ -4233,21 +4371,15 @@
                 </div>
             `;
 
-            showCustomDialog({
+            await showCustomDialog({
                 title: E.addItemTitle || '追加',
                 type: 'alert',
-                messageHtml: dialogHtml
-            });
-
-            // ダイアログ内の要素にイベントを設定するため、少し待つ (showCustomDialogの非同期レンダリング対策)
-            setTimeout(() => {
+                messageHtml: dialogHtml,
+                onOpen: ({ resolveWith }) => {
                 const tabUser = document.getElementById('add-friend-tab-user');
                 const tabGroup = document.getElementById('add-friend-tab-group');
                 const formUser = document.getElementById('add-friend-form-user');
                 const formGroup = document.getElementById('add-friend-form-group');
-                
-                const closeTopBtn = document.getElementById('cd-btn-close-top');
-                if (closeTopBtn) closeTopBtn.style.display = 'none';
 
                 if (tabUser && tabGroup && formUser && formGroup) {
                     tabUser.onclick = () => {
@@ -4308,7 +4440,7 @@
                             });
                             renderFriends();
                             saveFriendsLocal(false);
-                            if (closeTopBtn) closeTopBtn.click();
+                            resolveWith(true);
                         }
                     };
                 }
@@ -4318,7 +4450,7 @@
                     btnSubmitGroup.onclick = () => {
                         const groupNameVal = document.getElementById('add-group-name')?.value?.trim();
                         if (!groupNameVal) return;
-                        
+
                         friendsConfig.push({
                             name: groupNameVal,
                             friends: [],
@@ -4326,10 +4458,11 @@
                         });
                         renderFriends();
                         saveFriendsLocal(false);
-                        if (closeTopBtn) closeTopBtn.click();
+                        resolveWith(true);
                     };
                 }
-            }, 50);
+                }
+            });
         }
 
         function updateRestoreFileName(input) {
@@ -4338,6 +4471,7 @@
         }
 
         const BACKUP_BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+        const BACKUP_AUTH_KEYS = new Set(['token', 'userId', 'userLogin', 'clientId', 'redirectUri']);
 
         function isBackupRecord(value) {
             return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -4353,7 +4487,9 @@
                 memoList: Array.isArray,
                 raidShoutOut: isBackupRecord,
                 raidShoutOutTemplates: Array.isArray,
-                supporterArchives: Array.isArray
+                supporterArchives: Array.isArray,
+                cpGroups: Array.isArray,
+                cpAppRewardIds: Array.isArray
             };
             Object.entries(expectedTypes).forEach(([key, validator]) => {
                 if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
@@ -4367,7 +4503,7 @@
             if (!isBackupRecord(source)) return {};
             const result = {};
             Object.entries(source).forEach(([key, value]) => {
-                if (key !== 'token' && !BACKUP_BLOCKED_KEYS.has(key)) result[key] = value;
+                if (!BACKUP_AUTH_KEYS.has(key) && !BACKUP_BLOCKED_KEYS.has(key)) result[key] = value;
             });
             return result;
         }
@@ -4377,9 +4513,11 @@
             const restored = overwrite
                 ? backupSettingsWithoutToken(importedSettings)
                 : { ...current, ...backupSettingsWithoutToken(importedSettings) };
-            const currentToken = extractTwitchAccessToken(current.token || '');
-            if (currentToken) restored.token = currentToken;
-            else delete restored.token;
+            BACKUP_AUTH_KEYS.forEach(key => {
+                if (Object.prototype.hasOwnProperty.call(current, key) && current[key] !== '') restored[key] = current[key];
+                else delete restored[key];
+            });
+            if (restored.token) restored.token = extractTwitchAccessToken(restored.token);
             return restored;
         }
 
@@ -4394,40 +4532,31 @@
                     const d = parseBackupJson(e.target.result);
 
                     // 復元方法の選択ダイアログ (上書き / マージ / キャンセル)
-                    const choice = await new Promise((resolveDlg) => {
-                        showCustomDialog({
-                            title: uiText('runtime.restoreModeTitle'),
-                            type: 'alert',
-                            messageHtml: `
-                                <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main);">
-                                    ${raidSoEscape(uiText('runtime.restoreModeQuestion'))}<br><br>
-                                    <strong>・${raidSoEscape(uiText('runtime.restoreOverwrite'))}</strong><br>
-                                    ${raidSoEscape(uiText('runtime.restoreOverwriteDescription'))}<br><br>
-                                    <strong>・${raidSoEscape(uiText('runtime.restoreMerge'))}</strong><br>
-                                    ${raidSoEscape(uiText('runtime.restoreMergeDescription'))}
-                                </div>
-                                <div style="display:flex; flex-direction:column; gap:10px;">
-                                    <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreOverwrite'))}</button>
-                                    <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreMerge'))}</button>
-                                    <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(langMap[currentLang].cancel)}</button>
-                                </div>
-                            `
-                        });
-                        setTimeout(() => {
+                    const choice = await showCustomDialog({
+                        title: uiText('runtime.restoreModeTitle'),
+                        type: 'alert',
+                        messageHtml: `
+                            <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main);">
+                                ${raidSoEscape(uiText('runtime.restoreModeQuestion'))}<br><br>
+                                <strong>・${raidSoEscape(uiText('runtime.restoreOverwrite'))}</strong><br>
+                                ${raidSoEscape(uiText('runtime.restoreOverwriteDescription'))}<br><br>
+                                <strong>・${raidSoEscape(uiText('runtime.restoreMerge'))}</strong><br>
+                                ${raidSoEscape(uiText('runtime.restoreMergeDescription'))}
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreOverwrite'))}</button>
+                                <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreMerge'))}</button>
+                                <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(langMap[currentLang].cancel)}</button>
+                            </div>
+                        `,
+                        onOpen: ({ resolveWith }) => {
                             const btnOverwrite = document.getElementById('restore-opt-overwrite');
                             const btnMerge = document.getElementById('restore-opt-merge');
                             const btnCancel = document.getElementById('restore-opt-cancel');
-                            const closeTopBtn = document.getElementById('cd-btn-close-top');
-                            
-                            const finish = (result) => {
-                                if (closeTopBtn) closeTopBtn.click();
-                                resolveDlg(result);
-                            };
-                            
-                            if (btnOverwrite) btnOverwrite.onclick = () => finish('overwrite');
-                            if (btnMerge) btnMerge.onclick = () => finish('merge');
-                            if (btnCancel) btnCancel.onclick = () => finish('cancel');
-                        }, 50);
+                            if (btnOverwrite) btnOverwrite.onclick = () => resolveWith('overwrite');
+                            if (btnMerge) btnMerge.onclick = () => resolveWith('merge');
+                            if (btnCancel) btnCancel.onclick = () => resolveWith('cancel');
+                        }
                     });
 
                     if (choice === 'overwrite') {
@@ -4445,7 +4574,9 @@
                         }
                         if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
                         if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
-                        
+                        if (Array.isArray(d.cpGroups)) localStorage.setItem('cp_groups_v1', JSON.stringify(d.cpGroups));
+                        if (Array.isArray(d.cpAppRewardIds)) localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set(d.cpAppRewardIds.map(String))]));
+
                         raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
                         showToast(uiText('runtime.restoreOverwriteDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
@@ -4464,6 +4595,20 @@
                 }
             }; reader.readAsText(file);
             reader.onerror = () => showToast(uiText('runtime.restoreFailed'), 'error');
+        }
+
+        function mergeRaidSoBackupSettings(localSettings, importedSettings) {
+            const local = isBackupRecord(localSettings) ? localSettings : {};
+            const imported = isBackupRecord(importedSettings) ? importedSettings : {};
+            const merged = { ...local, ...imported };
+            const listenerEntries = new Map();
+            [...(local.listenerEntries || []), ...(imported.listenerEntries || [])].forEach(entry => {
+                if (!entry || !entry.userId) return;
+                listenerEntries.set(String(entry.userId), { ...(listenerEntries.get(String(entry.userId)) || {}), ...entry });
+            });
+            merged.listenerEntries = [...listenerEntries.values()];
+            merged.soundFiles = uniqueRaidSoSoundSources([...(local.soundFiles || []), ...(imported.soundFiles || [])]);
+            return removeDeprecatedRaidSoObsSettings(merged);
         }
 
         function mergeBackupData(d) {
@@ -4524,7 +4669,7 @@
             // 5. raidShoutOut
             if (isBackupRecord(d.raidShoutOut)) {
                 let localRSO = JSON.parse(localStorage.getItem(RAIDSO_STORAGE_KEY) || '{}');
-                const mergedRSO = removeDeprecatedRaidSoObsSettings({ ...localRSO, ...d.raidShoutOut });
+                const mergedRSO = mergeRaidSoBackupSettings(localRSO, d.raidShoutOut);
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(mergedRSO));
             }
 
@@ -4549,18 +4694,43 @@
                 });
                 localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
             }
+
+            // 8. channel point groups
+            if (Array.isArray(d.cpGroups)) {
+                const localGroups = JSON.parse(localStorage.getItem('cp_groups_v1') || '[]');
+                const groupsById = new Map(localGroups.filter(isBackupRecord).map(group => [String(group.id || ''), group]));
+                d.cpGroups.filter(isBackupRecord).forEach(group => {
+                    const id = String(group.id || '');
+                    if (!id) return;
+                    const existing = groupsById.get(id) || {};
+                    groupsById.set(id, {
+                        ...existing,
+                        ...group,
+                        rewardIds: [...new Set([...(existing.rewardIds || []), ...(group.rewardIds || [])].map(String))]
+                    });
+                });
+                localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
+            }
+
+            // 9. rewards created by TwitchManager
+            if (Array.isArray(d.cpAppRewardIds)) {
+                const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
+            }
         }
         async function copyBackupToClipboard() {
             collectRaidSoSettings();
             const d = {
-                backupVersion: 2,
+                backupVersion: 3,
                 config,
                 friends: friendsConfig,
                 settings: backupSettingsWithoutToken(settings),
                 memoList: memoConfig,
                 raidShoutOut: removeDeprecatedRaidSoObsSettings(raidSoSettings),
                 raidShoutOutTemplates: customRaidSoTemplates,
-                supporterArchives: readSupporterArchives()
+                supporterArchives: readSupporterArchives(),
+                cpGroups: JSON.parse(localStorage.getItem('cp_groups_v1') || '[]'),
+                cpAppRewardIds: JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]')
             };
             await copyTextToClipboard(JSON.stringify(d, null, 2));
         }
@@ -4599,11 +4769,11 @@
                 // 画面表示微調整（文字サイズ・行間）の初期化
                 const fontSizeOffset = Number(settings.fontSizeOffset ?? 0);
                 const lineHeight = Number(settings.lineHeight ?? 1.5);
-                
+
                 initCustomSlider('slider-font-size-wrapper', 'settings_font_size_offset', -3, 5, 1, fontSizeOffset, (val) => {
                     applyFontAdjustments(val, Number(document.getElementById('settings_line_height')?.dataset.value ?? 1.5));
                 });
-                
+
                 initCustomSlider('slider-line-height-wrapper', 'settings_line_height', 1.1, 2.2, 0.1, lineHeight, (val) => {
                     applyFontAdjustments(Number(document.getElementById('settings_font_size_offset')?.dataset.value ?? 0), val);
                 });
@@ -4665,7 +4835,7 @@
             updateTodayDateDisplay();
             setInterval(updateTodayDateDisplay, 1000);
         };
-    
+
 
 
     const CHAT_DURATION_LIMITS = {
@@ -5308,6 +5478,10 @@ function replaceRaidSoSoundObjectUrls(files) {
                 revokeRaidSoSoundObjectUrls(nextUrls);
                 throw error;
             }
+            if (!nextUrls.size) {
+                revokeRaidSoSoundObjectUrls(nextUrls);
+                return [];
+            }
             revokeRaidSoSoundObjectUrls(raidSoState.soundObjectUrls);
             raidSoState.soundObjectUrls = nextUrls;
             return [...nextUrls.keys()];
@@ -5340,6 +5514,7 @@ function replaceRaidSoSoundFilesFromFolder(input) {
 
 function applyRaidSoAvailableSoundFiles(sources) {
             const available = uniqueRaidSoSoundSources(sources);
+            if (!available.length) return [];
             const fallback = available[0] || '';
             const keepAvailable = value => available.includes(normalizeRaidSoSoundSource(value)) ? normalizeRaidSoSoundSource(value) : fallback;
             raidSoSettings.soundFiles = available;
@@ -5348,6 +5523,10 @@ function applyRaidSoAvailableSoundFiles(sources) {
             raidSoSettings.commentSoundFile = keepAvailable(raidSoSettings.commentSoundFile);
             raidSoSettings.channelPointSoundFile = keepAvailable(raidSoSettings.channelPointSoundFile);
             raidSoSettings.firstCommentSoundFile = keepAvailable(raidSoSettings.firstCommentSoundFile);
+            raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => ({
+                ...entry,
+                soundFile: keepAvailable(entry.soundFile)
+            }));
             return available;
         }
 
@@ -5702,7 +5881,8 @@ let cpState = {
     isLoading: false,
     sortBy: localStorage.getItem('cp_sort_by_v1') || 'default',
     modalSortBy: localStorage.getItem('cp_modal_sort_by_v1') || 'default',
-    autoOffTimers: {}
+    autoOffTimers: {},
+    activeGroups: new Set()
 };
 
 function cpCopy(key, vars = {}) {
@@ -5721,11 +5901,14 @@ function cpGroupName(group) {
 }
 
 function migrateCpDefaultGroup(group) {
-    if (!group || group.defaultNameKey || !CP_DEFAULT_GROUP_KEYS[group.id]) return group;
-    const key = CP_DEFAULT_GROUP_KEYS[group.id];
+    if (!group) return group;
+    const normalized = { ...group };
+    delete normalized.autoOnObsScene;
+    if (normalized.defaultNameKey || !CP_DEFAULT_GROUP_KEYS[normalized.id]) return normalized;
+    const key = CP_DEFAULT_GROUP_KEYS[normalized.id];
     const knownNames = Object.values(langMap).map(copy => copy?.cpTab?.[key]).filter(Boolean);
-    if (knownNames.includes(group.name)) return { ...group, name: '', defaultNameKey: key };
-    return group;
+    if (knownNames.includes(normalized.name)) return { ...normalized, name: '', defaultNameKey: key };
+    return normalized;
 }
 
 function isAppCreatedReward(reward) {
@@ -5752,14 +5935,14 @@ function getSortedCpRewards(rewards, sortBy) {
                 const aApp = isAppCreatedReward(a) ? 1 : 0;
                 const bApp = isAppCreatedReward(b) ? 1 : 0;
                 if (aApp !== bApp) return aApp - bApp;
-                return (a.title || '').localeCompare(a.title || '', 'ja');
+                return (a.title || '').localeCompare(b.title || '', 'ja');
             });
         case 'cost_asc':
             return list.sort((a, b) => (a.cost || 0) - (b.cost || 0));
         case 'cost_desc':
             return list.sort((a, b) => (b.cost || 0) - (a.cost || 0));
         case 'name_asc':
-            return list.sort((a, b) => (a.title || '').localeCompare(a.title || '', 'ja'));
+            return list.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'ja'));
         case 'name_desc':
             return list.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'ja'));
         case 'default':
@@ -5788,9 +5971,9 @@ function loadCpGroupsFromStorage() {
             cpState.groups = JSON.parse(saved).map(migrateCpDefaultGroup);
         } else {
             cpState.groups = [
-                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
-                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 },
-                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOnObsScene: '', autoOffMinutes: 0 }
+                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
+                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
+                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 }
             ];
             saveCpGroupsToStorage();
         }
@@ -5803,6 +5986,24 @@ function saveCpGroupsToStorage() {
     try {
         localStorage.setItem('cp_groups_v1', JSON.stringify(cpState.groups));
     } catch (e) {}
+}
+
+function isManageableCpRewardId(rewardId) {
+    const reward = cpState.rewards.find(item => item.id === rewardId);
+    return Boolean(reward && isAppCreatedReward(reward));
+}
+
+function reconcileCpGroupsWithRewards() {
+    const currentRewardIds = new Set(cpState.rewards.map(reward => reward.id));
+    let changed = false;
+    cpState.groups = cpState.groups.map(group => {
+        const previousRewardIds = Array.isArray(group.rewardIds) ? group.rewardIds : [];
+        const rewardIds = [...new Set(previousRewardIds.filter(rewardId => currentRewardIds.has(rewardId)))];
+        if (rewardIds.length === previousRewardIds.length && Array.isArray(group.rewardIds)) return group;
+        changed = true;
+        return { ...group, rewardIds };
+    });
+    if (changed) saveCpGroupsToStorage();
 }
 
 async function ensureCpAuth() {
@@ -5830,6 +6031,7 @@ async function fetchTwitchCustomRewards() {
         const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`);
         cpState.rewards = data.data || [];
         loadCpGroupsFromStorage();
+        reconcileCpGroupsWithRewards();
         renderCpTab();
         showToast(cpCopy('fetchSuccess'));
     } catch (e) {
@@ -5843,6 +6045,10 @@ async function fetchTwitchCustomRewards() {
 }
 
 async function toggleCustomRewardEnabled(rewardId, isEnabled) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
     try {
         const broadcasterId = await ensureCpAuth();
         const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
@@ -5875,12 +6081,30 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
         if (!isAutomatic) showToast(cpCopy('unassigned'), 'warn');
         return;
     }
-    const uniqueIds = Array.from(new Set(group.rewardIds));
+    if (!targetState) cpState.activeGroups.delete(groupId);
+    const protectedIds = new Set();
+    if (!targetState) {
+        cpState.groups.forEach(candidate => {
+            if (cpState.activeGroups.has(candidate.id)) {
+                (candidate.rewardIds || []).forEach(rewardId => protectedIds.add(rewardId));
+            }
+        });
+    }
+    const manageableIds = Array.from(new Set(group.rewardIds)).filter(isManageableCpRewardId);
+    if (manageableIds.length === 0) {
+        if (cpState.autoOffTimers[groupId]) clearTimeout(cpState.autoOffTimers[groupId]);
+        delete cpState.autoOffTimers[groupId];
+        cpState.activeGroups.delete(groupId);
+        if (!isAutomatic) showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const uniqueIds = manageableIds.filter(rewardId => targetState || !protectedIds.has(rewardId));
     let successCount = 0;
     for (const rId of uniqueIds) {
         const ok = await toggleCustomRewardEnabled(rId, targetState);
         if (ok) successCount++;
     }
+    if (targetState && successCount > 0) cpState.activeGroups.add(groupId);
     const stateStr = targetState ? 'ON' : 'OFF';
     const tagMsg = isAutomatic ? cpCopy('automaticSuffix') : '';
     showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: uniqueIds.length, state: stateStr, automatic: tagMsg }));
@@ -5892,7 +6116,7 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
             delete cpState.autoOffTimers[groupId];
         }
         const autoOffMin = parseInt(group.autoOffMinutes || 0, 10);
-        if (autoOffMin > 0) {
+        if (successCount > 0 && autoOffMin > 0) {
             const delayMs = autoOffMin * 60 * 1000;
             cpState.autoOffTimers[groupId] = setTimeout(async () => {
                 await batchToggleCpGroup(groupId, false, true);
@@ -5915,10 +6139,6 @@ async function triggerCpAutoOn(triggerType, detail = {}) {
             shouldTrigger = true;
         } else if (triggerType === 'raid' && g.autoOnRaid) {
             shouldTrigger = true;
-        } else if (triggerType === 'obs_scene' && g.autoOnObsScene && detail.sceneName) {
-            if (g.autoOnObsScene.trim().toLowerCase() === detail.sceneName.trim().toLowerCase()) {
-                shouldTrigger = true;
-            }
         }
         if (shouldTrigger) {
             await batchToggleCpGroup(g.id, true, true);
@@ -5946,7 +6166,7 @@ async function recreateCpReward(rewardId) {
     try {
         const broadcasterId = await ensureCpAuth();
         let createTitle = targetReward.title;
-        
+
         // If exact title already exists, append (アプリ) to avoid Twitch CREATE_CUSTOM_REWARD_DUPLICATE_REWARD error
         const existingTitles = cpState.rewards.map(r => r.title);
         if (existingTitles.includes(createTitle)) {
@@ -6009,9 +6229,10 @@ async function recreateCpReward(rewardId) {
 }
 
 async function toggleAllCpRewards(targetState) {
-    if (!cpState.rewards || cpState.rewards.length === 0) {
+    const manageableRewards = (cpState.rewards || []).filter(isAppCreatedReward);
+    if (manageableRewards.length === 0) {
         const noRewardsMsg = cpCopy('noRewards');
-        showToast(noRewardsMsg, 'warn');
+        showToast(cpState.rewards?.length ? cpCopy('cantModifyExternalReward') : noRewardsMsg, 'warn');
         return;
     }
     const stateStr = targetState ? 'ON' : 'OFF';
@@ -6019,8 +6240,8 @@ async function toggleAllCpRewards(targetState) {
     if (!confirm(confirmMsg)) return;
 
     let successCount = 0;
-    const totalCount = cpState.rewards.length;
-    for (const r of cpState.rewards) {
+    const totalCount = manageableRewards.length;
+    for (const r of manageableRewards) {
         if (r.is_enabled !== targetState) {
             const ok = await toggleCustomRewardEnabled(r.id, targetState);
             if (ok) successCount++;
@@ -6075,6 +6296,10 @@ async function saveCpReward() {
 }
 
 async function deleteCpReward(rewardId) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
     const confirmMsg = cpCopy('deleteConfirm');
     if (!confirm(confirmMsg)) return;
     try {
@@ -6082,6 +6307,13 @@ async function deleteCpReward(rewardId) {
         await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
             method: 'DELETE'
         });
+        cpState.groups = cpState.groups.map(group => ({
+            ...group,
+            rewardIds: (group.rewardIds || []).filter(id => id !== rewardId)
+        }));
+        cpState.appRewardIds = (cpState.appRewardIds || []).filter(id => id !== rewardId);
+        saveCpGroupsToStorage();
+        saveAppRewardIdsToStorage();
         showToast(cpCopy('deleteSuccess'));
         await fetchTwitchCustomRewards();
     } catch (e) {
@@ -6107,12 +6339,10 @@ function openCpGroupModal(groupId = null) {
 
     const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
     const autoRaidCheck = document.getElementById('cp-group-auto-raid');
-    const autoSceneInput = document.getElementById('cp-group-auto-obs-scene');
     const autoOffMinInput = document.getElementById('cp-group-auto-off-min');
 
     if (autoStreamCheck) autoStreamCheck.checked = targetGroup ? !!targetGroup.autoOnStreamStart : false;
     if (autoRaidCheck) autoRaidCheck.checked = targetGroup ? !!targetGroup.autoOnRaid : false;
-    if (autoSceneInput) autoSceneInput.value = targetGroup ? (targetGroup.autoOnObsScene || '') : '';
     if (autoOffMinInput) autoOffMinInput.value = targetGroup ? (targetGroup.autoOffMinutes || 0) : 0;
 
     const modalSortSelect = document.getElementById('cp-modal-sort-select');
@@ -6150,7 +6380,6 @@ function saveCpGroup() {
 
     const autoOnStreamStart = !!document.getElementById('cp-group-auto-stream-start')?.checked;
     const autoOnRaid = !!document.getElementById('cp-group-auto-raid')?.checked;
-    const autoOnObsScene = document.getElementById('cp-group-auto-obs-scene')?.value?.trim() || '';
     const autoOffMinutes = parseInt(document.getElementById('cp-group-auto-off-min')?.value || '0', 10) || 0;
 
     if (editId) {
@@ -6161,7 +6390,7 @@ function saveCpGroup() {
             cpState.groups[idx].rewardIds = selectedRewardIds;
             cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
             cpState.groups[idx].autoOnRaid = autoOnRaid;
-            cpState.groups[idx].autoOnObsScene = autoOnObsScene;
+            delete cpState.groups[idx].autoOnObsScene;
             cpState.groups[idx].autoOffMinutes = autoOffMinutes;
         }
     } else {
@@ -6171,7 +6400,6 @@ function saveCpGroup() {
             rewardIds: selectedRewardIds,
             autoOnStreamStart: autoOnStreamStart,
             autoOnRaid: autoOnRaid,
-            autoOnObsScene: autoOnObsScene,
             autoOffMinutes: autoOffMinutes
         };
         cpState.groups.push(newGroup);
@@ -6186,6 +6414,9 @@ function saveCpGroup() {
 function deleteCpGroup(groupId) {
     const confirmMsg = cpCopy('groupDeleteConfirm');
     if (!confirm(confirmMsg)) return;
+    if (cpState.autoOffTimers[groupId]) clearTimeout(cpState.autoOffTimers[groupId]);
+    delete cpState.autoOffTimers[groupId];
+    cpState.activeGroups.delete(groupId);
     cpState.groups = cpState.groups.filter(g => g.id !== groupId);
     saveCpGroupsToStorage();
     renderCpTab();
@@ -6228,6 +6459,11 @@ function openCpRewardModal(rewardId = null) {
         targetReward = cpState.rewards.find(r => r.id === rewardId);
     }
 
+    if (targetReward && !isAppCreatedReward(targetReward)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+
     if (targetReward) {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleEdit');
         editIdInput.value = targetReward.id;
@@ -6243,7 +6479,7 @@ function openCpRewardModal(rewardId = null) {
         costInput.value = 50;
         if (promptInput) promptInput.value = '';
         if (colorInput) colorInput.value = '#9146FF';
-        
+
         if (tplWrapper && tplSelect) {
             tplWrapper.style.display = 'block';
             const placeholder = cpCopy('selectTemplatePlaceholder');
@@ -6296,7 +6532,6 @@ function renderCpGroups() {
         const bRaid = cpCopy('badgeRaid');
         if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
         if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
-        if (g.autoOnObsScene) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#60a5fa; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">⚡${raidSoEscape(g.autoOnObsScene)}</span>`;
         if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
         html += `
@@ -6354,6 +6589,8 @@ function renderCpTable() {
             groupTagsHtml += `<span class="cp-group-tag${isShared ? ' is-shared' : ''}">${raidSoEscape(cpGroupName(g))}</span>`;
         });
         const isAppOwned = isAppCreatedReward(r);
+        const actionTitle = isAppOwned ? editText : cpCopy('cantModifyExternalReward');
+        const disabledAttribute = isAppOwned ? '' : ' disabled aria-disabled="true"';
         const sourceBadgeHtml = isAppOwned
             ? `<span class="cp-source-badge is-app">${raidSoEscape(appBadgeText)}</span>`
             : `<span class="cp-source-badge is-external">${raidSoEscape(extBadgeText)}</span>`;
@@ -6374,14 +6611,14 @@ function renderCpTable() {
                 <span class="${isEnabled ? 'is-enabled' : 'is-disabled'}">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
             </td>
             <td class="cp-reward-switch">
-                <label class="cp-reward-toggle" title="${raidSoEscape(isEnabled ? enabledText : disabledText)}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="toggleCustomRewardEnabled('${r.id}', this.checked)">
+                <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
+                    <input type="checkbox" ${isEnabled ? 'checked' : ''}${disabledAttribute}${isAppOwned ? ` onchange="toggleCustomRewardEnabled('${r.id}', this.checked)"` : ''}>
                     <span class="cp-reward-toggle-track"></span>
                 </label>
             </td>
             <td class="cp-reward-actions">
-                <button type="button" class="btn-secondary cp-reward-icon-button" onclick="openCpRewardModal('${r.id}')" aria-label="${raidSoEscape(editText)}" title="${raidSoEscape(editText)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                <button type="button" class="btn-secondary cp-reward-icon-button is-delete" onclick="deleteCpReward('${r.id}')" aria-label="${raidSoEscape(deleteAria)}" title="${raidSoEscape(deleteAria)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                <button type="button" class="btn-secondary cp-reward-icon-button is-delete"${disabledAttribute}${isAppOwned ? ` onclick="deleteCpReward('${r.id}')"` : ''} aria-label="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}" title="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </td>
         </tr>`;
     });

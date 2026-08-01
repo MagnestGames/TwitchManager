@@ -61,7 +61,7 @@ namespace TwitchManagerInstaller
             }
 
             string dockUrl = new Uri(dockPath).AbsoluteUri;
-            string audioUrl = new Uri(Path.Combine(installDirectory, "TwitchManagerAudio.html")).AbsoluteUri;
+            string audioUrl = dockUrl + "?audio-source=1";
             File.WriteAllText(Path.Combine(installDirectory, "OBS_Dock_URL.txt"), dockUrl + Environment.NewLine, new UTF8Encoding(true));
             File.WriteAllText(Path.Combine(installDirectory, "OBS_Audio_Source_URL.txt"), audioUrl + Environment.NewLine, new UTF8Encoding(true));
             File.WriteAllText(Path.Combine(installDirectory, MarkerFileName), MarkerContent, Encoding.ASCII);

@@ -4,6 +4,7 @@
 <summary><b>🇯🇵 日本語 (Japanese)</b></summary>
 
 - [ホーム](Home)
+- [更新履歴](Release-History)
 - [インストールとOBSへの追加](Getting-Started)
 - [Twitch認証](Authentication)
 - [機能一覧](Feature-Overview)
@@ -14,6 +15,7 @@
 - [IDリスト](ID-List)
 - [メモ帳・その他](Memo-and-Other)
 - [設定・バックアップ](Settings-and-Backup)
+- [ロゴの利用とクレジット](Logo-and-Credits)
 - [トラブルシューティング](Troubleshooting)
 - [Q&A](Q&A)
 
@@ -39,20 +41,20 @@
 </details>
 
 <details>
-<summary><b>🇨🇳 繁體中文 (Traditional Chinese)</b></summary>
+<summary><b>🇨🇳 简体中文 (Simplified Chinese)</b></summary>
 
-- [主頁](Home-ZH)
-- [安裝與新增至 OBS](Getting-Started-ZH)
-- [Twitch 身份驗證](Authentication-ZH)
-- [功能總覽](Feature-Overview-ZH)
-- [實況標題與分類](Stream-Title-ZH)
-- [通知與 Raid 介紹](Raid-and-Notifications-ZH)
+- [主页](Home-ZH)
+- [安装与添加至 OBS](Getting-Started-ZH)
+- [Twitch 身份验证](Authentication-ZH)
+- [功能概览](Feature-Overview-ZH)
+- [直播标题与分类](Stream-Title-ZH)
+- [通知与 Raid 介绍](Raid-and-Notifications-ZH)
 - [Twitch 工具](Twitch-Tools-ZH)
-- [指令設定](Commands-ZH)
+- [命令设置](Commands-ZH)
 - [ID 列表](ID-List-ZH)
-- [備忘錄與其他](Memo-and-Other-ZH)
-- [設定與備份](Settings-and-Backup-ZH)
-- [疑難排解](Troubleshooting-ZH)
-- [常見問題 Q&A](Q&A-ZH)
+- [备忘录与其他](Memo-and-Other-ZH)
+- [设置与备份](Settings-and-Backup-ZH)
+- [故障排除](Troubleshooting-ZH)
+- [常见问题 Q&A](Q&A-ZH)
 
 </details>

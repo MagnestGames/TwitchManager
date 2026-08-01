@@ -148,7 +148,7 @@ $preparedUrlPath = Join-Path $preparedRoot "OBS_Dock_URL.txt"
 $preparedAudioUrlPath = Join-Path $preparedRoot "OBS_Audio_Source_URL.txt"
 [System.IO.File]::WriteAllText(
     $preparedAudioUrlPath,
-    "file:///Applications/TwitchManager/TwitchManagerAudio.html`n",
+    "file:///Applications/TwitchManager/TwitchManagerDock.html?audio-source=1`n",
     [System.Text.UTF8Encoding]::new($false))
 
 $preparedApp = Join-Path $preparedRoot "TwitchManagerをOBSに追加.app\Contents"

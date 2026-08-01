@@ -13,6 +13,7 @@ const issueDate = new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'lo
 // ページの構成順序
 const PAGES = [
     { file: 'Home.md', title: 'ホーム' },
+    { file: 'Release-History.md', title: '更新履歴' },
     { file: 'Getting-Started.md', title: 'インストールとOBSへの追加' },
     { file: 'Authentication.md', title: 'Twitch認証' },
     { file: 'Feature-Overview.md', title: '機能一覧' },
@@ -23,28 +24,46 @@ const PAGES = [
     { file: 'ID-List.md', title: 'IDリスト' },
     { file: 'Memo-and-Other.md', title: 'メモ帳・その他' },
     { file: 'Settings-and-Backup.md', title: '設定・バックアップ' },
+    { file: 'Logo-and-Credits.md', title: 'ロゴの利用とクレジット' },
     { file: 'Troubleshooting.md', title: 'トラブルシューティング' },
     { file: 'Q&A.md', title: 'よくある質問 (Q&A)' }
 ];
 
+function toLocalImageUrl(src, baseImgDir) {
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('file:') || src.startsWith('data:')) {
+        return src;
+    }
+    const absolutePath = path.resolve(baseImgDir, src).replace(/\\/g, '/');
+    return `file:///${absolutePath}`;
+}
+
+function toDocumentHref(href) {
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('#')) {
+        return href;
+    }
+    const pageName = href.split('#')[0].replace(/\.md$/i, '');
+    const pageId = pageName.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    return `#section-${pageId}`;
+}
+
 // 簡易マークダウンパース関数
 function parseMarkdown(md, baseImgDir) {
-    // リンクの調整: [テキスト](PageName) -> [テキスト](#pagename)
-    md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, href) => {
-        if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')) {
-            return `<a href="${href}" target="_blank">${text}</a>`;
-        }
-        return `<a href="#${href.toLowerCase().replace(/[^a-z0-9_-]/g, '')}">${text}</a>`;
+    // Markdown画像を通常リンクより先に変換する。
+    md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+        const imgPath = toLocalImageUrl(src, baseImgDir);
+        return `<div class="img-container"><img src="${imgPath}" alt="${alt}" /><span class="img-caption">${alt}</span></div>`;
     });
 
-    // 画像パスの置換: images/foo.png -> file:///...
-    md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-        let imgPath = src;
-        if (!src.startsWith('http') && !src.startsWith('file:')) {
-            const absolutePath = path.resolve(baseImgDir, src).replace(/\\/g, '/');
-            imgPath = `file:///${absolutePath}`;
-        }
-        return `<div class="img-container"><img src="${imgPath}" alt="${alt}" /><span class="img-caption">${alt}</span></div>`;
+    // Wikiで幅指定に使うHTML画像も、PDFではローカルファイルを参照する。
+    md = md.replace(/(<img\b[^>]*\bsrc=["'])([^"']+)(["'][^>]*>)/gi, (match, before, src, after) => {
+        return `${before}${toLocalImageUrl(src, baseImgDir)}${after}`;
+    });
+
+    // ページ間リンクを統合PDF内の章アンカーへ変換する。
+    md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, href) => {
+        const target = toDocumentHref(href);
+        const external = /^https?:\/\//.test(target) || target.startsWith('mailto:');
+        return `<a href="${target}"${external ? ' target="_blank"' : ''}>${text}</a>`;
     });
 
     // HTMLへのライン単位変換
@@ -179,7 +198,7 @@ function inlineFormatting(str) {
             if (href.startsWith('http://') || href.startsWith('https://')) {
                 return `<a href="${href}">${text}</a>`;
             }
-            return `<a href="#${href.toLowerCase().replace(/[^a-z0-9_-]/g, '')}">${text}</a>`;
+            return `<a href="${toDocumentHref(href)}">${text}</a>`;
         });
 }
 
@@ -519,11 +538,12 @@ function generateFullHTML() {
 
     <!-- 表紙 -->
     <div class="cover-page">
-        <div class="cover-logo-badge">OBS Studio Plugin</div>
+        <div class="cover-logo-badge">OBS Studio Custom Browser Dock</div>
         <h1 class="cover-title">TwitchManager</h1>
         <div class="cover-subtitle">公式ユーザーマニュアル &amp; 統合Wikiドキュメント</div>
         <div class="cover-divider"></div>
         <div class="cover-meta">
+            Version: 1.0.2<br>
             発行日: ${issueDate}<br>
             対応言語: 日本語 (Japanese)<br>
             ドキュメント形式: 統合PDFマニュアル
@@ -545,7 +565,7 @@ function generateFullHTML() {
 </html>
 `;
 
-    fs.writeFileSync(OUTPUT_HTML, fullHTML, 'utf8');
+    fs.writeFileSync(OUTPUT_HTML, fullHTML.replace(/[ \t]+$/gm, ''), 'utf8');
     console.log(`Combined HTML generated successfully at: ${OUTPUT_HTML}`);
 }
 
