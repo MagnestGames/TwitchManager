@@ -4,6 +4,8 @@
 
 OBS Studioから、Twitch配信の準備・操作・通知・視聴者記録をまとめて行えるカスタムブラウザドックです。
 
+![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
+
 > TwitchManagerは、配信者の活動を少しでも支えたいという思いから、個人が善意で開発・無償公開しているツールです。TwitchおよびOBS Studioの公式ツールではありません。
 >
 > 無料版と機能・内容が同じ支援版をBOOTHで公開しています。開発を応援していただける場合は、[TwitchManager 支援版（中身は一緒）](https://toumei2suisai.booth.pm/items/8654630)をご利用ください。支援は任意であり、無料版の利用条件や機能に影響しません。
@@ -147,8 +149,6 @@ https://github.com/MagnestGames/TwitchManager
 
 TwitchまたはOBS Studioの公式製品・公認素材であると誤認させる使い方はしないでください。
 詳しくは[ロゴの利用とクレジット（Wiki）](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)を参照してください。
-
-![TwitchManagerは配信情報、レイド、通知、視聴者記録を一つのドックで管理](docs/wiki-mock/images/twitchmanager-overview.png)
 
 
 ## ライセンス
