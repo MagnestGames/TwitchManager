@@ -2,22 +2,9 @@
 
 [日本語](../README.md) | [English](README.en.md) | [简体中文](README.zh.md)
 
-![TwitchManager 徽标](../assets/branding/TwitchManager-logo.png)
-
-如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。您也可以选择将其用作直播画面或网页中的横幅。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
-
-任何人均可在直播画面、社交媒体、视频、文章等素材中，无需事先许可地展示、转载和再分发此徽标，商业与非商业用途均可。署名并非强制要求；如需标注，以下两行即可：
-
-```text
-TwitchManager
-https://github.com/MagnestGames/TwitchManager
-```
-
-请勿将其表述为 Twitch 或 OBS Studio 的官方或认可素材。详情请参阅[徽标使用与署名说明](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)。
+这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
 
 ![TwitchManager 在单个面板中管理直播信息、突袭、通知和支持者记录](wiki-mock/images/twitchmanager-overview.png)
-
-这是一个适用于 OBS Studio 的自定义浏览器面板，集成了 Twitch 直播准备、操作、通知和观众记录功能。
 
 > TwitchManager 由个人出于支持主播的初衷开发并免费发布。本工具并非 Twitch 或 OBS Studio 的官方产品。
 >
@@ -140,6 +127,21 @@ Beta 版不会显示更新通知。更新前，请先在“其他”选项卡中
 - [提交问题 (Issues)](https://github.com/MagnestGames/TwitchManager/issues)
 
 提交 Issue 时，请附上您的操作系统、OBS Studio 和 TwitchManager 的版本、复现步骤及显示的任何错误信息。请勿包含 Token 或私密凭据。
+
+## 鸣谢
+
+![TwitchManager 徽标](../assets/branding/TwitchManager-logo.png)
+
+如需在直播布局或宣传素材中使用徽标，请下载 [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png)。您也可以选择将其用作直播画面或网页中的横幅。Windows 和 macOS 安装目录中的 `assets/branding` 文件夹也包含此文件。
+
+任何人均可在直播画面、社交媒体、视频、文章等素材中，无需事先许可地展示、转载和再分发此徽标，商业与非商业用途均可。署名并非强制要求；如需标注，以下两行即可：
+
+```text
+TwitchManager
+https://github.com/MagnestGames/TwitchManager
+```
+
+请勿将其表述为 Twitch 或 OBS Studio 的官方或认可素材。详情请参阅[徽标使用与署名说明](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits)。
 
 ## 许可协议
 
