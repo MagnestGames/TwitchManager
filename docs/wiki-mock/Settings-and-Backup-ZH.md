@@ -1,42 +1,42 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Settings-and-Backup) | [🇺🇸 English](Settings-and-Backup-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Settings-and-Backup) | [🇺🇸 English](Settings-and-Backup-EN) | **🇨🇳 简体中文**
 
 ---
 
-# 設定與備份
+# 设置与备份
 
-點擊右上角的齒輪圖示以微調通用設定。
+点击右上角的齿轮图标以微调通用设置。
 
-## Twitch 身份驗證
+## Twitch 身份验证
 
-![Twitch 身份驗證設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
+![Twitch 身份验证设置](images/features/settings-authentication.png)
 
-儲存 Token、確認連結帳號資訊或解除授權。詳細說明請參閱 [Twitch 身份驗證](Authentication-ZH)。
+可保存 Token、确认已关联的账号信息或解除授权。详细说明请参阅 [Twitch 身份验证](Authentication-ZH)。
 
-## 顯示設定
+## 显示设置
 
-![顯示設定介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-display.png)
+![显示设置界面](images/features/settings-display.png)
 
-自訂日期格式、文字大小與行高。日期格式會同步套用至頂部狀態列與模板變數 `{date}`。
+自定义日期格式、文字大小与行高。日期格式会同步应用至顶部状态列与模板变量 `{date}`。
 
-## 實況自動化設定
+## 直播自动化设置
 
-![實況管理設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-stream-management.png)
+![直播管理设置](images/features/settings-stream-management.png)
 
-- 開播時自動播放 3 分鐘廣告。
-- 自動將介紹與 Raid 訊息在聊天室釘選 20 分鐘。
+- 开播时自动播放 3 分钟广告。
+- 自动将介绍与 Raid 消息在聊天室钉选 20 分钟。
 
-*自動廣告預設為關閉。請僅在需要時開啟，並確認未與 Twitch 官方排程廣告設定重疊。*
+*自动广告默认为关闭。请仅在需要时启用，并确认不会与 Twitch 官方的定时广告设置重叠。*
 
-## 分頁與區塊顯示設定
+## 选项卡与功能区显示设置
 
-![分類顯示設定介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/category-display-settings.png)
+![分类显示设置界面](images/features/category-display-settings.png)
 
-可自由設定顯示或隱藏「通知與介紹」、「Twitch」及「指令」分頁內的區塊。隱藏區塊不會刪除任何已儲存的資料。
+可设置显示或隐藏“通知与介绍”“Twitch”和“指令”选项卡中的功能区。隐藏功能区不会删除任何已保存的数据。
 
-## 資料備份
+## 数据备份
 
-![備份與還原介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![备份与恢复界面](images/features/backup-restore-logs.png)
 
-可使用「其他」分頁內的「複製備份」匯出資料。請務必在更新 OBS、轉移電腦、清理瀏覽器快取或執行還原前建立備份。
+可使用“其他”选项卡中的“复制备份”导出数据。请务必在更新 OBS、更换电脑、清理浏览器缓存或执行恢复前创建备份。
 
-資料皆儲存在 OBS 或瀏覽器的本機快取中。若一般瀏覽器與 OBS Dock 內容不一致，可於其中一方匯出備份後至另一方執行還原。
+数据保存在 OBS 或浏览器的本地存储中。如果普通浏览器与 OBS Dock 的内容不一致，请先从一端导出备份，再在另一端恢复。

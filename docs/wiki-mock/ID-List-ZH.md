@@ -1,32 +1,32 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](ID-List) | [🇺🇸 English](ID-List-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](ID-List) | [🇺🇸 English](ID-List-EN) | **🇨🇳 简体中文**
 
 ---
 
 # ID 列表管理
 
-將連動夥伴與 Raid 目標的資訊整理為卡片進行管理。
+将合作伙伴与 Raid 目标的信息整理成卡片进行管理。
 
-![ID 列表管理介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-management.png)
+![ID 列表管理界面](images/features/id-list-management.png)
 
-## 可紀錄的資訊項目
+## 可记录的信息项目
 
-- 顯示名稱、Twitch ID
-- X (Twitter)、YouTube 連結
-- 備忘筆記
-- 生日、紀念日
-- 標籤與分組
-- 介紹次數與最後介紹時間
+- 显示名称、Twitch ID
+- X (Twitter)、YouTube 链接
+- 备忘笔记
+- 生日、纪念日
+- 标签与分组
+- 介绍次数与最后介绍时间
 
-點擊 **「＋ 新增」** 可建立卡片或新分組。同一位實況主可歸類至多個分組，並可透過上方標籤進行快速篩選。
+点击 **「＋ 添加」** 可创建卡片或新分组。同一位主播可归类至多个分组，并可通过上方标签进行快速筛选。
 
-排序方式支援：名稱、分組、最近介紹、介紹次數及生日。請注意 Twitch ID 需輸入標準登入帳號名稱。
+排序方式支持：名称、分组、最近介绍、介绍次数及生日。请注意 Twitch ID 需输入标准登录账号名称。
 
-## 生日與紀念日
+## 生日与纪念日
 
-註冊的日期會於頂部通知列進行提醒，並同步顯示於紀念日日曆中。
+已登记的日期会在顶部通知栏中提醒，并同步显示在纪念日日历中。
 
-![生日通知提示](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-birthday-popover.png)
+![生日通知提示](images/features/id-list-birthday-popover.png)
 
-![紀念日日曆介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-calendar.png)
+![纪念日日历界面](images/features/id-list-calendar.png)
 
-*請記得定期對 ID 列表進行 [資料備份](Settings-and-Backup-ZH)。*
+*请记得定期对 ID 列表进行 [数据备份](Settings-and-Backup-ZH)。*

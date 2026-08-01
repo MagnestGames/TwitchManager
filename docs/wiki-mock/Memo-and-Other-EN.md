@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Memo-and-Other) | **🇺🇸 English** | [🇨🇳 繁體中文](Memo-and-Other-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Memo-and-Other) | **🇺🇸 English** | [🇨🇳 简体中文](Memo-and-Other-ZH)
 
 ---
 
@@ -8,7 +8,7 @@
 
 Save talking points, stream schedules, and notes across multiple cards.
 
-![Memo Pad](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/memo-pad.png)
+![Memo Pad](images/features/memo-pad.png)
 
 Click **"+"** to add cards. Reorder cards while unlocked. Use delete mode to clean up unused notes.
 
@@ -20,7 +20,7 @@ Use Cases:
 
 ## Backup & Restore
 
-![Backup and Restore](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![Backup and Restore](images/features/backup-restore-logs.png)
 
 - **Backup**: Copy your app data or download it as a text/JSON file.
 - **Restore**: Load a backup JSON file to overwrite or merge with existing settings.

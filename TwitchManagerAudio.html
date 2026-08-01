@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TwitchManager Audio</title>
+  <meta http-equiv="refresh" content="0; url=TwitchManagerDock.html?audio-source=1">
+  <style>html, body { margin: 0; min-height: 100%; background: transparent; }</style>
+</head>
+<body>
+  <script>
+    const target = new URL('TwitchManagerDock.html', location.href);
+    target.searchParams.set('audio-source', '1');
+    location.replace(target.href);
+  </script>
+</body>
+</html>

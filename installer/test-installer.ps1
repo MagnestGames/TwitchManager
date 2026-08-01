@@ -54,10 +54,14 @@ try {
         $entryNames = @($archive.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
         $requiredEntries = @(
             "TwitchManagerDock.html",
+            "TwitchManagerAudio.html",
             "creators.json",
+            "twitch_manager_version.js",
             "twitch_manager_locales.js",
             "twitch_manager.css",
             "assets/branding/TwitchManager-logo.png",
+            "js/update-check.js",
+            "js/audio-source.js",
             "js/ui.js",
             "sounds/chat_1.wav",
             "sounds/chat_2.wav",
@@ -187,6 +191,15 @@ try {
         if (-not (Test-Path -LiteralPath $extractedPath -PathType Leaf)) {
             throw "Extracted payload entry not found: $entryName"
         }
+    }
+    $versionScriptPath = Join-Path $extractionRoot "twitch_manager_version.js"
+    $versionScriptText = Get-Content -LiteralPath $versionScriptPath -Raw
+    if ($versionScriptText -notmatch 'TWITCH_MANAGER_BUILD' -or $versionScriptText -notmatch 'version:\s*"[^"]+"') {
+        throw "The extracted update-check version script is invalid."
+    }
+    if ((-not [string]::IsNullOrWhiteSpace($ExpectedVersion)) -and
+        (-not $versionScriptText.Contains("version: `"$ExpectedVersion`""))) {
+        throw "The extracted update-check version does not match $ExpectedVersion."
     }
 }
 finally {

@@ -1,37 +1,38 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Authentication) | [🇺🇸 English](Authentication-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Authentication) | [🇺🇸 English](Authentication-EN) | **🇨🇳 简体中文**
 
 ---
 
-# Twitch 身份驗證
+# Twitch 身份验证
 
-若要同步 Twitch 設定、接收事件通知及進行聊天室操作，需要設定 Access Token。
+要同步 Twitch 设置、接收事件通知或执行聊天操作，需要设置 Access Token。
 
-![Twitch 身份驗證設定](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
+![Twitch 身份验证设置](images/features/settings-authentication.png)
 
-## 設定步驟
+## 设置步骤
 
-1. 點擊右上角的齒輪圖示開啟「設定」。
-2. 點擊 **「複製 Twitch Token Generator URL」**。
-3. 使用一般瀏覽器開啟該 URL，並建立 **Custom Scope Token**。
-4. 將 ACCESS TOKEN 貼入 TwitchManager 並儲存。
-5. 確認畫面上已成功顯示連線的 Twitch 帳號名稱。
+1. 点击右上角的齿轮图标打开“设置”。
+2. 点击 **「复制 Twitch Token Generator URL」**。
+3. 使用默认浏览器打开该 URL，并创建 **Custom Scope Token**。
+4. 将 ACCESS TOKEN 粘贴到 TwitchManager 并保存。
+5. 确认界面中已显示关联的 Twitch 账号名称。
 
-## 主要權限列表 (Scopes)
+## 主要权限列表 (Scopes)
 
-| 功能 | 權限 (Scope) |
+| 功能 | 权限 (Scope) |
 | --- | --- |
-| 標題與分類 | `channel:manage:broadcast` |
+| 标题与分类 | `channel:manage:broadcast` |
 | 聊天室 | `user:read:chat` / `user:write:chat` |
 | 事件通知 | `bits:read` / `channel:read:subscriptions` / `channel:read:redemptions` |
-| 預測與投票 | `channel:manage:predictions` / `channel:manage:polls` |
-| Raid 與 頻道介紹 | `channel:manage:raids` / `moderator:manage:shoutouts` |
+| 欢迎通知 | `moderator:read:chatters` |
+| 预测与投票 | `channel:manage:predictions` / `channel:manage:polls` |
+| Raid 与频道介绍 | `channel:manage:raids` / `moderator:manage:shoutouts` |
 | 聊天室管理 | `moderator:manage:announcements` / `moderator:manage:chat_settings` |
-| 剪輯與 VIP | `clips:edit` / `channel:read:vips` / `channel:manage:vips` |
+| 剪辑与 VIP | `clips:edit` / `channel:read:vips` / `channel:manage:vips` |
 
-若缺乏相應權限，僅該功能會操作失敗。例如：點數兌換紀錄需要 `channel:read:redemptions`，執行 `/raid` 需要 `channel:manage:raids`。當使用新功能或出現授權錯誤時，請勾選所有必要權限重新產生 Token。
+缺少权限时，只有相应功能会操作失败。例如，频道积分兑换记录需要 `channel:read:redemptions`，执行 `/raid` 需要 `channel:manage:raids`，欢迎通知需要 `moderator:read:chatters`。使用新功能或遇到授权错误时，请勾选所需权限并重新生成 Token。
 
-## 注意事項
+## 注意事项
 
-- **請勿將 Access Token 展示在實況畫面、Issue 或社群媒體上**。
-- 若懷疑 Token 外洩，請點擊「解除 Twitch 身份驗證」並重新產生 Token。
-- 一般瀏覽器與 OBS Dock 的資料儲存區可能相互獨立，請務必在實況使用的 OBS Dock 內完成設定。
+- **请勿在直播画面、GitHub Issue 或社交媒体上显示 Access Token**。
+- 如果怀疑 Token 已泄露，请点击“解除 Twitch 身份验证”并重新生成 Token。
+- 默认浏览器与 OBS Dock 的本地存储区可能彼此独立。请务必在直播所用的 OBS Dock 中完成设置。

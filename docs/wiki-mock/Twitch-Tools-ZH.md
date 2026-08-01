@@ -1,51 +1,51 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Twitch-Tools) | [🇺🇸 English](Twitch-Tools-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Twitch-Tools) | [🇺🇸 English](Twitch-Tools-EN) | **🇨🇳 简体中文**
 
 ---
 
-# Twitch 聯動功能
+# Twitch 集成功能
 
-**「Twitch」** 分頁提供實況中與實況後使用的各項 Twitch 整合工具。
+“Twitch”选项卡提供直播中和直播后使用的各项 Twitch 集成工具。
 
-## 支持者與統計列表
+## 支持者与统计列表
 
-統計初次留言者、Raid、新追隨者、Bits 歡呼、訂閱、贈送訂閱、聊天發言與頻道點數兌換，並可一鍵複製感謝文案。
+统计首次发言用户、Raid、新关注者、Bits 欢呼、订阅、赠送订阅、聊天发言和频道积分兑换，并可一键复制感谢文案。
 
-![支持者列表介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-supporter-list.png)
+![支持者列表界面](images/features/twitch-supporter-list.png)
 
-點數兌換除自訂獎勵外，亦會紀錄表情符號放大、訊息特效、全螢幕慶祝與醒目訊息等 Twitch 自動獎勵。使用 Power-up 消耗的 Bits 亦會計算至 Bits 總數。
+除自定义奖励外，频道积分兑换还会记录表情符号放大、消息特效、全屏庆祝和醒目消息等 Twitch 自动奖励。Power-up 消耗的 Bits 也会计入 Bits 总数。
 
-可排除不統計的項目與機器人帳號，並設定開播時自動重置列表。點擊「開啟歷史日誌」可查看過往儲存的統計紀錄。
+可排除不统计的项目和机器人账号，并设置开播时自动重置列表。点击“打开历史记录”可查看此前保存的统计记录。
 
-## 預測與投票
+## 预测与投票
 
-![預測與投票介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-prediction-poll.png)
+![预测与投票界面](images/features/twitch-prediction-poll.png)
 
-- **預測**: 2 至 10 個選項，時間 30 至 1800 秒。
-- **投票**: 最多 5 個選項，時間 15 至 1800 秒。
-- 支援建立、取得狀態、結算結束與儲存預設模板。
+- **预测**: 2 至 10 个选项，时间 30 至 1800 秒。
+- **投票**: 最多 5 个选项，时间 15 至 1800 秒。
+- 支持创建、获取状态、结束并结算，以及保存预设模板。
 
-## 聊天室模式設定
+## 聊天室模式设置
 
-![聊天室設定介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-chat-control.png)
+![聊天室设置界面](images/features/twitch-chat-control.png)
 
-切換聊天室模式：清空聊天室、僅限表情符號、僅限訂閱者、重複訊息限制 (r9k)、僅限追隨者與慢速模式。
+切换聊天室模式：清空聊天室、仅限表情符号、仅限订阅者、重复消息限制 (r9k)、仅限关注者与慢速模式。
 
-## API 操作與剪輯
+## API 操作与剪辑
 
-![API 操作與剪輯介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-api-clips.png)
+![API 操作与剪辑界面](images/features/twitch-api-clips.png)
 
-建立實況標記與發送聊天室公告。剪輯支援建立、取得列表與新增至最愛。
+创建直播标记与发送聊天室公告。剪辑支持创建、获取列表与添加至收藏。
 
-## 多重觀看網址 (Collab)
+## 多流观看链接 (Collab)
 
-![多重觀看網址產生介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-collab-url.png)
+![多流观看链接生成界面](images/features/twitch-collab-url.png)
 
-輸入多個 Twitch ID，一鍵產生 `multistre.am` 或 `TwitchTheater` 的聯動觀看網址。
+输入多个 Twitch ID，即可生成 `multistre.am` 或 `TwitchTheater` 的多流观看链接。
 
-## 訂閱者與 VIP
+## 订阅者与 VIP
 
-![訂閱者與 VIP 介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/twitch-subscribers-vip.png)
+![订阅者与 VIP 界面](images/features/twitch-subscribers-vip.png)
 
-取得訂閱者列表。檢視 VIP 列表與配額使用情況，並可輸入 ID 快速新增或移除 VIP。
+获取订阅者列表。查看 VIP 列表与配额使用情况，并可输入 ID 快速添加或移除 VIP。
 
-*各功能所需權限 (Scopes) 不同。若操作失敗，請檢查 [Twitch 身份驗證](Authentication-ZH) 及活動日誌。*
+*各功能所需权限 (Scopes) 不同。若操作失败，请检查 [Twitch 身份验证](Authentication-ZH) 及活动日志。*

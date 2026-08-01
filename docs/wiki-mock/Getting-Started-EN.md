@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Getting-Started) | **🇺🇸 English** | [🇨🇳 繁體中文](Getting-Started-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Getting-Started) | **🇺🇸 English** | [🇨🇳 简体中文](Getting-Started-ZH)
 
 ---
 
@@ -21,11 +21,21 @@ The default installation path is the `TwitchManager` folder inside your Windows 
 
 The default installation path is `/Applications/TwitchManager`. Supported on macOS 11 or later.
 
+## Update Notifications
+
+TwitchManager checks for the latest stable release at startup. When a newer version is available, a dialog shows the installed and latest versions.
+
+- **Check**: Opens the matching GitHub release page.
+- **Remind in 3 days**: Defers the notice for three days, then shows the same update again.
+- **Skip**: Stops notifications for that version. A later release will be shown again.
+
+The network check runs at most once every 24 hours. Update notices are disabled in beta builds. If the check fails, TwitchManager starts normally without displaying an error dialog. Create a backup from the **Other** tab before installing an update.
+
 ## Adding to OBS Studio
 
 1. In OBS Studio, open **Docks** -> **Custom Browser Docks...** from the top menu.
 
-![OBS Dock Menu](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-menu.png)
+![OBS Dock Menu](images/obs-custom-browser-dock-menu.png)
 
 2. Set the Dock Name to `TwitchManager`.
 
@@ -36,7 +46,7 @@ The default installation path is `/Applications/TwitchManager`. Supported on mac
 
 4. Click **Apply**.
 
-<img src="https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/obs-custom-browser-dock-settings.png" alt="Custom Browser Dock Settings Example" width="700">
+<img src="images/obs-custom-browser-dock-settings.png" alt="Custom Browser Dock Settings Example" width="700">
 
 5. Drag the newly created dock to embed it into OBS, adjusting its width so buttons and text are clearly visible.
 

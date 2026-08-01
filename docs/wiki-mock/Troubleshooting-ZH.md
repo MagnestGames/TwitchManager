@@ -1,54 +1,54 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Troubleshooting) | [🇺🇸 English](Troubleshooting-EN) | **🇨🇳 繁體中文**
+> 🌐 **Language / 语言:** [🇯🇵 日本語](Troubleshooting) | [🇺🇸 English](Troubleshooting-EN) | **🇨🇳 简体中文**
 
 ---
 
-# 疑難排解指南
+# 故障排除指南
 
-若發生問題，請先至「其他」分頁查看活動日誌，並於重新設定前建立資料備份。
+如果出现问题，请先在“其他”选项卡中查看活动日志，并在重新设置前创建数据备份。
 
-| 異常狀況 | 確認項目 |
+| 问题 | 检查项目 |
 | --- | --- |
-| 無法顯示於 OBS | 自訂瀏覽器 Dock 之 URL 與本機檔案路徑 |
-| Twitch 操作失敗 | 連線帳號、Access Token 及 API 權限 (Scope) |
-| 外部音效無法播放 | 重新選擇音效資料夾 |
-| OBS 與一般瀏覽器資料不同 | 本機儲存區相互獨立與資料備份 |
-| 未能偵測 Raid 或通知 | 身份驗證狀態、EventSub 連線與功能開關 |
+| 无法在 OBS 中显示 | 自定义浏览器 Dock 的 URL 与本地文件路径 |
+| Twitch 操作失败 | 连接账号、Access Token 及 API 权限 (Scope) |
+| 外部音效无法播放 | 重新选择音效文件夹 |
+| OBS 与普通浏览器数据不同 | 本地存储彼此独立，需要通过备份同步 |
+| 无法检测 Raid 或通知 | 身份验证状态、EventSub 连接与功能开关 |
 
-## OBS Studio 無法顯示 Dock
+## OBS Studio 无法显示 Dock
 
-- 重新貼上 `OBS_Dock_URL.txt` 內記載的網址。
-- Windows 環境請確認網址格式為 `file:///C:/...`。
-- 確認安裝目錄或解壓縮後的資料夾未被移動位置。
-- 確認 OBS 上方「Dock」選單中 `TwitchManager` 已勾選啟用。
+- 重新粘贴 `OBS_Dock_URL.txt` 中记录的 URL。
+- 在 Windows 中，请确认 URL 格式为 `file:///C:/...`。
+- 确认安装目录或解压缩后的文件夹未被移动位置。
+- 确认 OBS 上方「Dock」菜单中 `TwitchManager` 已勾选启用。
 
-## Twitch 整合功能無法運作
+## Twitch 集成功能无法运行
 
-![驗證狀態介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/settings-authentication.png)
+![验证状态界面](images/features/settings-authentication.png)
 
-1. 確認設定頁面中已顯示連線的 Twitch 帳號名稱。
-2. 勾選所有必要權限 (Scope) 並重新產生 Token。
-3. 檢視活動日誌中的授權與權限錯誤訊息。
+1. 确认设置页面中已显示连接的 Twitch 账号名称。
+2. 勾选所有必要权限 (Scope) 并重新生成 Token。
+3. 查看活动日志中的授权与权限错误消息。
 
-*點數兌換紀錄需要 `channel:read:redemptions` 權限，發起 Raid 需要 `channel:manage:raids` 權限。*
+*频道积分兑换记录需要 `channel:read:redemptions` 权限，发起 Raid 需要 `channel:manage:raids` 权限。*
 
-若更新標題後 OBS 原生實況資訊 Dock 未同步，請手動重新載入該 Dock。
+若更新标题后 OBS 原生直播信息 Dock 未同步，请手动重新加载该 Dock。
 
-## 外部音效無法播放
+## 外部音效无法播放
 
-![音效設定介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/notification-sounds.png)
+![音效设置界面](images/features/notification-sounds.png)
 
-1. 點擊 **「選擇音效資料夾」** 並重新選擇儲存音效的資料夾。
-2. 重新指定各通知項目的音效檔案。
-3. 點擊試聽並儲存。
+1. 点击 **「选择音效文件夹」** 并重新选择保存音效的文件夹。
+2. 重新指定各通知项目的音效文件。
+3. 点击试听并保存。
 
-*受限於瀏覽器安全政策，重新載入頁面或重啟 OBS 後需重新選擇資料夾。若仍無法播放，請檢查功能開關、音量、排除 ID、OBS 音量混音器設定，並嘗試使用 `.wav` 或 `.mp3` 格式。*
+*受浏览器安全策略限制，重新加载页面或重启 OBS 后需要重新选择文件夹。如果仍无法播放，请检查功能开关、音量、排除 ID、OBS 音频混音器设置，并尝试使用 `.wav` 或 `.mp3` 格式。*
 
-## 資料消失或重置
+## 数据消失或重置
 
-清理瀏覽器快取或網站資料可能導致本機快取遭清除。若有備份，請至「其他」分頁進行資料還原。
+清理浏览器缓存或网站数据可能会清除本地数据。如果有备份，请在“其他”选项卡中恢复数据。
 
-![備份與還原介面](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/backup-restore-logs.png)
+![备份与恢复界面](images/features/backup-restore-logs.png)
 
-## 問題仍未解決？
+## 问题仍未解决？
 
-請準備您的 OS 版本、OBS 版本、發生步驟、時間點、螢幕截圖及活動日誌。請勿將 Access Token 或個人驗證資訊公開分享。
+请准备 OS 版本、OBS 版本、复现步骤、发生时间、屏幕截图和活动日志。请勿公开分享 Access Token 或个人身份验证信息。

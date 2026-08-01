@@ -3,6 +3,8 @@
         const SUPPORTER_ARCHIVE_STORAGE_KEY = 'stream_supporter_archives_v16';
         const SUPPORTER_ARCHIVE_LEGACY_KEY = 'stream_supporter_archive_v16';
         const SUPPORTER_ARCHIVE_LIMIT = 30;
+        const EVENTSUB_MESSAGE_DEDUPE_LIMIT = 1000;
+        const EVENTSUB_MESSAGE_DEDUPE_TTL_MS = 10 * 60 * 1000;
         const SUPPORTER_CATEGORY_DEFAULTS = Object.freeze({
             first: true,
             raid: true,
@@ -14,6 +16,7 @@
             point: true
         });
         let _esWs = null, _esSessionId = null, _esManualDisconnect = false, _esReconnectTimeout = null, _esReconnectDelay = 5000;
+        const _esProcessedMessageIds = new Map();
         let _streamStateInitialized = false;
         let _lastObservedStreamId = (() => {
             try {
@@ -23,6 +26,30 @@
             }
         })();
         let _numberWheelInitialized = false;
+
+        function isDuplicateEventSubNotification(metadata) {
+            const messageId = String(metadata?.message_id || '').trim();
+            if (!messageId) return false;
+
+            const now = Date.now();
+            for (const [storedId, seenAt] of _esProcessedMessageIds) {
+                if (now - seenAt <= EVENTSUB_MESSAGE_DEDUPE_TTL_MS) break;
+                _esProcessedMessageIds.delete(storedId);
+            }
+
+            if (_esProcessedMessageIds.has(messageId)) {
+                _esProcessedMessageIds.delete(messageId);
+                _esProcessedMessageIds.set(messageId, now);
+                return true;
+            }
+
+            _esProcessedMessageIds.set(messageId, now);
+            while (_esProcessedMessageIds.size > EVENTSUB_MESSAGE_DEDUPE_LIMIT) {
+                const oldestId = _esProcessedMessageIds.keys().next().value;
+                _esProcessedMessageIds.delete(oldestId);
+            }
+            return false;
+        }
 
         function createEmptyStreamStats() {
             return {
@@ -77,7 +104,16 @@
                 _lastObservedStreamId = marker;
                 safeSetLocal(SUPPORTER_LAST_STREAM_ID_KEY, marker);
             }
-            
+
+            if (typeof raidSoState !== 'undefined') {
+                raidSoState.seenChatters = new Set();
+            }
+            if (typeof triggerCpAutoOn === 'function') {
+                Promise.resolve(triggerCpAutoOn('stream_start')).catch(error => {
+                    console.warn('Channel point stream-start automation failed:', error);
+                });
+            }
+
             // 配信開始に伴う自動広告の実行
             triggerStreamStartAd();
 
@@ -208,6 +244,7 @@
                     await esSubscribe('channel.channel_points_automatic_reward_redemption.add', '2', { broadcaster_user_id: bId });
                     esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 12 }));
                 } else if (mtype === 'notification') {
+                    if (isDuplicateEventSubNotification(msg.metadata)) return;
                     const subtype = msg.metadata?.subscription_type;
                     const ev = msg.payload?.event;
                     let logMsg = "";
@@ -289,7 +326,12 @@
                             if (document.getElementById('es-f-raid')?.checked === false) showLog = false;
                             logMsg = `🚀 ${uiText('runtime.supporter.raid', { user: ev.from_broadcaster_user_name, viewers: ev.viewers })}`;
                             triggerNotification('raid');
-                            
+                            if (typeof triggerCpAutoOn === 'function') {
+                                Promise.resolve(triggerCpAutoOn('raid')).catch(error => {
+                                    console.warn('Channel point raid automation failed:', error);
+                                });
+                            }
+
                             // Stats tracking
                             if (canAddSupporter('raid', ev.from_broadcaster_user_id, ev.from_broadcaster_user_login, ev.from_broadcaster_user_name)) {
                                 streamStats.raids.push({ user: ev.from_broadcaster_user_name, viewers: ev.viewers });
@@ -456,8 +498,22 @@
                         updatePostPreview();
                     }
                 }
+                if (typeof pollRaidSoListenerArrivals === 'function') {
+                    pollRaidSoListenerArrivals(currentStreamId);
+                }
                 if (!_esWs) connectEventSub();
             } catch (err) {
                 console.error("Stream check failed:", err);
             }
+        }
+
+        function ensureTwitchEventServicesStarted() {
+            if (!settings.userId || !settings.clientId || !settings.token) return false;
+
+            if (!_esWs) connectEventSub();
+            if (!_streamCheckInterval) {
+                checkStreamStatus();
+                _streamCheckInterval = setInterval(checkStreamStatus, 60000);
+            }
+            return true;
         }

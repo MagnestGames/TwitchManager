@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** [🇯🇵 日本語](Home) | **🇺🇸 English** | [🇨🇳 繁體中文](Home-ZH)
+> 🌐 **Language / 語言:** [🇯🇵 日本語](Home) | **🇺🇸 English** | [🇨🇳 简体中文](Home-ZH)
 
 ---
 
@@ -12,7 +12,7 @@ TwitchManager is a local tool designed to handle stream preparation, live contro
 - **In-stream**: Raid shoutouts, outgoing raid shortcuts, notification sounds, predictions & polls, chat controls.
 - **Post-stream**: Supporter & Channel Point reward summary, activity log export, data backup.
 
-![TwitchManager Dock](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/twitch-manager-dock.png)
+![TwitchManager Dock](images/twitch-manager-dock.png)
 
 ## Getting Started
 

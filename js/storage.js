@@ -253,7 +253,12 @@ const langMap = {
             };
             document.getElementById('client_id').value = settings.clientId || '';
             document.getElementById('token').value = normalizedToken;
-            if (normalizedToken) await refreshTwitchAuthFromToken(false);
+            if (normalizedToken) {
+                await refreshTwitchAuthFromToken(false);
+            } else {
+                if (settings.userId || settings.userLogin) stopAllTwitchConnectionsForAuthClear();
+                clearLocalTwitchAuth();
+            }
             localStorage.setItem('stream_settings_v16', JSON.stringify(settings));
             updateSettingsAuthStatus();
             updateTodayDateDisplay();
@@ -261,6 +266,9 @@ const langMap = {
             showToast(doneText());
             raidSoLog(uiText('runtime.operationLog.settingsSaved'));
             syncRaidSoConnection(false);
+            if (typeof ensureTwitchEventServicesStarted === 'function') {
+                ensureTwitchEventServicesStarted();
+            }
         }
 
         function clearLocalTwitchAuth() {
@@ -378,6 +386,7 @@ const langMap = {
             'channel:manage:raids',
             'clips:edit',
             'moderator:read:followers',
+            'moderator:read:chatters',
             'moderator:manage:announcements',
             'moderator:manage:chat_messages',
             'moderator:manage:chat_settings',

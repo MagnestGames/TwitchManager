@@ -4,7 +4,16 @@
 
 ![TwitchManager logo](../assets/branding/TwitchManager-logo.png)
 
-To use the logo in stream layouts or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). It is also included in the `assets/branding` folder of Windows and macOS installations.
+To use the logo in a stream layout or promotional material, download [TwitchManager-logo.png](../assets/branding/TwitchManager-logo.png). You may also use it as an optional banner on stream layouts and web pages. It is included in the `assets/branding` folder of Windows and macOS installations.
+
+Anyone may display, copy, and redistribute the logo without prior permission in stream layouts, social posts, videos, articles, and other materials, for commercial or noncommercial use. Credit is optional. If you include credit, these two lines are enough:
+
+```text
+TwitchManager
+https://github.com/MagnestGames/TwitchManager
+```
+
+Do not present the logo as an official or endorsed Twitch or OBS Studio asset. See [Logo Usage and Credits](https://github.com/MagnestGames/TwitchManager/wiki/Logo-and-Credits) for details.
 
 ![TwitchManager manages stream info, raids, notifications, and supporter logs in a single dock](wiki-mock/images/twitchmanager-overview.png)
 
@@ -12,26 +21,29 @@ A custom browser dock for OBS Studio that brings together stream preparation, ma
 
 > TwitchManager is an independently developed tool created and shared free of charge in good faith, with the hope of supporting streamers. It is not an official Twitch or OBS Studio product.
 >
-> If you would like to support its continued development, a voluntary support edition with the same contents as the free edition is available on BOOTH. Support is optional and does not affect the features or terms of the free edition.
+> If you would like to support its continued development, the [TwitchManager Support Edition (identical content)](https://toumei2suisai.booth.pm/items/8654630) is available on BOOTH. Support is optional and does not affect the features or terms of the free edition.
 
-**UI Supported Languages:** Japanese / English / Simplified Chinese
+**Supported UI languages:** Japanese / English / Simplified Chinese
 
-The latest version is available on [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest).
+The latest version is available on [GitHub Releases](https://github.com/MagnestGames/TwitchManager/releases/latest). You can also review the [change history](../CHANGELOG.md).
 
 ## Main Features
 
 ### Stream Title & Category
-Save frequently used titles and categories as presets. Reflect saved presets to Twitch before streaming to reduce setup time.
+Save frequently used titles and categories as presets. Apply saved presets to Twitch before streaming to reduce setup time.
 
 ### Automatic Raid Shoutout & ID Logging
 Automatically introduce raiding channels upon receiving a raid. Supports executing official `/shoutout` and logging raiding Twitch IDs.
 
 ### Chat & Raid Notification Sounds
-Play sound alerts for chat, first-time chat, and raid events. Stay informed of critical viewer interactions without constantly watching the screen.
+Play sound alerts for chat, first-time chat, raids, and channel point redemptions. Stay informed of important viewer interactions without constantly watching the screen.
+TwitchManager audio can be routed through a single OBS Browser Source. Copy its URL from “🔊 Route sounds to OBS” in Notification Sounds.
+
+When Welcome Notification is enabled, a selected viewer can trigger one sound per stream when they appear in the stream's chat participant list—even if they have not posted a message. Detection may take a few minutes after they join.
 
 ### Streamer & Viewer Management
 - **Supporter List** — Record first-timers, raids, follows, Bits, subscriptions, chat activity, and channel point redemptions.
-- **Subscriber & VIP List Fetching** — View channel subscribers and VIPs in a consolidated list.
+- **Subscriber & VIP Lists** — View channel subscribers and VIPs in a consolidated list.
 - **ID List** — Save and manage streamer IDs for raids and shoutouts.
 
 ### Additional Streaming Support
@@ -58,7 +70,7 @@ Download the installer for your operating system from the "Assets" section on th
 2. Confirm destination and click "Install".
 3. Verify that the OBS URL has been copied to your clipboard on the completion screen.
 
-By default, it installs to the `TwitchManager` folder inside Windows **Documents**. The OBS URL can also be found in `OBS_Dock_URL.txt` inside the installation folder.
+By default, it installs to the `TwitchManager` folder inside Windows **Documents**. The dock URL is in `OBS_Dock_URL.txt`, and the OBS Browser Source URL for notification audio is in `OBS_Audio_Source_URL.txt`.
 
 ### macOS
 
@@ -66,11 +78,17 @@ By default, it installs to the `TwitchManager` folder inside Windows **Documents
 2. Run "Add TwitchManager to OBS" located in `/Applications/TwitchManager`.
 3. Confirm that the OBS URL is copied to your clipboard.
 
-The OBS URL is also stored in `/Applications/TwitchManager/OBS_Dock_URL.txt`.
+The dock URL is stored in `/Applications/TwitchManager/OBS_Dock_URL.txt`, and the OBS Browser Source URL for notification audio is in `OBS_Audio_Source_URL.txt`.
 
 ## Updating
 
-Back up your settings via the "Misc" tab, then run the installer for the latest release again. On Windows, select your current TwitchManager install path; on macOS, install the updated package over the existing installation.
+Stable builds check for the latest release at startup. When an update is available, the dialog provides three choices:
+
+- **Check** — Open the matching GitHub release page.
+- **Remind in 3 days** — Postpone the same update notification for three days.
+- **Skip** — Stop showing that version. A later release will still be announced.
+
+Beta builds do not show update notifications. Before updating, back up your settings from the "Misc" tab, then run the installer for the latest release again. On Windows, select your current TwitchManager install path; on macOS, install the updated package over the existing installation.
 
 When installing to the same location, you usually do not need to update the URL registered in OBS Studio.
 
@@ -125,4 +143,4 @@ When reporting an issue, please include your OS, versions of OBS Studio and Twit
 
 ## License
 
-[MIT License](LICENSE)
+[MIT License](../LICENSE)

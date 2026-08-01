@@ -158,6 +158,7 @@
             if (typeof updateSettingsAuthStatus === 'function') updateSettingsAuthStatus();
             showToast?.(ui.authSuccess || langMap.ja.settingsUi.authSuccess, 'success');
             try { if (typeof syncRaidSoConnection === 'function') syncRaidSoConnection(false); } catch (e) {}
+            try { if (typeof ensureTwitchEventServicesStarted === 'function') ensureTwitchEventServicesStarted(); } catch (e) {}
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -168,6 +169,16 @@
         }
     }
     window.authenticateTwitchFromSettings = authenticateTwitchFromSettings;
+
+    window.addEventListener('load', () => {
+        try {
+            if (typeof ensureTwitchEventServicesStarted === 'function') {
+                ensureTwitchEventServicesStarted();
+            }
+        } catch (e) {
+            console.warn('Twitch event services startup failed:', e);
+        }
+    }, { once: true });
 
     function ensureDangerModal() {
         let overlay = document.getElementById('tmd-danger-overlay');

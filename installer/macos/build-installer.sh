@@ -15,6 +15,10 @@ fi
 
 package_version="${version%%_*}"
 package_version="${package_version%%[-+]*}"
+if [[ ! "$version" =~ ^v?[0-9]+(\.[0-9]+){1,3}([_-][0-9A-Za-z.-]+)?$ ]]; then
+  echo "Version must use a form such as 1.0.2 or 1.0.2_beta: $version" >&2
+  exit 1
+fi
 if [[ ! "$package_version" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
   echo "Version must use a numeric form such as 1.0.0: $version" >&2
   exit 1
@@ -45,7 +49,9 @@ mkdir -p "$install_root"
 
 root_files=(
   "TwitchManagerDock.html"
+  "TwitchManagerAudio.html"
   "creators.json"
+  "twitch_manager_version.js"
   "twitch_manager_locales.js"
   "twitch_manager.css"
 )
@@ -58,6 +64,8 @@ for file_name in "${root_files[@]}"; do
   cp "$source_path" "$install_root/"
 done
 
+printf 'globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: "%s" });\n' "$version" > "$install_root/twitch_manager_version.js"
+
 for directory_name in assets js sounds; do
   source_path="$repository_root/$directory_name"
   if [[ -d "$source_path" ]]; then
@@ -66,7 +74,9 @@ for directory_name in assets js sounds; do
 done
 
 dock_url="file:///Applications/TwitchManager/TwitchManagerDock.html"
+audio_url="${dock_url}?audio-source=1"
 printf '%s\n' "$dock_url" > "$install_root/OBS_Dock_URL.txt"
+printf '%s\n' "$audio_url" > "$install_root/OBS_Audio_Source_URL.txt"
 printf '%s\n' "TwitchManagerInstaller-macOS-v1" > "$install_root/.twitchmanager-install"
 
 helper_app="$install_root/TwitchManagerをOBSに追加.app"

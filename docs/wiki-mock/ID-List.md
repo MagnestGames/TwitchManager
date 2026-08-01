@@ -1,4 +1,4 @@
-> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](ID-List-EN) | [🇨🇳 繁體中文](ID-List-ZH)
+> 🌐 **Language / 語言:** **🇯🇵 日本語** | [🇺🇸 English](ID-List-EN) | [🇨🇳 简体中文](ID-List-ZH)
 
 ---
 
@@ -6,7 +6,7 @@
 
 コラボ相手やレイド先候補の情報をカードで管理します。
 
-![IDリスト](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-management.png)
+![IDリスト](images/features/id-list-management.png)
 
 ## 登録できる情報
 
@@ -25,8 +25,8 @@
 
 登録した日付は、画面上部の通知とカレンダーに表示されます。
 
-![誕生日・記念日の通知](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-birthday-popover.png)
+![誕生日・記念日の通知](images/features/id-list-birthday-popover.png)
 
-![記念日カレンダー](https://raw.githubusercontent.com/MagnestGames/TwitchManager/dev_0.9_beta/docs/wiki-mock/images/features/id-list-calendar.png)
+![記念日カレンダー](images/features/id-list-calendar.png)
 
 IDリストは定期的に[バックアップ](Settings-and-Backup)してください。

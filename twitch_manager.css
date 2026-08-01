@@ -3167,6 +3167,10 @@
             grid-template-columns: minmax(90px, max-content);
         }
 
+        .custom-dialog-actions.three-actions {
+            grid-template-columns: repeat(3, minmax(0, auto));
+        }
+
         .custom-dialog-actions button {
             min-width: 0;
             white-space: normal;
@@ -3212,6 +3216,10 @@
 
             .custom-dialog-actions.single-action {
                 grid-template-columns: 1fr;
+            }
+
+            .custom-dialog-actions.three-actions {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
@@ -4311,6 +4319,322 @@ body.light-theme .icon-btn:hover {
 }
 
 body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
+
+/* Channel Points controls use the same visual hierarchy as the rest of the dock. */
+.cp-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 8px 0;
+    margin-bottom: 10px;
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cp-toolbar-row,
+.cp-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.cp-toolbar-row { justify-content: space-between; }
+.cp-toolbar-actions { gap: 4px; }
+
+.cp-toolbar-select {
+    width: 116px;
+    max-width: 116px;
+    height: 28px;
+    padding: 0 6px;
+    flex-shrink: 0;
+    color: var(--text-main);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 10.5px;
+    cursor: pointer;
+    text-overflow: ellipsis;
+}
+
+.cp-toolbar-btn {
+    min-height: 28px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    font-size: 10.5px;
+}
+
+.cp-notice {
+    margin-bottom: 12px;
+    background: rgba(145, 70, 255, 0.08);
+    border: 1px solid rgba(145, 70, 255, 0.25);
+    border-radius: var(--radius-sm);
+}
+
+.cp-notice > summary {
+    padding: 8px 10px;
+    color: var(--command-accent);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cp-notice-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 10px 10px;
+    flex-wrap: wrap;
+}
+
+.cp-notice-copy {
+    min-width: 200px;
+    flex: 1;
+    color: var(--text-main);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.cp-notice-link {
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    flex-shrink: 0;
+    border-color: var(--twitch-purple);
+    color: var(--command-accent);
+    font-size: 10.5px;
+}
+
+.cp-rewards-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 11px;
+    text-align: left;
+}
+
+.cp-rewards-table th { padding: 6px; white-space: nowrap; }
+.cp-th-reward { width: 42%; }
+.cp-th-group { width: 17%; }
+.cp-th-status { width: 13%; }
+.cp-th-toggle { width: 12%; }
+.cp-th-actions { width: 16%; text-align: right; }
+.cp-reward-row { border-bottom: 1px solid var(--border-color); }
+.cp-reward-row > td { padding: 8px 6px; vertical-align: middle; }
+.cp-reward-identity { min-width: 0; display: flex; align-items: center; gap: 6px; }
+.cp-reward-color { width: 16px; height: 16px; border-radius: 3px; flex: 0 0 16px; }
+.cp-reward-copy { min-width: 0; }
+.cp-reward-title { color: var(--text-main); font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.cp-reward-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 2px; color: var(--twitch-purple); font-size: 10px; }
+.cp-source-badge { display: inline-flex; align-items: center; max-width: 92px; padding: 1px 4px; border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; color: var(--text-muted); background: rgba(255,255,255,0.08); font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.cp-source-badge.is-app { color: #00f59b; border-color: #00c875; background: rgba(0,200,117,0.15); font-weight: 700; }
+.cp-reward-groups { overflow-wrap: normal; word-break: keep-all; }
+.cp-group-tag { display: inline-block; max-width: 100%; margin: 1px 3px 1px 0; padding: 1px 4px; border: 1px solid var(--border-color); border-radius: 3px; overflow: hidden; color: var(--text-main); background: var(--bg-item); font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.cp-group-tag.is-shared { color: #c084fc; border-color: var(--twitch-purple); background: rgba(145,70,255,0.15); }
+.cp-reward-unassigned { color: var(--text-muted); }
+.cp-reward-status { white-space: nowrap; }
+.cp-reward-status span { font-size: 10px; font-weight: 700; }
+.cp-reward-status .is-enabled { color: #00f59b; }
+.cp-reward-status .is-disabled { color: #ff4f4d; }
+.cp-reward-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.cp-reward-icon-button { width: 28px; min-width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.cp-reward-icon-button.is-delete { color: var(--accent-red); }
+.cp-reward-icon-button:disabled,
+.cp-reward-toggle.is-disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
+.cp-toggle-action.is-enable,
+.cp-toggle-action.is-disable,
+.cp-group-toggle.is-enable,
+.cp-group-toggle.is-disable {
+    background: var(--bg-item);
+    color: var(--text-main);
+}
+
+.cp-toggle-action.is-enable,
+.cp-group-toggle.is-enable { border-color: rgba(52, 211, 153, 0.45); }
+.cp-toggle-action.is-disable,
+.cp-group-toggle.is-disable { border-color: rgba(248, 113, 113, 0.45); }
+
+.cp-toggle-action.is-enable:hover,
+.cp-group-toggle.is-enable:hover { box-shadow: inset 0 0 0 999px rgba(0, 200, 117, 0.10); }
+.cp-toggle-action.is-disable:hover,
+.cp-group-toggle.is-disable:hover { box-shadow: inset 0 0 0 999px rgba(233, 61, 58, 0.10); }
+
+.cp-reward-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cp-reward-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.cp-reward-toggle-track {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    background: var(--bg-focus);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.cp-reward-toggle-track::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.cp-reward-toggle input:checked + .cp-reward-toggle-track {
+    background: rgba(145, 70, 255, 0.22);
+    border-color: var(--twitch-purple);
+}
+
+.cp-reward-toggle input:checked + .cp-reward-toggle-track::before {
+    transform: translateX(16px);
+    background: var(--command-accent);
+}
+
+.cp-reward-toggle input:focus-visible + .cp-reward-toggle-track {
+    box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.28);
+}
+
+.cp-reward-toggle input:disabled + .cp-reward-toggle-track {
+    filter: grayscale(0.35);
+}
+
+.raidso-external-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.raidso-setting-hint { margin: 7px 0 0; color: var(--text-muted); font-size: 10.5px; line-height: 1.5; }
+
+.raidso-audio-guide-button {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 10px;
+}
+.raidso-audio-guide-icon { flex: 0 0 auto; line-height: 1; }
+
+.raidso-fox-mark {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 24px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-item);
+    font-size: 13px;
+    line-height: 1;
+}
+
+.raidso-audio-guide p,
+.raidso-listener-settings p { margin: 7px 0; color: var(--text-muted); }
+.raidso-audio-guide ol { margin: 8px 0 12px; padding-left: 22px; }
+.raidso-audio-url { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin: 5px 0 10px; }
+.raidso-audio-url code { overflow-x: auto; white-space: nowrap; padding: 7px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-base); }
+.raidso-guide-note { font-size: 11px; }
+.raidso-easter-egg { margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+.raidso-easter-egg > summary { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; color: var(--text-muted); font-size: 11px; list-style: none; }
+.raidso-easter-egg > summary::-webkit-details-marker { display: none; }
+.raidso-easter-body { margin-top: 8px; padding: 8px; border-radius: var(--radius-sm); background: var(--bg-item); }
+.raidso-casual-notes { margin: 7px 0 10px; padding-left: 20px; color: var(--text-muted); font-size: 10.5px; line-height: 1.5; }
+.raidso-listener-settings { margin-top: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-item); }
+.raidso-listener-heading { display: flex; align-items: center; gap: 8px; }
+.raidso-listener-add { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) auto; gap: 7px; align-items: end; margin: 10px 0; }
+.raidso-listener-add label { min-width: 0; }
+.raidso-listener-add input, .raidso-listener-add select, .raidso-listener-row select { width: 100%; box-sizing: border-box; }
+.raidso-listener-add-button {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-border) !important;
+}
+.raidso-listener-add-button:hover { background: var(--button-primary-hover-bg) !important; }
+.raidso-listener-list { display: grid; gap: 6px; }
+.raidso-listener-row { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(120px, 1fr) 30px; gap: 7px; align-items: center; padding: 6px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-base); }
+.raidso-listener-person { min-width: 0; display: flex; flex-direction: column; }
+.raidso-listener-person strong, .raidso-listener-person small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.raidso-listener-person small, .raidso-listener-empty { color: var(--text-muted); }
+.raidso-listener-remove { width: 30px; min-width: 30px; height: 30px; padding: 0; }
+
+@media (max-width: 520px) {
+    .raidso-listener-add { grid-template-columns: 1fr; }
+    .raidso-listener-row { grid-template-columns: minmax(80px, 1fr) minmax(100px, 1fr) 30px; }
+    .raidso-audio-url { grid-template-columns: 1fr; }
+
+    #cp-rewards-table-wrapper { overflow-x: visible !important; }
+    .cp-rewards-table, .cp-rewards-table tbody { display: block; }
+    .cp-rewards-table thead { display: none; }
+    .cp-reward-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "reward status actions"
+            "reward switch actions"
+            "group group group";
+        gap: 4px 8px;
+        margin-bottom: 8px;
+        padding: 9px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background: var(--bg-item);
+    }
+    .cp-reward-row > td { display: block; padding: 0; }
+    .cp-reward-main { grid-area: reward; min-width: 0; }
+    .cp-reward-groups { grid-area: group; padding-top: 6px !important; border-top: 1px solid var(--border-color); }
+    .cp-reward-status { grid-area: status; align-self: start; text-align: right; }
+    .cp-reward-switch { grid-area: switch; align-self: end; text-align: right; }
+    .cp-reward-actions { grid-area: actions; align-self: stretch; flex-direction: column; justify-content: space-between; }
+    .cp-source-badge { max-width: 76px; }
+}
+
+@media (max-width: 520px) {
+    .cp-toolbar-row { align-items: flex-start; }
+    .cp-toolbar-actions { width: 100%; }
+    .cp-toolbar-select { flex: 1 1 120px; max-width: none; }
+    .cp-toolbar-btn { flex: 1 1 auto; }
+}
 
 body.light-theme .raidso-template-box,
 body.light-theme .raidso-token-help,
