@@ -520,6 +520,7 @@
                 </div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openCpBulkEditModal('selected')" data-i18n="cpTab.bulkEditTitle">🎨 一括編集 (色・ポイント)</button>
+                    <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openTwitchImageResizerTool()" data-i18n="cpTab.imageResizerBtnTitle" title="Twitch用画像リサイズツールを開く">🖼️ 画像リサイズ</button>
                     <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="clearCpRewardSelection()">選択解除</button>
                 </div>
             </div>
@@ -854,6 +855,9 @@
                     <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
                 </select>
                 <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
+            </div>
+            <div style="font-size: 11px; margin-bottom: 10px;">
+                <a href="#" onclick="openTwitchImageResizerTool(); return false;" style="color: var(--twitch-purple); text-decoration: underline; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;" data-i18n="cpTab.imageResizerLinkLabel">🖼️ Twitchスタンプ・アイコン用 画像リサイズツールを開く ↗</a>
             </div>
             <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
                 <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
