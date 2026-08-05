@@ -199,6 +199,52 @@ function fallbackCopyText(text, customMsg) {
     }
 }
 
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+    let html = '';
+
+    // 1. カスタム共通タグ (言葉セット)
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
+    });
+
+    // 2. {Category}
+    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
+
+    // 3. {コラボ} (シンプル表示)
+    const selectedNames = getSelectedCollabNames();
+    const collabCat = titleTagConfig.collabCategoryName || '';
+    const collabTitle = selectedNames 
+        ? `IDリスト選択中 (${collabCat || '全体'}): ${selectedNames.trim()}` 
+        : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
+
+    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
+
+    // 4. IDリストの各カテゴリタグ名を表示
+    const catNames = (friendsConfig || [])
+        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+        .map(cat => cat.name.trim())
+        .filter(name => name);
+    const uniqueCats = [...new Set(catNames)];
+
+    uniqueCats.forEach(catName => {
+        const formattedCatNames = getCategoryCollabNames(catName);
+        const catTagText = '{' + catName + '}';
+        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
+    });
+
+    // 5. {date}
+    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
+
+    bar.innerHTML = html;
+}
+
 window.renderCommonTagBar = renderCommonTagBar;
 window.getCategoryCollabNames = getCategoryCollabNames;
 window.showCollabHoverHint = showCollabHoverHint;
