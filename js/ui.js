@@ -1089,6 +1089,7 @@ window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
+                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
                     <div class="tag-chip-bar">
                         ${(titleTagConfig.customTags || []).map(t => `<button type="button" class="tag-chip" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(t.name)}}')">＋{${raidSoEscape(t.name)}}</button>`).join('')}
                         <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}')">＋{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}</button>
@@ -1097,7 +1098,6 @@ window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
                         <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{曜日}')">＋{曜日}</button>
                         <button type="button" class="tag-chip is-manage" onclick="openTitleTagModal()">⚙️ 識別タグ設定</button>
                     </div>
-                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
                     <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>

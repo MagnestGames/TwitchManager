@@ -5166,3 +5166,117 @@ body.light-theme .cp-segment-btn.is-purple.active {
     background: var(--bg-card);
     border-color: var(--twitch-purple);
 }
+
+
+/* === Tag Chip Bar (Stream Title Word Sets) === */
+.tag-chip-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px 0 2px;
+    margin-bottom: 4px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-family: monospace, SFMono-Regular, Consolas, sans-serif;
+    border-radius: 10px;
+    border: 1px solid rgba(145, 70, 255, 0.35);
+    background: rgba(145, 70, 255, 0.1);
+    color: #c084fc;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.tag-chip:hover {
+    background: rgba(145, 70, 255, 0.22);
+    border-color: rgba(145, 70, 255, 0.7);
+    color: #d8b4fe;
+}
+
+.tag-chip.is-system {
+    border-color: rgba(99, 180, 255, 0.35);
+    background: rgba(99, 180, 255, 0.08);
+    color: #93c5fd;
+}
+
+.tag-chip.is-system:hover {
+    background: rgba(99, 180, 255, 0.2);
+    border-color: rgba(99, 180, 255, 0.6);
+    color: #bfdbfe;
+}
+
+.tag-chip.is-manage {
+    border-color: rgba(156, 163, 175, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+}
+
+.tag-chip.is-manage:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(156, 163, 175, 0.6);
+    color: var(--text-main);
+}
+
+/* Light theme overrides */
+body.light-theme .tag-chip {
+    background: rgba(145, 70, 255, 0.08);
+    color: #7e22ce;
+    border-color: rgba(145, 70, 255, 0.3);
+}
+
+body.light-theme .tag-chip:hover {
+    background: rgba(145, 70, 255, 0.15);
+    color: #6d28d9;
+    border-color: rgba(145, 70, 255, 0.55);
+}
+
+body.light-theme .tag-chip.is-system {
+    background: rgba(37, 99, 235, 0.07);
+    color: #1d4ed8;
+    border-color: rgba(37, 99, 235, 0.28);
+}
+
+body.light-theme .tag-chip.is-system:hover {
+    background: rgba(37, 99, 235, 0.14);
+    color: #1e40af;
+    border-color: rgba(37, 99, 235, 0.5);
+}
+
+body.light-theme .tag-chip.is-manage {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text-muted);
+    border-color: rgba(0, 0, 0, 0.18);
+}
+
+body.light-theme .tag-chip.is-manage:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-main);
+}
+
+/* Title preview box */
+.title-preview-box {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid rgba(145, 70, 255, 0.45);
+    padding: 5px 8px;
+    border-radius: 5px;
+    margin-top: 4px;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+body.light-theme .title-preview-box {
+    background: #faf5ff;
+    border-color: #e9d5ff;
+    border-left-color: #7e22ce;
+    color: #374151;
+}
