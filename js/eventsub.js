@@ -242,6 +242,9 @@
                     await esSubscribe('stream.offline', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
                     await esSubscribe('channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.add', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.update', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.remove', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.channel_points_automatic_reward_redemption.add', '2', { broadcaster_user_id: bId });
                     esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 12 }));
                 } else if (mtype === 'notification') {

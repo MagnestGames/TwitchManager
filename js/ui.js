@@ -6612,6 +6612,28 @@ function deleteCpGroup(groupId) {
 }
 
 
+
+async function pickCpColorWithEyedropper(isBulk = false) {
+    if (!window.EyeDropper) {
+        showToast(cpCopy('eyedropperNotSupported'), 'info');
+        return;
+    }
+    try {
+        const eyeDropper = new EyeDropper();
+        const result = await eyeDropper.open();
+        if (result && result.sRGBHex) {
+            if (isBulk) {
+                setCpBulkColorSwatch(result.sRGBHex);
+            } else {
+                updateCpColorPreview(result.sRGBHex);
+            }
+        }
+    } catch (e) {
+        // User canceled eyedropper selection
+    }
+}
+window.pickCpColorWithEyedropper = pickCpColorWithEyedropper;
+
 function updateCpColorPreview(hex) {
     if (!hex) hex = '#9146FF';
     if (!hex.startsWith('#')) hex = '#' + hex;
