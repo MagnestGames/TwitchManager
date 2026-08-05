@@ -77,14 +77,14 @@
             </div>
         </details>
 
-        <!-- 共通タグバー (ヘルプの真下, 全タイトル共通) -->
-        <div id="common-tag-bar-section" style="padding: 6px 10px 4px; border-bottom: 1px solid var(--border-color);">
-            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px; display:flex; align-items:center; gap:6px;">
+        <!-- 共通タグバー (ヘルプの真下, 全タイトル共通・開閉対応) -->
+        <details id="common-tag-bar-section" style="padding: 4px 10px; border-bottom: 1px solid var(--border-color);" open>
+            <summary style="font-size: 10px; color: var(--text-muted); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; padding: 2px 0;">
                 <span>📋 共通タグ（クリックでコピー → タイトルに貼り付け）</span>
-                <button type="button" style="margin-left:auto; font-size:10px; padding:2px 7px;" class="btn-secondary" onclick="openTitleTagModal()">⚙️ 設定</button>
-            </div>
-            <div id="common-tag-chip-bar" class="tag-chip-bar"></div>
-        </div>
+                <button type="button" style="margin-left:auto; font-size:10px; padding:1px 6px;" class="btn-secondary" onclick="event.stopPropagation(); openTitleTagModal()">⚙️ 設定</button>
+            </summary>
+            <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
+        </details>
 
         <div id="main-container" class="sortable-container"></div>
 
