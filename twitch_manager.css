@@ -4988,3 +4988,83 @@ body.light-theme .cp-group-toggle.is-pause {
     background: #fef3c7 !important;
     font-weight: 700 !important;
 }
+
+/* Unified 3-Segment Redemption Control Box */
+.cp-th-reward { width: 38%; }
+.cp-th-group { width: 18%; }
+.cp-th-control { width: 28%; text-align: center; }
+.cp-th-actions { width: 12%; text-align: right; }
+
+.cp-segmented-control {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+    box-sizing: border-box;
+}
+
+.cp-segment-btn {
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.cp-segment-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cp-segment-btn.is-on.active {
+    background: rgba(0, 200, 117, 0.2);
+    color: #00f59b;
+    border-color: #00c875;
+    font-weight: 700;
+}
+
+.cp-segment-btn.is-pause.active {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-color: #f59e0b;
+    font-weight: 700;
+}
+
+.cp-segment-btn.is-off.active {
+    background: rgba(233, 61, 58, 0.2);
+    color: #f87171;
+    border-color: #e93d3a;
+    font-weight: 700;
+}
+
+.cp-segmented-control.is-disabled .cp-segment-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+body.light-theme .cp-segment-btn.is-on.active {
+    background: #d1fae5 !important;
+    color: #047857 !important;
+    border-color: #10b981 !important;
+}
+
+body.light-theme .cp-segment-btn.is-pause.active {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border-color: #d97706 !important;
+}
+
+body.light-theme .cp-segment-btn.is-off.active {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+}

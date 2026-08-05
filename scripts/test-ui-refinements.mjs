@@ -30,8 +30,8 @@ assert.match(ui, /manageableRewards = \(cpState\.rewards \|\| \[\]\)\.filter\(is
 assert.match(ui, /manageableIds = Array\.from\(new Set\(group\.rewardIds\)\)\.filter\(isManageableCpRewardId\)/, 'CP group automation must skip external and stale reward IDs.');
 assert.match(ui, /loadCpGroupsFromStorage\(\);\s*reconcileCpGroupsWithRewards\(\);/, 'Refreshing CP data must remove stale group reward IDs.');
 assert.match(ui, /disabledAttribute = isAppOwned \? '' : ' disabled aria-disabled="true"'/, 'External CP controls must be visibly disabled.');
-assert.match(ui, /class="cp-reward-toggle\$\{isAppOwned \? '' : ' is-disabled'\}"/, 'External CP switches must expose a disabled visual state.');
-assert.match(css, /\.cp-reward-icon-button:disabled,[\s\S]*\.cp-reward-toggle\.is-disabled\s*\{[^}]*cursor:\s*not-allowed;/, 'External CP controls must look disabled in both themes.');
+assert.match(ui, /class="cp-segmented-control\${isAppOwned \? '' : ' is-disabled'}"/, 'External CP switches must expose a disabled visual state.');
+assert.match(css, /\.cp-reward-icon-button:disabled,[\s\S]*\.cp-segmented-control\.is-disabled/, 'External CP controls must look disabled in both themes.');
 assert.match(ui, /rewardIds: \(group\.rewardIds \|\| \[\]\)\.filter\(id => id !== rewardId\)/, 'Deleting a reward must remove stale group references.');
 assert.match(ui, /cpGroups:[\s\S]*cpAppRewardIds:/, 'Backups must include CP groups and app-created reward IDs.');
 assert.match(ui, /let customDialogTail = Promise\.resolve\(\)/, 'Custom dialogs must be serialized.');

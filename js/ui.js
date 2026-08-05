@@ -6062,6 +6062,82 @@ async function fetchTwitchCustomRewards() {
 }
 
 
+
+async function setCustomRewardState(rewardId, targetState) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    const patchBody = {};
+    if (targetState === 'on') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = false;
+    } else if (targetState === 'pause') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = true;
+    } else if (targetState === 'off') {
+        patchBody.is_enabled = false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patchBody)
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab();
+        return true;
+    } catch (e) {
+        console.error('setCustomRewardState error:', e);
+        showToast(cpCopy('toggleFail') + ' ' + (e.message || ''), 'warn');
+        return false;
+    }
+}
+
+async function batchSetCpGroupState(groupId, targetState) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const patchBody = {};
+    if (targetState === 'on') { patchBody.is_enabled = true; patchBody.is_paused = false; }
+    else if (targetState === 'pause') { patchBody.is_enabled = true; patchBody.is_paused = true; }
+    else if (targetState === 'off') { patchBody.is_enabled = false; }
+
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patchBody)
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchSetCpGroupState error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = targetState === 'on' ? cpCopy('statusEnabled') : (targetState === 'pause' ? cpCopy('statusPaused') : cpCopy('statusDisabled'));
+    showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel, automatic: '' }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab();
+}
+
+window.setCustomRewardState = setCustomRewardState;
+window.batchSetCpGroupState = batchSetCpGroupState;
+
 async function toggleCustomRewardPaused(rewardId, isPaused) {
     if (!isManageableCpRewardId(rewardId)) {
         showToast(cpCopy('cantModifyExternalReward'), 'warn');
@@ -6767,18 +6843,12 @@ function renderCpTable() {
                 </div>
             </td>
             <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
-            <td class="cp-reward-status">
-                ${!isEnabled 
-                    ? `<span class="is-disabled">${raidSoEscape(disabledText)}</span>`
-                    : (r.is_paused 
-                        ? `<span class="is-paused">⏸️ ${raidSoEscape(cpCopy('statusPaused'))}</span>`
-                        : `<span class="is-enabled">${raidSoEscape(enabledText)}</span>`)}
-            </td>
-            <td class="cp-reward-switch">
-                <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''}${disabledAttribute}${isAppOwned ? ` onchange="toggleCustomRewardEnabled('${r.id}', this.checked)"` : ''}>
-                    <span class="cp-reward-toggle-track"></span>
-                </label>
+            <td class="cp-reward-control-cell" style="text-align: center;">
+                <div class="cp-segmented-control${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(actionTitle)}">
+                    <button type="button" class="cp-segment-btn is-on${isEnabled && !r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'on')"` : ''}>ON</button>
+                    <button type="button" class="cp-segment-btn is-pause${isEnabled && r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'pause')"` : ''}>⏸ 停止</button>
+                    <button type="button" class="cp-segment-btn is-off${!isEnabled ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'off')"` : ''}>OFF</button>
+                </div>
             </td>
             <td class="cp-reward-actions">
                 <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
