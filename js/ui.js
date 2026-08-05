@@ -198,14 +198,14 @@ function renderCommonTagBar() {
     // 2. {Category}
     html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
 
-    // 3. {コラボ} (IDリスト全体または設定されたカテゴリ対象)
+    // 3. {コラボ} (IDリストの選択中メンバーを (半角空白)@XXX (半角空白)@OOO... 形式でコピー)
     const selectedNames = getSelectedCollabNames();
     const collabCat = titleTagConfig.collabCategoryName || '';
     const collabTitle = selectedNames 
-        ? `選択中のコラボ相手 (${collabCat || '全体'}):${selectedNames}` 
+        ? `IDリスト選択中 (${collabCat || '全体'}): ${selectedNames.trim()}` 
         : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
 
-    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
+    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}${selectedNames ? ' (' + raidSoEscape(selectedNames.trim()) + ')' : ''}</button>`;
 
     // 4. IDリストの各カテゴリ(タグ分けグループ)から動的ボタンを生成
     const catNames = (friendsConfig || [])
@@ -226,15 +226,38 @@ function renderCommonTagBar() {
                 });
             }
         });
-        const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
+        catSelected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        const formattedCatNames = catSelected.length > 0 ? catSelected.map(n => ' @' + n.replace(/^@/, '')).join('') : '';
         const catTagText = '{' + catName + '}';
-        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="IDリスト【${raidSoEscape(catName)}】:${membersStr}">＋${raidSoEscape(catTagText)}</button>`;
+        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}${formattedCatNames ? ' (' + raidSoEscape(formattedCatNames.trim()) + ')' : ''}</button>`;
     });
 
     // 5. {date}
     html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
 
     bar.innerHTML = html;
+}
+
+function getCategoryCollabNames(catName) {
+    try {
+        const catSelected = [];
+        (friendsConfig || []).forEach(cat => {
+            if (cat.name === catName) {
+                (cat.friends || []).forEach(f => {
+                    if (f.isSelected) {
+                        const n = f.name || f.twitch || '';
+                        if (n && !catSelected.includes(n)) catSelected.push(n);
+                    }
+                });
+            }
+        });
+        if (catSelected.length === 0) return '';
+        catSelected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return catSelected.map(n => ' @' + n.replace(/^@/, '')).join('');
+    } catch (e) {
+        return '';
+    }
 }
 
 function showCollabHoverHint(tagNameOrCat) {
@@ -244,66 +267,72 @@ function showCollabHoverHint(tagNameOrCat) {
             const selectedNames = getSelectedCollabNames();
             const collabCat = titleTagConfig.collabCategoryName || '';
             msg = selectedNames 
-                ? `選択中コラボ (${collabCat || '全体'}):${selectedNames}` 
-                : `コラボメンバー未選択 (IDリストでチェックを入れてください)`;
+                ? `コラボ名簿 (${collabCat || '全体'}):${selectedNames}` 
+                : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
         } else {
-            // Specific ID list category name
-            const catSelected = [];
-            (friendsConfig || []).forEach(cat => {
-                if (cat.name === tagNameOrCat) {
-                    (cat.friends || []).forEach(f => {
-                        if (f.isSelected) {
-                            const n = f.name || f.twitch || '';
-                            if (n && !catSelected.includes(n)) catSelected.push(n);
-                        }
-                    });
-                }
-            });
-            const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
-            msg = `IDリスト【${tagNameOrCat}】選択中: ${membersStr}`;
+            const catNames = getCategoryCollabNames(tagNameOrCat);
+            msg = catNames 
+                ? `IDリスト【${tagNameOrCat}】:${catNames}` 
+                : `IDリスト【${tagNameOrCat}】: 未選択`;
         }
         showToast(msg, 'info');
     } catch (e) {}
 }
 
 function copyCommonTag(tagText) {
+    let copyString = tagText;
     let toastMsg = 'コピー: ' + tagText;
+
+    // もし {コラボ} の場合は IDリストから取得した 「 (半角空白)@XXX (半角空白)@OOO...」 をコピー
     if (tagText === '{コラボ}') {
         const names = getSelectedCollabNames();
         if (names) {
-            toastMsg += ' (展開:' + names.trim() + ')';
+            copyString = names;
+            toastMsg = 'コラボ名簿をコピー:' + names;
+        } else {
+            showToast('IDリストでコラボ相手のチェックを入れてください', 'warn');
+            return;
+        }
+    } else if (tagText.startsWith('{') && tagText.endsWith('}')) {
+        const rawName = tagText.slice(1, -1);
+        const catNames = getCategoryCollabNames(rawName);
+        if (catNames) {
+            copyString = catNames;
+            toastMsg = 'IDリスト【' + rawName + '】をコピー:' + catNames;
         }
     }
+
     try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(tagText).then(() => {
+            navigator.clipboard.writeText(copyString).then(() => {
                 showToast(toastMsg, 'success');
             }).catch(() => {
-                fallbackCopyText(tagText, toastMsg);
+                fallbackCopyText(copyString, toastMsg);
             });
         } else {
-            fallbackCopyText(tagText, toastMsg);
+            fallbackCopyText(copyString, toastMsg);
         }
     } catch (e) {
-        fallbackCopyText(tagText, toastMsg);
+        fallbackCopyText(copyString, toastMsg);
     }
 }
 
-function fallbackCopyText(tagText, customMsg) {
+function fallbackCopyText(text, customMsg) {
     try {
         const ta = document.createElement('textarea');
-        ta.value = tagText;
+        ta.value = text;
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        showToast(customMsg || ('コピー: ' + tagText), 'success');
+        showToast(customMsg || ('コピー: ' + text), 'success');
     } catch (e) {
         showToast('コピーできませんでした', 'warn');
     }
 }
 
 window.renderCommonTagBar = renderCommonTagBar;
+window.getCategoryCollabNames = getCategoryCollabNames;
 window.showCollabHoverHint = showCollabHoverHint;
 window.copyCommonTag = copyCommonTag;
 
