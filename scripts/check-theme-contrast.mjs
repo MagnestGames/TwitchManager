@@ -150,7 +150,7 @@ for (const selector of [
 
 for (const [label, selector, themeVariables, surface] of [
     ["dark active toggle", ".active-toggle", darkVariables, "var(--bg-card)"],
-    ["light active toggle", ".active-toggle", lightVariables, "var(--bg-card)"],
+    ["light active toggle", "body.light-theme .active-toggle", lightVariables, "var(--bg-card)"],
     ["light clear-chat action", "body.light-theme .tw-chat-clear-btn", lightVariables, "var(--bg-card)"],
     ["light history reset", "body.light-theme .id-history-reset-btn", lightVariables, "var(--bg-card)"],
     ["light inactive celebration icon", "body.light-theme #birthday-indicator-btn.inactive", lightVariables, "var(--bg-header)"]
