@@ -89,7 +89,9 @@
             }
 
             let finalTitle = record.title || "";
-            if (finalTitle.includes('{date}')) {
+            if (typeof resolveStreamTitleTemplate === 'function') {
+                finalTitle = resolveStreamTitleTemplate(finalTitle, { game: record.game || '' });
+            } else if (finalTitle.includes('{date}')) {
                 finalTitle = finalTitle.replace(/{date}/g, formatDateToken(new Date(), settings.dateFormat || "MM/DD"));
             }
 

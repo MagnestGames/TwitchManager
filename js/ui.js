@@ -1,3 +1,163 @@
+
+function updateRecordTitleValue(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    config[ci].records[ri].title = val;
+    saveAllLocal(false);
+    
+    // Update card header label if auto
+    if (!config[ci].records[ri].isCustomLabel) {
+        const lbl = document.getElementById(`record-label-${ci}-${ri}`);
+        if (lbl) {
+            const newLabel = langMap[currentLang]?.titleActions?.newLabel || langMap.ja.titleActions.newLabel;
+            lbl.textContent = '● ' + (val.trim() || newLabel);
+        }
+    }
+    // Update inline header tag badges
+    const headerTagsEl = document.getElementById(`record-header-tags-${ci}-${ri}`);
+    if (headerTagsEl) {
+        headerTagsEl.innerHTML = getTagBadgesHtmlForTitle(val);
+    }
+    // Update live preview box
+    const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+    if (previewEl) {
+        const game = config[ci].records[ri].game || '';
+        const resolved = resolveStreamTitleTemplate(val, { game });
+        previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+    }
+}
+
+function insertTagToRecordTitle(ci, ri, tagText) {
+    const textarea = document.getElementById(`record-title-input-${ci}-${ri}`);
+    if (!textarea) return;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const val = textarea.value || '';
+    const newVal = val.substring(0, start) + tagText + val.substring(end);
+    textarea.value = newVal;
+    textarea.selectionStart = textarea.selectionEnd = start + tagText.length;
+    textarea.focus();
+    updateRecordTitleValue(ci, ri, newVal);
+}
+
+window.updateRecordTitleValue = updateRecordTitleValue;
+window.insertTagToRecordTitle = insertTagToRecordTitle;
+
+
+let titleTagConfig = {
+    customTags: [
+        { id: 'tag_1', name: '識別', value: '内容' },
+        { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
+        { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
+    ],
+    collabTagName: 'コラボ',
+    categoryTagName: 'カテゴリ'
+};
+
+function loadTitleTagConfig() {
+    try {
+        const saved = localStorage.getItem('title_tag_config_v1');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && Array.isArray(parsed.customTags)) {
+                titleTagConfig = parsed;
+            }
+        }
+    } catch (e) {
+        console.error('loadTitleTagConfig error:', e);
+    }
+}
+
+function saveTitleTagConfig() {
+    try {
+        localStorage.setItem('title_tag_config_v1', JSON.stringify(titleTagConfig));
+    } catch (e) {
+        console.error('saveTitleTagConfig error:', e);
+    }
+}
+
+function getSelectedCollabNames() {
+    try {
+        const selected = [];
+        (friendsConfig || []).forEach(cat => {
+            if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            (cat.friends || []).forEach(f => {
+                if (f.isSelected) {
+                    const name = f.name || f.twitch || '';
+                    if (name && !selected.includes(name)) selected.push(name);
+                }
+            });
+        });
+        if (selected.length === 0) return '';
+        // 名前順 (A-Z / アルファベット昇順) にソート
+        selected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        // 「（半角空白）@名前」形式で連結 (例: " @AAA @BBBB @CCC")
+        return selected.map(name => ' @' + name.replace(/^@/, '')).join('');
+    } catch (e) {
+        return '';
+    }
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab} or custom collabTagName)
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 3. Category Tag ({カテゴリ} or {category} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    const gameVal = context.game !== undefined ? context.game : '';
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|カテゴリ|category|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    return result;
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^$${}()|[\]\\]/g, '\\$&');
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="識別タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
             let value = resolve(langMap[currentLang]);
@@ -909,7 +1069,16 @@
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
+                    <div class="tag-chip-bar">
+                        ${(titleTagConfig.customTags || []).map(t => `<button type="button" class="tag-chip" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(t.name)}}')">＋{${raidSoEscape(t.name)}}</button>`).join('')}
+                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}')">＋{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}</button>
+                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(titleTagConfig.collabTagName || 'コラボ')}}')">＋{${raidSoEscape(titleTagConfig.collabTagName || 'コラボ')}}</button>
+                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{日付}')">＋{日付}</button>
+                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{曜日}')">＋{曜日}</button>
+                        <button type="button" class="tag-chip is-manage" onclick="openTitleTagModal()">⚙️ 識別タグ設定</button>
+                    </div>
+                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
+                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -4620,6 +4789,14 @@
                     if (idx > -1) localConfig[idx] = cfg;
                     else localConfig.push(cfg);
                 });
+            // 1. config
+            if (d.config && Array.isArray(d.config)) {
+                let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
+                d.config.forEach(cfg => {
+                    const idx = localConfig.findIndex(c => c.id === cfg.id);
+                    if (idx > -1) localConfig[idx] = cfg;
+                    else localConfig.push(cfg);
+                });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
 
@@ -4712,16 +4889,68 @@
                 localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
             }
 
+            // 10. titleTagConfig
+            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
+                titleTagConfig = d.titleTagConfig;
+                saveTitleTagConfig();
+            }
+
             // 9. rewards created by TwitchManager
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
-                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
+                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
+                if (typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = merged;
+                }
             }
         }
         async function copyBackupToClipboard() {
             collectRaidSoSettings();
             const d = {
                 backupVersion: 3,
+=======
+                localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
+            }
+
+            // 8. channel point groups
+            if (Array.isArray(d.cpGroups)) {
+                const localGroups = JSON.parse(localStorage.getItem('cp_groups_v1') || '[]');
+                const groupsById = new Map(localGroups.filter(isBackupRecord).map(group => [String(group.id || ''), group]));
+                d.cpGroups.filter(isBackupRecord).forEach(group => {
+                    const id = String(group.id || '');
+                    if (!id) return;
+                    const existing = groupsById.get(id) || {};
+                    groupsById.set(id, {
+                        ...existing,
+                        ...group,
+                        rewardIds: [...new Set([...(existing.rewardIds || []), ...(group.rewardIds || [])].map(String))]
+                    });
+                });
+                localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
+            }
+
+            // 10. titleTagConfig
+            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
+                titleTagConfig = d.titleTagConfig;
+                saveTitleTagConfig();
+            }
+
+            // 9. rewards created by TwitchManager
+            if (Array.isArray(d.cpAppRewardIds)) {
+                const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
+                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
+                if (typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = merged;
+                }
+            }
+        }
+        async function copyBackupToClipboard() {
+            collectRaidSoSettings();
+            const d = {
+                backupVersion: 3,
+>>>>>>> a8bf03f (feat(ui): Add Stream Title Word Sets & Dynamic Tag Replacement Engine with inline header badges and sorted @collab formatting)
                 config,
                 friends: friendsConfig,
                 settings: backupSettingsWithoutToken(settings),
@@ -6474,6 +6703,10 @@ function openCpRewardModal(rewardId = null) {
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
+        const idWrapper = document.getElementById('cp-reward-id-wrapper');
+        const idDisplay = document.getElementById('cp-reward-id-display');
+        if (idWrapper) idWrapper.style.display = 'none';
+        if (idDisplay) idDisplay.value = '';
         editIdInput.value = '';
         titleInput.value = '';
         costInput.value = 50;
@@ -6555,72 +6788,78 @@ function renderCpGroups() {
     container.innerHTML = html;
 }
 
-function renderCpTable() {
-    const tbody = document.getElementById('cp-rewards-tbody');
-    const totalEl = document.getElementById('cp-total-count');
-    const mainSortSelect = document.getElementById('cp-sort-select');
-    if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
-    if (!tbody) return;
+function openTitleTagModal() {
+    loadTitleTagConfig();
+    renderTitleTagModalRows();
+    const collabInput = document.getElementById('title-tag-collab-name-input');
+    const catInput = document.getElementById('title-tag-category-name-input');
+    if (collabInput) collabInput.value = titleTagConfig.collabTagName || 'コラボ';
+    if (catInput) catInput.value = titleTagConfig.categoryTagName || 'カテゴリ';
+    openModal('titleTagModal');
+}
 
-    if (totalEl) totalEl.textContent = cpCopy('count', { count: cpState.rewards.length });
-
-    if (cpState.rewards.length === 0) {
-        const noRewardText = cpCopy('noRewards');
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">${raidSoEscape(noRewardText)}</td></tr>`;
+function renderTitleTagModalRows() {
+    const container = document.getElementById('title-tag-list-container');
+    if (!container) return;
+    if (!titleTagConfig.customTags || titleTagConfig.customTags.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">(登録されているカスタム識別タグはありません)</div>';
         return;
     }
-
     let html = '';
-    const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
-    const enabledText = cpCopy('statusEnabled');
-    const disabledText = cpCopy('statusDisabled');
-    const editText = cpCopy('edit');
-    const deleteAria = langMap[currentLang]?.delete || langMap.ja.delete;
-    const appBadgeText = cpCopy('badgeAppCreated');
-    const extBadgeText = cpCopy('badgeExternalCreated');
-
-    sortedRewards.forEach(r => {
-        const isEnabled = r.is_enabled;
-        const color = r.background_color || '#9146FF';
-        const assignedGroups = cpState.groups.filter(g => g.rewardIds && g.rewardIds.includes(r.id));
-        let groupTagsHtml = '';
-        assignedGroups.forEach(g => {
-            const isShared = assignedGroups.length > 1;
-            groupTagsHtml += `<span class="cp-group-tag${isShared ? ' is-shared' : ''}">${raidSoEscape(cpGroupName(g))}</span>`;
-        });
-        const isAppOwned = isAppCreatedReward(r);
-        const actionTitle = isAppOwned ? editText : cpCopy('cantModifyExternalReward');
-        const disabledAttribute = isAppOwned ? '' : ' disabled aria-disabled="true"';
-        const sourceBadgeHtml = isAppOwned
-            ? `<span class="cp-source-badge is-app">${raidSoEscape(appBadgeText)}</span>`
-            : `<span class="cp-source-badge is-external">${raidSoEscape(extBadgeText)}</span>`;
-
+    titleTagConfig.customTags.forEach((tag, idx) => {
         html += `
-        <tr class="cp-reward-row">
-            <td class="cp-reward-main">
-                <div class="cp-reward-identity">
-                    <div class="cp-reward-color" style="background:${color};"></div>
-                    <div class="cp-reward-copy">
-                        <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
-                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
-            <td class="cp-reward-status">
-                <span class="${isEnabled ? 'is-enabled' : 'is-disabled'}">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
-            </td>
-            <td class="cp-reward-switch">
-                <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''}${disabledAttribute}${isAppOwned ? ` onchange="toggleCustomRewardEnabled('${r.id}', this.checked)"` : ''}>
-                    <span class="cp-reward-toggle-track"></span>
-                </label>
-            </td>
-            <td class="cp-reward-actions">
-                <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                <button type="button" class="btn-secondary cp-reward-icon-button is-delete"${disabledAttribute}${isAppOwned ? ` onclick="deleteCpReward('${r.id}')"` : ''} aria-label="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}" title="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </td>
-        </tr>`;
+        <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1;">
+                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <div style="flex:2;">
+                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+        </div>`;
     });
-    tbody.innerHTML = html;
+    container.innerHTML = html;
 }
+
+function addCustomTitleTagRow() {
+    if (!titleTagConfig.customTags) titleTagConfig.customTags = [];
+    const newId = 'tag_' + Date.now();
+    titleTagConfig.customTags.push({ id: newId, name: '識別' + (titleTagConfig.customTags.length + 1), value: '' });
+    renderTitleTagModalRows();
+}
+
+function deleteCustomTitleTagRow(idx) {
+    if (!titleTagConfig.customTags) return;
+    titleTagConfig.customTags.splice(idx, 1);
+    renderTitleTagModalRows();
+}
+
+function saveTitleTagModalSettings() {
+    const nameInputs = document.querySelectorAll('.tag-row-name');
+    const valInputs = document.querySelectorAll('.tag-row-val');
+    const newTags = [];
+    nameInputs.forEach((nInput, idx) => {
+        const name = (nInput.value || '').trim();
+        const value = (valInputs[idx]?.value || '');
+        if (name) {
+            newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
+        }
+    });
+    titleTagConfig.customTags = newTags;
+
+    const collabInput = document.getElementById('title-tag-collab-name-input');
+    const catInput = document.getElementById('title-tag-category-name-input');
+    if (collabInput && collabInput.value.trim()) titleTagConfig.collabTagName = collabInput.value.trim().substring(0, 10);
+    if (catInput && catInput.value.trim()) titleTagConfig.categoryTagName = catInput.value.trim().substring(0, 10);
+
+    saveTitleTagConfig();
+    closeModal('titleTagModal');
+    showToast('識別タグ・言葉セットを保存しました', 'success');
+    render(); // Re-render main tab template cards to reflect new chips & preview
+}
+
+window.openTitleTagModal = openTitleTagModal;
+window.renderTitleTagModalRows = renderTitleTagModalRows;
+window.addCustomTitleTagRow = addCustomTitleTagRow;
+window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
+window.saveTitleTagModalSettings = saveTitleTagModalSettings;
