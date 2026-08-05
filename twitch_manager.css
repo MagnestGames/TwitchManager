@@ -4929,3 +4929,62 @@ body.light-theme .cp-reward-status .is-paused {
     background: rgba(59, 130, 246, 0.15);
     border-color: #3b82f6;
 }
+
+/* Table Pause Toggle Column & Yellow Styling */
+.cp-th-reward { width: 33%; }
+.cp-th-group { width: 16%; }
+.cp-th-status { width: 13%; }
+.cp-th-toggle { width: 10%; text-align: center; }
+.cp-th-pause-toggle { width: 11%; text-align: center; }
+.cp-th-actions { width: 12%; text-align: right; }
+
+.cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track {
+    background-color: #f59e0b;
+}
+.cp-reward-pause-toggle-track {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    background-color: var(--border-color);
+    border-radius: 9px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    vertical-align: middle;
+}
+.cp-reward-pause-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    transition: transform 0.2s;
+}
+.cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track::after {
+    transform: translateX(14px);
+}
+
+.cp-group-toggle.is-pause {
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+}
+.cp-group-toggle.is-pause:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+body.light-theme .cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track {
+    background-color: #d97706 !important;
+}
+
+body.light-theme .cp-group-toggle.is-pause {
+    border-color: #d97706 !important;
+    color: #b45309 !important;
+    background: #fef3c7 !important;
+    font-weight: 700 !important;
+}
