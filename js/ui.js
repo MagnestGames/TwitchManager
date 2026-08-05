@@ -162,6 +162,7 @@ window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
 
 function renderCommonTagBar() {
+    loadTitleTagConfig();
     const bar = document.getElementById('common-tag-chip-bar');
     if (!bar) return;
     let html = '';
@@ -170,7 +171,7 @@ function renderCommonTagBar() {
         if (!tag.name) return;
         const tagText = '{' + tag.name + '}';
         const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
-        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
+        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
     });
     // System tags: {Category}, {コラボ}, {date}
     [
@@ -178,7 +179,7 @@ function renderCommonTagBar() {
         '{コラボ}',
         '{date}'
     ].forEach(t => {
-        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(t)}')">${raidSoEscape(t)}</button>`;
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(t)}')">＋${raidSoEscape(t)}</button>`;
     });
     bar.innerHTML = html;
 }
@@ -1165,6 +1166,7 @@ window.copyCommonTag = copyCommonTag;
                 c.appendChild(d);
             });
             initSortable();
+            renderCommonTagBar();
         }
 
         // --- 追加機能：リネーム ---
@@ -7583,3 +7585,11 @@ window.renderTitleTagModalRows = renderTitleTagModalRows;
 window.addCustomTitleTagRow = addCustomTitleTagRow;
 window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
 window.saveTitleTagModalSettings = saveTitleTagModalSettings;
+
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        loadTitleTagConfig();
+        renderCommonTagBar();
+    } catch (e) {}
+});
+
