@@ -6392,6 +6392,7 @@ function openCpGroupModal(groupId = null) {
             const checked = selectedIds.has(r.id) ? 'checked' : '';
             html += `<label style="display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; padding: 6px 10px; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; width: 100%; box-sizing: border-box; transition: 0.15s;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
                 <input type="checkbox" class="cp-group-reward-check" value="${raidSoEscape(r.id)}" ${checked} style="margin: 0; flex-shrink: 0; cursor: pointer; width: 15px; height: 15px; accent-color: var(--twitch-purple);">
+                ${getCpRewardIconUrl(r) ? `<span class="cp-reward-icon-badge is-small" style="background:${r.background_color || '#9146FF'};"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></span>` : `<div class="cp-reward-color" style="background:${r.background_color || '#9146FF'};"></div>`}
                 <span style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); font-weight: 500;">${raidSoEscape(r.title)}</span>
                 <span style="color: var(--twitch-purple); font-weight: bold; font-size: 11px; flex-shrink: 0; margin-left: 6px;">(${r.cost} pt)</span>
             </label>`;
@@ -6560,7 +6561,9 @@ function renderCpGroups() {
             const rTitle = rewardObj ? rewardObj.title : rId;
             const sharedCount = cpState.groups.filter(grp => grp.rewardIds.includes(rId)).length;
             const isShared = sharedCount > 1;
-            rewardTagsHtml += `<span class="cp-group-reward-tag${isShared ? ' is-shared' : ''}" style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
+            const iconUrl = getCpRewardIconUrl(rewardObj);
+            const iconBadgeTag = iconUrl ? `<span class="cp-reward-icon-badge is-tag" style="background:${rewardObj?.background_color || '#9146FF'};"><img src="${iconUrl}" alt="" loading="lazy"></span>` : '';
+            rewardTagsHtml += `<span class="cp-group-reward-tag${isShared ? ' is-shared' : ''}" style="display:inline-flex; align-items:center; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${iconBadgeTag}${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
         });
 
         let autoBadgesHtml = '';
@@ -6593,6 +6596,13 @@ function renderCpGroups() {
     });
     container.innerHTML = html;
 }
+
+
+function getCpRewardIconUrl(r) {
+    if (!r) return '';
+    return r.image?.url_2x || r.image?.url_1x || r.default_image?.url_2x || r.default_image?.url_1x || '';
+}
+window.getCpRewardIconUrl = getCpRewardIconUrl;
 
 function renderCpTable() {
     const tbody = document.getElementById('cp-rewards-tbody');
@@ -6639,7 +6649,9 @@ function renderCpTable() {
             <td style="width:32px; text-align:center; vertical-align:middle;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
             <td class="cp-reward-main">
                 <div class="cp-reward-identity">
-                    <div class="cp-reward-color" style="background:${color};"></div>
+                    ${getCpRewardIconUrl(r) 
+                    ? `<div class="cp-reward-icon-badge" style="background:${color};" title="${raidSoEscape(r.title)}"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></div>`
+                    : `<div class="cp-reward-color" style="background:${color};"></div>`}
                     <div class="cp-reward-copy">
                         <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
                         <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}</div>
