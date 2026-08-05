@@ -1,6 +1,16 @@
 const I18N_DATA = {
     "ja": {
         "ui": {
+            "titleTagModalTitle": "配信タイトルの識別タグ・言葉セット (単語帳)",
+            "titleTagGuide": "タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。",
+            "titleTagAddBtn": "＋ 新しい識別タグを追加",
+            "titleTagCollabLabel": "コラボタグの名称",
+            "titleTagCategoryLabel": "カテゴリタグの名称",
+            "titleTagPreviewLabel": "反映プレビュー",
+            "titleTagManageBtn": "⚙️ 識別タグ設定",
+            "titleTagKeyHeader": "識別名 (10文字以内)",
+            "titleTagValueHeader": "置換内容 (テキスト)",
+            "titleTagSystemDesc": "【標準システムタグ】\n・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名\n・{コラボ} : IDリストで選択中のコラボ相手名\n・{日付} : 本日の日付 (例: 8/5)\n・{曜日} : 本日の曜日 (例: 水)\n・{時間} : 現在の時刻 (例: 13:30)",
             "tabs": [
                 "タイトル",
                 "通知と紹介",
@@ -1378,6 +1388,16 @@ const I18N_DATA = {
     },
     "en": {
         "ui": {
+            "titleTagModalTitle": "Stream Title Placeholder & Word Set Manager",
+            "titleTagGuide": "Insert tags like {識別} or {カテゴリ} into titles to automatically resolve saved phrases or stream metadata.",
+            "titleTagAddBtn": "＋ Add New Tag",
+            "titleTagCollabLabel": "Collab Tag Name",
+            "titleTagCategoryLabel": "Category Tag Name",
+            "titleTagPreviewLabel": "Preview",
+            "titleTagManageBtn": "⚙️ Tag Settings",
+            "titleTagKeyHeader": "Tag Name (Max 10 chars)",
+            "titleTagValueHeader": "Replacement Value",
+            "titleTagSystemDesc": "【System Tags】\n・{カテゴリ} : Twitch game/category name\n・{コラボ} : Selected collab members\n・{日付} : Today's date (e.g. 8/5)\n・{曜日} : Day of week (e.g. Wed)\n・{時間} : Current time (e.g. 13:30)",
             "tabs": [
                 "Titles",
                 "Alerts & Raids",
@@ -2755,6 +2775,16 @@ const I18N_DATA = {
     },
     "zh": {
         "ui": {
+            "titleTagModalTitle": "直播标题标识标签与词汇集设置",
+            "titleTagGuide": "在标题中加入 {識別} 或 {カテゴリ} 等标签，系统将自动替换为预设词汇或直播数据。",
+            "titleTagAddBtn": "＋ 添加新标识标签",
+            "titleTagCollabLabel": "联动标签名称",
+            "titleTagCategoryLabel": "分类标签名称",
+            "titleTagPreviewLabel": "预览",
+            "titleTagManageBtn": "⚙️ 标签设置",
+            "titleTagKeyHeader": "标识名 (10字以内)",
+            "titleTagValueHeader": "替换文本",
+            "titleTagSystemDesc": "【系统标准标签】\n・{カテゴリ} : Twitch游戏/分类名称\n・{コラボ} : 选中的联动成员列表\n・{日付} : 今日日期 (例: 8/5)\n・{曜日} : 今日星期\n・{時間} : 当前时间 (例: 13:30)",
             "tabs": [
                 "标题",
                 "通知与介绍",

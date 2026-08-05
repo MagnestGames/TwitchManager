@@ -1053,6 +1053,57 @@
         </div>
     </div>
 
+
+    <!-- 配信タイトル 識別タグ・単語セット設定モーダル -->
+    <div id="titleTagModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="title-tag-modal-title">
+        <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
+                <div style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;" data-i18n="titleTagGuide">
+                    タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
+                </div>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
+                <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">コラボ・カテゴリタグ名設定 (最大10文字)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCollabLabel">コラボタグの名称</label>
+                        <input type="text" id="title-tag-collab-name-input" maxlength="10" placeholder="コラボ" class="cd-input-field" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCategoryLabel">カテゴリタグの名称</label>
+                        <input type="text" id="title-tag-category-name-input" maxlength="10" placeholder="カテゴリ" class="cd-input-field" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準システムタグのご案内</summary>
+                    <div style="margin-top: 6px; line-height: 1.6; white-space: pre-line;" data-i18n="titleTagSystemDesc">
+                        【標準システムタグ】
+                        ・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名
+                        ・{コラボ} : IDリストで選択中のコラボ相手名
+                        ・{日付} : 本日の日付 (例: 8/5)
+                        ・{曜日} : 本日の曜日 (例: 水)
+                        ・{時間} : 現在の時刻 (例: 13:30)
+                    </div>
+                </details>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" data-i18n="cancel">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveTitleTagModalSettings()" data-i18n="extended.saveBtn">保存して反映</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
