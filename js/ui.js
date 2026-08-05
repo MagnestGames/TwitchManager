@@ -202,16 +202,16 @@ function renderCommonTagBar() {
     // 2. {Category}
     html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
 
-    // 3. {コラボ} (IDリストの選択中メンバーを (半角空白)@XXX (半角空白)@OOO... 形式でコピー)
+    // 3. {コラボ} (シンプル表示)
     const selectedNames = getSelectedCollabNames();
     const collabCat = titleTagConfig.collabCategoryName || '';
     const collabTitle = selectedNames 
         ? `IDリスト選択中 (${collabCat || '全体'}): ${selectedNames.trim()}` 
         : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
 
-    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}${selectedNames ? ' (' + raidSoEscape(selectedNames.trim()) + ')' : ''}</button>`;
+    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
 
-    // 4. IDリストの各カテゴリ(タグ分けグループ)から動的ボタンを生成
+    // 4. IDリストの各タグ名を表示 -> クリックで該当メンバーの (半角空白)@XXX (半角空白)@YYY... を横並びコピー
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
         .map(cat => cat.name.trim())
@@ -219,22 +219,10 @@ function renderCommonTagBar() {
     const uniqueCats = [...new Set(catNames)];
 
     uniqueCats.forEach(catName => {
-        const catSelected = [];
-        (friendsConfig || []).forEach(cat => {
-            if (cat.name === catName) {
-                (cat.friends || []).forEach(f => {
-                    if (f.isSelected) {
-                        const n = f.name || f.twitch || '';
-                        if (n && !catSelected.includes(n)) catSelected.push(n);
-                    }
-                });
-            }
-        });
-        catSelected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        const formattedCatNames = catSelected.length > 0 ? catSelected.map(n => ' @' + n.replace(/^@/, '')).join('') : '';
+        const formattedCatNames = getCategoryCollabNames(catName);
         const catTagText = '{' + catName + '}';
         const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
-        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}${formattedCatNames ? ' (' + raidSoEscape(formattedCatNames.trim()) + ')' : ''}</button>`;
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
     });
 
     // 5. {date}
