@@ -4902,3 +4902,30 @@ body.light-theme .cp-auto-badge.is-stream-end {
     width: 10px;
     height: 10px;
 }
+
+/* Pause & Resume Styling */
+.cp-reward-status .is-paused {
+    color: #f59e0b;
+}
+body.light-theme .cp-reward-status .is-paused {
+    color: #d97706 !important;
+    font-weight: 700 !important;
+}
+
+.cp-reward-icon-button.is-paused-active {
+    color: #f59e0b;
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.cp-group-toggle.is-pause { border-color: rgba(245, 158, 11, 0.45); }
+.cp-group-toggle.is-resume { border-color: rgba(59, 130, 246, 0.45); }
+
+.cp-group-toggle.is-pause:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+}
+.cp-group-toggle.is-resume:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: #3b82f6;
+}
