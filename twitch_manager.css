@@ -4740,3 +4740,18 @@ body.light-theme .tw-command-copy-btn code {
 #friends-tag-filter-details > summary::before {
     content: none !important;
 }
+
+/* Title preview box */
+.title-preview-box {
+    font-size: 11px;
+    color: var(--text-main);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--command-accent, #9146ff);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+    word-break: break-all;
+}
