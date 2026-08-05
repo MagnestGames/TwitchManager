@@ -6795,6 +6795,27 @@ function openTitleTagModal() {
     const catInput = document.getElementById('title-tag-category-name-input');
     if (collabInput) collabInput.value = titleTagConfig.collabTagName || 'コラボ';
     if (catInput) catInput.value = titleTagConfig.categoryTagName || 'カテゴリ';
+
+    // Populate collab datalist from IDリスト category names
+    const datalist = document.getElementById('collab-tag-name-datalist');
+    const hint = document.getElementById('collab-tag-name-hint');
+    if (datalist) {
+        // Get unique category names from friendsConfig (exclude shoutout-history and authenticated-user)
+        const catNames = (friendsConfig || [])
+            .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+            .map(cat => cat.name.trim())
+            .filter(name => name && name.length <= 10);
+        const uniqueNames = [...new Set(catNames)];
+        datalist.innerHTML = uniqueNames.map(n => `<option value="${raidSoEscape(n)}">`).join('');
+
+        if (hint) {
+            if (uniqueNames.length > 0) {
+                hint.textContent = 'IDリストのカテゴリ: ' + uniqueNames.join(' / ');
+            } else {
+                hint.textContent = '';
+            }
+        }
+    }
     openModal('titleTagModal');
 }
 
