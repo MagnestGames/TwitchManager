@@ -7017,6 +7017,34 @@ function toggleCpBulkColorSection(enabled) {
     }
 }
 
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkUserInputSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-user-input-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkOption(optionName, enabled) {
+    if (optionName === 'color') toggleCpBulkColorSection(enabled);
+    else if (optionName === 'cost') toggleCpBulkCostSection(enabled);
+    else if (optionName === 'pause') toggleCpBulkPauseSection(enabled);
+    else if (optionName === 'user-input') toggleCpBulkUserInputSection(enabled);
+}
+
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
+window.toggleCpBulkUserInputSection = toggleCpBulkUserInputSection;
+window.toggleCpBulkOption = toggleCpBulkOption;
+
 function toggleCpBulkCostSection(enabled) {
     const ctrl = document.getElementById('cp-bulk-cost-controls');
     if (ctrl) {
@@ -7068,7 +7096,9 @@ function openCpBulkEditModal(mode, groupId = null) {
     if (enableColor) { enableColor.checked = false; toggleCpBulkColorSection(false); }
     if (enableCost) { enableCost.checked = false; toggleCpBulkCostSection(false); }
     const enablePause = document.getElementById("cp-bulk-enable-pause");
-    if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); }
+    if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); } setCpBulkPauseValue('pause');
+    const enableUserInput = document.getElementById('cp-bulk-enable-user-input');
+    if (enableUserInput) { enableUserInput.checked = false; toggleCpBulkUserInputSection(false); } setCpBulkUserInputVal(true);
 
     renderCpUsedColorSwatches('cp-bulk-used-colors-swatches', true);
     openModal('cpBulkEditModal');

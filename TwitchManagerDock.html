@@ -1009,7 +1009,7 @@
             <!-- User Input Requirement Section -->
             <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
                 <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkOption('user-input', this.checked)">
+                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkUserInputSection(this.checked)">
                     <span data-i18n="cpTab.bulkChangeUserInput">💬 視聴者コメント必須 (テキスト入力必須) を変更する</span>
                 </label>
                 <div id="cp-bulk-user-input-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
