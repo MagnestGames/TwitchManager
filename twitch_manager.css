@@ -4816,3 +4816,39 @@ body.light-theme .cp-group-toggle.is-enable:hover {
     background: #d1fae5 !important;
     box-shadow: none !important;
 }
+
+/* Light Theme CP Group Badges & Tags Legibility Fixes */
+body.light-theme .cp-auto-badge.is-stream-start {
+    color: #047857 !important;
+    border-color: #10b981 !important;
+    background: #d1fae5 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-auto-badge.is-raid {
+    color: #6b21a8 !important;
+    border-color: #a855f7 !important;
+    background: #f5edff !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-auto-badge.is-auto-off {
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+    background: #fee2e2 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-group-reward-tag {
+    color: #34343d !important;
+    border-color: #cfd6df !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+body.light-theme .cp-group-reward-tag.is-shared {
+    color: #6b21a8 !important;
+    border-color: #a855f7 !important;
+    background: #f5edff !important;
+    font-weight: 600 !important;
+}
