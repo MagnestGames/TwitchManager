@@ -1110,6 +1110,27 @@
         </div>
     </div>
 
+    <!-- 重複ID統合・競合解決モーダル -->
+    <div id="idDeduplicateModal" class="modal-overlay" onclick="if(event.target===this)closeModal('idDeduplicateModal')">
+        <div class="modal-content" style="max-width: 580px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🔄 重複IDの統合・競合解決</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="font-size: 11.5px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;">
+                同じ Twitch ID が複数の項目に登録されています。各重複IDについて、残すデータを選択してください（両方のメモやSNS情報を結合して残すこともできます）。
+            </div>
+
+            <div id="id-dedup-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyIdDeduplication()">選択した内容で統合を実行</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
