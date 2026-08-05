@@ -239,6 +239,7 @@
                     await esSubscribe('channel.hype_train.begin', '2', { broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.end', '2', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('stream.offline', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
                     await esSubscribe('channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.channel_points_automatic_reward_redemption.add', '2', { broadcaster_user_id: bId });
@@ -253,6 +254,13 @@
                     if (subtype === 'stream.online') {
                         const didReset = handleSupporterStreamStart(ev.id || ev.started_at || '');
                         logMsg = `📡 ${uiText(didReset ? 'runtime.supporter.streamStarted' : 'runtime.supporter.streamStartedNoReset')}`;
+                    } else if (subtype === 'stream.offline') {
+                        logMsg = `📡 Stream offline detected`;
+                        if (typeof triggerCpAutoOff === 'function') {
+                            Promise.resolve(triggerCpAutoOff('stream_offline')).catch(error => {
+                                console.warn('Channel point stream-offline automation failed:', error);
+                            });
+                        }
                     } else if (subtype === 'channel.subscribe') {
                         if (document.getElementById('es-f-sub')?.checked === false) showLog = false;
                         logMsg = `🎉 ${uiText('runtime.supporter.subscription', { user: ev.user_name, tier: ev.tier?.charAt(0) || '' })}`;

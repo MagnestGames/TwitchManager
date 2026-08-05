@@ -4852,3 +4852,10 @@ body.light-theme .cp-group-reward-tag.is-shared {
     background: #f5edff !important;
     font-weight: 600 !important;
 }
+
+body.light-theme .cp-auto-badge.is-stream-end {
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+    background: #fee2e2 !important;
+    font-weight: 700 !important;
+}
