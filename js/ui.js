@@ -1069,14 +1069,7 @@ window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <div class="tag-chip-bar">
-                        ${(titleTagConfig.customTags || []).map(t => `<button type="button" class="tag-chip" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(t.name)}}')">＋{${raidSoEscape(t.name)}}</button>`).join('')}
-                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}')">＋{${raidSoEscape(titleTagConfig.categoryTagName || 'カテゴリ')}}</button>
-                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{${raidSoEscape(titleTagConfig.collabTagName || 'コラボ')}}')">＋{${raidSoEscape(titleTagConfig.collabTagName || 'コラボ')}}</button>
-                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{日付}')">＋{日付}</button>
-                        <button type="button" class="tag-chip is-system" onclick="insertTagToRecordTitle(${ci}, ${ri}, '{曜日}')">＋{曜日}</button>
-                        <button type="button" class="tag-chip is-manage" onclick="openTitleTagModal()">⚙️ 識別タグ設定</button>
-                    </div>
+
                     <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
                     <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
