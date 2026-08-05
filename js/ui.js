@@ -6632,6 +6632,35 @@ function syncCpColorFromHex(val) {
     }
 }
 
+
+function renderCpUsedColorSwatches(containerId, isBulk = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const usedColors = new Map();
+    (cpState.rewards || []).forEach(r => {
+        if (r.background_color) {
+            const hex = r.background_color.toUpperCase();
+            if (!usedColors.has(hex)) usedColors.set(hex, []);
+            usedColors.get(hex).push(r.title);
+        }
+    });
+
+    if (usedColors.size === 0) {
+        container.innerHTML = `<span style="font-size: 10px; color: var(--text-muted);">(使用中カラーなし)</span>`;
+        return;
+    }
+
+    let html = '';
+    usedColors.forEach((titles, hex) => {
+        const titleTooltip = `${hex} (${titles.slice(0, 3).join(', ')}${titles.length > 3 ? '...' : ''})`;
+        const clickFn = isBulk ? `setCpBulkColorSwatch('${hex}')` : `setCpRewardColorSwatch('${hex}')`;
+        html += `<button type="button" class="cp-swatch" style="background:${hex}; width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,0.7); cursor:pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2);" onclick="${clickFn}" title="${raidSoEscape(titleTooltip)}"></button>`;
+    });
+    container.innerHTML = html;
+}
+
+window.renderCpUsedColorSwatches = renderCpUsedColorSwatches;
+
 function setCpRewardColorSwatch(hex) {
     updateCpColorPreview(hex);
 }
@@ -6712,6 +6741,7 @@ function openCpRewardModal(rewardId = null) {
             tplSelect.value = '';
         }
     }
+    renderCpUsedColorSwatches('cp-reward-used-colors-swatches', false);
     openModal('cpRewardModal');
 }
 
@@ -6955,6 +6985,7 @@ function openCpBulkEditModal(mode, groupId = null) {
     const enablePause = document.getElementById("cp-bulk-enable-pause");
     if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); }
 
+    renderCpUsedColorSwatches('cp-bulk-used-colors-swatches', true);
     openModal('cpBulkEditModal');
 }
 
