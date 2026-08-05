@@ -855,6 +855,13 @@
                 </select>
                 <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
             </div>
+            <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
+                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="text" id="cp-reward-id-display" readonly style="font-family: monospace; font-size: 11px; padding: 4px 6px; background: var(--bg-item); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; flex: 1; box-sizing: border-box;" onclick="this.select()">
+                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()">📋 コピー</button>
+                </div>
+            </div>
             <div style="margin-bottom: 10px;">
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
                 <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
