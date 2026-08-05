@@ -6061,6 +6061,81 @@ async function fetchTwitchCustomRewards() {
     }
 }
 
+
+async function toggleCustomRewardPaused(rewardId, isPaused) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_paused: isPaused })
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab();
+        return true;
+    } catch (e) {
+        console.error('toggleCustomRewardPaused error:', e);
+        const failPrefix = cpCopy('toggleFail');
+        let errMsg = e.message || '';
+        if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
+            errMsg = cpCopy('cantModifyExternalReward');
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
+        return false;
+    }
+}
+
+async function batchPauseCpGroup(groupId, isPaused) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_paused: isPaused })
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchPauseCpGroup error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = isPaused ? (cpCopy('statusPaused') || '一時停止') : (cpCopy('statusResumed') || '再開');
+    showToast(cpCopy('batchPauseResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab();
+}
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+window.toggleCustomRewardPaused = toggleCustomRewardPaused;
+window.batchPauseCpGroup = batchPauseCpGroup;
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
+
 async function toggleCustomRewardEnabled(rewardId, isEnabled) {
     if (!isManageableCpRewardId(rewardId)) {
         showToast(cpCopy('cantModifyExternalReward'), 'warn');
@@ -6660,7 +6735,11 @@ function renderCpTable() {
             </td>
             <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
             <td class="cp-reward-status">
-                <span class="${isEnabled ? 'is-enabled' : 'is-disabled'}">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
+                ${!isEnabled 
+                    ? `<span class="is-disabled">${raidSoEscape(disabledText)}</span>`
+                    : (r.is_paused 
+                        ? `<span class="is-paused">⏸️ ${raidSoEscape(cpCopy('statusPaused'))}</span>`
+                        : `<span class="is-enabled">${raidSoEscape(enabledText)}</span>`)}
             </td>
             <td class="cp-reward-switch">
                 <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
@@ -6770,6 +6849,8 @@ function openCpBulkEditModal(mode, groupId = null) {
 
     if (enableColor) { enableColor.checked = false; toggleCpBulkColorSection(false); }
     if (enableCost) { enableCost.checked = false; toggleCpBulkCostSection(false); }
+    const enablePause = document.getElementById("cp-bulk-enable-pause");
+    if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); }
 
     openModal('cpBulkEditModal');
 }
@@ -6808,6 +6889,7 @@ async function applyCpBulkEdit() {
     const patchBody = {};
     if (enableColor) patchBody.background_color = colorVal;
     if (enableCost) patchBody.cost = costVal;
+    if (enablePause) patchBody.is_paused = pauseVal;
 
     let successCount = 0;
     try {

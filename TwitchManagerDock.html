@@ -954,7 +954,21 @@
                 </div>
             </div>
 
-            <!-- Cost Section -->
+            <!-- Pause / Resume Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-pause" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkPauseSection(this.checked)">
+                    <span data-i18n="cpTab.enablePauseChange">⏸️ 引き換え一時停止 / 再開を変更する</span>
+                </label>
+                <div id="cp-bulk-pause-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <select id="cp-bulk-pause-select" class="cd-input-field" style="width: 100%; padding: 6px; font-size: 11.5px; box-sizing: border-box;">
+                        <option value="pause" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</option>
+                        <option value="resume" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する</option>
+                    </select>
+                </div>
+            </div>
+
+                        <!-- Cost Section -->
             <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
                 <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
                     <input type="checkbox" id="cp-bulk-enable-cost" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkCostSection(this.checked)">
