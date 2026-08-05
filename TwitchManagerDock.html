@@ -1055,7 +1055,7 @@
 
 
     <!-- 配信タイトル 識別タグ・単語セット設定モーダル -->
-    <div id="titleTagModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="title-tag-modal-title">
+    <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
         <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                 <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
