@@ -361,14 +361,16 @@ function renderCommonTagBar() {
     const arrow = isCollabTagGroupExpanded ? '▼' : '▶';
 
     const fullHtml = `
-        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;">
+        <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:4px;">
             ${mainHtml}
         </div>
-        <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border-color, rgba(255,255,255,0.1));">
-            <button type="button" class="btn-secondary" style="font-size:10.5px; padding:2px 8px; border-radius:12px; opacity:0.85; margin-bottom:4px; cursor:pointer;" onclick="toggleCollabTagGroup()">
-                ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
-            </button>
-            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">${collabHtml}</div>` : ''}
+        <div style="margin-top:4px; padding:6px 8px; background:var(--bg-item, rgba(0,0,0,0.25)); border:1px solid var(--border-color, rgba(255,255,255,0.12)); border-radius:6px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center;">
+                <button type="button" class="btn-secondary" style="font-size:10px; padding:2px 8px; border-radius:10px; opacity:0.9; cursor:pointer;" onclick="toggleCollabTagGroup()">
+                    ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
+                </button>
+            </div>
+            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:2px;">${collabHtml}</div>` : ''}
         </div>
     `;
 
