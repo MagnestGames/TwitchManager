@@ -358,13 +358,15 @@ function renderCommonTagBar() {
 
     uniqueCats.forEach(catName => {
         const formattedCatNames = getCategoryCollabNames(catName);
+        const idListStr = formattedCatNames ? formattedCatNames.trim() : '(登録IDなし)';
         const catTagText = '{' + catName + '}';
+        const hoverTooltip = `【${raidSoEscape(catName)}】登録ID: ${raidSoEscape(idListStr)}`;
         collabHtml += `
-            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
-                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
+            <div class="tag-chip-segmented" title="${hoverTooltip}" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
+                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー | 登録ID: ${raidSoEscape(idListStr)}" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
                     ＋${raidSoEscape(catTagText)}
                 </button>
-                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー | 登録ID: ${raidSoEscape(idListStr)}" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
                     ${I18N_DATA[currentLang]?.ui?.rawIdListCopyBtn || '@ID一覧'}
                 </button>
             </div>
