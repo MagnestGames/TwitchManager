@@ -347,7 +347,7 @@ function renderCommonTagBar() {
                     ＋${raidSoEscape(catTagText)}
                 </button>
                 <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
-                    @ID一覧
+                    ${I18N_DATA[currentLang]?.ui?.rawIdListCopyBtn || '@ID一覧'}
                 </button>
             </div>
         `;
