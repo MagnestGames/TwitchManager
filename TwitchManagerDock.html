@@ -859,6 +859,12 @@
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
                 <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
             </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
+                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
+                </label>
+            </div>
             <div style="margin-bottom: 10px;">
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalCostLabel">消費ポイント数 (コスト):</label>
                 <input type="number" id="cp-reward-cost-input" value="50" min="1" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
@@ -894,12 +900,6 @@
                 <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
                     <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
                     <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
-                </label>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
-                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
                 </label>
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
