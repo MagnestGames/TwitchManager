@@ -6925,12 +6925,50 @@ window.getCpRewardIconUrl = getCpRewardIconUrl;
 
 
 
+function safeOpenExternalUrl(url) {
+    if (!url) return;
+    try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (e) {
+        try {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+            window.location.href = url;
+        }
+    }
+}
+window.safeOpenExternalUrl = safeOpenExternalUrl;
+
 async function openTwitchImageResizerTool() {
-    const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const url = 'https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html';
     const confirmTitle = cpCopy('imageResizerConfirmTitle');
-    const ok = await showCustomConfirm(confirmMsg, confirmTitle);
+    const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const hintMsg = cpCopy('imageResizerPopupHint');
+    const okText = langMap[currentLang]?.extended?.ok || '開く';
+    const cancelText = langMap[currentLang]?.extended?.cancelBtn || 'キャンセル';
+
+    const messageHtml = `<div>${raidSoEscape(confirmMsg)}</div>` +
+        `<div style="margin-top: 10px; word-break: break-all;">` +
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--twitch-purple); font-weight: bold; text-decoration: underline; font-size: 12px;">` +
+        `${url} ↗</a></div>` +
+        `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${raidSoEscape(hintMsg)}</div>`;
+
+    const ok = await presentCustomDialog({
+        type: 'confirm',
+        title: confirmTitle,
+        messageHtml: messageHtml,
+        okText: okText,
+        cancelText: cancelText
+    });
+
     if (ok) {
-        window.open('https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html', '_blank', 'noopener,noreferrer');
+        safeOpenExternalUrl(url);
     }
 }
 window.openTwitchImageResizerTool = openTwitchImageResizerTool;
