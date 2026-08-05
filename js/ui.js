@@ -6541,15 +6541,15 @@ function renderCpGroups() {
             const rTitle = rewardObj ? rewardObj.title : rId;
             const sharedCount = cpState.groups.filter(grp => grp.rewardIds.includes(rId)).length;
             const isShared = sharedCount > 1;
-            rewardTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
+            rewardTagsHtml += `<span class="cp-group-reward-tag${isShared ? ' is-shared' : ''}" style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
         });
 
         let autoBadgesHtml = '';
         const bStream = cpCopy('badgeStreamStart');
         const bRaid = cpCopy('badgeRaid');
-        if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
-        if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
-        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
+        if (g.autoOnStreamStart) autoBadgesHtml += `<span class="cp-auto-badge is-stream-start" style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
+        if (g.autoOnRaid) autoBadgesHtml += `<span class="cp-auto-badge is-raid" style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
+        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span class="cp-auto-badge is-auto-off" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
         html += `
         <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
