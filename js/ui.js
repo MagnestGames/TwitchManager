@@ -134,6 +134,7 @@ function escapeRegExp(string) {
 
 function resolveStreamTitleTemplate(templateStr, context = {}) {
     if (!templateStr) return '';
+    loadTitleTagConfig();
     let result = String(templateStr);
 
     // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
@@ -971,6 +972,11 @@ window.copyCommonTag = copyCommonTag;
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
+            if (id === 'titleTagModal' && typeof saveTitleTagModalSettings === 'function') {
+                try {
+                    saveTitleTagModalSettings(true);
+                } catch (e) {}
+            }
             el.style.display = 'none';
             el.classList.remove('modal-open');
         }
@@ -7762,26 +7768,48 @@ function deleteCustomTitleTagRow(idx) {
     renderTitleTagModalRows();
 }
 
-function saveTitleTagModalSettings() {
+function updateAllTitlePreviews() {
+    loadTitleTagConfig();
+    if (!Array.isArray(config)) return;
+    config.forEach((c, ci) => {
+        if (!c || !Array.isArray(c.records)) return;
+        c.records.forEach((r, ri) => {
+            const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+            if (previewEl) {
+                const game = r.game || '';
+                const resolved = resolveStreamTitleTemplate(r.title || '', { game });
+                previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+            }
+        });
+    });
+}
+window.updateAllTitlePreviews = updateAllTitlePreviews;
+
+function saveTitleTagModalSettings(silent = false) {
     const nameInputs = document.querySelectorAll('.tag-row-name');
     const valInputs = document.querySelectorAll('.tag-row-val');
-    const newTags = [];
-    nameInputs.forEach((nInput, idx) => {
-        const name = (nInput.value || '').trim();
-        const value = (valInputs[idx]?.value || '');
-        if (name) {
-            newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
-        }
-    });
-    titleTagConfig.customTags = newTags;
+    if (nameInputs && nameInputs.length > 0) {
+        const newTags = [];
+        nameInputs.forEach((nInput, idx) => {
+            const name = (nInput.value || '').trim();
+            const value = (valInputs[idx]?.value || '');
+            if (name) {
+                newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
+            }
+        });
+        titleTagConfig.customTags = newTags;
+    }
 
     const collabSelect = document.getElementById('title-tag-collab-category-select');
     if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
 
     saveTitleTagConfig();
-    closeModal('titleTagModal');
-    showToast('共通タグの設定を保存しました', 'success');
+    if (!silent) {
+        closeModal('titleTagModal');
+        showToast('共通タグの設定を保存しました', 'success');
+    }
     renderCommonTagBar();
+    updateAllTitlePreviews();
 }
 
 window.openTitleTagModal = openTitleTagModal;
