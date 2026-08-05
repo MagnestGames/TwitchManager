@@ -222,25 +222,21 @@ function showCollabHoverHint(tagNameOrCat) {
 }
 
 function copyCommonTag(tagText) {
-    let copyString = tagText;
+    const copyString = tagText;
     let toastMsg = 'コピー: ' + tagText;
 
-    // もし {コラボ} の場合は IDリストから取得した 「 (半角空白)@XXX (半角空白)@OOO...」 をコピー
-    if (tagText === '{コラボ}') {
-        const names = getSelectedCollabNames();
-        if (names) {
-            copyString = names;
-            toastMsg = 'コラボ名簿をコピー:' + names;
-        } else {
-            showToast('IDリストでコラボ相手のチェックを入れてください', 'warn');
-            return;
-        }
-    } else if (tagText.startsWith('{') && tagText.endsWith('}')) {
+    if (tagText.startsWith('{') && tagText.endsWith('}')) {
         const rawName = tagText.slice(1, -1);
-        const catNames = getCategoryCollabNames(rawName);
-        if (catNames) {
-            copyString = catNames;
-            toastMsg = 'IDリスト【' + rawName + '】をコピー:' + catNames;
+        if (rawName === 'コラボ') {
+            const names = getSelectedCollabNames();
+            if (names) {
+                toastMsg = 'コピー: {コラボ} (' + names.trim() + ')';
+            }
+        } else {
+            const catNames = getCategoryCollabNames(rawName);
+            if (catNames) {
+                toastMsg = 'コピー: ' + tagText + ' (' + catNames.trim() + ')';
+            }
         }
     }
 
