@@ -158,6 +158,61 @@ window.saveTitleTagConfig = saveTitleTagConfig;
 window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
 
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+    let html = '';
+    // Custom tags
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
+    });
+    // System tags: {Category}, {コラボ}, {date}
+    [
+        '{Category}',
+        '{コラボ}',
+        '{date}'
+    ].forEach(t => {
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(t)}')">＋${raidSoEscape(t)}</button>`;
+    });
+    bar.innerHTML = html;
+}
+
+function copyCommonTag(tagText) {
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(tagText).then(() => {
+                showToast('コピー: ' + tagText, 'success');
+            }).catch(() => {
+                fallbackCopyText(tagText);
+            });
+        } else {
+            fallbackCopyText(tagText);
+        }
+    } catch (e) {
+        fallbackCopyText(tagText);
+    }
+}
+
+function fallbackCopyText(tagText) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = tagText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('コピー: ' + tagText, 'success');
+    } catch (e) {
+        showToast('コピーできませんでした', 'warn');
+    }
+}
+
+window.renderCommonTagBar = renderCommonTagBar;
+window.copyCommonTag = copyCommonTag;
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
             let value = resolve(langMap[currentLang]);
@@ -1087,6 +1142,7 @@ window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
                 c.appendChild(d);
             });
             initSortable();
+            renderCommonTagBar();
         }
 
         // --- 追加機能：リネーム ---
@@ -6877,3 +6933,11 @@ window.renderTitleTagModalRows = renderTitleTagModalRows;
 window.addCustomTitleTagRow = addCustomTitleTagRow;
 window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
 window.saveTitleTagModalSettings = saveTitleTagModalSettings;
+
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        loadTitleTagConfig();
+        renderCommonTagBar();
+    } catch (e) {}
+});
+
