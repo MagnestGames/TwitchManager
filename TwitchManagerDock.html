@@ -968,18 +968,25 @@
                     <span data-i18n="cpTab.enableColorChange">🎨 背景色を変更する</span>
                 </label>
                 <div id="cp-bulk-color-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <input type="color" id="cp-bulk-color-input" value="#9146FF" style="width: 42px; height: 32px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
-                        <span style="font-size: 11px; color: var(--text-muted);">カラーコード直接入力 / パレット選択</span>
+                    <div class="cp-color-picker-row">
+                        <input type="color" id="cp-bulk-color-input" value="#9146FF" oninput="updateCpBulkColorPreview(this.value)" onchange="updateCpBulkColorPreview(this.value)">
+                        <div id="cp-bulk-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
+                        <input type="text" id="cp-bulk-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpBulkColorFromHex(this.value)">
+                        <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(true)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
+                        <span>カラーコード / パレット選択</span>
                     </div>
                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="cp-swatch" style="background:#9146FF; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#9146FF')"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF69B4; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#FF69B4')"></button>
-                        <button type="button" class="cp-swatch" style="background:#00C875; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#00C875')"></button>
-                        <button type="button" class="cp-swatch" style="background:#3B82F6; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#3B82F6')"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF9800; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#FF9800')"></button>
-                        <button type="button" class="cp-swatch" style="background:#E93D3A; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#E93D3A')"></button>
-                        <button type="button" class="cp-swatch" style="background:#26262C; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#26262C')"></button>
+                        <button type="button" class="cp-swatch" style="background:#9146FF; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF69B4; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
+                        <button type="button" class="cp-swatch" style="background:#00C875; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
+                        <button type="button" class="cp-swatch" style="background:#3B82F6; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF9800; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
+                        <button type="button" class="cp-swatch" style="background:#E93D3A; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
+                        <button type="button" class="cp-swatch" style="background:#26262C; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkColorSwatch('#26262C')" title="#26262C (Dark)"></button>
+                    </div>
+                    <div style="margin-top: 6px;">
+                        <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
+                        <div id="cp-bulk-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
                     </div>
                 </div>
             </div>
@@ -991,10 +998,11 @@
                     <span data-i18n="cpTab.enablePauseChange">⏸️ 引き換え一時停止 / 再開を変更する</span>
                 </label>
                 <div id="cp-bulk-pause-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <select id="cp-bulk-pause-select" class="cd-input-field" style="width: 100%; padding: 6px; font-size: 11.5px; box-sizing: border-box;">
-                        <option value="pause" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</option>
-                        <option value="resume" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する</option>
-                    </select>
+                    <input type="hidden" id="cp-bulk-pause-val" value="pause">
+                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
+                        <button type="button" id="cp-bulk-pause-btn-pause" class="cp-segment-btn is-pause active" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('pause')" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</button>
+                        <button type="button" id="cp-bulk-pause-btn-resume" class="cp-segment-btn is-on" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('resume')" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する (受付中)</button>
+                    </div>
                 </div>
             </div>
 

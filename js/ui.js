@@ -6656,6 +6656,40 @@ function syncCpColorFromHex(val) {
 
 
 
+
+function setCpBulkPauseValue(val) {
+    const hidden = document.getElementById('cp-bulk-pause-val');
+    const btnPause = document.getElementById('cp-bulk-pause-btn-pause');
+    const btnResume = document.getElementById('cp-bulk-pause-btn-resume');
+    if (hidden) hidden.value = val;
+
+    if (val === 'pause') {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause active';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on';
+    } else {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on active';
+    }
+}
+
+function setCpBulkUserInputVal(isReq) {
+    const hidden = document.getElementById('cp-bulk-user-input-val');
+    const btnTrue = document.getElementById('cp-bulk-user-input-btn-true');
+    const btnFalse = document.getElementById('cp-bulk-user-input-btn-false');
+    if (hidden) hidden.value = isReq ? 'true' : 'false';
+
+    if (isReq) {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple active';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off';
+    } else {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off active';
+    }
+}
+
+window.setCpBulkPauseValue = setCpBulkPauseValue;
+window.setCpBulkUserInputVal = setCpBulkUserInputVal;
+
 function updateCpBulkColorPreview(hex) {
     if (!hex) hex = '#9146FF';
     if (!hex.startsWith('#')) hex = '#' + hex;

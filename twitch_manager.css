@@ -5130,3 +5130,16 @@ body.light-theme .cp-segment-btn.is-off.active {
     margin: 0 !important;
     white-space: nowrap !important;
 }
+
+
+.cp-segment-btn.is-purple.active {
+    background: rgba(145, 70, 255, 0.2);
+    color: #c084fc;
+    border-color: #9146ff;
+    font-weight: 700;
+}
+body.light-theme .cp-segment-btn.is-purple.active {
+    background: #e9d5ff !important;
+    color: #7e22ce !important;
+    border-color: #9146ff !important;
+}
