@@ -313,14 +313,8 @@
                         const isOutbound = ev.from_broadcaster_user_id === settings.userId;
                         if (isOutbound) {
                             logMsg = `🚀 Outbound Raid to ${ev.to_broadcaster_user_name} with ${ev.viewers} viewers!`;
-                            const targetLogin = ev.to_broadcaster_user_login;
-                            const timeDiff = Date.now() - (raidSoState.lastOutboundRaidAt || 0);
-                            const isDuplicate = raidSoState.lastOutboundRaidTarget === targetLogin.toLowerCase() && timeDiff < 60000;
-                            
-                            if (raidSoSettings.autoSendRaidUrlEnabled && !isDuplicate) {
-                                if (typeof handleRaidSoOutboundRaidEvent === 'function') {
-                                    handleRaidSoOutboundRaidEvent(ev);
-                                }
+                            if (typeof handleRaidSoOutboundRaidEvent === 'function') {
+                                handleRaidSoOutboundRaidEvent(ev);
                             }
                         } else {
                             if (document.getElementById('es-f-raid')?.checked === false) showLog = false;

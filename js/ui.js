@@ -864,6 +864,19 @@
             return `<div class="empty-state">${raidSoEscape(text || '')}</div>`;
         }
 
+
+        function getRecordDisplayLabel(r, defaultLabel) {
+            if (r.isCustomLabel && r.label && r.label.trim()) {
+                return r.label.trim();
+            }
+            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
+                return r.label.trim();
+            }
+            if (r.title && r.title.trim()) {
+                return r.title.trim();
+            }
+            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
+        }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
             const T = langMap[currentLang];
@@ -887,7 +900,7 @@
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
+                        <span id="record-label-${ci}-${ri}">● ${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
                         <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -909,7 +922,7 @@
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
+                    <textarea oninput="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false); if (!config[${ci}].records[${ri}].isCustomLabel) { const lbl = document.getElementById('record-label-${ci}-${ri}'); if (lbl) lbl.textContent = '● ' + (this.value.trim() || A.newLabel); }">${raidSoEscape(r.title || '')}</textarea>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -929,12 +942,16 @@
 
         // --- 追加機能：リネーム ---
         async function renameRecord(ci, ri) {
+            const rec = config[ci].records[ri];
+            const currentCustom = rec.isCustomLabel ? rec.label : '';
             const newName = await customPrompt({
                 ...dialogCopy('titleRecordRename'),
-                defaultValue: config[ci].records[ri].label || ''
+                defaultValue: currentCustom || (rec.isCustomLabel ? rec.label : '') || ''
             });
             if (newName !== null) {
-                config[ci].records[ri].label = newName;
+                const trimmed = newName.trim();
+                rec.label = trimmed;
+                rec.isCustomLabel = trimmed.length > 0;
                 saveAllLocal(false);
                 render();
             }
@@ -2474,7 +2491,7 @@
         }
         function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
 
-        function addRecord(i) { config[i].records.push({ label: "NEW", game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
+        function addRecord(i) { config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
         async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
         async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
         async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
