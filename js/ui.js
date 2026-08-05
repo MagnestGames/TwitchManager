@@ -7191,6 +7191,24 @@ function openTitleTagModal() {
     openModal('titleTagModal');
 }
 
+function sanitizeTitleTagName(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/[\{\}\[\]\s]/g, '')
+        .replace(/\p{Extended_Pictographic}|\p{Emoji}/gu, '')
+        .replace(/[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F700-\u1F77F\u1F780-\u1F7FF\u1F800-\u1F8FF\u1F900-\u1F9FF\u1FA00-\u1FA6F\u1FA70-\u1FAFF\u2600-\u26FF\u2700-\u27BF]/g, '');
+}
+
+function sanitizeTitleTagNameInput(inputEl) {
+    if (!inputEl) return;
+    const cleaned = sanitizeTitleTagName(inputEl.value);
+    if (inputEl.value !== cleaned) {
+        inputEl.value = cleaned;
+    }
+}
+window.sanitizeTitleTagName = sanitizeTitleTagName;
+window.sanitizeTitleTagNameInput = sanitizeTitleTagNameInput;
+
 function renderTitleTagModalRows() {
     const container = document.getElementById('title-tag-list-container');
     if (!container) return;
@@ -7203,7 +7221,7 @@ function renderTitleTagModalRows() {
         html += `
         <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
             <div style="flex:1;">
-                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
             <div style="flex:2;">
                 <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
@@ -7250,7 +7268,7 @@ function saveTitleTagModalSettings(silent = false) {
     if (nameInputs && nameInputs.length > 0) {
         const newTags = [];
         nameInputs.forEach((nInput, idx) => {
-            const name = (nInput.value || '').trim();
+            const name = sanitizeTitleTagName((nInput.value || '').trim());
             const value = (valInputs[idx]?.value || '');
             if (name) {
                 newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
