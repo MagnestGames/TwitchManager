@@ -332,11 +332,13 @@ function renderCommonTagBar() {
         <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;">
             ${mainHtml}
         </div>
-        <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border-color, rgba(255,255,255,0.1));">
-            <button type="button" class="btn-secondary" style="font-size:10.5px; padding:2px 8px; border-radius:12px; opacity:0.85; margin-bottom:4px; cursor:pointer;" onclick="toggleCollabTagGroup()">
-                ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
-            </button>
-            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">${collabHtml}</div>` : ''}
+        <div style="display:flex; flex-direction:column; gap:4px; margin-top:4px; padding-top:6px; border-top:1px dashed var(--border-color, rgba(255,255,255,0.15));">
+            <div style="display:flex; align-items:center;">
+                <button type="button" class="btn-secondary" style="font-size:10.5px; padding:2px 10px; border-radius:12px; opacity:0.9; cursor:pointer;" onclick="toggleCollabTagGroup()">
+                    ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
+                </button>
+            </div>
+            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px;">${collabHtml}</div>` : ''}
         </div>
     `;
 
