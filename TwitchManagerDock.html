@@ -1076,7 +1076,9 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
                     <div>
                         <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCollabLabel">コラボタグの名称</label>
-                        <input type="text" id="title-tag-collab-name-input" maxlength="10" placeholder="コラボ" class="cd-input-field" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                        <input type="text" id="title-tag-collab-name-input" maxlength="10" placeholder="コラボ" class="cd-input-field" list="collab-tag-name-datalist" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                        <datalist id="collab-tag-name-datalist"></datalist>
+                        <div id="collab-tag-name-hint" style="font-size: 10px; color: var(--text-muted); margin-top: 3px;"></div>
                     </div>
                     <div>
                         <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCategoryLabel">カテゴリタグの名称</label>
