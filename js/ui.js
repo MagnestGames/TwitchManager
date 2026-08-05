@@ -128,6 +128,80 @@ function getCategoryCollabNames(catName) {
     }
 }
 
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
+    (friendsConfig || []).forEach(cat => {
+        if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+            const catName = cat.name.trim();
+            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
+                const catVal = getCategoryCollabNames(catName);
+                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
+                result = result.replace(reg, catVal);
+            }
+        }
+    });
+
+    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    const gameVal = context.game !== undefined ? context.game : '';
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    return result;
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+window.escapeRegExp = escapeRegExp;
+
 function showCollabHoverHint(tagNameOrCat) {
     try {
         let msg = '';
