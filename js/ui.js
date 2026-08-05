@@ -6823,6 +6823,10 @@ function openCpRewardModal(rewardId = null) {
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
+        const idWrapper = document.getElementById('cp-reward-id-wrapper');
+        const idDisplay = document.getElementById('cp-reward-id-display');
+        if (idWrapper) idWrapper.style.display = 'none';
+        if (idDisplay) idDisplay.value = '';
         editIdInput.value = '';
         titleInput.value = '';
         costInput.value = 50;
@@ -6919,6 +6923,23 @@ function getCpRewardIconUrl(r) {
 }
 window.getCpRewardIconUrl = getCpRewardIconUrl;
 
+
+function copyCpRewardIdToClipboard(rewardId) {
+    if (!rewardId) return;
+    writeClipboardTextSync(rewardId);
+    showToast(cpCopy('rewardIdCopied', { id: rewardId }), 'success');
+}
+
+function copyCpRewardIdModal() {
+    const el = document.getElementById('cp-reward-id-display');
+    if (el && el.value) {
+        copyCpRewardIdToClipboard(el.value);
+    }
+}
+
+window.copyCpRewardIdToClipboard = copyCpRewardIdToClipboard;
+window.copyCpRewardIdModal = copyCpRewardIdModal;
+
 function renderCpTable() {
     const tbody = document.getElementById('cp-rewards-tbody');
     const totalEl = document.getElementById('cp-total-count');
@@ -6969,7 +6990,7 @@ function renderCpTable() {
                     : `<div class="cp-reward-color" style="background:${color};"></div>`}
                     <div class="cp-reward-copy">
                         <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
-                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}</div>
+                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}<span class="cp-id-badge" onclick="copyCpRewardIdToClipboard('${r.id}')" title="クリックで報酬IDをコピー (ID: ${r.id})">ID: ${r.id.substring(0, 8)}... 📋</span></div>
                     </div>
                 </div>
             </td>

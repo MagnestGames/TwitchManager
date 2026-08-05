@@ -5143,3 +5143,26 @@ body.light-theme .cp-segment-btn.is-purple.active {
     color: #7e22ce !important;
     border-color: #9146ff !important;
 }
+
+
+.cp-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: monospace, SFMono-Regular, Consolas, sans-serif;
+    font-size: 9.5px;
+    color: var(--text-muted);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    padding: 1px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: all;
+    margin-left: 4px;
+}
+.cp-id-badge:hover {
+    color: var(--text-main);
+    background: var(--bg-card);
+    border-color: var(--twitch-purple);
+}
