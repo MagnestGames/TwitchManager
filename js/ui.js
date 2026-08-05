@@ -78,44 +78,37 @@ function saveTitleTagConfig() {
 function getSelectedCollabNames() {
     try {
         const collabCat = titleTagConfig.collabCategoryName || '';
-        let selected = [];
-        let allInCat = [];
+        // IDリストのタグ絞り込みでチェックが入っているカテゴリ
+        const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
+        const activeTags = Array.from(activeTagEls).map(el => el.value);
+
+        const selectedIds = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
             if (collabCat && cat.name !== collabCat) return;
+
+            const isCatChecked = activeTags.includes(cat.name);
+
             (cat.friends || []).forEach(f => {
-                const name = f.name || f.twitch || '';
-                if (name) {
-                    if (!allInCat.includes(name)) allInCat.push(name);
-                    if (f.isSelected && !selected.includes(name)) selected.push(name);
+                // タグがチェックされているか、または個別にisSelectedの場合のみ
+                if (f.isSelected || isCatChecked) {
+                    const twitchId = (f.twitch || '').trim().replace(/^@/, '');
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
+                    }
                 }
             });
         });
-        // もしチェック選択中が無ければ登録一覧メンバーを採用
-        const targetList = selected.length > 0 ? selected : allInCat;
-        if (targetList.length === 0) return '';
 
-        // 名前順 (A-Z / アルファベット昇順) にソート
-        targetList.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        // 「（半角空白）@名前」形式で連結 (例: " @XXX @OOO")
-        return targetList.map(name => ' @' + name.replace(/^@/, '')).join('');
+        if (selectedIds.length === 0) return '';
+
+        // アルファベット昇順ソート
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+
+        // （半角空白）@TwitchID
+        return selectedIds.map(id => ' @' + id).join('');
     } catch (e) {
         return '';
-    }
-}
-
-function resolveStreamTitleTemplate(templateStr, context = {}) {
-    if (!templateStr) return '';
-    let result = String(templateStr);
-
-    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
-    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
-        titleTagConfig.customTags.forEach(tag => {
-            if (tag && tag.name) {
-                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
-                result = result.replace(regex, tag.value || '');
-            }
-        });
     }
 
     // 2. Collab Tag ({コラボ} or {collab} or custom collabTagName)
@@ -233,23 +226,28 @@ function renderCommonTagBar() {
 
 function getCategoryCollabNames(catName) {
     try {
-        let selected = [];
-        let allInCat = [];
+        const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
+        const activeTags = Array.from(activeTagEls).map(el => el.value);
+        const isCatChecked = activeTags.includes(catName);
+
+        const selectedIds = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
                 (cat.friends || []).forEach(f => {
-                    const n = f.name || f.twitch || '';
-                    if (n) {
-                        if (!allInCat.includes(n)) allInCat.push(n);
-                        if (f.isSelected && !selected.includes(n)) selected.push(n);
+                    if (f.isSelected || isCatChecked) {
+                        const twitchId = (f.twitch || '').trim().replace(/^@/, '');
+                        if (twitchId && !selectedIds.includes(twitchId)) {
+                            selectedIds.push(twitchId);
+                        }
                     }
                 });
             }
         });
-        const targetList = selected.length > 0 ? selected : allInCat;
-        if (targetList.length === 0) return '';
-        targetList.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        return targetList.map(n => ' @' + n.replace(/^@/, '')).join('');
+
+        if (selectedIds.length === 0) return '';
+
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedIds.map(id => ' @' + id).join('');
     } catch (e) {
         return '';
     }
@@ -1629,6 +1627,7 @@ window.copyCommonTag = copyCommonTag;
             if (countEl) {
                 countEl.innerText = activeTags.length > 0 ? `(${activeTags.length})` : '';
             }
+            renderCommonTagBar();
 
             const isGroupMode = friendsSortOrder === 'group';
 
