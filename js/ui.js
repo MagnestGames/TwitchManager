@@ -3196,11 +3196,17 @@ window.copyCommonTag = copyCommonTag;
                 <div class="category-box command-feature-box tw-section" id="raidso-box-open-settings">
                     <div class="category-name" onclick="twToggle('raidso-box-open-settings')"><span>${raidSoEscape(r.openRaidSettingsTitle || 'Twitch レイド受付設定')}</span></div>
                     <div class="tw-body">
-                        <button type="button" class="btn-outline raidso-external-link" onclick="copyTwitchStreamSettingsUrl()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <span>${raidSoEscape(r.copyRaidSettingsUrl || r.openRaidSettings || 'レイド設定URLをコピー')}</span>
-                        </button>
-                        <p class="raidso-setting-hint">${raidSoEscape(r.raidSettingsCopyHint || '')}</p>
+                        <div style="display:flex; gap:8px; width:100%;">
+                            <button type="button" class="btn-primary raidso-external-link" onclick="openTwitchStreamSettings()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 10px; font-size:11px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                <span>${raidSoEscape(r.openRaidSettingsDirect || 'ブラウザで開く')}</span>
+                            </button>
+                            <button type="button" class="btn-outline raidso-external-link" onclick="copyTwitchStreamSettingsUrl()" style="flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:6px 10px; font-size:11px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>${raidSoEscape(r.copyRaidSettingsUrl || 'リンクをコピー')}</span>
+                            </button>
+                        </div>
+                        <p class="raidso-setting-hint" style="margin-top:6px;">${raidSoEscape(r.raidSettingsCopyHint || '')}</p>
                     </div>
                 </div>
 
