@@ -1081,6 +1081,13 @@
                 
                 <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい共通タグを追加</button>
 
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
+                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
+                </div>
+                <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
+
 
 
                 <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>

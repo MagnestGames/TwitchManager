@@ -49,6 +49,9 @@ let titleTagConfig = {
         { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
         { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
     ],
+    categoryMap: [
+        { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' }
+    ],
     collabCategoryName: '', // IDリストのどのカテゴリをコラボ対象にするか
     categoryTagName: 'カテゴリ' // {カテゴリ} placeholder (fixed keyword, not configurable in UI)
 };
@@ -58,8 +61,10 @@ function loadTitleTagConfig() {
         const saved = localStorage.getItem('title_tag_config_v1');
         if (saved) {
             const parsed = JSON.parse(saved);
-            if (parsed && Array.isArray(parsed.customTags)) {
-                titleTagConfig = parsed;
+            if (parsed) {
+                if (Array.isArray(parsed.customTags)) titleTagConfig.customTags = parsed.customTags;
+                if (Array.isArray(parsed.categoryMap)) titleTagConfig.categoryMap = parsed.categoryMap;
+                if (parsed.collabCategoryName !== undefined) titleTagConfig.collabCategoryName = parsed.collabCategoryName;
             }
         }
     } catch (e) {
@@ -167,7 +172,19 @@ function resolveStreamTitleTemplate(templateStr, context = {}) {
 
     // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
     const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
-    const gameVal = context.game !== undefined ? context.game : '';
+    let gameVal = context.game !== undefined ? context.game : '';
+
+    // 手動カテゴリ変換マッピングの優先適用
+    if (gameVal && titleTagConfig && Array.isArray(titleTagConfig.categoryMap)) {
+        const trimmedGame = String(gameVal).trim();
+        const matched = titleTagConfig.categoryMap.find(item =>
+            item && item.from && String(item.from).trim().toLowerCase() === trimmedGame.toLowerCase()
+        );
+        if (matched && matched.to !== undefined && matched.to !== null && String(matched.to).trim() !== '') {
+            gameVal = String(matched.to);
+        }
+    }
+
     const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
     result = result.replace(catRegex, gameVal);
 
@@ -7725,6 +7742,7 @@ window.applyCpBulkEdit = applyCpBulkEdit;
 function openTitleTagModal() {
     loadTitleTagConfig();
     renderTitleTagModalRows();
+    renderCategoryMapModalRows();
 
     // Populate collab category <select> from IDリスト category names
     const collabSelect = document.getElementById('title-tag-collab-category-select');
@@ -7782,6 +7800,43 @@ function renderTitleTagModalRows() {
     container.innerHTML = html;
 }
 
+function renderCategoryMapModalRows() {
+    const container = document.getElementById('title-tag-category-map-container');
+    if (!container) return;
+    if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
+        return;
+    }
+    let html = '';
+    titleTagConfig.categoryMap.forEach((item, idx) => {
+        html += `
+        <div style="display:flex; gap:6px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1.2;">
+                <input type="text" class="cd-input-field cat-map-row-from" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名 (例: Just Chatting)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">➔</div>
+            <div style="flex:1.2;">
+                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function addCustomCategoryMappingRow() {
+    if (!titleTagConfig.categoryMap) titleTagConfig.categoryMap = [];
+    const newId = 'cat_map_' + Date.now();
+    titleTagConfig.categoryMap.push({ id: newId, from: '', to: '' });
+    renderCategoryMapModalRows();
+}
+
+function deleteCustomCategoryMappingRow(idx) {
+    if (!titleTagConfig.categoryMap) return;
+    titleTagConfig.categoryMap.splice(idx, 1);
+    renderCategoryMapModalRows();
+}
+
 function addCustomTitleTagRow() {
     if (!titleTagConfig.customTags) titleTagConfig.customTags = [];
     const newId = 'tag_' + Date.now();
@@ -7827,13 +7882,29 @@ function saveTitleTagModalSettings(silent = false) {
         titleTagConfig.customTags = newTags;
     }
 
+    const catFromInputs = document.querySelectorAll('.cat-map-row-from');
+    const catToInputs = document.querySelectorAll('.cat-map-row-to');
+    if (catFromInputs && catFromInputs.length > 0) {
+        const newMaps = [];
+        catFromInputs.forEach((fInput, idx) => {
+            const from = (fInput.value || '').trim();
+            const to = (catToInputs[idx]?.value || '').trim();
+            if (from) {
+                newMaps.push({ id: 'cat_map_' + idx, from, to });
+            }
+        });
+        titleTagConfig.categoryMap = newMaps;
+    } else {
+        titleTagConfig.categoryMap = [];
+    }
+
     const collabSelect = document.getElementById('title-tag-collab-category-select');
     if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
 
     saveTitleTagConfig();
     if (!silent) {
         closeModal('titleTagModal');
-        showToast('共通タグの設定を保存しました', 'success');
+        showToast('共通タグおよびカテゴリ変換の設定を保存しました', 'success');
     }
     renderCommonTagBar();
     updateAllTitlePreviews();
@@ -7841,8 +7912,11 @@ function saveTitleTagModalSettings(silent = false) {
 
 window.openTitleTagModal = openTitleTagModal;
 window.renderTitleTagModalRows = renderTitleTagModalRows;
+window.renderCategoryMapModalRows = renderCategoryMapModalRows;
 window.addCustomTitleTagRow = addCustomTitleTagRow;
 window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
+window.addCustomCategoryMappingRow = addCustomCategoryMappingRow;
+window.deleteCustomCategoryMappingRow = deleteCustomCategoryMappingRow;
 window.saveTitleTagModalSettings = saveTitleTagModalSettings;
 
 document.addEventListener('DOMContentLoaded', () => {
