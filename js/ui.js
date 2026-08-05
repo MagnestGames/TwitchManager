@@ -5025,8 +5025,63 @@ window.copyCommonTag = copyCommonTag;
             await copyTextToClipboard(JSON.stringify(d, null, 2));
         }
 
+function getDefaultTitleConfig() {
+    return [
+        {
+            name: "ゲーム配信",
+            isClosed: false,
+            records: [
+                {
+                    label: "【参加型】ゲーム配信",
+                    isCustomLabel: true,
+                    game: "Just Chatting",
+                    title: "{識別}【参加型】のんびりゲーム配信中！ {Category} {コラボ} {date}",
+                    notif: "のんびり配信スタートしました！",
+                    tags: "参加型, Vtuber",
+                    memo: "",
+                    isOpen: true
+                }
+            ]
+        },
+        {
+            name: "雑談配信",
+            isClosed: false,
+            records: [
+                {
+                    label: "雑談配信",
+                    isCustomLabel: true,
+                    game: "Just Chatting",
+                    title: "{識別} のんびり雑談タイム！ {コラボ} {date}",
+                    notif: "雑談配信はじまりました！",
+                    tags: "雑談, 初見歓迎",
+                    memo: "",
+                    isOpen: false
+                }
+            ]
+        }
+    ];
+}
+
+function restoreDefaultTitleConfig() {
+    config = getDefaultTitleConfig();
+    saveAllLocal(true);
+    render();
+}
+window.restoreDefaultTitleConfig = restoreDefaultTitleConfig;
+
         window.onload = () => {
-            config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
+            let loadedConfig = null;
+            try {
+                loadedConfig = JSON.parse(localStorage.getItem('stream_config_v16') || 'null');
+            } catch (e) {
+                loadedConfig = null;
+            }
+            if (!loadedConfig || !Array.isArray(loadedConfig) || loadedConfig.length === 0) {
+                config = getDefaultTitleConfig();
+                saveAllLocal(false);
+            } else {
+                config = loadedConfig;
+            }
             friendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
             memoConfig = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
             customRaidSoTemplates = loadRaidSoCustomTemplates();
