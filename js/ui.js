@@ -310,19 +310,12 @@ function renderCommonTagBar() {
 
     // 4. コラボ・IDリスト用タグ（改行して配置 & 開閉アコーディオン）
     let collabHtml = '';
-    
-    // {コラボ} ボタン
-    const selectedNames = getSelectedCollabNames();
-    const collabTitle = selectedNames 
-        ? `IDリスト選択中: ${selectedNames.trim()}` 
-        : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
-    collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
 
-    // IDリストの各カテゴリタグボタン
+    // IDリストの各カテゴリタグボタン (「未分類」などの除外)
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
         .map(cat => cat.name.trim())
-        .filter(name => name);
+        .filter(name => name && name !== '未分類' && name !== 'Uncategorized');
     const uniqueCats = [...new Set(catNames)];
 
     uniqueCats.forEach(catName => {
@@ -332,7 +325,7 @@ function renderCommonTagBar() {
         collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
     });
 
-    const collabTotalCount = 1 + uniqueCats.length;
+    const collabTotalCount = uniqueCats.length;
     const arrow = isCollabTagGroupExpanded ? '▼' : '▶';
 
     const fullHtml = `
