@@ -5988,9 +5988,9 @@ function loadCpGroupsFromStorage() {
             cpState.groups = JSON.parse(saved).map(migrateCpDefaultGroup);
         } else {
             cpState.groups = [
-                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 }
+                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 }
             ];
             saveCpGroupsToStorage();
         }
@@ -6147,6 +6147,20 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
         }
     }
 }
+
+async function triggerCpAutoOff(triggerType, detail = {}) {
+    if (!cpState.groups || cpState.groups.length === 0) return;
+    for (const g of cpState.groups) {
+        let shouldTrigger = false;
+        if (triggerType === 'stream_offline' && g.autoOffStreamEnd) {
+            shouldTrigger = true;
+        }
+        if (shouldTrigger) {
+            await batchToggleCpGroup(g.id, false, true);
+        }
+    }
+}
+window.triggerCpAutoOff = triggerCpAutoOff;
 
 async function triggerCpAutoOn(triggerType, detail = {}) {
     if (!cpState.groups || cpState.groups.length === 0) return;
@@ -6355,10 +6369,12 @@ function openCpGroupModal(groupId = null) {
     nameInput.value = targetGroup ? cpGroupName(targetGroup) : '';
 
     const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
+    const autoStreamEndCheck = document.getElementById('cp-group-auto-stream-end');
     const autoRaidCheck = document.getElementById('cp-group-auto-raid');
     const autoOffMinInput = document.getElementById('cp-group-auto-off-min');
 
     if (autoStreamCheck) autoStreamCheck.checked = targetGroup ? !!targetGroup.autoOnStreamStart : false;
+    if (autoStreamEndCheck) autoStreamEndCheck.checked = targetGroup ? !!targetGroup.autoOffStreamEnd : false;
     if (autoRaidCheck) autoRaidCheck.checked = targetGroup ? !!targetGroup.autoOnRaid : false;
     if (autoOffMinInput) autoOffMinInput.value = targetGroup ? (targetGroup.autoOffMinutes || 0) : 0;
 
@@ -6396,6 +6412,7 @@ function saveCpGroup() {
     const selectedRewardIds = Array.from(checkedNodes).map(node => node.value);
 
     const autoOnStreamStart = !!document.getElementById('cp-group-auto-stream-start')?.checked;
+    const autoOffStreamEnd = !!document.getElementById('cp-group-auto-stream-end')?.checked;
     const autoOnRaid = !!document.getElementById('cp-group-auto-raid')?.checked;
     const autoOffMinutes = parseInt(document.getElementById('cp-group-auto-off-min')?.value || '0', 10) || 0;
 
@@ -6406,6 +6423,7 @@ function saveCpGroup() {
             delete cpState.groups[idx].defaultNameKey;
             cpState.groups[idx].rewardIds = selectedRewardIds;
             cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
+            cpState.groups[idx].autoOffStreamEnd = autoOffStreamEnd;
             cpState.groups[idx].autoOnRaid = autoOnRaid;
             delete cpState.groups[idx].autoOnObsScene;
             cpState.groups[idx].autoOffMinutes = autoOffMinutes;
@@ -6416,6 +6434,7 @@ function saveCpGroup() {
             name: name,
             rewardIds: selectedRewardIds,
             autoOnStreamStart: autoOnStreamStart,
+            autoOffStreamEnd: autoOffStreamEnd,
             autoOnRaid: autoOnRaid,
             autoOffMinutes: autoOffMinutes
         };
@@ -6546,8 +6565,10 @@ function renderCpGroups() {
 
         let autoBadgesHtml = '';
         const bStream = cpCopy('badgeStreamStart');
+        const bStreamEnd = cpCopy('badgeStreamEnd');
         const bRaid = cpCopy('badgeRaid');
         if (g.autoOnStreamStart) autoBadgesHtml += `<span class="cp-auto-badge is-stream-start" style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
+        if (g.autoOffStreamEnd) autoBadgesHtml += `<span class="cp-auto-badge is-stream-end" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStreamEnd)}</span>`;
         if (g.autoOnRaid) autoBadgesHtml += `<span class="cp-auto-badge is-raid" style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
         if (g.autoOffMinutes > 0) autoBadgesHtml += `<span class="cp-auto-badge is-auto-off" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
