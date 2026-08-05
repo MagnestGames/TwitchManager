@@ -78,7 +78,6 @@ function saveTitleTagConfig() {
 function getSelectedCollabNames() {
     try {
         const collabCat = titleTagConfig.collabCategoryName || '';
-        // IDリストのタグ絞り込みでチェックが入っているカテゴリ
         const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
         const activeTags = Array.from(activeTagEls).map(el => el.value);
 
@@ -87,10 +86,9 @@ function getSelectedCollabNames() {
             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
             if (collabCat && cat.name !== collabCat) return;
 
-            const isCatChecked = activeTags.includes(cat.name);
+            const isCatChecked = activeTags.length === 0 || activeTags.includes(cat.name);
 
             (cat.friends || []).forEach(f => {
-                // タグがチェックされているか、または個別にisSelectedの場合のみ
                 if (f.isSelected || isCatChecked) {
                     const twitchId = (f.twitch || '').trim().replace(/^@/, '');
                     if (twitchId && !selectedIds.includes(twitchId)) {
@@ -101,11 +99,7 @@ function getSelectedCollabNames() {
         });
 
         if (selectedIds.length === 0) return '';
-
-        // アルファベット昇順ソート
         selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-
-        // （半角空白）@TwitchID
         return selectedIds.map(id => ' @' + id).join('');
     } catch (e) {
         return '';
@@ -114,26 +108,19 @@ function getSelectedCollabNames() {
 
 function getCategoryCollabNames(catName) {
     try {
-        const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
-        const activeTags = Array.from(activeTagEls).map(el => el.value);
-        const isCatChecked = activeTags.includes(catName);
-
         const selectedIds = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
                 (cat.friends || []).forEach(f => {
-                    if (f.isSelected || isCatChecked) {
-                        const twitchId = (f.twitch || '').trim().replace(/^@/, '');
-                        if (twitchId && !selectedIds.includes(twitchId)) {
-                            selectedIds.push(twitchId);
-                        }
+                    const twitchId = (f.twitch || '').trim().replace(/^@/, '');
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
                     }
                 });
             }
         });
 
         if (selectedIds.length === 0) return '';
-
         selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
         return selectedIds.map(id => ' @' + id).join('');
     } catch (e) {
