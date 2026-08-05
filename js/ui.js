@@ -320,6 +320,31 @@ function toggleCollabTagGroup() {
 }
 window.toggleCollabTagGroup = toggleCollabTagGroup;
 
+function copyCategoryRawIds(catName) {
+    const rawIds = getCategoryCollabNames(catName);
+    if (!rawIds) {
+        showToast(`IDリスト【${catName}】に選択中のメンバーがいません`, 'warn');
+        return;
+    }
+    const copyString = rawIds;
+    const toastMsg = `IDリスト【${catName}】の@ID一覧をコピー:${copyString.trim()}`;
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copyString).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(copyString, toastMsg);
+            });
+        } else {
+            fallbackCopyText(copyString, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(copyString, toastMsg);
+    }
+}
+window.copyCategoryRawIds = copyCategoryRawIds;
+
 function renderCommonTagBar() {
     loadTitleTagConfig();
     const bar = document.getElementById('common-tag-chip-bar');
@@ -340,7 +365,7 @@ function renderCommonTagBar() {
     // 3. {date}
     mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
 
-    // 4. コラボ・IDリスト用タグ（枠なし・開閉なし・改行表示）
+    // 4. コラボ・IDリスト用タグ（タグ名コピーと @ID一覧コピーの横並びセグメントボタン）
     let collabHtml = '';
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
@@ -351,8 +376,16 @@ function renderCommonTagBar() {
     uniqueCats.forEach(catName => {
         const formattedCatNames = getCategoryCollabNames(catName);
         const catTagText = '{' + catName + '}';
-        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
-        collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
+        collabHtml += `
+            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
+                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
+                    ＋${raidSoEscape(catTagText)}
+                </button>
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                    @ID一覧
+                </button>
+            </div>
+        `;
     });
 
     let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
