@@ -512,10 +512,21 @@
 
             <div>
                 <div style="font-weight: bold; font-size: 12px; margin-bottom: 6px; color: var(--command-accent);" data-i18n="cpTab.rewardListTitle">登録チャンネルポイント一覧</div>
-                <div id="cp-rewards-table-wrapper" style="overflow-x: auto;">
+                <!-- Bulk Action Bar -->
+            <div id="cp-bulk-action-bar" style="display: none; align-items: center; justify-content: space-between; background: var(--bg-item); border: 1px solid var(--twitch-purple); padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; gap: 8px; flex-wrap: wrap;">
+                <div style="font-size: 11.5px; font-weight: bold; color: var(--command-accent); display: flex; align-items: center; gap: 8px;">
+                    <span>☑ <span id="cp-bulk-selected-count">0</span>件選択中</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openCpBulkEditModal('selected')" data-i18n="cpTab.bulkEditTitle">🎨 一括編集 (色・ポイント)</button>
+                    <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="clearCpRewardSelection()">選択解除</button>
+                </div>
+            </div>
+            <div id="cp-rewards-table-wrapper" style="overflow-x: auto;">
                     <table class="cp-rewards-table">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                                <th style="width: 32px; text-align: center; vertical-align: middle;"><input type="checkbox" id="cp-select-all-checkbox" onchange="toggleSelectAllCpRewards(this.checked)" style="accent-color: var(--twitch-purple); width: 15px; height: 15px; cursor: pointer;" title="全選択/全解除"></th>
                                 <th class="cp-th-reward" data-i18n="cpTab.thRewardCost">報酬名 / コスト</th>
                                 <th class="cp-th-group" data-i18n="cpTab.thGroup">グループ</th>
                                 <th class="cp-th-status" data-i18n="cpTab.thStatus">状態</th>
@@ -904,6 +915,64 @@
             document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
         }
     </script>
+
+
+    <!-- CP Bulk Edit Modal -->
+    <div id="cpBulkEditModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 460px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpBulkEditModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-bulk-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.bulkEditModalTitle">チャンネルポイントの一括編集</h3>
+            <input type="hidden" id="cp-bulk-mode">
+            <input type="hidden" id="cp-bulk-group-id">
+
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+                <span style="color: var(--twitch-purple); font-weight: bold;">※</span> 選択した報酬の「背景色」および「消費ポイント数」を一括で変更できます。<br>
+                <span style="font-size: 10px;" data-i18n="cpTab.bulkExternalNotice">（※Twitchの仕様上、外部作成された報酬は変更されません）</span>
+            </div>
+
+            <!-- Color Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-color" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkColorSection(this.checked)">
+                    <span data-i18n="cpTab.enableColorChange">🎨 背景色を変更する</span>
+                </label>
+                <div id="cp-bulk-color-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <input type="color" id="cp-bulk-color-input" value="#9146FF" style="width: 42px; height: 32px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
+                        <span style="font-size: 11px; color: var(--text-muted);">カラーコード直接入力 / パレット選択</span>
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="cp-swatch" style="background:#9146FF; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#9146FF')"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF69B4; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#FF69B4')"></button>
+                        <button type="button" class="cp-swatch" style="background:#00C875; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#00C875')"></button>
+                        <button type="button" class="cp-swatch" style="background:#3B82F6; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#3B82F6')"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF9800; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#FF9800')"></button>
+                        <button type="button" class="cp-swatch" style="background:#E93D3A; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#E93D3A')"></button>
+                        <button type="button" class="cp-swatch" style="background:#26262C; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpBulkSwatch('#26262C')"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Section -->
+            <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-cost" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkCostSection(this.checked)">
+                    <span data-i18n="cpTab.enableCostChange">💎 報酬額 (消費ポイント数) を変更する</span>
+                </label>
+                <div id="cp-bulk-cost-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <input type="number" id="cp-bulk-cost-input" value="50" min="1" max="2000000000" class="cd-input-field" style="width: 100px; padding: 6px; font-size: 12px;">
+                        <span style="font-size: 11px; color: var(--text-main);">pt</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpBulkEditModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyCpBulkEdit()" data-i18n="cpTab.applyBulkEdit">一括適用</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 
