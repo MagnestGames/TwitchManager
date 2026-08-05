@@ -305,6 +305,83 @@ function fallbackCopyText(tagText, customMsg) {
     }
 }
 
+let isCollabTagGroupExpanded = true;
+try {
+    const savedExp = localStorage.getItem('common_collab_tags_expanded');
+    if (savedExp !== null) isCollabTagGroupExpanded = savedExp === 'true';
+} catch (e) {}
+
+function toggleCollabTagGroup() {
+    isCollabTagGroupExpanded = !isCollabTagGroupExpanded;
+    try {
+        localStorage.setItem('common_collab_tags_expanded', String(isCollabTagGroupExpanded));
+    } catch (e) {}
+    renderCommonTagBar();
+}
+window.toggleCollabTagGroup = toggleCollabTagGroup;
+
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+
+    let mainHtml = '';
+    // 1. カスタム共通タグ (言葉セット)
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
+    });
+
+    // 2. {Category}
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
+
+    // 3. {date}
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
+
+    // 4. コラボ・IDリスト用タグ（改行して配置 & 開閉アコーディオン）
+    let collabHtml = '';
+    
+    // {コラボ} ボタン
+    const selectedNames = getSelectedCollabNames();
+    const collabTitle = selectedNames 
+        ? `IDリスト選択中: ${selectedNames.trim()}` 
+        : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
+    collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
+
+    // IDリストの各カテゴリタグボタン
+    const catNames = (friendsConfig || [])
+        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+        .map(cat => cat.name.trim())
+        .filter(name => name);
+    const uniqueCats = [...new Set(catNames)];
+
+    uniqueCats.forEach(catName => {
+        const formattedCatNames = getCategoryCollabNames(catName);
+        const catTagText = '{' + catName + '}';
+        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
+        collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
+    });
+
+    const collabTotalCount = 1 + uniqueCats.length;
+    const arrow = isCollabTagGroupExpanded ? '▼' : '▶';
+
+    const fullHtml = `
+        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;">
+            ${mainHtml}
+        </div>
+        <div style="margin-top:4px; padding-top:4px; border-top:1px dashed var(--border-color, rgba(255,255,255,0.1));">
+            <button type="button" class="btn-secondary" style="font-size:10.5px; padding:2px 8px; border-radius:12px; opacity:0.85; margin-bottom:4px; cursor:pointer;" onclick="toggleCollabTagGroup()">
+                ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
+            </button>
+            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">${collabHtml}</div>` : ''}
+        </div>
+    `;
+
+    bar.innerHTML = fullHtml;
+}
+
 window.renderCommonTagBar = renderCommonTagBar;
 window.showCollabHoverHint = showCollabHoverHint;
 window.copyCommonTag = copyCommonTag;
