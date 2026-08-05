@@ -10,7 +10,7 @@ const I18N_DATA = {
             "titleTagManageBtn": "⚙️ 識別タグ設定",
             "titleTagKeyHeader": "識別名 (10文字以内)",
             "titleTagValueHeader": "置換内容 (テキスト)",
-            "titleTagSystemDesc": "【標準システムタグ】\n・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名\n・{コラボ} : IDリストで選択中のコラボ相手名\n・{日付} : 本日の日付 (例: 8/5)\n・{曜日} : 本日の曜日 (例: 水)\n・{時間} : 現在の時刻 (例: 13:30)",
+            "titleTagSystemDesc": "【標準共通タグ】\n・{Category} : Twitchの配信ゲーム/カテゴリ名\n・{コラボ} : IDリストで選択中のコラボ相手名\n・{date} : 本日の日付 (例: 8/5)",
             "tabs": [
                 "タイトル",
                 "通知と紹介",
@@ -1397,7 +1397,7 @@ const I18N_DATA = {
             "titleTagManageBtn": "⚙️ Tag Settings",
             "titleTagKeyHeader": "Tag Name (Max 10 chars)",
             "titleTagValueHeader": "Replacement Value",
-            "titleTagSystemDesc": "【System Tags】\n・{カテゴリ} : Twitch game/category name\n・{コラボ} : Selected collab members\n・{日付} : Today's date (e.g. 8/5)\n・{曜日} : Day of week (e.g. Wed)\n・{時間} : Current time (e.g. 13:30)",
+            "titleTagSystemDesc": "【Standard Common Tags】\n・{Category} : Twitch game/category name\n・{コラボ} : Selected collab members\n・{date} : Today's date (e.g. 8/5)",
             "tabs": [
                 "Titles",
                 "Alerts & Raids",
@@ -2784,7 +2784,7 @@ const I18N_DATA = {
             "titleTagManageBtn": "⚙️ 标签设置",
             "titleTagKeyHeader": "标识名 (10字以内)",
             "titleTagValueHeader": "替换文本",
-            "titleTagSystemDesc": "【系统标准标签】\n・{カテゴリ} : Twitch游戏/分类名称\n・{コラボ} : 选中的联动成员列表\n・{日付} : 今日日期 (例: 8/5)\n・{曜日} : 今日星期\n・{時間} : 当前时间 (例: 13:30)",
+            "titleTagSystemDesc": "【标准公共标签】\n・{Category} : Twitch游戏/分类名称\n・{コラボ} : 选中的联动成员列表\n・{date} : 今日日期 (例: 8/5)",
             "tabs": [
                 "标题",
                 "通知与介绍",

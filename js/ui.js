@@ -49,8 +49,8 @@ let titleTagConfig = {
         { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
         { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
     ],
-    collabTagName: 'コラボ',
-    categoryTagName: 'カテゴリ'
+    collabCategoryName: '', // IDリストのどのカテゴリをコラボ対象にするか
+    categoryTagName: 'カテゴリ' // {カテゴリ} placeholder (fixed keyword, not configurable in UI)
 };
 
 function loadTitleTagConfig() {
@@ -77,9 +77,12 @@ function saveTitleTagConfig() {
 
 function getSelectedCollabNames() {
     try {
+        const collabCat = titleTagConfig.collabCategoryName || '';
         const selected = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            // If a collab category is specified, only include members from that category
+            if (collabCat && cat.name !== collabCat) return;
             (cat.friends || []).forEach(f => {
                 if (f.isSelected) {
                     const name = f.name || f.twitch || '';
@@ -120,7 +123,7 @@ function resolveStreamTitleTemplate(templateStr, context = {}) {
     // 3. Category Tag ({カテゴリ} or {category} or {game})
     const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
     const gameVal = context.game !== undefined ? context.game : '';
-    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|カテゴリ|category|game)}', 'g');
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
     result = result.replace(catRegex, gameVal);
 
     // 4. Built-in Date & Time Tags
@@ -157,6 +160,62 @@ window.loadTitleTagConfig = loadTitleTagConfig;
 window.saveTitleTagConfig = saveTitleTagConfig;
 window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+
+function renderCommonTagBar() {
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+    let html = '';
+    // Custom tags
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
+    });
+    // System tags: {Category}, {コラボ}, {date}
+    [
+        '{Category}',
+        '{コラボ}',
+        '{date}'
+    ].forEach(t => {
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(t)}')">${raidSoEscape(t)}</button>`;
+    });
+    bar.innerHTML = html;
+}
+
+function copyCommonTag(tagText) {
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(tagText).then(() => {
+                showToast('コピー: ' + tagText, 'success');
+            }).catch(() => {
+                fallbackCopyText(tagText);
+            });
+        } else {
+            fallbackCopyText(tagText);
+        }
+    } catch (e) {
+        fallbackCopyText(tagText);
+    }
+}
+
+function fallbackCopyText(tagText) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = tagText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('コピー: ' + tagText, 'success');
+    } catch (e) {
+        showToast('コピーできませんでした', 'warn');
+    }
+}
+
+window.renderCommonTagBar = renderCommonTagBar;
+window.copyCommonTag = copyCommonTag;
+
 
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
@@ -7453,30 +7512,18 @@ window.applyCpBulkEdit = applyCpBulkEdit;
 function openTitleTagModal() {
     loadTitleTagConfig();
     renderTitleTagModalRows();
-    const collabInput = document.getElementById('title-tag-collab-name-input');
-    const catInput = document.getElementById('title-tag-category-name-input');
-    if (collabInput) collabInput.value = titleTagConfig.collabTagName || 'コラボ';
-    if (catInput) catInput.value = titleTagConfig.categoryTagName || 'カテゴリ';
 
-    // Populate collab datalist from IDリスト category names
-    const datalist = document.getElementById('collab-tag-name-datalist');
-    const hint = document.getElementById('collab-tag-name-hint');
-    if (datalist) {
-        // Get unique category names from friendsConfig (exclude shoutout-history and authenticated-user)
-        const catNames = (friendsConfig || [])
+    // Populate collab category <select> from IDリスト category names
+    const collabSelect = document.getElementById('title-tag-collab-category-select');
+    if (collabSelect) {
+        const cats = (friendsConfig || [])
             .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
             .map(cat => cat.name.trim())
-            .filter(name => name && name.length <= 10);
-        const uniqueNames = [...new Set(catNames)];
-        datalist.innerHTML = uniqueNames.map(n => `<option value="${raidSoEscape(n)}">`).join('');
-
-        if (hint) {
-            if (uniqueNames.length > 0) {
-                hint.textContent = 'IDリストのカテゴリ: ' + uniqueNames.join(' / ');
-            } else {
-                hint.textContent = '';
-            }
-        }
+            .filter(name => name);
+        const uniqueCats = [...new Set(cats)];
+        const currentVal = titleTagConfig.collabCategoryName || '';
+        collabSelect.innerHTML = '<option value="">(選択なし)</option>' +
+            uniqueCats.map(n => `<option value="${raidSoEscape(n)}"${n === currentVal ? ' selected' : ''}>${raidSoEscape(n)}</option>`).join('');
     }
     openModal('titleTagModal');
 }
@@ -7530,15 +7577,13 @@ function saveTitleTagModalSettings() {
     });
     titleTagConfig.customTags = newTags;
 
-    const collabInput = document.getElementById('title-tag-collab-name-input');
-    const catInput = document.getElementById('title-tag-category-name-input');
-    if (collabInput && collabInput.value.trim()) titleTagConfig.collabTagName = collabInput.value.trim().substring(0, 10);
-    if (catInput && catInput.value.trim()) titleTagConfig.categoryTagName = catInput.value.trim().substring(0, 10);
+    const collabSelect = document.getElementById('title-tag-collab-category-select');
+    if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
 
     saveTitleTagConfig();
     closeModal('titleTagModal');
-    showToast('識別タグ・言葉セットを保存しました', 'success');
-    render(); // Re-render main tab template cards to reflect new chips & preview
+    showToast('共通タグの設定を保存しました', 'success');
+    renderCommonTagBar();
 }
 
 window.openTitleTagModal = openTitleTagModal;

@@ -26,7 +26,7 @@
         <div class="app-header">
             <h1 class="app-title app-title-row">◆ <span id="today-date"
                     style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
+                
             </h1>
             <div class="app-header-controls">
                 <!-- Birthday/Anniversary Indicator -->
@@ -76,6 +76,15 @@
                 <p id="ui-main-info-bottom" style="margin: 0;"></p>
             </div>
         </details>
+
+        <!-- 共通タグバー (ヘルプの真下, 全タイトル共通) -->
+        <div id="common-tag-bar-section" style="padding: 6px 10px 4px; border-bottom: 1px solid var(--border-color);">
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px; display:flex; align-items:center; gap:6px;">
+                <span>📋 共通タグ（クリックでコピー → タイトルに貼り付け）</span>
+                <button type="button" style="margin-left:auto; font-size:10px; padding:2px 7px;" class="btn-secondary" onclick="openTitleTagModal()">⚙️ 設定</button>
+            </div>
+            <div id="common-tag-chip-bar" class="tag-chip-bar"></div>
+        </div>
 
         <div id="main-container" class="sortable-container"></div>
 
@@ -1058,7 +1067,7 @@
     <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
         <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
+                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトル 共通タグ・言葉セット</h3>
                 <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
             </div>
             
@@ -1067,27 +1076,25 @@
                     タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
                 </div>
 
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム共通タグ一覧</div>
                 <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
                 
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい共通タグを追加</button>
 
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">コラボ・カテゴリタグ名設定 (最大10文字)</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                    <div>
-                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCollabLabel">コラボタグの名称</label>
-                        <input type="text" id="title-tag-collab-name-input" maxlength="10" placeholder="コラボ" class="cd-input-field" list="collab-tag-name-datalist" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
-                        <datalist id="collab-tag-name-datalist"></datalist>
-                        <div id="collab-tag-name-hint" style="font-size: 10px; color: var(--text-muted); margin-top: 3px;"></div>
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;" data-i18n="titleTagCategoryLabel">カテゴリタグの名称</label>
-                        <input type="text" id="title-tag-category-name-input" maxlength="10" placeholder="カテゴリ" class="cd-input-field" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">{コラボ} タグ設定</div>
+                <div style="margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                    <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">コラボ対象のIDリストカテゴリ</label>
+                    <select id="title-tag-collab-category-select" class="cd-input-field" style="width: 100%; padding: 4px 6px; font-size: 12px; box-sizing: border-box;">
+                        <option value="">(選択なし)</option>
+                    </select>
+                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 5px; line-height: 1.5;">
+                        選択したカテゴリの <strong>isSelected</strong> のメンバーが <code>{コラボ}</code> に展開されます。<br>
+                        例: <span style="font-family:monospace;">{コラボ}</span> → <span style="font-family:monospace;"> @AAA @BBB</span>
                     </div>
                 </div>
 
                 <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
-                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準システムタグのご案内</summary>
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準共通タグのご案内</summary>
                     <div style="margin-top: 6px; line-height: 1.6; white-space: pre-line;" data-i18n="titleTagSystemDesc">
                         【標準システムタグ】
                         ・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名
