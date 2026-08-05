@@ -5068,3 +5068,65 @@ body.light-theme .cp-segment-btn.is-off.active {
     color: #b91c1c !important;
     border-color: #f87171 !important;
 }
+
+/* Pixel-Perfect Color Picker Row Alignment */
+.cp-color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    height: 28px;
+}
+
+.cp-color-picker-row input[type="color"] {
+    width: 38px !important;
+    height: 28px !important;
+    padding: 1px 2px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    background: var(--bg-item) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.cp-color-picker-row .cp-swatch-preview {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.cp-color-picker-row input[type="text"] {
+    width: 76px !important;
+    height: 28px !important;
+    padding: 0 6px !important;
+    font-size: 11.5px !important;
+    font-family: monospace !important;
+    text-transform: uppercase !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    background: var(--bg-item) !important;
+    color: var(--text-main) !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    line-height: 26px !important;
+}
+
+.cp-color-picker-row span {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    line-height: 28px !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
