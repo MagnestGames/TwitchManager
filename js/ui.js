@@ -50,7 +50,8 @@ let titleTagConfig = {
         { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
     ],
     categoryMap: [
-        { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' }
+        { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' },
+        { id: 'cat_map_2', from: 'Phoenix Wright: Ace Attorney Trilogy', to: '逆転裁判' }
     ],
     collabCategoryName: '', // IDリストのどのカテゴリをコラボ対象にするか
     categoryTagName: 'カテゴリ' // {カテゴリ} placeholder (fixed keyword, not configurable in UI)
@@ -7270,10 +7271,10 @@ function renderCategoryMapModalRows() {
     container.innerHTML = html;
 }
 
-function addCustomCategoryMappingRow() {
+function addCustomCategoryMappingRow(fromVal = '', toVal = '') {
     if (!titleTagConfig.categoryMap) titleTagConfig.categoryMap = [];
     const newId = 'cat_map_' + Date.now();
-    titleTagConfig.categoryMap.push({ id: newId, from: '', to: '' });
+    titleTagConfig.categoryMap.push({ id: newId, from: fromVal, to: toVal });
     renderCategoryMapModalRows();
 }
 
