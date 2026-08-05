@@ -22,7 +22,7 @@ function updateRecordTitleValue(ci, ri, val) {
     if (previewEl) {
         const game = config[ci].records[ri].game || '';
         const resolved = resolveStreamTitleTemplate(val, { game });
-        previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+        previewEl.innerHTML = raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>';
     }
 }
 
@@ -1304,7 +1304,10 @@ window.copyCommonTag = copyCommonTag;
                     
                     <span class="field-label">${L.title}</span>
                     <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
-                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                    <div style="margin-top:2px; margin-bottom:10px;">
+                        <div style="font-size:10.5px; color:var(--text-muted); font-weight:bold; margin-bottom:2px;">反映プレビュー</div>
+                        <div id="record-title-preview-${ci}-${ri}" class="title-preview-box">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                    </div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
