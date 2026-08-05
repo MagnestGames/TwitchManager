@@ -6924,6 +6924,17 @@ function getCpRewardIconUrl(r) {
 window.getCpRewardIconUrl = getCpRewardIconUrl;
 
 
+
+async function openTwitchImageResizerTool() {
+    const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const confirmTitle = cpCopy('imageResizerConfirmTitle');
+    const ok = await showCustomConfirm(confirmMsg, confirmTitle);
+    if (ok) {
+        window.open('https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html', '_blank', 'noopener,noreferrer');
+    }
+}
+window.openTwitchImageResizerTool = openTwitchImageResizerTool;
+
 function copyCpRewardIdToClipboard(rewardId) {
     if (!rewardId) return;
     writeClipboardTextSync(rewardId);
