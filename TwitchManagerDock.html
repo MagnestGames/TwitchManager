@@ -1006,6 +1006,21 @@
                 </div>
             </div>
 
+            <!-- User Input Requirement Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkOption('user-input', this.checked)">
+                    <span data-i18n="cpTab.bulkChangeUserInput">💬 視聴者コメント必須 (テキスト入力必須) を変更する</span>
+                </label>
+                <div id="cp-bulk-user-input-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <input type="hidden" id="cp-bulk-user-input-val" value="true">
+                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
+                        <button type="button" id="cp-bulk-user-input-btn-true" class="cp-segment-btn is-purple active" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(true)" data-i18n="cpTab.bulkUserInputTrue">💬 必須にする (ON)</button>
+                        <button type="button" id="cp-bulk-user-input-btn-false" class="cp-segment-btn is-off" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(false)" data-i18n="cpTab.bulkUserInputFalse">💬 必須にしない (OFF)</button>
+                    </div>
+                </div>
+            </div>
+
                         <!-- Cost Section -->
             <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
                 <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
