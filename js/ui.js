@@ -202,7 +202,7 @@ function renderCommonTagBar() {
     // 2. {Category}
     html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
 
-    // 3. {コラボ} (IDリスト全体または設定されたカテゴリ対象)
+    // 3. {コラボ} (シンプル表示)
     const selectedNames = getSelectedCollabNames();
     const collabCat = titleTagConfig.collabCategoryName || '';
     const collabTitle = selectedNames 
@@ -211,7 +211,7 @@ function renderCommonTagBar() {
 
     html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
 
-    // 4. IDリストの各カテゴリ(タグ分けグループ)から動的ボタンを生成
+    // 4. IDリストの各タグ名を表示 -> クリックで該当メンバーの (半角空白)@XXX (半角空白)@YYY... を横並びコピー
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
         .map(cat => cat.name.trim())
@@ -219,20 +219,10 @@ function renderCommonTagBar() {
     const uniqueCats = [...new Set(catNames)];
 
     uniqueCats.forEach(catName => {
-        const catSelected = [];
-        (friendsConfig || []).forEach(cat => {
-            if (cat.name === catName) {
-                (cat.friends || []).forEach(f => {
-                    if (f.isSelected) {
-                        const n = f.name || f.twitch || '';
-                        if (n && !catSelected.includes(n)) catSelected.push(n);
-                    }
-                });
-            }
-        });
-        const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
+        const formattedCatNames = getCategoryCollabNames(catName);
         const catTagText = '{' + catName + '}';
-        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="IDリスト【${raidSoEscape(catName)}】:${membersStr}">＋${raidSoEscape(catTagText)}</button>`;
+        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
+        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
     });
 
     // 5. {date}
