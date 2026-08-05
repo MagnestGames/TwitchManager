@@ -6585,6 +6585,7 @@ function renderCpGroups() {
             <div style="display:flex; gap:4px;">
                 <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
                 <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
+                <button type="button" class="btn-secondary" onclick="openCpBulkEditModal('group', '${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
@@ -6635,6 +6636,7 @@ function renderCpTable() {
 
         html += `
         <tr class="cp-reward-row">
+            <td style="width:32px; text-align:center; vertical-align:middle;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
             <td class="cp-reward-main">
                 <div class="cp-reward-identity">
                     <div class="cp-reward-color" style="background:${color};"></div>
@@ -6662,3 +6664,181 @@ function renderCpTable() {
     });
     tbody.innerHTML = html;
 }
+
+
+/* --- CP Bulk Edit Logic --- */
+function updateCpBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+    const bar = document.getElementById('cp-bulk-action-bar');
+    const countEl = document.getElementById('cp-bulk-selected-count');
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+
+    if (countEl) countEl.textContent = checked.length;
+
+    if (bar) {
+        bar.style.display = checked.length > 0 ? 'flex' : 'none';
+    }
+
+    if (selectAllCheck && checkboxes.length > 0) {
+        selectAllCheck.checked = checked.length === checkboxes.length;
+        selectAllCheck.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+}
+
+function toggleSelectAllCpRewards(isChecked) {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = isChecked; });
+    updateCpBulkActionBar();
+}
+
+function clearCpRewardSelection() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+    if (selectAllCheck) { selectAllCheck.checked = false; selectAllCheck.indeterminate = false; }
+    updateCpBulkActionBar();
+}
+
+function toggleCpBulkColorSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-color-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkCostSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-cost-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function setCpBulkSwatch(hex) {
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const colorEnable = document.getElementById('cp-bulk-enable-color');
+    if (colorInput) colorInput.value = hex;
+    if (colorEnable && !colorEnable.checked) {
+        colorEnable.checked = true;
+        toggleCpBulkColorSection(true);
+    }
+}
+
+function openCpBulkEditModal(mode, groupId = null) {
+    const hiddenMode = document.getElementById('cp-bulk-mode');
+    const hiddenGroup = document.getElementById('cp-bulk-group-id');
+    const modalTitle = document.getElementById('cp-bulk-modal-title');
+    const enableColor = document.getElementById('cp-bulk-enable-color');
+    const enableCost = document.getElementById('cp-bulk-enable-cost');
+
+    if (hiddenMode) hiddenMode.value = mode;
+    if (hiddenGroup) hiddenGroup.value = groupId || '';
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoSelection'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditModalTitle', { count: targetRewardIds.length });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (!group) return;
+        targetRewardIds = group.rewardIds || [];
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoGroupRewards'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditGroupTitle', { name: cpGroupName(group) });
+    }
+
+    if (enableColor) { enableColor.checked = false; toggleCpBulkColorSection(false); }
+    if (enableCost) { enableCost.checked = false; toggleCpBulkCostSection(false); }
+
+    openModal('cpBulkEditModal');
+}
+
+async function applyCpBulkEdit() {
+    const mode = document.getElementById('cp-bulk-mode')?.value;
+    const groupId = document.getElementById('cp-bulk-group-id')?.value;
+    const enableColor = !!document.getElementById('cp-bulk-enable-color')?.checked;
+    const enableCost = !!document.getElementById('cp-bulk-enable-cost')?.checked;
+    const colorVal = document.getElementById('cp-bulk-color-input')?.value || '#9146FF';
+    const costVal = parseInt(document.getElementById('cp-bulk-cost-input')?.value || '50', 10) || 50;
+
+    if (!enableColor && !enableCost) {
+        showToast(cpCopy('bulkNoOptionsChecked'), 'warn');
+        return;
+    }
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (group) targetRewardIds = group.rewardIds || [];
+    }
+
+    const manageableIds = targetRewardIds.filter(id => isManageableCpRewardId(id));
+    const externalCount = targetRewardIds.length - manageableIds.length;
+
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('bulkExternalSkipped', { count: externalCount }), 'warn');
+        closeModal('cpBulkEditModal');
+        return;
+    }
+
+    const patchBody = {};
+    if (enableColor) patchBody.background_color = colorVal;
+    if (enableCost) patchBody.cost = costVal;
+
+    let successCount = 0;
+    try {
+        const broadcasterId = await ensureCpAuth();
+        for (let i = 0; i < manageableIds.length; i++) {
+            const rId = manageableIds[i];
+            showToast(cpCopy('bulkApplying', { current: i + 1, total: manageableIds.length }), 'info');
+            try {
+                const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(patchBody)
+                });
+                if (data.data?.[0]) {
+                    const idx = cpState.rewards.findIndex(r => r.id === rId);
+                    if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                    successCount++;
+                }
+            } catch (err) {
+                console.error('Bulk PATCH error for ID:', rId, err);
+            }
+            await new Promise(res => setTimeout(res, 60));
+        }
+
+        let toastMsg = cpCopy('bulkSuccess', { success: successCount, total: manageableIds.length });
+        if (externalCount > 0) {
+            toastMsg += ' ' + cpCopy('bulkExternalSkipped', { count: externalCount });
+        }
+        showToast(toastMsg, successCount > 0 ? 'success' : 'warn');
+    } catch (err) {
+        console.error('applyCpBulkEdit outer error:', err);
+        showToast(cpCopy('bulkFail') || '一括更新に失敗しました: ' + (err.message || ''), 'warn');
+    }
+
+    closeModal('cpBulkEditModal');
+    clearCpRewardSelection();
+    renderCpTab();
+}
+
+window.updateCpBulkActionBar = updateCpBulkActionBar;
+window.toggleSelectAllCpRewards = toggleSelectAllCpRewards;
+window.clearCpRewardSelection = clearCpRewardSelection;
+window.toggleCpBulkColorSection = toggleCpBulkColorSection;
+window.toggleCpBulkCostSection = toggleCpBulkCostSection;
+window.setCpBulkSwatch = setCpBulkSwatch;
+window.openCpBulkEditModal = openCpBulkEditModal;
+window.applyCpBulkEdit = applyCpBulkEdit;
