@@ -532,6 +532,7 @@
                                 <th class="cp-th-group" data-i18n="cpTab.thGroup">グループ</th>
                                 <th class="cp-th-status" data-i18n="cpTab.thStatus">状態</th>
                                 <th class="cp-th-toggle" data-i18n="cpTab.thToggle">ON/OFF</th>
+                                <th class="cp-th-pause-toggle" data-i18n="cpTab.thPauseToggle">一時停止</th>
                                 <th class="cp-th-actions" data-i18n="cpTab.thActions">操作</th>
                             </tr>
                         </thead>
@@ -870,11 +871,11 @@
             </div>
             <div style="margin-bottom: 14px;">
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <input type="color" id="cp-reward-color-input" value="#9146FF" style="width: 42px; height: 32px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent;" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
-                    <div id="cp-reward-color-swatch-preview" style="width: 28px; height: 28px; border-radius: 4px; background: #9146FF; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.25); flex-shrink: 0;" title="選択中のカラープレビュー"></div>
-                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" class="cd-input-field" style="width: 80px; padding: 5px 6px; font-size: 11.5px; font-family: monospace; text-transform: uppercase;" oninput="syncCpColorFromHex(this.value)">
-                    <span style="font-size: 11px; color: var(--text-muted);">カラーコード / パレット選択</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; height: 28px;">
+                    <input type="color" id="cp-reward-color-input" value="#9146FF" style="width: 36px; height: 28px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent; box-sizing: border-box; flex-shrink: 0;" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
+                    <div id="cp-reward-color-swatch-preview" style="width: 28px; height: 28px; border-radius: 4px; background: #9146FF; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.2); flex-shrink: 0; box-sizing: border-box;" title="選択中のカラープレビュー"></div>
+                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" class="cd-input-field" style="width: 76px; height: 28px; padding: 0 6px; font-size: 11.5px; font-family: monospace; text-transform: uppercase; box-sizing: border-box; flex-shrink: 0;" oninput="syncCpColorFromHex(this.value)">
+                    <span style="font-size: 11px; color: var(--text-muted); line-height: 28px; white-space: nowrap;">カラーコード / パレット選択</span>
                 </div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button type="button" class="cp-swatch" style="background:#9146FF; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
