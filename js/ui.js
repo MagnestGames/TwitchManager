@@ -6535,6 +6535,35 @@ function deleteCpGroup(groupId) {
     showToast(cpCopy('groupDeleteSuccess'));
 }
 
+
+function updateCpColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-reward-color-input');
+    const hexInput = document.getElementById('cp-reward-color-hex-input');
+    const previewBox = document.getElementById('cp-reward-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpColorPreview(cleanHex);
+    }
+}
+
+function setCpRewardColorSwatch(hex) {
+    updateCpColorPreview(hex);
+}
+
+window.updateCpColorPreview = updateCpColorPreview;
+window.syncCpColorFromHex = syncCpColorFromHex;
+window.setCpRewardColorSwatch = setCpRewardColorSwatch;
+
 function applyCpRewardTemplate(selectedRewardId) {
     if (!selectedRewardId) return;
     const targetReward = cpState.rewards.find(r => r.id === selectedRewardId);
@@ -6548,7 +6577,9 @@ function applyCpRewardTemplate(selectedRewardId) {
     if (titleInput) titleInput.value = targetReward.title || '';
     if (costInput) costInput.value = targetReward.cost || 50;
     if (promptInput) promptInput.value = targetReward.prompt || '';
-    if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = !!targetReward.is_paused;
+    if (targetReward.background_color) updateCpColorPreview(targetReward.background_color);
 
     const toastMsg = cpCopy('templateLoadedToast', { name: targetReward.title || '' });
     showToast(toastMsg);
@@ -6582,7 +6613,7 @@ function openCpRewardModal(rewardId = null) {
         titleInput.value = targetReward.title || '';
         costInput.value = targetReward.cost || 50;
         if (promptInput) promptInput.value = targetReward.prompt || '';
-        if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
+        updateCpColorPreview(targetReward.background_color || '#9146FF');
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
@@ -6590,7 +6621,9 @@ function openCpRewardModal(rewardId = null) {
         titleInput.value = '';
         costInput.value = 50;
         if (promptInput) promptInput.value = '';
-        if (colorInput) colorInput.value = '#9146FF';
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = false;
+        updateCpColorPreview('#9146FF');
 
         if (tplWrapper && tplSelect) {
             tplWrapper.style.display = 'block';
