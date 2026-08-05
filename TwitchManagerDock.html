@@ -868,9 +868,29 @@
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalPromptLabel">説明文 (任意):</label>
                 <input type="text" id="cp-reward-prompt-input" placeholder="例: 配信上で効果音が再生されます" data-i18n-placeholder="cpTab.rewardModalPromptPlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
             </div>
-            <div style="margin-bottom: 12px;">
+            <div style="margin-bottom: 14px;">
                 <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
-                <input type="color" id="cp-reward-color-input" value="#9146FF" style="height:32px; width:60px; cursor:pointer;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <input type="color" id="cp-reward-color-input" value="#9146FF" style="width: 42px; height: 32px; padding: 0; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; background: transparent;" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
+                    <div id="cp-reward-color-swatch-preview" style="width: 28px; height: 28px; border-radius: 4px; background: #9146FF; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.25); flex-shrink: 0;" title="選択中のカラープレビュー"></div>
+                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" class="cd-input-field" style="width: 80px; padding: 5px 6px; font-size: 11.5px; font-family: monospace; text-transform: uppercase;" oninput="syncCpColorFromHex(this.value)">
+                    <span style="font-size: 11px; color: var(--text-muted);">カラーコード / パレット選択</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="cp-swatch" style="background:#9146FF; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
+                    <button type="button" class="cp-swatch" style="background:#FF69B4; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
+                    <button type="button" class="cp-swatch" style="background:#00C875; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
+                    <button type="button" class="cp-swatch" style="background:#3B82F6; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
+                    <button type="button" class="cp-swatch" style="background:#FF9800; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
+                    <button type="button" class="cp-swatch" style="background:#E93D3A; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
+                    <button type="button" class="cp-swatch" style="background:#26262C; width:22px; height:22px; border-radius:4px; border:1px solid #ffffff; cursor:pointer;" onclick="setCpRewardColorSwatch('#26262C')" title="#26262C (Dark)"></button>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
+                    <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
+                </label>
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
