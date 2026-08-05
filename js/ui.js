@@ -593,6 +593,13 @@
             el.style.display = 'flex';
             el.classList.add('modal-open');
         }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.id) {
+                closeModal(e.target.id);
+            }
+        });
+
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
