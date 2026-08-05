@@ -4739,7 +4739,11 @@
             // 9. rewards created by TwitchManager
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
-                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
+                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
+                if (typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = merged;
+                }
             }
         }
         async function copyBackupToClipboard() {
@@ -6054,6 +6058,11 @@ async function fetchTwitchCustomRewards() {
         const broadcasterId = await ensureCpAuth();
         const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`);
         cpState.rewards = data.data || [];
+        (cpState.rewards || []).forEach(reward => {
+            if (isAppCreatedReward(reward)) {
+                markRewardAsAppCreated(reward.id);
+            }
+        });
         loadCpGroupsFromStorage();
         reconcileCpGroupsWithRewards();
         renderCpTab();
