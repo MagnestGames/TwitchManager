@@ -784,7 +784,7 @@
     </div>
 
     <!-- CP Group Modal -->
-    <div id="cpGroupModal" class="modal-overlay">
+    <div id="cpGroupModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpGroupModal')">
         <div class="modal-content" style="max-width: 480px;">
             <button type="button" class="modal-close-top" onclick="closeModal('cpGroupModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
             <h3 id="cp-group-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.groupModalTitle">グループ設定</h3>
@@ -841,7 +841,7 @@
     </div>
 
     <!-- CP Reward Modal (Create & Edit) -->
-    <div id="cpRewardModal" class="modal-overlay">
+    <div id="cpRewardModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpRewardModal')">
         <div class="modal-content" style="max-width: 480px;">
             <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
             <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
@@ -949,7 +949,7 @@
 
 
     <!-- CP Bulk Edit Modal -->
-    <div id="cpBulkEditModal" class="modal-overlay">
+    <div id="cpBulkEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpBulkEditModal')">
         <div class="modal-content" style="max-width: 460px;">
             <button type="button" class="modal-close-top" onclick="closeModal('cpBulkEditModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
             <h3 id="cp-bulk-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.bulkEditModalTitle">チャンネルポイントの一括編集</h3>
