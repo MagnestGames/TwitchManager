@@ -6949,11 +6949,13 @@ async function openTwitchImageResizerTool() {
     const url = 'https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html';
     const confirmTitle = cpCopy('imageResizerConfirmTitle');
     const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const devNote = cpCopy('imageResizerDeveloperNote');
     const hintMsg = cpCopy('imageResizerPopupHint');
     const okText = langMap[currentLang]?.extended?.ok || '開く';
     const cancelText = langMap[currentLang]?.extended?.cancelBtn || 'キャンセル';
 
     const messageHtml = `<div>${raidSoEscape(confirmMsg)}</div>` +
+        `<div style="font-size: 11.5px; color: var(--command-accent, #c084fc); margin-top: 4px; font-weight: bold;">${raidSoEscape(devNote)}</div>` +
         `<div style="margin-top: 10px; word-break: break-all;">` +
         `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--twitch-purple); font-weight: bold; text-decoration: underline; font-size: 12px;">` +
         `${url} ↗</a></div>` +
