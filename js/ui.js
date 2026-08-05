@@ -77,21 +77,28 @@ function saveTitleTagConfig() {
 
 function getSelectedCollabNames() {
     try {
-        const selected = [];
+        const collabCat = titleTagConfig.collabCategoryName || '';
+        let selected = [];
+        let allInCat = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            if (collabCat && cat.name !== collabCat) return;
             (cat.friends || []).forEach(f => {
-                if (f.isSelected) {
-                    const name = f.name || f.twitch || '';
-                    if (name && !selected.includes(name)) selected.push(name);
+                const name = f.name || f.twitch || '';
+                if (name) {
+                    if (!allInCat.includes(name)) allInCat.push(name);
+                    if (f.isSelected && !selected.includes(name)) selected.push(name);
                 }
             });
         });
-        if (selected.length === 0) return '';
+        // もしチェック選択中が無ければ登録一覧メンバーを採用
+        const targetList = selected.length > 0 ? selected : allInCat;
+        if (targetList.length === 0) return '';
+
         // 名前順 (A-Z / アルファベット昇順) にソート
-        selected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        // 「（半角空白）@名前」形式で連結 (例: " @AAA @BBBB @CCC")
-        return selected.map(name => ' @' + name.replace(/^@/, '')).join('');
+        targetList.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        // 「（半角空白）@名前」形式で連結 (例: " @XXX @OOO")
+        return targetList.map(name => ' @' + name.replace(/^@/, '')).join('');
     } catch (e) {
         return '';
     }
@@ -234,6 +241,29 @@ function renderCommonTagBar() {
     bar.innerHTML = html;
 }
 
+function getCategoryCollabNames(catName) {
+    try {
+        let selected = [];
+        let allInCat = [];
+        (friendsConfig || []).forEach(cat => {
+            if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+                (cat.friends || []).forEach(f => {
+                    const n = f.name || f.twitch || '';
+                    if (n) {
+                        if (!allInCat.includes(n)) allInCat.push(n);
+                        if (f.isSelected && !selected.includes(n)) selected.push(n);
+                    }
+                });
+            }
+        });
+        const targetList = selected.length > 0 ? selected : allInCat;
+        if (targetList.length === 0) return '';
+        targetList.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return targetList.map(n => ' @' + n.replace(/^@/, '')).join('');
+    } catch (e) {
+        return '';
+    }
+}
 function showCollabHoverHint(tagNameOrCat) {
     try {
         let msg = '';
