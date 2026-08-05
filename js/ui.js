@@ -239,6 +239,82 @@ function getCategoryCollabNames(catName) {
         return '';
     }
 }
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    loadTitleTagConfig();
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
+    (friendsConfig || []).forEach(cat => {
+        if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+            const catName = cat.name.trim();
+            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
+                const catVal = getCategoryCollabNames(catName);
+                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
+                result = result.replace(reg, catVal);
+            }
+        }
+    });
+
+    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    const gameVal = context.game !== undefined ? context.game : '';
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    return result;
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+window.escapeRegExp = escapeRegExp;
+
 function showCollabHoverHint(tagNameOrCat) {
     try {
         let msg = '';
@@ -997,6 +1073,11 @@ window.copyCommonTag = copyCommonTag;
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
+            if (id === 'titleTagModal' && typeof saveTitleTagModalSettings === 'function') {
+                try {
+                    saveTitleTagModalSettings(true);
+                } catch (e) {}
+            }
             el.style.display = 'none';
             el.classList.remove('modal-open');
         }
@@ -7146,18 +7227,37 @@ function deleteCustomTitleTagRow(idx) {
     renderTitleTagModalRows();
 }
 
-function saveTitleTagModalSettings() {
+function updateAllTitlePreviews() {
+    loadTitleTagConfig();
+    if (!Array.isArray(config)) return;
+    config.forEach((c, ci) => {
+        if (!c || !Array.isArray(c.records)) return;
+        c.records.forEach((r, ri) => {
+            const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+            if (previewEl) {
+                const game = r.game || '';
+                const resolved = resolveStreamTitleTemplate(r.title || '', { game });
+                previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+            }
+        });
+    });
+}
+window.updateAllTitlePreviews = updateAllTitlePreviews;
+
+function saveTitleTagModalSettings(silent = false) {
     const nameInputs = document.querySelectorAll('.tag-row-name');
     const valInputs = document.querySelectorAll('.tag-row-val');
-    const newTags = [];
-    nameInputs.forEach((nInput, idx) => {
-        const name = (nInput.value || '').trim();
-        const value = (valInputs[idx]?.value || '');
-        if (name) {
-            newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
-        }
-    });
-    titleTagConfig.customTags = newTags;
+    if (nameInputs && nameInputs.length > 0) {
+        const newTags = [];
+        nameInputs.forEach((nInput, idx) => {
+            const name = (nInput.value || '').trim();
+            const value = (valInputs[idx]?.value || '');
+            if (name) {
+                newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
+            }
+        });
+        titleTagConfig.customTags = newTags;
+    }
 
     const collabInput = document.getElementById('title-tag-collab-name-input');
     const catInput = document.getElementById('title-tag-category-name-input');
@@ -7165,9 +7265,12 @@ function saveTitleTagModalSettings() {
     if (catInput && catInput.value.trim()) titleTagConfig.categoryTagName = catInput.value.trim().substring(0, 10);
 
     saveTitleTagConfig();
-    closeModal('titleTagModal');
-    showToast('識別タグ・言葉セットを保存しました', 'success');
-    render(); // Re-render main tab template cards to reflect new chips & preview
+    if (!silent) {
+        closeModal('titleTagModal');
+        showToast('識別タグ・言葉セットを保存しました', 'success');
+    }
+    renderCommonTagBar();
+    updateAllTitlePreviews();
 }
 
 window.openTitleTagModal = openTitleTagModal;
