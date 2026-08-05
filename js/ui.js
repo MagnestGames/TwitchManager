@@ -6655,6 +6655,35 @@ function syncCpColorFromHex(val) {
 }
 
 
+
+function updateCpBulkColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const hexInput = document.getElementById('cp-bulk-color-hex-input');
+    const previewBox = document.getElementById('cp-bulk-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpBulkColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpBulkColorPreview(cleanHex);
+    }
+}
+
+function setCpBulkColorSwatch(hex) {
+    updateCpBulkColorPreview(hex);
+}
+
+window.updateCpBulkColorPreview = updateCpBulkColorPreview;
+window.syncCpBulkColorFromHex = syncCpBulkColorFromHex;
+window.setCpBulkColorSwatch = setCpBulkColorSwatch;
+
 function renderCpUsedColorSwatches(containerId, isBulk = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
