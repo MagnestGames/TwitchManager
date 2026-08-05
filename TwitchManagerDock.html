@@ -873,6 +873,7 @@
                     <input type="color" id="cp-reward-color-input" value="#9146FF" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
                     <div id="cp-reward-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
                     <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpColorFromHex(this.value)">
+                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
                     <span>カラーコード / パレット選択</span>
                 </div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -893,6 +894,12 @@
                 <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
                     <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
                     <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
+                </label>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
+                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
                 </label>
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
