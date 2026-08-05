@@ -308,10 +308,8 @@ function renderCommonTagBar() {
     // 3. {date}
     mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
 
-    // 4. コラボ・IDリスト用タグ（改行して配置 & 開閉アコーディオン）
+    // 4. コラボ・IDリスト用タグ（枠なし・開閉なし・改行表示）
     let collabHtml = '';
-
-    // IDリストの各カテゴリタグボタン (「未分類」などの除外)
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
         .map(cat => cat.name.trim())
@@ -325,22 +323,10 @@ function renderCommonTagBar() {
         collabHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
     });
 
-    const collabTotalCount = uniqueCats.length;
-    const arrow = isCollabTagGroupExpanded ? '▼' : '▶';
-
-    const fullHtml = `
-        <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:4px;">
-            ${mainHtml}
-        </div>
-        <div style="margin-top:4px; padding:6px 8px; background:var(--bg-item, rgba(0,0,0,0.25)); border:1px solid var(--border-color, rgba(255,255,255,0.12)); border-radius:6px; display:flex; flex-direction:column; gap:4px;">
-            <div style="display:flex; align-items:center;">
-                <button type="button" class="btn-secondary" style="font-size:10px; padding:2px 8px; border-radius:10px; opacity:0.9; cursor:pointer;" onclick="toggleCollabTagGroup()">
-                    ${arrow} コラボ・IDリストタグ (${collabTotalCount}件)
-                </button>
-            </div>
-            ${isCollabTagGroupExpanded ? `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:2px;">${collabHtml}</div>` : ''}
-        </div>
-    `;
+    let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
+    if (collabHtml) {
+        fullHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px;">${collabHtml}</div>`;
+    }
 
     bar.innerHTML = fullHtml;
 }
