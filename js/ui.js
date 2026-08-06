@@ -59,6 +59,9 @@
             updateLanguageButton();
 
             // 自動ローカライズ (data-i18n)
+            if (typeof streamStatsCache !== 'undefined' && streamStatsCache.data && typeof renderStreamStatsPopover === 'function') {
+                renderStreamStatsPopover(streamStatsCache.data);
+            }
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const keys = el.getAttribute('data-i18n').split('.');
                 let val = L;
@@ -5532,6 +5535,9 @@ function applyRaidSoAvailableSoundFiles(sources) {
 
 function readRaidSoSoundFolderSourcesFromIframe(folderUrl) {
             return new Promise(resolve => {
+                if (!folderUrl || !folderUrl.href || folderUrl.href === window.location.href) {
+                    return resolve({ sources: [], readable: false });
+                }
                 const iframe = document.createElement('iframe');
                 let done = false;
                 const finish = result => {
