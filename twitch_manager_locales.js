@@ -2,6 +2,22 @@ const I18N_DATA = {
     "ja": {
         "ui": {
             "titleTagModalTitle": "配信タイトルの識別タグ・言葉セット (単語帳)",
+            "streamStats": {
+                "title": "配信時間の統計",
+                "past7Days": "過去7日間",
+                "thisWeek": "今週 (月〜日)",
+                "thisMonth": "今月 ({month})",
+                "incompleteBadge": "一部のみ/API範囲外",
+                "incompleteNote": "※Twitchアーカイブ保存期間（14~60日）外の配信はAPIで取得できないためグレーアウトしています。",
+                "loading": "配信時間を集計中...",
+                "noData": "アーカイブデータなし",
+                "liveNow": "（配信中を含む）",
+                "archiveNote": "※公開されているアーカイブ動画の合計時間",
+                "startDateNote": "※日付を跨ぐ配信の長さは「配信開始日」に合算されます。",
+                "dailyChartTitle": "日別配信時間グラフ",
+                "selectPrompt": "※タップでグラフ切替",
+                "tooltipBtn": "配信時間の統計"
+            },
             "commonTagBarTitle": "共通タグ（クリックでコピー → タイトルに貼り付け）",
             "rawIdListCopyBtn": "@ID一覧",
             "titleTagGuide": "タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。",
@@ -1392,6 +1408,22 @@ const I18N_DATA = {
     "en": {
         "ui": {
             "titleTagModalTitle": "Stream Title Placeholder & Word Set Manager",
+            "streamStats": {
+                "title": "Stream Duration Stats",
+                "past7Days": "Past 7 Days",
+                "thisWeek": "This Week (Mon-Sun)",
+                "thisMonth": "This Month ({month})",
+                "incompleteBadge": "Incomplete / Out of API range",
+                "incompleteNote": "* Streams older than Twitch archive retention period (14-60 days) cannot be fetched via API and are grayed out.",
+                "loading": "Calculating stream stats...",
+                "noData": "No archive data available",
+                "liveNow": "(Includes live stream)",
+                "archiveNote": "* Total duration of published stream archives",
+                "startDateNote": "* Streams spanning past midnight are counted toward the start date.",
+                "dailyChartTitle": "Daily Stream Duration Chart",
+                "selectPrompt": "* Click item to switch chart",
+                "tooltipBtn": "Stream Duration Stats"
+            },
             "commonTagBarTitle": "Common Tags (Click to copy → Paste to title)",
             "rawIdListCopyBtn": "@ID List",
             "titleTagGuide": "Insert tags like {識別} or {カテゴリ} into titles to automatically resolve saved phrases or stream metadata.",
@@ -2782,6 +2814,22 @@ const I18N_DATA = {
     "zh": {
         "ui": {
             "titleTagModalTitle": "直播标题标识标签与词汇集设置",
+            "streamStats": {
+                "title": "直播时长统计",
+                "past7Days": "过去7天",
+                "thisWeek": "本周 (周一至周日)",
+                "thisMonth": "本月 ({month})",
+                "incompleteBadge": "部分/超API范围",
+                "incompleteNote": "※超出Twitch归档保存期限(14~60天)的直播无法通过API获取，故已灰显。",
+                "loading": "正在计算直播时长...",
+                "noData": "无归档数据",
+                "liveNow": "（含直播中）",
+                "archiveNote": "※基于已公开的归档视频计算的总时长",
+                "startDateNote": "※跨日直播的总时长将计入「开始直播」的日期。",
+                "dailyChartTitle": "每日直播时长图表",
+                "selectPrompt": "※点击切换图表",
+                "tooltipBtn": "直播时长统计"
+            },
             "commonTagBarTitle": "常用标签（点击复制 → 粘贴至标题）",
             "rawIdListCopyBtn": "@ID 列表",
             "titleTagGuide": "在标题中加入 {識別} 或 {カテゴリ} 等标签，系统将自动替换为预设词汇或直播数据。",
