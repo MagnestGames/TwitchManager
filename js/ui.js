@@ -2405,11 +2405,13 @@
 
         
         
+        
+        
         const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
 
-        function renderMarkdownToHtml(src) {
+        function renderMarkdownToHtml(src, memoIndex = null) {
             if (!src) return '<div style="color:var(--text-muted); font-size:11px; font-style:italic;">(空のメモです。「編集」ボタンから書き込みできます)</div>';
             let html = raidSoEscape(src);
 
@@ -2430,12 +2432,18 @@
             html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
             html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
-            // Checkboxes / Tasks
-            html = html.replace(/^- \[x\] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" checked disabled> <span class="md-done">$1</span></li>');
-            html = html.replace(/^- \[ \] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" disabled> $1</li>');
-
-            // Bullet Lists
-            html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+            // Interactive Task Checkboxes
+            let taskIdx = 0;
+            html = html.replace(/^- \[(x| )\] (.*$)/gim, (match, checkedChar, itemText) => {
+                const isChecked = checkedChar === 'x';
+                const currentTaskIdx = taskIdx++;
+                const onclickAttr = (memoIndex !== null && memoIndex !== undefined)
+                    ? `onclick="toggleMemoTaskCheckbox(${memoIndex}, ${currentTaskIdx}, this.checked)"`
+                    : 'disabled';
+                const checkedAttr = isChecked ? 'checked' : '';
+                const spanClass = isChecked ? 'class="md-done"' : '';
+                return `<div class="md-task-item"><input type="checkbox" ${checkedAttr} ${onclickAttr}><span ${spanClass}>${itemText}</span></div>`;
+            });
 
             // Blockquotes
             html = html.replace(/^&gt; (.*$)/gim, '<blockquote class="md-quote">$1</blockquote>');
@@ -2446,11 +2454,30 @@
             // Links
             html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
 
-            // Line Breaks
+            // Line-by-line List & Nesting Processor
             const lines = html.split('\n');
             const processed = lines.map(line => {
+                const indentMatch = line.match(/^(\s+)/);
+                const indentSpaces = indentMatch ? indentMatch[1].replace(/\t/g, '  ').length : 0;
+                const indentLevel = Math.min(Math.floor(indentSpaces / 2), 4);
+                const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+
                 const trimmed = line.trim();
-                if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+                if (!trimmed) return '<div style="height: 4px;"></div>';
+
+                // Numbered list (e.g. 1. Item, 2) Item)
+                const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+                if (olMatch) {
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${olMatch[1]}.</span> <span>${olMatch[2]}</span></div>`;
+                }
+
+                // Bullet list (e.g. - Item, * Item)
+                const ulMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+                if (ulMatch) {
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span> <span>${ulMatch[1]}</span></div>`;
+                }
+
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
                     return line;
                 }
                 return line + '<br>';
@@ -2459,6 +2486,30 @@
             return processed.join('');
         }
         window.renderMarkdownToHtml = renderMarkdownToHtml;
+
+        function toggleMemoTaskCheckbox(memoIndex, taskIndex, isChecked) {
+            const memo = memoConfig[memoIndex];
+            if (!memo || !memo.content) return;
+
+            let currentTaskCount = 0;
+            const lines = memo.content.split('\n');
+            const updatedLines = lines.map(line => {
+                const match = line.match(/^(- \[(?:x| )\] )(.*)$/);
+                if (match) {
+                    if (currentTaskCount === taskIndex) {
+                        currentTaskCount++;
+                        return isChecked ? `- [x] ${match[2]}` : `- [ ] ${match[2]}`;
+                    }
+                    currentTaskCount++;
+                }
+                return line;
+            });
+
+            memo.content = updatedLines.join('\n');
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoTaskCheckbox = toggleMemoTaskCheckbox;
 
         function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
             const textarea = document.getElementById(`memo-input-${memoIndex}`);
@@ -2511,6 +2562,7 @@
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="箇条書きリスト">• リスト</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="番号付きリスト">1. 番号</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="タスクチェックボックス">☑ タスク</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="リンク" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}リンク</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="コード">&lt;&gt; コード</button>
@@ -2519,7 +2571,7 @@
 
                 const bodyContentHtml = mode === 'edit'
                     ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
-                    : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '')}</div>`;
+                    : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '', i)}</div>`;
 
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
