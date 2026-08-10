@@ -629,7 +629,8 @@
         }
 
         .category-box.closed .category-records,
-        .category-box.closed textarea {
+        .category-box.closed textarea,
+.category-box.closed .memo-markdown-preview {
             display: none !important;
         }
 
