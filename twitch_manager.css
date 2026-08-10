@@ -5653,3 +5653,30 @@ body.light-theme .title-preview-box {
     font-size: 12px;
     flex-shrink: 0;
 }
+
+
+.memo-global-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--bg-base);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+#global-memo-toolbar.memo-toolbar {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 6px;
+    background: var(--bg-item);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}

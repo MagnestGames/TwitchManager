@@ -3075,57 +3075,45 @@ window.copyCommonTag = copyCommonTag;
             }
         }
         window.handleMemoKeydown = handleMemoKeydown;
+        let activeMemoIndex = 0;
 
-        function toggleMemoTaskCheckbox(memoIndex, taskIndex, isChecked) {
-            const memo = memoConfig[memoIndex];
-            if (!memo || !memo.content) return;
-
-            let currentTaskCount = 0;
-            const lines = memo.content.split('\n');
-            const updatedLines = lines.map(line => {
-                const match = line.match(/^(- \[(?:x| )\] )(.*)$/);
-                if (match) {
-                    if (currentTaskCount === taskIndex) {
-                        currentTaskCount++;
-                        return isChecked ? `- [x] ${match[2]}` : `- [ ] ${match[2]}`;
-                    }
-                    currentTaskCount++;
-                }
-                return line;
-            });
-
-            memo.content = updatedLines.join('\n');
-            saveMemoLocal(false);
-            renderMemo();
+        function setActiveMemoIndex(idx) {
+            activeMemoIndex = idx;
         }
-        window.toggleMemoTaskCheckbox = toggleMemoTaskCheckbox;
+        window.setActiveMemoIndex = setActiveMemoIndex;
 
-        function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
-            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+        function insertGlobalMarkdownSyntax(prefix, suffix = '') {
+            let targetIdx = activeMemoIndex;
+            if (targetIdx < 0 || targetIdx >= memoConfig.length) {
+                targetIdx = 0;
+            }
+            if (!memoConfig[targetIdx]) return;
+
+            if (memoConfig[targetIdx].mode === 'preview') {
+                memoConfig[targetIdx].mode = 'edit';
+                renderMemo();
+            }
+
+            const textarea = document.getElementById(`memo-input-${targetIdx}`);
             if (!textarea) return;
+
             const start = textarea.selectionStart || 0;
             const end = textarea.selectionEnd || 0;
             const text = textarea.value || '';
             const selectedText = text.substring(start, end) || 'テキスト';
             const replacement = prefix + selectedText + suffix;
+
             textarea.value = text.substring(0, start) + replacement + text.substring(end);
             textarea.selectionStart = start + prefix.length;
             textarea.selectionEnd = start + prefix.length + selectedText.length;
             textarea.focus();
-            memoConfig[memoIndex].content = textarea.value;
+
+            memoConfig[targetIdx].content = textarea.value;
             saveMemoLocal();
         }
-        window.insertMarkdownSyntax = insertMarkdownSyntax;
+        window.insertGlobalMarkdownSyntax = insertGlobalMarkdownSyntax;
 
-        function toggleMemoMode(memoIndex, mode) {
-            if (!memoConfig[memoIndex]) return;
-            memoConfig[memoIndex].mode = mode;
-            saveMemoLocal(false);
-            renderMemo();
-        }
-        window.toggleMemoMode = toggleMemoMode;
-
-function renderMemo() {
+        function renderMemo() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
                 c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
@@ -3145,21 +3133,8 @@ function renderMemo() {
                     ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_EYE}${raidSoEscape(uiText("memoPreview"))}</button>`
                     : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_PENCIL}${raidSoEscape(uiText("memoEdit"))}</button>`;
 
-                const toolbarHtml = `
-                    <div class="memo-toolbar">
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("memoBold"))}"><b>B</b> ${raidSoEscape(uiText("memoBold"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("memoList"))}">• ${raidSoEscape(uiText("memoList"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("memoOl"))}">1. ${raidSoEscape(uiText("memoOl"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("memoTask"))}">☑ ${raidSoEscape(uiText("memoTask"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("memoLink"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("memoCode"))}</button>
-                    </div>
-                `;
-
                 const bodyContentHtml = mode === 'edit'
-                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
+                    ? `<textarea id="memo-input-${i}" style="min-height:150px;" onfocus="setActiveMemoIndex(${i})" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
                     : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '', i)}</div>`;
 
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
