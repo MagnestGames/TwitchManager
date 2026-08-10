@@ -2647,8 +2647,8 @@
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'preview'
-                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_PENCIL}${raidSoEscape(uiText("extended.memoEdit"))}</button>`
-                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_EYE}${raidSoEscape(uiText("extended.memoPreview"))}</button>`;
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
 
                 const toolbarHtml = `
                     <div class="memo-toolbar">

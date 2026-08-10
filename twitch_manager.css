@@ -633,13 +633,13 @@
             display: none !important;
         }
 
-        .category-name span::before {
+        .category-name > div:first-child > span:first-child::before {
             content: "▼ ";
             display: inline-block;
             transition: transform 0.2s;
         }
 
-        .category-box.closed .category-name span::before {
+        .category-box.closed .category-name > div:first-child > span:first-child::before {
             transform: rotate(-90deg);
         }
 
