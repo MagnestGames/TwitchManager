@@ -5475,3 +5475,67 @@ body.light-theme .title-preview-box {
     border-left-color: #7e22ce;
     color: #374151;
 }
+
+/* Initial Loading Overlay Screen */
+#app-loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-base, #0e0e10);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+#app-loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(145, 71, 255, 0.2);
+    border-top-color: var(--twitch-purple, #9146ff);
+    border-radius: 50%;
+    animation: appSpinnerRotate 0.8s linear infinite;
+}
+
+@keyframes appSpinnerRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.loading-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-main, #efeff1);
+    letter-spacing: 0.5px;
+}
+
+.loading-sub {
+    font-size: 11px;
+    color: var(--text-muted, #adadb8);
+}
+

@@ -200,6 +200,7 @@
         async function esSubscribe(type, version, condition) {
             if (!_esSessionId || !settings.clientId || !settings.token) return;
             try {
+                await new Promise(res => setTimeout(res, 100));
                 await apiRequest('/eventsub/subscriptions', 'POST', {
                     type, version, condition,
                     transport: { method: 'websocket', session_id: _esSessionId }
