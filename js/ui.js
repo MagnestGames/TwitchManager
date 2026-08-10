@@ -87,7 +87,7 @@ function getSelectedCollabNames() {
         const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
         const activeTags = Array.from(activeTagEls).map(el => el.value);
 
-        const selectedIds = [];
+        const selectedHandles = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
             if (collabCat && cat.name !== collabCat) return;
@@ -96,18 +96,17 @@ function getSelectedCollabNames() {
 
             (cat.friends || []).forEach(f => {
                 if (f.isSelected || isCatChecked) {
-                    const rawVal = f.twitch || f.name || f.id || '';
-                    const twitchId = extractTwitchId(rawVal);
-                    if (twitchId && !selectedIds.includes(twitchId)) {
-                        selectedIds.push(twitchId);
+                    const handle = getFriendHandle(f);
+                    if (handle && !selectedHandles.includes(handle)) {
+                        selectedHandles.push(handle);
                     }
                 }
             });
         });
 
-        if (selectedIds.length === 0) return '';
-        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        return selectedIds.map(id => ' @' + id).join('');
+        if (selectedHandles.length === 0) return '';
+        selectedHandles.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedHandles.map(h => ' ' + h).join('');
     } catch (e) {
         return '';
     }
@@ -120,28 +119,71 @@ function extractTwitchId(str) {
     val = val.replace(/^twitch\.tv\//i, '');
     val = val.split('/')[0].split('?')[0].split('#')[0];
     val = val.replace(/^@/, '').trim();
+    if (!/^[a-zA-Z0-9_]{3,25}$/.test(val)) {
+        return '';
+    }
     return val;
 }
 window.extractTwitchId = extractTwitchId;
 
+function getFriendTwitchId(f) {
+    if (!f) return '';
+    const fromTwitch = extractTwitchId(f.twitch);
+    if (fromTwitch) return fromTwitch;
+    const fromName = extractTwitchId(f.name);
+    if (fromName) return fromName;
+    const fromId = extractTwitchId(f.id);
+    if (fromId) return fromId;
+
+    // Cross-category lookup by name if twitch ID is set in another category
+    if (f.name && Array.isArray(friendsConfig)) {
+        const cleanMyName = String(f.name).replace(/さん$/i, '').trim().toLowerCase();
+        for (const cat of friendsConfig) {
+            for (const item of (cat.friends || [])) {
+                if (item === f) continue;
+                const cleanItemName = String(item.name || '').replace(/さん$/i, '').trim().toLowerCase();
+                if (cleanMyName && cleanItemName && (cleanMyName === cleanItemName || cleanMyName.includes(cleanItemName) || cleanItemName.includes(cleanMyName))) {
+                    const matchedId = extractTwitchId(item.twitch || item.id);
+                    if (matchedId) return matchedId;
+                }
+            }
+        }
+    }
+    return '';
+}
+window.getFriendTwitchId = getFriendTwitchId;
+
+function getFriendHandle(f) {
+    if (!f) return '';
+    const twitchId = getFriendTwitchId(f);
+    if (twitchId) {
+        return '@' + twitchId;
+    }
+    const name = String(f.name || f.displayName || '').trim();
+    if (name) {
+        return '@' + name.replace(/^@/, '');
+    }
+    return '';
+}
+window.getFriendHandle = getFriendHandle;
+
 function getCategoryCollabNames(catName) {
     try {
-        const selectedIds = [];
+        const selectedHandles = [];
         (friendsConfig || []).forEach(cat => {
             if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
                 (cat.friends || []).forEach(f => {
-                    const rawVal = f.twitch || f.name || f.id || '';
-                    const twitchId = extractTwitchId(rawVal);
-                    if (twitchId && !selectedIds.includes(twitchId)) {
-                        selectedIds.push(twitchId);
+                    const handle = getFriendHandle(f);
+                    if (handle && !selectedHandles.includes(handle)) {
+                        selectedHandles.push(handle);
                     }
                 });
             }
         });
 
-        if (selectedIds.length === 0) return '';
-        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        return selectedIds.map(id => ' @' + id).join('');
+        if (selectedHandles.length === 0) return '';
+        selectedHandles.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedHandles.map(h => ' ' + h).join('');
     } catch (e) {
         return '';
     }
@@ -374,16 +416,7 @@ function renderCommonTagBar() {
         const idListStr = formattedCatNames ? formattedCatNames.trim() : '(登録IDなし)';
         const catTagText = '{' + catName + '}';
         const hoverTooltip = `【${raidSoEscape(catName)}】登録ID: ${raidSoEscape(idListStr)}`;
-        collabHtml += `
-            <div class="tag-chip-segmented" title="${hoverTooltip}" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
-                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー | 登録ID: ${raidSoEscape(idListStr)}" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
-                    ＋${raidSoEscape(catTagText)}
-                </button>
-                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー | 登録ID: ${raidSoEscape(idListStr)}" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
-                    ${I18N_DATA[currentLang]?.ui?.rawIdListCopyBtn || '@ID一覧'}
-                </button>
-            </div>
-        `;
+        collabHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー | 登録ID: ${raidSoEscape(idListStr)}">＋${raidSoEscape(catTagText)}</button>`;
     });
 
     let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
@@ -1567,6 +1600,7 @@ window.copyCommonTag = copyCommonTag;
             const I = L.idList || langMap.ja.idList;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -4270,32 +4304,9 @@ window.copyCommonTag = copyCommonTag;
             }
         }
 
-        async function handleRaidSoOutboundRaidEvent(event) {
-            const targetLogin = event.to_broadcaster_user_login;
-            const targetName = event.to_broadcaster_user_name;
-            const targetId = event.to_broadcaster_user_id;
+        function handleRaidSoOutboundRaidEvent(event) {
+            const targetName = event.to_broadcaster_user_name || event.to_broadcaster_user_login;
             raidSoLog(uiText('raidSo.outboundRaidDetected', { user: targetName }));
-            
-            if (raidSoSettings.autoSendRaidUrlEnabled) {
-                const url = `https://www.twitch.tv/${targetLogin}`;
-                const rawTemplate = raidSoSettings.outboundRaidTemplate || raidSoText().outboundRaidDefaultTemplate;
-                const channel = await getRaidSoChannel(targetId).catch(() => null);
-                const data = {
-                    username: targetLogin,
-                    displayName: targetName,
-                    game: channel?.game_name || '',
-                    title: channel?.title || '',
-                    viewers: event.viewers || '',
-                    url: url
-                };
-                const message = renderRaidSoTemplate(rawTemplate, data);
-                try {
-                    await sendRaidSoChat(message);
-                    raidSoLog(uiText('raidSo.outboundRaidUrlSent', { message }));
-                } catch (e) {
-                    raidSoLog(uiText('raidSo.outboundRaidUrlFailed', { error: localizeRaidSoError(e) }), 'warn');
-                }
-            }
         }
 
         async function getRaidSoUser(loginOrId) {
@@ -7946,76 +7957,100 @@ window.saveTitleTagModalSettings = saveTitleTagModalSettings;
 
 let pendingDedupConflicts = [];
 
+function extractXId(str) {
+    if (!str) return '';
+    let val = String(str).trim();
+    val = val.replace(/^https?:\/\/(www\.)?x\.com\//i, '');
+    val = val.replace(/^https?:\/\/(www\.)?twitter\.com\//i, '');
+    val = val.split('/')[0].split('?')[0].split('#')[0];
+    val = val.replace(/^@/, '').trim();
+    if (!/^[a-zA-Z0-9_]{1,30}$/.test(val)) return '';
+    return val.toLowerCase();
+}
+
+function cleanBaseFriendName(name) {
+    if (!name) return '';
+    let val = String(name).trim();
+    val = val.replace(/[\(\（].*?[\)\）]/g, '');
+    val = val.replace(/さん$/i, '');
+    val = val.replace(/^@/, '');
+    return val.trim().toLowerCase();
+}
+
+function areFriendsSamePerson(f1, f2) {
+    if (!f1 || !f2) return false;
+    
+    // 1. Twitch ID match
+    const t1 = getFriendTwitchId(f1);
+    const t2 = getFriendTwitchId(f2);
+    if (t1 && t2 && t1.toLowerCase() === t2.toLowerCase()) return true;
+
+    // 2. X (Twitter) ID match
+    const x1 = extractXId(f1.x);
+    const x2 = extractXId(f2.x);
+    if (x1 && x2 && x1 === x2) return true;
+
+    // 3. Base Name match
+    const n1 = cleanBaseFriendName(f1.name || f1.displayName);
+    const n2 = cleanBaseFriendName(f2.name || f2.displayName);
+    if (n1 && n2) {
+        if (n1 === n2 || (n1.length >= 2 && n2.length >= 2 && (n1.includes(n2) || n2.includes(n1)))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function checkAndConsolidateDuplicateIds() {
     if (!Array.isArray(friendsConfig)) return;
 
-    const map = new Map();
-
+    const allItems = [];
     friendsConfig.forEach((cat, ci) => {
-        if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+        if (cat.kind === 'authenticated-user') return; // only skip self user account card
         (cat.friends || []).forEach((f, fi) => {
-            const raw = f.twitch || f.name || f.id || '';
-            const twitchId = extractTwitchId(raw);
-            if (!twitchId) return;
-            const key = twitchId.toLowerCase();
-
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push({ ci, fi, friend: f, catName: cat.name || '未分類', twitchId });
+            allItems.push({ ci, fi, friend: f, catName: cat.name || '未分類' });
         });
     });
 
-    let autoMergedCount = 0;
-    const conflicts = [];
+    if (allItems.length === 0) {
+        showToast('登録されているメンバーがいません。', 'info');
+        return;
+    }
 
-    map.forEach((items) => {
-        if (items.length <= 1) return;
+    const groups = [];
+    const usedIndices = new Set();
 
-        const first = items[0].friend;
-        const isIdentical = items.every(item => {
-            const f = item.friend;
-            return (f.name || '') === (first.name || '') &&
-                   (f.x || '') === (first.x || '') &&
-                   (f.youtube || '') === (first.youtube || '') &&
-                   (f.birthday || '') === (first.birthday || '') &&
-                   (f.anniversary || '') === (first.anniversary || '') &&
-                   (f.memo || '') === (first.memo || '');
-        });
+    for (let i = 0; i < allItems.length; i++) {
+        if (usedIndices.has(i)) continue;
+        const item1 = allItems[i];
+        const group = [item1];
+        usedIndices.add(i);
 
-        if (isIdentical) {
-            autoMergedCount += (items.length - 1);
-        } else {
-            conflicts.push({ twitchId: items[0].twitchId, items });
+        for (let j = i + 1; j < allItems.length; j++) {
+            if (usedIndices.has(j)) continue;
+            const item2 = allItems[j];
+
+            if (areFriendsSamePerson(item1.friend, item2.friend)) {
+                group.push(item2);
+                usedIndices.add(j);
+            }
         }
-    });
 
-    if (autoMergedCount === 0 && conflicts.length === 0) {
+        if (group.length > 1) {
+            const displayName = getFriendTwitchId(group[0].friend) || group[0].friend.name || '重複項目';
+            groups.push({ twitchId: displayName, items: group });
+        }
+    }
+
+    if (groups.length === 0) {
         showToast('重複するIDは見つかりませんでした。データは正常です。', 'info');
         return;
     }
 
-    if (conflicts.length === 0) {
-        performAutoDeduplicate(map);
-        showToast(`${autoMergedCount}件の完全重複IDを自動統合しました`, 'success');
-        renderFriends();
-        saveFriendsLocalDebounced();
-        return;
-    }
-
-    pendingDedupConflicts = conflicts;
-    renderDeduplicateModalRows(conflicts);
+    pendingDedupConflicts = groups;
+    renderDeduplicateModalRows(groups);
     openModal('idDeduplicateModal');
-}
-
-function performAutoDeduplicate(map) {
-    map.forEach((items) => {
-        if (items.length <= 1) return;
-        for (let i = items.length - 1; i >= 1; i--) {
-            const removeItem = items[i];
-            if (friendsConfig[removeItem.ci] && friendsConfig[removeItem.ci].friends) {
-                friendsConfig[removeItem.ci].friends.splice(removeItem.fi, 1);
-            }
-        }
-    });
 }
 
 function renderDeduplicateModalRows(conflicts) {
@@ -8024,34 +8059,33 @@ function renderDeduplicateModalRows(conflicts) {
 
     let html = '';
     conflicts.forEach((group, gIdx) => {
-        const idName = '@' + group.twitchId;
+        const idName = group.twitchId ? '@' + group.twitchId.replace(/^@/, '') : '重複メンバー';
         html += `
-        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
-            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:8px; display:flex; justify-content:space-between;">
-                <span>ID: ${raidSoEscape(idName)}</span>
+        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:12px; width:100%; box-sizing:border-box; writing-mode:horizontal-tb !important; direction:ltr !important;">
+            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <span>対象: ${raidSoEscape(idName)}</span>
                 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(重複検出: ${group.items.length}件)</span>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:8px;">`;
+            <div style="display:flex; flex-direction:column; gap:8px; width:100%;">`;
 
         group.items.forEach((item, iIdx) => {
             const f = item.friend;
             const details = [];
-            if (f.name && f.name !== item.twitchId) details.push(`表示名: ${f.name}`);
+            if (f.twitch) details.push(`Twitch: ${f.twitch}`);
             if (f.x) details.push(`X: ${f.x}`);
             if (f.youtube) details.push(`YT: ${f.youtube}`);
             if (f.birthday) details.push(`誕生日: ${f.birthday}`);
             if (f.memo) details.push(`メモ: ${f.memo}`);
 
-            const checked = iIdx === 0 ? ' checked' : '';
             html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--text-main);">
+                <label style="display:grid; grid-template-columns:24px minmax(0, 1fr); align-items:center; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:10px 12px; cursor:pointer; width:100%; box-sizing:border-box; writing-mode:horizontal-tb !important; direction:ltr !important;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}" style="margin:0; width:16px; height:16px; accent-color:var(--twitch-purple);">
+                    <div style="min-width:0; width:100%; font-size:12px; line-height:1.5; writing-mode:horizontal-tb !important; text-align:left; direction:ltr !important;">
+                        <div style="font-weight:bold; color:var(--text-main); white-space:normal;">
                             [${raidSoEscape(item.catName)}] ${raidSoEscape(f.name || idName)}
                         </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
+                        <div style="color:var(--text-muted); font-size:11px; margin-top:2px; word-break:break-all; white-space:normal;">
                             ${raidSoEscape(details.join(' | ') || '(追加情報なし)')}
                         </div>
                     </div>
@@ -8059,14 +8093,14 @@ function renderDeduplicateModalRows(conflicts) {
         });
 
         html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--twitch-purple);">
-                            ✨ 両方の情報（メモ・SNS等）を結合して残す
+                <label style="display:grid; grid-template-columns:24px minmax(0, 1fr); align-items:center; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:10px 12px; cursor:pointer; width:100%; box-sizing:border-box; writing-mode:horizontal-tb !important; direction:ltr !important;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" checked style="margin:0; width:16px; height:16px; accent-color:var(--twitch-purple);">
+                    <div style="min-width:0; width:100%; font-size:12px; line-height:1.5; writing-mode:horizontal-tb !important; text-align:left; direction:ltr !important;">
+                        <div style="font-weight:bold; color:var(--twitch-purple); white-space:normal;">
+                            ✨ 両方の情報（Twitch/X/メモ等）を結合して最新カードを残す
                         </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
-                            表示名やメモなどの情報を並列でまとめて1つの項目に統合します
+                        <div style="color:var(--text-muted); font-size:11px; margin-top:2px; white-space:normal;">
+                            表示名やID・メモなどの情報を統合し、不要な重複カードのみ削除します
                         </div>
                     </div>
                 </label>
@@ -8075,6 +8109,13 @@ function renderDeduplicateModalRows(conflicts) {
     });
 
     container.innerHTML = html;
+}
+
+function getCategoryPriority(catName, catKind) {
+    if (catKind === 'shoutout-history' || catName === '紹介履歴' || catName === '自動記録') return 1;
+    const uncategorizedName = (typeof uiText === 'function' ? uiText('idList.uncategorized') : '') || '未分類';
+    if (!catName || catName === uncategorizedName) return 2;
+    return 3;
 }
 
 function applyIdDeduplication() {
@@ -8092,21 +8133,79 @@ function applyIdDeduplication() {
         const val = selectedEl.value;
 
         if (val === 'merge') {
-            const keep = group.items[0];
-            const mergedMemos = group.items.map(it => it.friend.memo).filter(Boolean);
-            if (mergedMemos.length > 0) {
-                keep.friend.memo = [...new Set(mergedMemos)].join(' / ');
-            }
-            const mergedX = group.items.map(it => it.friend.x).filter(Boolean);
-            if (mergedX.length > 0) keep.friend.x = mergedX[0];
+            const sortedGroupItems = [...group.items].sort((a, b) => {
+                const catA = friendsConfig[a.ci];
+                const catB = friendsConfig[b.ci];
+                const prioA = getCategoryPriority(a.catName, catA?.kind);
+                const prioB = getCategoryPriority(b.catName, catB?.kind);
+                return prioB - prioA;
+            });
 
-            for (let i = 1; i < group.items.length; i++) {
-                itemsToRemove.push(group.items[i]);
-            }
+            const keepItem = sortedGroupItems[0];
+            const master = keepItem.friend;
+
+            let bestName = '';
+            let bestTwitch = '';
+            let bestX = '';
+            let bestYt = '';
+            let bestBday = '';
+            let bestAnniv = '';
+            let allMemos = [];
+
+            // 1. 全重複カードから最良のフィールド情報（ID、SNS、メモ等）を統合
+            group.items.forEach(it => {
+                const f = it.friend;
+                if (!bestName || (f.name && f.name.length > bestName.length)) bestName = f.name || bestName;
+                if (!bestTwitch && f.twitch) bestTwitch = f.twitch;
+                if (!bestX && f.x) bestX = f.x;
+                if (!bestYt && f.youtube) bestYt = f.youtube;
+                if (!bestBday && f.birthday) bestBday = f.birthday;
+                if (!bestAnniv && f.anniversary) bestAnniv = f.anniversary;
+                if (f.memo && f.memo.trim() && !allMemos.includes(f.memo.trim())) {
+                    allMemos.push(f.memo.trim());
+                }
+            });
+
+            if (bestName) master.name = bestName;
+            if (bestTwitch) master.twitch = bestTwitch;
+            if (bestX) master.x = bestX;
+            if (bestYt) master.youtube = bestYt;
+            if (bestBday) master.birthday = bestBday;
+            if (bestAnniv) master.anniversary = bestAnniv;
+            if (allMemos.length > 0) master.memo = allMemos.join(' / ');
+
+            // 2. 所属している固有グループタグ（MAG、ももねずコラボ等）を全て統合・引き継ぐ
+            const targetCustomCatNames = new Set();
+            group.items.forEach(it => {
+                const cat = friendsConfig[it.ci];
+                const prio = getCategoryPriority(it.catName, cat?.kind);
+                if (prio === 3 && it.catName) { // 固有グループタグ
+                    targetCustomCatNames.add(it.catName);
+                }
+            });
+
+            targetCustomCatNames.forEach(catName => {
+                const targetCat = friendsConfig.find(c => c.name === catName && c.kind !== 'shoutout-history' && c.kind !== 'authenticated-user');
+                if (targetCat && Array.isArray(targetCat.friends)) {
+                    const masterTwitch = (master.twitch || master.name || '').toLowerCase();
+                    const alreadyExists = targetCat.friends.some(f => (f.twitch || f.name || '').toLowerCase() === masterTwitch || f === master);
+                    if (!alreadyExists) {
+                        targetCat.friends.push({ ...master });
+                    }
+                }
+            });
+
+            // 3. 不要な重複カード（未分類、紹介履歴、同一グループ内の余分なカード）を除去対象へ
+            group.items.forEach(it => {
+                if (it !== keepItem && !itemsToRemove.includes(it)) {
+                    itemsToRemove.push(it);
+                }
+            });
         } else {
             const keepIdx = parseInt(val, 10);
-            group.items.forEach((item, iIdx) => {
-                if (iIdx !== keepIdx) {
+            const keepItem = group.items[keepIdx];
+            group.items.forEach((item) => {
+                if (item !== keepItem && !itemsToRemove.includes(item)) {
                     itemsToRemove.push(item);
                 }
             });
@@ -8128,7 +8227,7 @@ function applyIdDeduplication() {
     closeModal('idDeduplicateModal');
     showToast(`${resolvedCount}件の重複IDを統合・整理しました`, 'success');
     renderFriends();
-    saveFriendsLocalDebounced();
+    saveFriendsLocal(false);
 }
 
 window.checkAndConsolidateDuplicateIds = checkAndConsolidateDuplicateIds;

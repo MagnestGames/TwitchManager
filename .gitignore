@@ -1,2 +1,9 @@
 /dist/
 /installer/.build/
+# Ignore YTM (YouTube Manager) experimental files & backups
+*YTM*
+yt_*.js
+*.json.bak
+YTM_Buckup.json
+TMD.json
+
