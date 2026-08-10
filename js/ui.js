@@ -2884,6 +2884,7 @@ window.copyCommonTag = copyCommonTag;
         
         
         
+        
         const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
@@ -2931,26 +2932,53 @@ window.copyCommonTag = copyCommonTag;
             // Links
             html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
 
-            // Line-by-line List & Nesting Processor
+            // Line-by-line Smart List Processor (Auto連番 & 柔軟ネスト)
             const lines = html.split('\n');
+            let inOl = false;
+            let olCounter = 1;
+            let currentOlIndent = 0;
+
             const processed = lines.map(line => {
-                const indentMatch = line.match(/^(\s+)/);
-                const indentSpaces = indentMatch ? indentMatch[1].replace(/\t/g, '  ').length : 0;
-                const indentLevel = Math.min(Math.floor(indentSpaces / 2), 4);
-                const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                const rawIndentMatch = line.match(/^(\s*)/);
+                const indentStr = rawIndentMatch ? rawIndentMatch[1] : '';
+                const spacesCount = indentStr.replace(/\t/g, '  ').length;
 
                 const trimmed = line.trim();
-                if (!trimmed) return '<div style="height: 4px;"></div>';
-
-                // Numbered list (e.g. 1. Item, 2) Item)
-                const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
-                if (olMatch) {
-                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${olMatch[1]}.</span> <span>${olMatch[2]}</span></div>`;
+                if (!trimmed) {
+                    inOl = false;
+                    return '<div style="height: 4px;"></div>';
                 }
 
-                // Bullet list (e.g. - Item, * Item)
+                // Handle "- - テキスト" notation as nested level 1
+                const dashDashMatch = trimmed.match(/^[-*+]\s+[-*+]\s+(.*)$/);
+                if (dashDashMatch) {
+                    inOl = false;
+                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span> <span>${dashDashMatch[1]}</span></div>`;
+                }
+
+                // Handle Numbered List (Auto-Increment 1., 2., 3...)
+                const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+                if (olMatch) {
+                    const indentLevel = Math.min(Math.floor(spacesCount / 2), 4);
+                    if (!inOl || indentLevel !== currentOlIndent) {
+                        inOl = true;
+                        olCounter = 1;
+                        currentOlIndent = indentLevel;
+                    }
+                    const numStr = `${olCounter}.`;
+                    olCounter++;
+
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span> <span>${olMatch[2]}</span></div>`;
+                } else {
+                    inOl = false;
+                }
+
+                // Handle Bullet List (- Item or * Item)
                 const ulMatch = trimmed.match(/^[-*+]\s+(.*)$/);
                 if (ulMatch) {
+                    const indentLevel = Math.min(Math.max(Math.floor(spacesCount / 2), spacesCount >= 2 ? 1 : 0), 4);
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
                     return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span> <span>${ulMatch[1]}</span></div>`;
                 }
 
@@ -2963,6 +2991,72 @@ window.copyCommonTag = copyCommonTag;
             return processed.join('');
         }
         window.renderMarkdownToHtml = renderMarkdownToHtml;
+
+        function handleMemoKeydown(e, memoIndex) {
+            const textarea = e.target;
+            if (!textarea) return;
+
+            // Tab key: Insert 2 spaces for indent
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = textarea.selectionStart || 0;
+                const end = textarea.selectionEnd || 0;
+                const value = textarea.value || '';
+
+                if (!e.shiftKey) {
+                    textarea.value = value.substring(0, start) + '  ' + value.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 2;
+                } else {
+                    if (start >= 2 && value.substring(start - 2, start) === '  ') {
+                        textarea.value = value.substring(0, start - 2) + value.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = start - 2;
+                    }
+                }
+                memoConfig[memoIndex].content = textarea.value;
+                saveMemoLocal();
+                return;
+            }
+
+            // Enter key: Auto continue list
+            if (e.key === 'Enter') {
+                const start = textarea.selectionStart || 0;
+                const value = textarea.value || '';
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+
+                const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s+(.*)$/);
+                const ulMatch = currentLine.match(/^(\s*)[-*+]\s+(.*)$/);
+                const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
+
+                if (taskMatch) {
+                    if (!taskMatch[2].trim()) return;
+                    e.preventDefault();
+                    const prefix = `\n${taskMatch[1]}- [ ] `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                } else if (ulMatch) {
+                    if (!ulMatch[2].trim()) return;
+                    e.preventDefault();
+                    const prefix = `\n${ulMatch[1]}- `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                } else if (olMatch) {
+                    if (!olMatch[3].trim()) return;
+                    e.preventDefault();
+                    const nextNum = parseInt(olMatch[2], 10) + 1;
+                    const prefix = `\n${olMatch[1]}${nextNum}. `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                }
+            }
+        }
+        window.handleMemoKeydown = handleMemoKeydown;
 
         function toggleMemoTaskCheckbox(memoIndex, taskIndex, isChecked) {
             const memo = memoConfig[memoIndex];
@@ -3047,7 +3141,7 @@ window.copyCommonTag = copyCommonTag;
                 `;
 
                 const bodyContentHtml = mode === 'edit'
-                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
+                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
                     : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '', i)}</div>`;
 
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
