@@ -2885,6 +2885,7 @@ window.copyCommonTag = copyCommonTag;
         
         
         
+        
         const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
@@ -2932,16 +2933,18 @@ window.copyCommonTag = copyCommonTag;
             // Links
             html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
 
-            // Line-by-line Smart List Processor (Auto連番 & 柔軟ネスト)
+            // Line-by-line Smart 3-Level Nesting & List Processor (全角スペース・中黒・ダッシュ対応)
             const lines = html.split('\n');
             let inOl = false;
             let olCounter = 1;
             let currentOlIndent = 0;
 
             const processed = lines.map(line => {
-                const rawIndentMatch = line.match(/^(\s*)/);
-                const indentStr = rawIndentMatch ? rawIndentMatch[1] : '';
-                const spacesCount = indentStr.replace(/\t/g, '  ').length;
+                // 全角スペース・タブを半角2文字に変換
+                const normalizedLine = line.replace(/　/g, '  ').replace(/\t/g, '  ');
+                const rawIndentMatch = normalizedLine.match(/^(\s*)/);
+                const spacesCount = rawIndentMatch ? rawIndentMatch[1].length : 0;
+                const spaceLevel = Math.floor(spacesCount / 2);
 
                 const trimmed = line.trim();
                 if (!trimmed) {
@@ -2949,37 +2952,52 @@ window.copyCommonTag = copyCommonTag;
                     return '<div style="height: 4px;"></div>';
                 }
 
-                // Handle "- - テキスト" notation as nested level 1
-                const dashDashMatch = trimmed.match(/^[-*+]\s+[-*+]\s+(.*)$/);
-                if (dashDashMatch) {
-                    inOl = false;
-                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span> <span>${dashDashMatch[1]}</span></div>`;
+                // 記号ベースの階層判定 (- - -, - -, ・ ・, etc)
+                let symbolLevel = 0;
+                let itemText = trimmed;
+
+                const m3 = trimmed.match(/^(?:[-*+・]\s*){3}\s*(.*)$/);
+                const m2 = trimmed.match(/^(?:[-*+・]\s*){2}\s*(.*)$/);
+                const m1 = trimmed.match(/^(?:[-*+・])\s*(.*)$/);
+
+                if (m3) {
+                    symbolLevel = 2;
+                    itemText = m3[1];
+                } else if (m2) {
+                    symbolLevel = 1;
+                    itemText = m2[1];
+                } else if (m1) {
+                    symbolLevel = 0;
+                    itemText = m1[1];
                 }
 
-                // Handle Numbered List (Auto-Increment 1., 2., 3...)
+                // 最大3階層 (Level 0, 1, 2)
+                const finalLevel = Math.min(2, Math.max(spaceLevel, symbolLevel));
+                const indentStyle = finalLevel > 0 ? `style="margin-left: ${finalLevel * 18}px;"` : '';
+
+                // 階層別箇条書き記号 (•, ◦, ▪)
+                const bullets = ['•', '◦', '▪'];
+                const bulletChar = bullets[finalLevel] || '•';
+
+                // 番号付きリスト (自動連番 1., 2., 3...)
                 const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
                 if (olMatch) {
-                    const indentLevel = Math.min(Math.floor(spacesCount / 2), 4);
-                    if (!inOl || indentLevel !== currentOlIndent) {
+                    if (!inOl || finalLevel !== currentOlIndent) {
                         inOl = true;
                         olCounter = 1;
-                        currentOlIndent = indentLevel;
+                        currentOlIndent = finalLevel;
                     }
                     const numStr = `${olCounter}.`;
                     olCounter++;
 
-                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
                     return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span> <span>${olMatch[2]}</span></div>`;
                 } else {
                     inOl = false;
                 }
 
-                // Handle Bullet List (- Item or * Item)
-                const ulMatch = trimmed.match(/^[-*+]\s+(.*)$/);
-                if (ulMatch) {
-                    const indentLevel = Math.min(Math.max(Math.floor(spacesCount / 2), spacesCount >= 2 ? 1 : 0), 4);
-                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
-                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span> <span>${ulMatch[1]}</span></div>`;
+                // 箇条書きリスト (-, *, +, ・ または 記号連続入力)
+                if (m1 || m2 || m3) {
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">${bulletChar}</span> <span>${itemText}</span></div>`;
                 }
 
                 if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
@@ -3025,7 +3043,7 @@ window.copyCommonTag = copyCommonTag;
                 const currentLine = value.substring(lineStart, start);
 
                 const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s+(.*)$/);
-                const ulMatch = currentLine.match(/^(\s*)[-*+]\s+(.*)$/);
+                const ulMatch = currentLine.match(/^(\s*)[-*+・]\s+(.*)$/);
                 const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
 
                 if (taskMatch) {
@@ -3107,7 +3125,7 @@ window.copyCommonTag = copyCommonTag;
         }
         window.toggleMemoMode = toggleMemoMode;
 
-        function renderMemo() {
+function renderMemo() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
                 c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
