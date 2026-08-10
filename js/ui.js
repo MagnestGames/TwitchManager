@@ -2881,6 +2881,11 @@ window.copyCommonTag = copyCommonTag;
 
 
         
+        
+        const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+        const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+
         function renderMarkdownToHtml(src) {
             if (!src) return '<div style="color:var(--text-muted); font-size:11px; font-style:italic;">(空のメモです。「編集」ボタンから書き込みできます)</div>';
             let html = raidSoEscape(src);
@@ -2916,7 +2921,7 @@ window.copyCommonTag = copyCommonTag;
             html = html.replace(/^---$/gim, '<hr class="md-hr">');
 
             // Links
-            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 🔗</a>');
+            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
 
             // Line Breaks
             const lines = html.split('\n');
@@ -2974,8 +2979,8 @@ window.copyCommonTag = copyCommonTag;
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'edit'
-                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:3px;">👁️ プレビュー</button>`
-                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:3px;">✏️ 編集</button>`;
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_EYE}プレビュー</button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_PENCIL}編集</button>`;
 
                 const toolbarHtml = `
                     <div class="memo-toolbar">
@@ -2984,7 +2989,7 @@ window.copyCommonTag = copyCommonTag;
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="箇条書きリスト">• リスト</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="タスクチェックボックス">☑ タスク</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="リンク">🔗 リンク</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="リンク" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}リンク</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="コード">&lt;&gt; コード</button>
                     </div>
                 `;
