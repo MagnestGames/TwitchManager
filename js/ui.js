@@ -3130,8 +3130,8 @@ window.copyCommonTag = copyCommonTag;
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'preview'
-                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span>${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
-                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span>${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
 
                 const bodyContentHtml = mode === 'edit'
                     ? `<textarea id="memo-input-${i}" style="min-height:150px;" onfocus="setActiveMemoIndex(${i})" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
