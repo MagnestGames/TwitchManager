@@ -2908,8 +2908,8 @@ window.copyCommonTag = copyCommonTag;
             html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
 
             // Checkboxes / Tasks
-            html = html.replace(/^- \[x\] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" checked disabled> <span class="md-done">$1</span></li>');
-            html = html.replace(/^- \[ \] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" disabled> $1</li>');
+            html = html.replace(/^- \[x\] (.*$)/gim, '<div class="md-task-item"><input type="checkbox" checked disabled><span class="md-done">$1</span></div>');
+            html = html.replace(/^- \[ \] (.*$)/gim, '<div class="md-task-item"><input type="checkbox" disabled><span>$1</span></div>');
 
             // Bullet Lists
             html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
@@ -2927,7 +2927,7 @@ window.copyCommonTag = copyCommonTag;
             const lines = html.split('\n');
             const processed = lines.map(line => {
                 const trimmed = line.trim();
-                if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
                     return line;
                 }
                 return line + '<br>';
