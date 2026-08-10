@@ -381,6 +381,24 @@ const I18N_DATA = {
             },
             "guideHtml": "\n                <div style=\"color: var(--text-main); line-height: 1.8; font-size: 13px;\">\n                    <h2 style=\"color: var(--twitch-purple); font-size: 18px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 20px;\">◆ ヘルプ</h2>\n                    \n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">1. Twitch連携の設定</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted); margin-bottom: 15px;\">\n                            <li><strong>Twitch Token Generator:</strong> 「Custom Scope Token」を選び、必要な権限を入れてACCESS TOKENを生成します。</li>\n                            <li><strong>アクセストークン:</strong> 生成されたACCESS TOKENを設定画面に貼り付けて保存します。Client IDとチャンネルIDは保存時に自動で確認します。</li>\n                            <li><strong>更新:</strong> 反映や同期で認証エラーが出た場合は、同じ手順でアクセストークンを再取得して保存します。</li>\n                        </ul>\n                        <div style=\"background: rgba(255, 74, 74, 0.1); border-left: 4px solid #ff4a4a; padding: 12px; border-radius: 8px;\">\n                            <strong style=\"color: #ff4a4a;\">セキュリティについて（！）</strong><br>\n                            アクセストークンは配信権限に関わる重要な情報です。第三者へ共有したり、配信画面に映したりしないでください。万が一流出した場合は、Twitchの接続設定から権限を取り消し、新しいアクセストークンを取得してください。\n                        </div>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">2. 「保存」と「反映」について</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li><strong>保存 / 自動保存:</strong> 内容をブラウザ内に保存します。ツールを閉じても保持されます。</li>\n                            <li><strong>反映:</strong> 編集内容をTwitchへ送信し、配信タイトルとカテゴリを更新します。</li>\n                            <li><strong>同期:</strong> 現在のTwitch配信情報を、このツールへ読み込みます。</li>\n                        </ul>\n                        <p style=\"font-size: 11px; color: var(--text-muted); background: var(--bg-base); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;\">※タグと通知文は、現在のTwitch APIの仕様上、このツールから直接変更できません。メモ欄として利用できます。</p>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <h3 style=\"font-size: 15px; color: #bf94ff; margin-bottom: 12px;\">3. バックアップ（！）</h3>\n                        <ul style=\"padding-left: 20px; color: var(--text-muted);\">\n                            <li>ブラウザのキャッシュ削除に備え、「バックアップ」タブから定期的にテキスト保存しておくと安心です。</li>\n                            <li>OBSドックからは直接ファイル保存ができないため、コピーした内容をメモ帳などに保管します。</li>\n                            <li>PCの買い替えやデータ復旧時は、保存したテキストを読み込めます。</li>\n                            <li>データ量が多いと、バックアップデータのコピーに失敗する場合があります。不要なデータは定期的に整理すると安心です。</li>\n                        </ul>\n                    </section>\n\n                    <section style=\"margin-bottom: 24px;\">\n                        <a href=\"https://note.com/konpeito_fox/n/n533d100fd0d3\" target=\"_blank\" style=\"display: block; background: var(--bg-header); border: 1px solid var(--border-color); color: var(--text-main); text-decoration: none; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;\">📖 画像付きの詳細説明書（note）を開く</a>\n                    </section>\n\n                    <div style=\"font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 15px;\">\n                        <strong>【免責事項】</strong><br>\n                        本ツールは個人制作です。動作確認は行っていますが、予期せぬ不具合やブラウザ側の変更により、データが消える可能性があります。大切な設定やデータを守るため、自己責任での利用と、こまめなバックアップをお願いします。不明点があれば、DiscordのDM（XのDMは見逃す可能性が高いです）、Xのリプライ、配信コメントなどでご相談ください。\n                    </div>\n                    <div id=\"help-creators-container\"></div>\n                </div>",
             "extended": {
+            "backupExportAll": "すべてのデータを保存",
+            "backupExportTitle": "タイトル一覧のみ保存",
+            "backupExportId": "ID一覧のみ保存",
+            "backupExportRaidSo": "通知と紹介のみ保存",
+            "backupExportSettings": "ツール設定のみ保存",
+            "appLoadingText": "読み込み中...",
+            "memoPreview": "プレビュー",
+            "memoEdit": "編集",
+            "memoBold": "太字",
+            "memoH1": "H1",
+            "memoH2": "H2",
+            "memoList": "リスト",
+            "memoOl": "番号",
+            "memoTask": "タスク",
+            "memoLink": "リンク",
+            "memoCode": "コード",
+            "memoEmptyHint": "(空のメモです。「編集」ボタンから書き込みできます)",
+
                 "addItemTitle": "追加",
                 "addTypeUser": "IDカード を追加",
                 "addTypeUserDesc": "名前やTwitch IDでカードを作成します。",
@@ -1334,6 +1352,25 @@ const I18N_DATA = {
         }
     },
     "en": {
+
+            "backupExportAll": "Save All Data",
+            "backupExportTitle": "Save Titles Only",
+            "backupExportId": "Save IDs Only",
+            "backupExportRaidSo": "Save Notifications Only",
+            "backupExportSettings": "Save Settings Only",
+            "appLoadingText": "Loading...",
+            "memoPreview": "Preview",
+            "memoEdit": "Edit",
+            "memoBold": "Bold",
+            "memoH1": "H1",
+            "memoH2": "H2",
+            "memoList": "List",
+            "memoOl": "Numbered",
+            "memoTask": "Task",
+            "memoLink": "Link",
+            "memoCode": "Code",
+            "memoEmptyHint": "(Empty memo. Click 'Edit' to write content.)",
+
         "ui": {
             "tabs": [
                 "Titles",
