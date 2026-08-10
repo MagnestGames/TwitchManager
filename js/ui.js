@@ -2403,6 +2403,83 @@
         }
 
 
+        
+        function renderMarkdownToHtml(src) {
+            if (!src) return '<div style="color:var(--text-muted); font-size:11px; font-style:italic;">(空のメモです。「編集」ボタンから書き込みできます)</div>';
+            let html = raidSoEscape(src);
+
+            // Code blocks
+            html = html.replace(/```([\s\S]*?)```/g, (m, code) => `<pre class="md-code-block"><code>${code.trim()}</code></pre>`);
+            
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>');
+
+            // Headings
+            html = html.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
+
+            // Text Styles
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // Checkboxes / Tasks
+            html = html.replace(/^- \[x\] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" checked disabled> <span class="md-done">$1</span></li>');
+            html = html.replace(/^- \[ \] (.*$)/gim, '<li class="md-task-item"><input type="checkbox" disabled> $1</li>');
+
+            // Bullet Lists
+            html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+
+            // Blockquotes
+            html = html.replace(/^&gt; (.*$)/gim, '<blockquote class="md-quote">$1</blockquote>');
+
+            // HR
+            html = html.replace(/^---$/gim, '<hr class="md-hr">');
+
+            // Links
+            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 🔗</a>');
+
+            // Line Breaks
+            const lines = html.split('\n');
+            const processed = lines.map(line => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<li') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+                    return line;
+                }
+                return line + '<br>';
+            });
+
+            return processed.join('');
+        }
+        window.renderMarkdownToHtml = renderMarkdownToHtml;
+
+        function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
+            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+            if (!textarea) return;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            const selectedText = text.substring(start, end) || 'テキスト';
+            const replacement = prefix + selectedText + suffix;
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.selectionStart = start + prefix.length;
+            textarea.selectionEnd = start + prefix.length + selectedText.length;
+            textarea.focus();
+            memoConfig[memoIndex].content = textarea.value;
+            saveMemoLocal();
+        }
+        window.insertMarkdownSyntax = insertMarkdownSyntax;
+
+        function toggleMemoMode(memoIndex, mode) {
+            if (!memoConfig[memoIndex]) return;
+            memoConfig[memoIndex].mode = mode;
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoMode = toggleMemoMode;
+
         function renderMemo() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
@@ -2411,23 +2488,51 @@
                 return;
             }
             memoConfig.forEach((m, i) => {
-                const d = document.createElement('div'); d.className = "category-box" + (m.isClosed ? " closed" : ""); d.setAttribute('data-idx', i);
+                const mode = m.mode || (m.content ? 'preview' : 'edit');
+                const d = document.createElement('div');
+                d.className = "category-box" + (m.isClosed ? " closed" : "");
+                d.setAttribute('data-idx', i);
+
                 let previewText = (m.content || '').replace(/\n/g, ' ').substring(0, 15);
                 if ((m.content || '').length > 15) previewText += '...';
+
+                const modeBtnHtml = mode === 'edit'
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:3px;">👁️ プレビュー</button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:3px;">✏️ 編集</button>`;
+
+                const toolbarHtml = `
+                    <div class="memo-toolbar">
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="太字"><b>B</b> 太字</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="箇条書きリスト">• リスト</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="タスクチェックボックス">☑ タスク</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="リンク">🔗 リンク</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="コード">&lt;&gt; コード</button>
+                    </div>
+                `;
+
+                const bodyContentHtml = mode === 'edit'
+                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
+                    : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '')}</div>`;
+
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
                         <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
                         <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
-                    <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${modeBtnHtml}
+                        <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    </div>
                 </div>
-            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${raidSoEscape(m.content || '')}</textarea>`;
+                ${bodyContentHtml}`;
                 c.appendChild(d);
             });
             initSortable();
         }
 
-        function initSortable() {
+function initSortable() {
             if (typeof Sortable === 'undefined') return;
             sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
             const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
