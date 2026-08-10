@@ -1131,6 +1131,7 @@
             const I = L.idList || langMap.ja.idList;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -3824,32 +3825,9 @@
             }
         }
 
-        async function handleRaidSoOutboundRaidEvent(event) {
-            const targetLogin = event.to_broadcaster_user_login;
-            const targetName = event.to_broadcaster_user_name;
-            const targetId = event.to_broadcaster_user_id;
+        function handleRaidSoOutboundRaidEvent(event) {
+            const targetName = event.to_broadcaster_user_name || event.to_broadcaster_user_login;
             raidSoLog(uiText('raidSo.outboundRaidDetected', { user: targetName }));
-            
-            if (raidSoSettings.autoSendRaidUrlEnabled) {
-                const url = `https://www.twitch.tv/${targetLogin}`;
-                const rawTemplate = raidSoSettings.outboundRaidTemplate || raidSoText().outboundRaidDefaultTemplate;
-                const channel = await getRaidSoChannel(targetId).catch(() => null);
-                const data = {
-                    username: targetLogin,
-                    displayName: targetName,
-                    game: channel?.game_name || '',
-                    title: channel?.title || '',
-                    viewers: event.viewers || '',
-                    url: url
-                };
-                const message = renderRaidSoTemplate(rawTemplate, data);
-                try {
-                    await sendRaidSoChat(message);
-                    raidSoLog(uiText('raidSo.outboundRaidUrlSent', { message }));
-                } catch (e) {
-                    raidSoLog(uiText('raidSo.outboundRaidUrlFailed', { error: localizeRaidSoError(e) }), 'warn');
-                }
-            }
         }
 
         async function getRaidSoUser(loginOrId) {

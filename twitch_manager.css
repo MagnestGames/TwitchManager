@@ -2161,6 +2161,27 @@
             margin-bottom: 10px;
         }
 
+        /* IDリスト配信者カードのマルチカラム（横並び）レスポンシブレイアウト */
+        .category-records,
+        #friends-container.flat-mode {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+            align-items: start;
+        }
+
+        .category-records .record-card,
+        #friends-container.flat-mode .record-card {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 650px) {
+            .category-records,
+            #friends-container.flat-mode {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .record-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);

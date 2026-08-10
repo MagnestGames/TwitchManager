@@ -552,23 +552,57 @@
             <div class="tab-help-body"><p data-i18n="extended.miscHelpText">バックアップ・復元、イベントログを管理します。ブラウザの保存データに備えて、バックアップは定期的に保管してください。</p></div>
         </details>
         
-        <!-- Backup & Restore side by side -->
-        <div class="misc-pair-grid">
-            <div class="category-box" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-backup-title" style="margin-bottom: 8px; font-size: 13px;"><span data-i18n="backupTitle">バックアップ</span></div>
-                <div style="display: flex; flex: 1; align-items: center;">
-                    <button id="ui-backup-copy" class="btn-primary" style="width: 100%; padding: 6px 12px; font-size: 12px;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">コピー</button>
+        <!-- Backup & Restore Section -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="category-box" style="margin-bottom: 0; padding: 12px 15px; border-left: 4px solid var(--twitch-purple);">
+                <div class="category-name" id="ui-backup-title" style="margin-bottom: 8px; font-size: 13px; color: var(--command-accent);">
+                    <span data-i18n="backupTitle">💾 バックアップ作成・保存</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                    バックアップ対象の項目を選択してください:
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; margin-bottom: 10px; background: var(--bg-base); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="bk-opt-title" checked style="accent-color: var(--twitch-purple); cursor: pointer;">
+                        <span>タイトル一覧</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="bk-opt-id" checked style="accent-color: var(--twitch-purple); cursor: pointer;">
+                        <span>ID一覧</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="bk-opt-raidso" checked style="accent-color: var(--twitch-purple); cursor: pointer;">
+                        <span>Twitch/通知と紹介</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="bk-opt-settings" checked style="accent-color: var(--twitch-purple); cursor: pointer;">
+                        <span>ツール設定</span>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button id="ui-backup-download" class="btn-primary" style="flex: 1.5; min-width: 140px; padding: 6px 12px; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" onclick="downloadBackupFile()">
+                        📥 ファイル保存 (.json)
+                    </button>
+                    <button id="ui-backup-copy" class="btn-secondary" style="flex: 1; min-width: 90px; padding: 6px 12px; font-size: 11.5px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">
+                        📋 コピー
+                    </button>
                 </div>
             </div>
-            <div class="category-box" id="misc-restore-section" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 8px; font-size: 13px; cursor: pointer; user-select: none;"><span data-i18n="restoreTitle">復元</span></div>
-                <div class="tw-body misc-restore-row" style="flex: 1;">
-                    <div class="restore-file-picker">
+
+            <div class="category-box" id="misc-restore-section" style="margin-bottom: 0; padding: 12px 15px; border-left: 4px solid var(--twitch-purple);">
+                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 8px; font-size: 13px; cursor: pointer; user-select: none;">
+                    <span data-i18n="restoreTitle">📂 復元・個別読み込み</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                    バックアップJSONファイルから、選択した項目のみを統合または上書きして読み込みます:
+                </div>
+                <div class="tw-body misc-restore-row" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <div class="restore-file-picker" style="flex: 1; min-width: 160px; display: flex; align-items: center; gap: 8px;">
                         <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,application/json" onchange="updateRestoreFileName(this)">
-                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" data-i18n="footerActions.selectFile">ファイル選択</label>
-                        <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
+                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" style="padding: 6px 10px; font-size: 11px; white-space: nowrap;" data-i18n="footerActions.selectFile">ファイル選択</label>
+                        <span id="ui-restore-file-name" class="restore-file-name" style="font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" data-i18n="footerActions.noFileSelected">未選択</span>
                     </div>
-                    <button id="ui-restore-btn" class="btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
+                    <button id="ui-restore-btn" class="btn-primary" style="padding: 6px 14px; font-size: 11.5px; white-space: nowrap;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
                 </div>
             </div>
         </div>
@@ -891,14 +925,14 @@
             document.body.appendChild(audioSourceScript);
         } else {
             const appScripts = [
-                'twitch_manager_version.js',
-                'twitch_manager_locales.js',
-                'js/update-check.js',
-                'js/storage.js',
-                'js/api.js',
-                'js/eventsub.js',
-                'js/ui.js',
-                'js/main.js'
+                'twitch_manager_version.js?v=20260810_singletag',
+                'twitch_manager_locales.js?v=20260810_singletag',
+                'js/update-check.js?v=20260810_singletag',
+                'js/storage.js?v=20260810_singletag',
+                'js/api.js?v=20260810_singletag',
+                'js/eventsub.js?v=20260810_singletag',
+                'js/ui.js?v=20260810_singletag',
+                'js/main.js?v=20260810_singletag'
             ];
             document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
         }
