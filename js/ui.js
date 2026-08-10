@@ -2891,7 +2891,7 @@ window.copyCommonTag = copyCommonTag;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
 
         function renderMarkdownToHtml(src, memoIndex = null) {
-            if (!src) return '<div style="color:var(--text-muted); font-size:11px; font-style:italic;">(空のメモです。「編集」ボタンから書き込みできます)</div>';
+            if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText('memoEmptyHint'))}</div>`;
             let html = raidSoEscape(src);
 
             // Code blocks
@@ -3142,19 +3142,19 @@ function renderMemo() {
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'edit'
-                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_EYE}プレビュー</button>`
-                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_PENCIL}編集</button>`;
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_EYE}${raidSoEscape(uiText("memoPreview"))}</button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center;">${MEMO_SVG_PENCIL}${raidSoEscape(uiText("memoEdit"))}</button>`;
 
                 const toolbarHtml = `
                     <div class="memo-toolbar">
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="太字"><b>B</b> 太字</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("memoBold"))}"><b>B</b> ${raidSoEscape(uiText("memoBold"))}</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="箇条書きリスト">• リスト</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="番号付きリスト">1. 番号</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="タスクチェックボックス">☑ タスク</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="リンク" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}リンク</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="コード">&lt;&gt; コード</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("memoList"))}">• ${raidSoEscape(uiText("memoList"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("memoOl"))}">1. ${raidSoEscape(uiText("memoOl"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("memoTask"))}">☑ ${raidSoEscape(uiText("memoTask"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("memoLink"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("memoCode"))}</button>
                     </div>
                 `;
 
