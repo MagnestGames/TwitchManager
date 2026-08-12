@@ -379,7 +379,22 @@
             <div class="category-box tw-section closed" id="tw-box-sub" style="flex:1;min-width:270px;margin-bottom:0;">
                 <div class="category-name" onclick="twToggle('tw-box-sub')"><span id="tw-l-sub" data-i18n="extended.subscribersTab">サブスクライバー</span></div>
                 <div class="tw-body">
-                    <button class="btn-secondary" style="width:100%;margin-bottom:10px;" onclick="fetchSubscribers(this)" id="tw-btn-sub" data-i18n="extended.fetchBtn">一覧を取得</button>
+                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                        <button class="btn-secondary" style="flex:1;min-width:0;padding:4px;font-size:11px;height:28px;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="fetchSubscribers(this)" id="tw-btn-sub" data-i18n="extended.fetchBtn">一覧を取得</button>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-sub-sort-select" onchange="changeSubSortMode(this.value)" aria-label="並び替え">
+                            <option value="default">標準順</option>
+                            <option value="tier_desc">Tier(高→低)</option>
+                            <option value="tier_asc">Tier(低→高)</option>
+                            <option value="gift_first">ギフト優先</option>
+                            <option value="direct_first">通常優先</option>
+                        </select>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-sub-size-select" onchange="changeSubPageSize(this.value)" aria-label="1ページあたりの表示人数">
+                            <option value="10" selected>10件/P</option>
+                            <option value="30">30件/P</option>
+                            <option value="50">50件/P</option>
+                            <option value="100">100件/P</option>
+                        </select>
+                    </div>
                     <div id="tw-sub-list" class="tw-list"><p class="tw-list-empty" data-i18n="extended.noListInfo">情報がありません</p></div>
                 </div>
             </div>
@@ -390,7 +405,15 @@
                     <div style="font-size:11px;margin-bottom:8px;opacity:0.9;display:flex;justify-content:space-between;background:var(--bg-base);border:1px solid var(--border-color);padding:4px 8px;border-radius:4px;" id="tw-vip-slot-info">
                         <span><span data-i18n="extended.vipSlotPrefix">VIP枠: </span><strong data-i18n="extended.vipSlotDesc">一覧取得後に反映</strong></span>
                     </div>
-                    <button class="btn-secondary" style="width:100%;margin-bottom:10px;" onclick="fetchVips(this)" id="tw-btn-vip-list" data-i18n="extended.fetchListBtn">一覧を取得</button>
+                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                        <button class="btn-secondary" style="flex:1;min-width:0;padding:4px;font-size:11px;height:28px;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="fetchVips(this)" id="tw-btn-vip-list" data-i18n="extended.fetchListBtn">一覧を取得</button>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-vip-size-select" onchange="changeVipPageSize(this.value)" aria-label="1ページあたりの表示人数">
+                            <option value="10" selected>10件/P</option>
+                            <option value="30">30件/P</option>
+                            <option value="50">50件/P</option>
+                            <option value="100">100件/P</option>
+                        </select>
+                    </div>
                     <div id="tw-vip-list" class="tw-list" style="margin-bottom:10px;"><p class="tw-list-empty" data-i18n="extended.noListInfo">情報がありません</p></div>
                     <label class="field-label" id="tw-l-vip-edit" data-i18n="extended.vipEditLabel">VIP追加・削除（ログインID）</label>
                     <div style="display:flex;gap:8px;">
@@ -645,7 +668,10 @@
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
                 <div style="font-weight: bold; color: var(--command-accent); margin-bottom: 12px; font-size: 12px;" data-i18n="settingsUi.adjustScreenTitle">画面表示の微調整</div>
                 
-                <span class="field-label" id="ui-settings-font-size-label" data-i18n="settingsUi.fontSizeLabel">文字サイズ調整</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="field-label" id="ui-settings-font-size-label" data-i18n="settingsUi.fontSizeLabel" style="margin-bottom: 0;">文字サイズ調整</span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;"><span id="settings_font_size_val">0</span>px</span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
                     <div class="custom-slider-wrapper" id="slider-font-size-wrapper" style="flex: 1;">
                         <div class="custom-slider-track"></div>
@@ -653,7 +679,10 @@
                     </div>
                 </div>
 
-                <span class="field-label" id="ui-settings-line-height-label" data-i18n="settingsUi.lineHeightLabel">行間の隙間調整</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="field-label" id="ui-settings-line-height-label" data-i18n="settingsUi.lineHeightLabel" style="margin-bottom: 0;">行間の隙間調整</span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;"><span id="settings_line_height_val">1.5</span></span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                     <div class="custom-slider-wrapper" id="slider-line-height-wrapper" style="flex: 1;">
                         <div class="custom-slider-track"></div>

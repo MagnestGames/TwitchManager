@@ -1148,6 +1148,96 @@
             text-align: center;
         }
 
+        .tw-pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 6px 0;
+            user-select: none;
+        }
+
+        .tw-page-size-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tw-page-size-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main, #efeff1);
+            border-radius: var(--radius-sm, 4px);
+            padding: 2px 4px;
+            font-size: 10.5px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            height: 26px;
+        }
+
+        .tw-page-size-select option {
+            background: #1f1f23;
+            color: #efeff1;
+        }
+
+        body.light-mode .tw-page-size-select option,
+        body.light-theme .tw-page-size-select option {
+            background: #ffffff;
+            color: #111111;
+        }
+
+        .tw-page-size-select:hover {
+            border-color: var(--command-accent, #9146FF);
+        }
+
+        .tw-page-nav-btns {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: auto;
+        }
+
+        .tw-page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            padding: 0 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-sm, 4px);
+            color: var(--text-main, #efeff1);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tw-page-btn:hover:not(:disabled) {
+            background: var(--command-accent, #9146FF);
+            border-color: var(--command-accent, #9146FF);
+            color: #ffffff;
+        }
+
+        .tw-page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .tw-page-num {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main, #efeff1);
+            padding: 0 4px;
+            letter-spacing: 0.5px;
+            min-width: 38px;
+            text-align: center;
+        }
+
         .tw-clip-list {
             display: grid;
             gap: 10px;
