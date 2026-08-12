@@ -1504,6 +1504,12 @@ window.copyCommonTag = copyCommonTag;
             }
 
             const isSelf = friendsConfig?.[ci]?.kind === 'authenticated-user';
+            const isPinned = Boolean(f.isPinned);
+            if (isPinned) {
+                card.classList.add('is-pinned-card');
+            }
+            const pinBadge = isPinned ? `<span title="ピン留め中" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">📌</span>` : '';
+
             const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
             const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
@@ -1523,11 +1529,26 @@ window.copyCommonTag = copyCommonTag;
                 ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">${raidSoEscape(sortMeta)}</span>`
                 : '';
 
+            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
+            const pinStyle = isPinned
+                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
+                : '';
+
+            const pinBtnHtml = isSelf ? '' : `
+                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="${pinStyle}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 17v5"></path>
+                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
+                        <line x1="9" y1="4" x2="15" y2="4"></line>
+                    </svg>
+                </button>
+            `;
+
             card.innerHTML = `
             <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
                 <div style="display:flex; flex-direction:column; min-width:0;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(displayName)}</span>
+                        <span>● ${pinBadge}${raidSoEscape(displayName)}</span>
                         ${sortMetaHtml}
                         <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1536,6 +1557,7 @@ window.copyCommonTag = copyCommonTag;
                     ${groupTagsHtml}
                 </div>
                 <div style="display:flex; gap:5px; flex-shrink:0;">
+                    ${pinBtnHtml}
                     <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
@@ -1593,6 +1615,17 @@ window.copyCommonTag = copyCommonTag;
             </div>`;
             return card;
         }
+
+        function toggleFriendPin(ci, fi) {
+            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
+            const friend = friendsConfig[ci].friends[fi];
+            friend.isPinned = !friend.isPinned;
+            saveFriendsLocal(false);
+            renderFriends();
+            const msg = friend.isPinned ? '最上部にピン留めしました 📌' : 'ピン留めを解除しました';
+            showToast(msg, 'info');
+        }
+        window.toggleFriendPin = toggleFriendPin;
 
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
@@ -1678,7 +1711,16 @@ window.copyCommonTag = copyCommonTag;
                     if (!friends.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
                     }
-                    friends.forEach((f, fi) => {
+
+                    // カテゴリ内でもピン留め対象を最上位へ整列
+                    const sortedCatFriends = [...friends].sort((a, b) => {
+                        const pa = a.isPinned ? 1 : 0;
+                        const pb = b.isPinned ? 1 : 0;
+                        return pb - pa;
+                    });
+
+                    sortedCatFriends.forEach((f) => {
+                        const fi = friends.indexOf(f);
                         d.querySelector('.category-records').appendChild(_buildFriendCard(f, ci, fi, L, I, null));
                     });
                     c.appendChild(d);
@@ -1710,6 +1752,10 @@ window.copyCommonTag = copyCommonTag;
 
                 allFriends.sort((a, b) => {
                     const fa = a.f, fb = b.f;
+                    const pa = fa.isPinned ? 1 : 0;
+                    const pb = fb.isPinned ? 1 : 0;
+                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
+
                     if (friendsSortOrder === 'name') {
                         const na = (fa.name || fa.twitch || '').toLowerCase();
                         const nb = (fb.name || fb.twitch || '').toLowerCase();
