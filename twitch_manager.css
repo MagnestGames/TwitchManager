@@ -4830,3 +4830,21 @@ body.light-theme .tw-command-copy-btn code {
 #friends-tag-filter-details > summary::before {
     content: none !important;
 }
+
+.icon-btn.id-pin-action {
+    color: var(--text-muted);
+}
+.icon-btn.id-pin-action:hover {
+    color: var(--warning-text, #ffaa00);
+    border-color: rgba(255, 170, 0, 0.4);
+    background: rgba(255, 170, 0, 0.08);
+}
+.icon-btn.id-pin-action.is-pinned {
+    color: var(--warning-text, #ffaa00);
+    border-color: rgba(255, 170, 0, 0.5);
+    background: rgba(255, 170, 0, 0.15);
+}
+.record-card.is-pinned-card {
+    border-color: rgba(255, 170, 0, 0.35) !important;
+    background: linear-gradient(180deg, rgba(255, 170, 0, 0.04) 0%, var(--bg-card) 100%) !important;
+}
