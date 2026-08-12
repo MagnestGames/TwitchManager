@@ -1534,7 +1534,7 @@ window.copyCommonTag = copyCommonTag;
                 ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
                 : '';
 
-            const pinBtnHtml = isSelf ? '' : `
+            const pinBtnHtml = `
                 <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 17v5"></path>
