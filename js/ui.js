@@ -1328,6 +1328,7 @@ window.copyCommonTag = copyCommonTag;
             return (r.label && r.label.trim()) || defaultLabel || 'NEW';
         }
         let titlesSortOrder = localStorage.getItem('stream_titles_sort_order_v16') || 'group';
+        let titlesLayoutMode = localStorage.getItem('stream_titles_layout_mode_v16') || 'grid';
 
         function changeTitlesSortOrder(val) {
             titlesSortOrder = val;
@@ -1337,6 +1338,15 @@ window.copyCommonTag = copyCommonTag;
             render();
         }
         window.changeTitlesSortOrder = changeTitlesSortOrder;
+
+        function changeTitlesLayoutMode(val) {
+            titlesLayoutMode = val;
+            localStorage.setItem('stream_titles_layout_mode_v16', val);
+            const sel = document.getElementById('titles-layout-select');
+            if (sel && sel.value !== val) sel.value = val;
+            render();
+        }
+        window.changeTitlesLayoutMode = changeTitlesLayoutMode;
 
         function toggleTitlePin(ci, ri) {
             if (!config[ci] || !config[ci].records[ri]) return;
@@ -1416,15 +1426,15 @@ window.copyCommonTag = copyCommonTag;
             card.setAttribute('data-idx', ri);
 
             card.innerHTML = `
-            <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})" style="position:relative; padding-right:32px;">
-                <div style="display:flex; align-items:center; gap:8px;">
+            <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})" style="position:relative; padding-right:36px;">
+                <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
                     <span id="record-label-${ci}-${ri}">● ${pinBadge}${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
-                    <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
+                    <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     </button>
                 </div>
                 ${pinBtnHtml}
-                <div class="record-actions">
+                <div class="record-actions" style="margin-right: 32px;">
                     <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
                         <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
@@ -1443,8 +1453,7 @@ window.copyCommonTag = copyCommonTag;
                 <span class="field-label">${L.title}</span>
                 <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
                 <div style="margin-top:2px; margin-bottom:10px;">
-                    <div style="font-size:10.5px; color:var(--text-muted); font-weight:bold; margin-bottom:2px;">反映プレビュー</div>
-                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                    <span style="font-size:10px; color:var(--text-muted);" id="record-title-counter-${ci}-${ri}">${(r.title || '').length}/140文字</span>
                 </div>
 
                 <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
@@ -1462,6 +1471,8 @@ window.copyCommonTag = copyCommonTag;
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
             c.classList.toggle('flat-mode', titlesSortOrder !== 'group');
+            c.classList.toggle('layout-grid', titlesLayoutMode === 'grid');
+            c.classList.toggle('layout-list', titlesLayoutMode === 'list');
             const T = langMap[currentLang];
             const L = T.labels;
             const A = T.titleActions || langMap.ja.titleActions;
@@ -1473,6 +1484,8 @@ window.copyCommonTag = copyCommonTag;
 
             const sel = document.getElementById('titles-sort-select');
             if (sel && sel.value !== titlesSortOrder) sel.value = titlesSortOrder;
+            const layoutSel = document.getElementById('titles-layout-select');
+            if (layoutSel && layoutSel.value !== titlesLayoutMode) layoutSel.value = titlesLayoutMode;
 
             // ----- グループ別表示（デフォ・手動ソート・ドラッグ可能） -----
             if (titlesSortOrder === 'group') {
@@ -1490,7 +1503,7 @@ window.copyCommonTag = copyCommonTag;
                             <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
                         </div>
                     </div>
-                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                    <div class="category-records sortable-items ${titlesLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
 
                     if (!records.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
@@ -1702,7 +1715,7 @@ window.copyCommonTag = copyCommonTag;
             `;
 
             card.innerHTML = `
-            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})" style="position:relative; padding-right:32px;">
+            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})" style="position:relative; padding-right:36px;">
                 <div style="display:flex; flex-direction:column; min-width:0;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span>● ${pinBadge}${raidSoEscape(displayName)}</span>
@@ -1714,7 +1727,7 @@ window.copyCommonTag = copyCommonTag;
                     ${groupTagsHtml}
                 </div>
                 ${pinBtnHtml}
-                <div style="display:flex; gap:5px; flex-shrink:0;">
+                <div style="display:flex; gap:5px; flex-shrink:0; margin-right:32px;">
                     <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
@@ -1784,6 +1797,27 @@ window.copyCommonTag = copyCommonTag;
         }
         window.toggleFriendPin = toggleFriendPin;
 
+        let friendsSortOrder = localStorage.getItem('stream_friends_sort_order_v16') || 'name';
+        let friendsLayoutMode = localStorage.getItem('stream_friends_layout_mode_v16') || 'grid';
+
+        function changeFriendsSortOrder(val) {
+            friendsSortOrder = val;
+            localStorage.setItem('stream_friends_sort_order_v16', val);
+            const sel = document.getElementById('friends-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderFriends();
+        }
+        window.changeFriendsSortOrder = changeFriendsSortOrder;
+
+        function changeFriendsLayoutMode(val) {
+            friendsLayoutMode = val;
+            localStorage.setItem('stream_friends_layout_mode_v16', val);
+            const sel = document.getElementById('friends-layout-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderFriends();
+        }
+        window.changeFriendsLayoutMode = changeFriendsLayoutMode;
+
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
             const L = langMap[currentLang];
@@ -1791,6 +1825,13 @@ window.copyCommonTag = copyCommonTag;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
             c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
+            c.classList.toggle('layout-grid', friendsLayoutMode === 'grid');
+            c.classList.toggle('layout-list', friendsLayoutMode === 'list');
+
+            const sortSel = document.getElementById('friends-sort-select');
+            if (sortSel && sortSel.value !== friendsSortOrder) sortSel.value = friendsSortOrder;
+            const layoutSel = document.getElementById('friends-layout-select');
+            if (layoutSel && layoutSel.value !== friendsLayoutMode) layoutSel.value = friendsLayoutMode;
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -1866,7 +1907,7 @@ window.copyCommonTag = copyCommonTag;
                             <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
                         </div>
                     </div>
-                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                    <div class="category-records sortable-items ${friendsLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
 
                     if (!friends.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');

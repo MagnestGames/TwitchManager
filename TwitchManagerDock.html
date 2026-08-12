@@ -104,11 +104,15 @@
         <!-- Title Sort & Open/Close Toolbar -->
         <div class="titles-toolbar" style="display: flex; gap: 6px; margin-top: 10px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
             <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="titles.sortBy">表示順:</span>
-            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" data-i18n-aria="titles.sortBy" aria-label="表示順" style="flex: 1; min-width: 130px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" data-i18n-aria="titles.sortBy" aria-label="表示順" style="flex: 1; min-width: 120px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="group" data-i18n="titles.sortGroup" selected>グループ別 (手動)</option>
                 <option value="category" data-i18n="titles.sortCategory">カテゴリ順 (一覧)</option>
                 <option value="title" data-i18n="titles.sortTitle">登録タイトル順 (2) (一覧)</option>
                 <option value="name" data-i18n="titles.sortName">登録名前順 (1) (一覧)</option>
+            </select>
+            <select id="titles-layout-select" onchange="changeTitlesLayoutMode(this.value)" aria-label="レイアウト" style="font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="grid" data-i18n="layoutGrid" selected>横並び可</option>
+                <option value="list" data-i18n="layoutList">縦積みのみ</option>
             </select>
             <button type="button" class="btn-secondary" onclick="expandAllTitles()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="expandAllTitlesTip" title="すべてのタイトルカードを開く">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg><span data-i18n="expandAll">すべて開く</span>
@@ -496,12 +500,16 @@
         <!-- Sort & Filter Toolbar -->
         <div class="friends-toolbar" style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
             <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
-            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 130px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 120px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
                 <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
                 <option value="recent-so" data-i18n="idList.sortRecentSo">直近の応援順</option>
                 <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
                 <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
+            </select>
+            <select id="friends-layout-select" onchange="changeFriendsLayoutMode(this.value)" aria-label="レイアウト" style="font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="grid" data-i18n="layoutGrid" selected>横並び可</option>
+                <option value="list" data-i18n="layoutList">縦積みのみ</option>
             </select>
             <button type="button" class="btn-secondary" onclick="expandAllFriends()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="expandAllFriendsTip" title="すべてのIDカードを開く">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg><span data-i18n="expandAll">すべて開く</span>
