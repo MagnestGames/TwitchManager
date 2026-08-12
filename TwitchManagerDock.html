@@ -599,7 +599,18 @@
     <div id="settingModal" class="modal-overlay" onclick="if(event.target===this)closeModal('settingModal')">
         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="ui-settings-title">
             <button class="modal-close-top" onclick="closeModal('settingModal')" data-i18n-aria="extended.close" aria-label="閉じる">×</button>
-            <h3 id="ui-settings-title" style="color: var(--command-accent); font-size:18px; margin-bottom:20px; display:flex; align-items:center;" data-i18n="settingsUi.title">設定</h3>
+            <h3 id="ui-settings-title" style="color: var(--command-accent); font-size:18px; margin-bottom:16px; display:flex; align-items:center;" data-i18n="settingsUi.title">設定</h3>
+            <!-- バージョンステータス表示エリア -->
+            <div id="app-version-status-container" style="background:var(--bg-panel); padding:10px 14px; border-radius:10px; margin-bottom:20px; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px;">
+                <div id="app-version-status-text" style="color:var(--text-main); font-weight:500; display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden;">
+                    <span id="app-version-status-icon" style="font-size:13px;">✅</span>
+                    <span id="app-version-status-msg" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">バージョン確認中...</span>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                    <button type="button" id="app-version-action-btn" class="btn-primary" style="padding:4px 10px; font-size:11px; display:none;" onclick="openUpdateReleasePage()"><span data-i18n="extended.updateDownloadBtn">更新する ↗</span></button>
+                    <button type="button" id="app-version-check-btn" class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="checkUpdateManual()"><span data-i18n="extended.updateCheckBtn">更新を確認</span></button>
+                </div>
+            </div>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
                 <div class="category-subtitle" id="ui-settings-auth-title" style="margin-bottom:8px;" data-i18n="settingsUi.authTitle">Twitch認証</div>
@@ -686,18 +697,7 @@
                     </div>
                 </div>
             </div>
-                        <!-- バージョンステータス表示エリア (Feature 3) -->
-            <div id="app-version-status-container" style="background:var(--bg-panel); padding:12px 16px; border-radius:10px; margin-bottom:16px; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px;">
-                <div id="app-version-status-text" style="color:var(--text-main); font-weight:500; display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden;">
-                    <span id="app-version-status-icon">✅</span>
-                    <span id="app-version-status-msg" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">バージョン確認中...</span>
-                </div>
-                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-                    <button type="button" id="app-version-action-btn" class="btn-primary" style="padding:4px 10px; font-size:11px; display:none;" onclick="openUpdateReleasePage()"><span data-i18n="extended.updateDownloadBtn">更新する ↗</span></button>
-                    <button type="button" id="app-version-check-btn" class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="checkUpdateManual()"><span data-i18n="extended.updateCheckBtn">更新を確認</span></button>
-                </div>
-            </div>
-<button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
+            <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
         </div>
     </div>
 
