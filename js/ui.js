@@ -2774,7 +2774,7 @@ window.copyCommonTag = copyCommonTag;
             <div style="background:var(--bg-card);border:2px solid var(--border-color);border-radius:12px;padding:16px;width:300px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <strong style="color:var(--twitch-purple);font-size:13px;">${raidSoEscape(uiText('idList.datePickerTitle', { type: typeLabel }))}</strong>
-                    <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
+                    <button onclick="document.getElementById('mini-date-picker-overlay')?.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&lt;</button>
@@ -6066,11 +6066,10 @@ function safeSetLocal(key, value) {
         function renderVipSlotInfo(currentVipCount, maxVip) {
             const infoEl = document.getElementById('tw-vip-slot-info');
             if (!infoEl) return;
-            const remaining = Math.max(0, maxVip - currentVipCount);
-            if (maxVip === 0) {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong> (${raidSoEscape(uiText('runtime.standardAccount'))})</span>`;
+            if (!maxVip || maxVip === 0) {
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span>`;
             } else {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount} / ${maxVip}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span>${raidSoEscape(uiText('runtime.remaining'))}: <strong>${remaining}${raidSoEscape(uiText('runtime.slotSuffix'))}</strong></span>`;
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span style="font-size:10px;opacity:0.8;">(推定枠上限: <strong>${maxVip}人</strong>)</span>`;
             }
         }
 
@@ -6084,18 +6083,192 @@ function safeSetLocal(key, value) {
             }
         }
 
-        function renderVipList(vips) {
+        let _subState = {
+            subscribers: [],
+            rawSubscribers: [],
+            total: 0,
+            currentPage: 1,
+            pageSize: Number(localStorage.getItem('tw_sub_page_size') || 10),
+            sortMode: localStorage.getItem('tw_sub_sort_mode') || 'default'
+        };
+        let _vipState = {
+            vips: [],
+            currentPage: 1,
+            pageSize: Number(localStorage.getItem('tw_vip_page_size') || 10)
+        };
+
+        function sortSubscribersArray(subscribers, sortMode) {
+            if (!Array.isArray(subscribers) || subscribers.length === 0) return subscribers || [];
+            const sorted = [...subscribers];
+            if (sortMode === 'tier_desc') {
+                sorted.sort((a, b) => (Number(b.tier) || 1000) - (Number(a.tier) || 1000));
+            } else if (sortMode === 'tier_asc') {
+                sorted.sort((a, b) => (Number(a.tier) || 1000) - (Number(b.tier) || 1000));
+            } else if (sortMode === 'gift_first') {
+                sorted.sort((a, b) => (b.is_gift ? 1 : 0) - (a.is_gift ? 1 : 0));
+            } else if (sortMode === 'direct_first') {
+                sorted.sort((a, b) => (a.is_gift ? 1 : 0) - (b.is_gift ? 1 : 0));
+            }
+            return sorted;
+        }
+
+        function renderSubscriberList(subscribers, total, page = 1, pageSize = null) {
+            const c = document.getElementById('tw-sub-list');
+            if (!c) return;
+            if (!subscribers || subscribers.length === 0) {
+                _subState.subscribers = [];
+                _subState.rawSubscribers = [];
+                _subState.total = 0;
+                _subState.currentPage = 1;
+                c.innerHTML = twitchListEmptyHtml();
+                return;
+            }
+
+            _subState.rawSubscribers = subscribers;
+            _subState.total = total !== undefined ? total : subscribers.length;
+            if (pageSize) _subState.pageSize = Number(pageSize) || 10;
+
+            const effectivePageSize = _subState.pageSize || 10;
+            const totalCount = _subState.total;
+
+            const sortedSubscribers = sortSubscribersArray(subscribers, _subState.sortMode);
+            _subState.subscribers = sortedSubscribers;
+
+            const totalPages = Math.ceil(sortedSubscribers.length / effectivePageSize) || 1;
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            _subState.currentPage = page;
+
+            // Sync top header selects if present
+            const subSizeSel = document.getElementById('tw-sub-size-select');
+            if (subSizeSel && String(subSizeSel.value) !== String(effectivePageSize)) {
+                subSizeSel.value = String(effectivePageSize);
+            }
+            const subSortSel = document.getElementById('tw-sub-sort-select');
+            if (subSortSel && String(subSortSel.value) !== String(_subState.sortMode)) {
+                subSortSel.value = String(_subState.sortMode || 'default');
+            }
+
+            let displayItems = sortedSubscribers;
+            if (sortedSubscribers.length > 10) {
+                const start = (page - 1) * effectivePageSize;
+                const end = start + effectivePageSize;
+                displayItems = sortedSubscribers.slice(start, end);
+            }
+
+            let html = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${totalCount}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>`;
+
+            html += displayItems.map(s => {
+                const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
+                const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
+                return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
+            }).join('');
+
+            if (sortedSubscribers.length > 10) {
+                html += `
+                <div class="tw-pagination-bar">
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
+                    <span class="tw-page-num">${page} / ${totalPages}</span>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
+                </div>`;
+            }
+
+            c.innerHTML = html;
+        }
+        window.renderSubscriberList = renderSubscriberList;
+
+        function changeSubPage(newPage) {
+            if (!_subState.subscribers || _subState.subscribers.length === 0) return;
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, newPage);
+        }
+        window.changeSubPage = changeSubPage;
+
+        function changeSubPageSize(newSize) {
+            const size = Number(newSize) || 10;
+            _subState.pageSize = size;
+            safeSetLocal('tw_sub_page_size', String(size));
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1, size);
+        }
+        window.changeSubPageSize = changeSubPageSize;
+
+        function changeSubSortMode(newSortMode) {
+            _subState.sortMode = newSortMode || 'default';
+            safeSetLocal('tw_sub_sort_mode', _subState.sortMode);
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1);
+        }
+        window.changeSubSortMode = changeSubSortMode;
+
+        function renderVipList(vips, page = 1, pageSize = null) {
             const list = document.getElementById('tw-vip-list');
             if (!list) return;
-            list.innerHTML = vips.length === 0
-                ? twitchListEmptyHtml()
-                : vips.map(v => {
-                    const name = raidSoEscape(v.user_name || v.user_login || '');
-                    const login = raidSoEscape(v.user_login || '');
-                    const tip = raidSoEscape(twExt('copyVipIdTip'));
-                    return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
-                }).join('');
+            if (!vips || vips.length === 0) {
+                _vipState.vips = [];
+                _vipState.currentPage = 1;
+                list.innerHTML = twitchListEmptyHtml();
+                return;
+            }
+
+            _vipState.vips = vips;
+            if (pageSize) _vipState.pageSize = Number(pageSize) || 10;
+
+            const effectivePageSize = _vipState.pageSize || 10;
+            const totalPages = Math.ceil(vips.length / effectivePageSize) || 1;
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            _vipState.currentPage = page;
+
+            // Sync top header select if present
+            const vipSizeSel = document.getElementById('tw-vip-size-select');
+            if (vipSizeSel && String(vipSizeSel.value) !== String(effectivePageSize)) {
+                vipSizeSel.value = String(effectivePageSize);
+            }
+
+            let displayItems = vips;
+            if (vips.length > 10) {
+                const start = (page - 1) * effectivePageSize;
+                const end = start + effectivePageSize;
+                displayItems = vips.slice(start, end);
+            }
+
+            let html = displayItems.map(v => {
+                const name = raidSoEscape(v.user_name || v.user_login || '');
+                const login = raidSoEscape(v.user_login || '');
+                const tip = raidSoEscape(twExt('copyVipIdTip'));
+                return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
+            }).join('');
+
+            if (vips.length > 10) {
+                html += `
+                <div class="tw-pagination-bar">
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
+                    <span class="tw-page-num">${page} / ${totalPages}</span>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
+                </div>`;
+            }
+
+            list.innerHTML = html;
         }
+        window.renderVipList = renderVipList;
+
+        function changeVipPage(newPage) {
+            if (!_vipState.vips || _vipState.vips.length === 0) return;
+            renderVipList(_vipState.vips, newPage);
+        }
+        window.changeVipPage = changeVipPage;
+
+        function changeVipPageSize(newSize) {
+            const size = Number(newSize) || 10;
+            _vipState.pageSize = size;
+            safeSetLocal('tw_vip_page_size', String(size));
+            renderVipList(_vipState.vips, 1, size);
+        }
+        window.changeVipPageSize = changeVipPageSize;
 
         function copyVipLoginFromButton(button) {
             const login = String(button?.dataset?.login || '').trim();
