@@ -1344,7 +1344,7 @@ window.copyCommonTag = copyCommonTag;
             record.isPinned = !record.isPinned;
             saveAllLocal(false);
             render();
-            const msg = record.isPinned ? '最上部にピン留めしました 📌' : 'ピン留めを解除しました';
+            const msg = record.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
             showToast(msg, 'info');
         }
         window.toggleTitlePin = toggleTitlePin;
@@ -1356,7 +1356,7 @@ window.copyCommonTag = copyCommonTag;
             });
             saveAllLocal(false);
             render();
-            showToast('すべてのタイトルカードを開きました 📂', 'info');
+            showToast('すべてのタイトルカードを開きました', 'info');
         }
         window.expandAllTitles = expandAllTitles;
 
@@ -1367,7 +1367,7 @@ window.copyCommonTag = copyCommonTag;
             });
             saveAllLocal(false);
             render();
-            showToast('すべてのタイトルカードを閉じました 📁', 'info');
+            showToast('すべてのタイトルカードを閉じました', 'info');
         }
         window.collapseAllTitles = collapseAllTitles;
 
@@ -1378,7 +1378,7 @@ window.copyCommonTag = copyCommonTag;
             });
             saveFriendsLocal(false);
             renderFriends();
-            showToast('すべてのIDカードを開きました 📂', 'info');
+            showToast('すべてのIDカードを開きました', 'info');
         }
         window.expandAllFriends = expandAllFriends;
 
@@ -1389,13 +1389,13 @@ window.copyCommonTag = copyCommonTag;
             });
             saveFriendsLocal(false);
             renderFriends();
-            showToast('すべてのIDカードを閉じました 📁', 'info');
+            showToast('すべてのIDカードを閉じました', 'info');
         }
         window.collapseAllFriends = collapseAllFriends;
 
         function _buildTitleCard(r, ci, ri, T, L, A) {
             const isPinned = Boolean(r.isPinned);
-            const pinBadge = isPinned ? `<span title="ピン留め中" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">📌</span>` : '';
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
             const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
             const pinStyle = isPinned
                 ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
@@ -1625,7 +1625,7 @@ window.copyCommonTag = copyCommonTag;
         function saveFriendsLocalDebounced() {
             if (saveFriendsTimeout) clearTimeout(saveFriendsTimeout);
             saveFriendsTimeout = setTimeout(() => {
-                saveFriendsLocal(false);
+                        saveFriendsLocal(false);
             }, 300);
         }
 
@@ -1665,7 +1665,7 @@ window.copyCommonTag = copyCommonTag;
             if (isPinned) {
                 card.classList.add('is-pinned-card');
             }
-            const pinBadge = isPinned ? `<span title="ピン留め中" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">📌</span>` : '';
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
 
             const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
@@ -1779,7 +1779,7 @@ window.copyCommonTag = copyCommonTag;
             friend.isPinned = !friend.isPinned;
             saveFriendsLocal(false);
             renderFriends();
-            const msg = friend.isPinned ? '最上部にピン留めしました 📌' : 'ピン留めを解除しました';
+            const msg = friend.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
             showToast(msg, 'info');
         }
         window.toggleFriendPin = toggleFriendPin;
