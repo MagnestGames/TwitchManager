@@ -2974,6 +2974,191 @@
             return copyTextToClipboard(getObsAudioSourceUrl(), doneText());
         }
 
+        function updateWelcomeImageSizeVal(val) {
+            const el = document.getElementById('settings_listener_image_size_val');
+            if (el) el.textContent = `${val}%`;
+        }
+        window.updateWelcomeImageSizeVal = updateWelcomeImageSizeVal;
+
+        function updateWelcomeImagePosHandle(x, y) {
+            const handle = document.getElementById('raidso-image-pos-handle');
+            const dot = document.getElementById('raidso-image-pos-dot');
+            const img = document.getElementById('raidso-image-pos-img');
+            const centerDot = document.getElementById('raidso-image-pos-center-dot');
+            if (handle) {
+                handle.style.left = `${x}%`;
+                handle.style.top = `${y}%`;
+            }
+            if (raidSoSettings.listenerImageFile) {
+                if (dot) dot.style.display = 'none';
+                if (centerDot) centerDot.style.display = 'block';
+                if (img) {
+                    img.src = raidSoSettings.listenerImageFile;
+                    img.style.display = 'block';
+                    const scale = (Number(raidSoSettings.listenerImageSize) || 100) / 100;
+                    img.style.transform = `scale(${scale})`;
+                }
+            } else {
+                if (dot) dot.style.display = 'block';
+                if (centerDot) centerDot.style.display = 'none';
+                if (img) {
+                    img.src = '';
+                    img.style.display = 'none';
+                }
+            }
+        }
+
+        function resetWelcomeImagePos() {
+            raidSoSettings.listenerImagePosX = 50;
+            raidSoSettings.listenerImagePosY = 50;
+            updateWelcomeImagePosHandle(50, 50);
+            saveListenerImageSettings();
+        }
+        window.resetWelcomeImagePos = resetWelcomeImagePos;
+
+        function initWelcomeImagePosPicker() {
+            const picker = document.getElementById('raidso-image-pos-picker');
+            if (!picker || picker.dataset.initialized) return;
+            picker.dataset.initialized = 'true';
+
+            let isDragging = false;
+
+            function updatePosFromEvent(e) {
+                const rect = picker.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                if (e.touches && e.touches[0]) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+                let x = Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
+                let y = Math.max(0, Math.min(100, Math.round(((clientY - rect.top) / rect.height) * 100)));
+
+                if (Math.abs(x - 50) <= 3) x = 50;
+                if (Math.abs(y - 50) <= 3) y = 50;
+
+                raidSoSettings.listenerImagePosX = x;
+                raidSoSettings.listenerImagePosY = y;
+                updateWelcomeImagePosHandle(x, y);
+                saveListenerImageSettings();
+            }
+
+            picker.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updatePosFromEvent(e);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) updatePosFromEvent(e);
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            picker.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                updatePosFromEvent(e);
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (isDragging) updatePosFromEvent(e);
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+        }
+        window.initWelcomeImagePosPicker = initWelcomeImagePosPicker;
+
+        function syncSettingModalListenerUI() {
+            const urlCode = document.getElementById('settings-secret-fox-obs-url');
+            if (urlCode && typeof getObsAudioSourceUrl === 'function') {
+                urlCode.textContent = getObsAudioSourceUrl();
+            }
+
+            const arrivalCheck = document.getElementById('settings_listener_arrival_enabled');
+            if (arrivalCheck) arrivalCheck.checked = Boolean(raidSoSettings.listenerArrivalEnabled);
+
+            const imageCheck = document.getElementById('settings_listener_image_enabled');
+            if (imageCheck) imageCheck.checked = Boolean(raidSoSettings.listenerImageEnabled);
+
+            const durInput = document.getElementById('settings_listener_image_duration');
+            if (durInput) durInput.value = raidSoSettings.listenerImageDuration || 5;
+
+            const sizeInput = document.getElementById('settings_listener_image_size');
+            if (sizeInput) {
+                const sz = raidSoSettings.listenerImageSize ?? 100;
+                sizeInput.value = sz;
+                updateWelcomeImageSizeVal(sz);
+            }
+
+            updateWelcomeImagePosHandle(raidSoSettings.listenerImagePosX ?? 50, raidSoSettings.listenerImagePosY ?? 50);
+            initWelcomeImagePosPicker();
+
+            const controls = document.getElementById('raidso-welcome-image-controls');
+            if (controls) controls.hidden = false;
+
+            const statusEl = document.getElementById('raidso-welcome-image-status');
+            const removeBtn = document.getElementById('raidso-welcome-image-remove-btn');
+
+            if (raidSoSettings.listenerImageFile) {
+                if (statusEl) statusEl.textContent = raidSoText().listenerImageSet || '画像設定済み';
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+            } else {
+                if (statusEl) statusEl.textContent = raidSoText().listenerImageNotSet || '未設定';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+        }
+        window.syncSettingModalListenerUI = syncSettingModalListenerUI;
+
+        function handleWelcomeImagePick(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) {
+                return showToast('画像サイズが大きすぎます (10MB以下を推奨)', 'error');
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                raidSoSettings.listenerImageFile = e.target.result;
+                raidSoSettings.listenerImageEnabled = true;
+                const imageCheck = document.getElementById('settings_listener_image_enabled');
+                if (imageCheck) imageCheck.checked = true;
+                saveListenerImageSettings();
+            };
+            reader.readAsDataURL(file);
+        }
+        window.handleWelcomeImagePick = handleWelcomeImagePick;
+
+        function removeWelcomeImage() {
+            raidSoSettings.listenerImageFile = '';
+            saveListenerImageSettings();
+        }
+        window.removeWelcomeImage = removeWelcomeImage;
+
+        function saveListenerImageSettings() {
+            raidSoSettings.listenerImageEnabled = Boolean(document.getElementById('settings_listener_image_enabled')?.checked ?? raidSoSettings.listenerImageEnabled);
+            const durInput = document.getElementById('settings_listener_image_duration');
+            if (durInput) raidSoSettings.listenerImageDuration = Math.max(1, Math.min(30, Number(durInput.value) || 5));
+            const sizeInput = document.getElementById('settings_listener_image_size');
+            if (sizeInput) raidSoSettings.listenerImageSize = Math.max(10, Math.min(200, Number(sizeInput.value) || 100));
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            syncSettingModalListenerUI();
+        }
+        window.saveListenerImageSettings = saveListenerImageSettings;
+
+        function testWelcomeImageAndSound() {
+            saveListenerImageSettings();
+            const soundFile = raidSoSettings.listenerEntries?.[0]?.soundFile || getRaidSoSoundFiles()[0] || '';
+            playRaidSoAudioConfig({
+                src: soundFile,
+                volume: 80,
+                label: 'テストリスナー'
+            }, { overlap: true, forceObs: true, forceImage: true });
+        }
+        window.testWelcomeImageAndSound = testWelcomeImageAndSound;
+
         async function openObsAudioSetup() {
             const r = raidSoText();
             const url = getObsAudioSourceUrl();
@@ -4102,18 +4287,27 @@
         }
 
         function playRaidSoAudioConfig(cfg, options = {}) {
-            if (!cfg.src) return;
+            if (!cfg.src && !options.forceImage) return;
             const directConfig = {
                 src: getRaidSoSoundPlaybackUrl(cfg.src),
                 volume: Math.max(0, Math.min(1, Number(cfg.volume) / 100)),
                 label: cfg.label
             };
-            if (raidSoSettings.obsAudioEnabled) {
+            const imageInfo = (options.forceImage || raidSoSettings.listenerImageEnabled) && raidSoSettings.listenerImageFile ? {
+                enabled: true,
+                src: raidSoSettings.listenerImageFile,
+                size: raidSoSettings.listenerImageSize || 100,
+                posX: raidSoSettings.listenerImagePosX ?? 50,
+                posY: raidSoSettings.listenerImagePosY ?? 50,
+                duration: raidSoSettings.listenerImageDuration || 5
+            } : null;
+
+            if (raidSoSettings.obsAudioEnabled || options.forceObs) {
                 const eventId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-                if (sendRaidSoObsAudio({ type: 'play', eventId, src: directConfig.src, volume: directConfig.volume, overlap: Boolean(options.overlap) }, directConfig, options)) return;
+                if (sendRaidSoObsAudio({ type: 'play', eventId, src: directConfig.src, volume: directConfig.volume, overlap: Boolean(options.overlap), imageInfo }, directConfig, options)) return;
                 raidSoLog(raidSoText().obsAudioFallback, 'warn');
             }
-            playRaidSoAudioDirect(directConfig, options);
+            if (directConfig.src) playRaidSoAudioDirect(directConfig, options);
         }
 
         function playRaidSoSound(kind, options = {}) {

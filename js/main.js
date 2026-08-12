@@ -469,6 +469,9 @@
         if (id === 'settingModal') {
             setupDateFormatSelect();
             updateSettingsAuthStatus();
+            if (typeof syncSettingModalListenerUI === 'function') {
+                syncSettingModalListenerUI();
+            }
         }
         return result;
     };

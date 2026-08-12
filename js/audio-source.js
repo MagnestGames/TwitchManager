@@ -53,9 +53,62 @@
     }
   }
 
+  let overlayTimer = null;
+  let overlayFadeTimer = null;
+
+  function showWelcomeOverlay(imageInfo) {
+    let overlay = document.getElementById('obs-welcome-overlay');
+    let img = document.getElementById('obs-welcome-img');
+
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'obs-welcome-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;max-width:1920px;max-height:1080px;pointer-events:none;z-index:999999;opacity:0;transition:opacity 0.4s ease-in-out;visibility:visible !important;';
+
+      img = document.createElement('img');
+      img.id = 'obs-welcome-img';
+      overlay.appendChild(img);
+
+      document.body.appendChild(overlay);
+    }
+
+    if (overlayTimer) clearTimeout(overlayTimer);
+    if (overlayFadeTimer) clearTimeout(overlayFadeTimer);
+
+    img.src = imageInfo.src;
+    const scale = (Number(imageInfo.size) || 100) / 100;
+    const posX = imageInfo.posX ?? 50;
+    const posY = imageInfo.posY ?? 50;
+
+    img.style.cssText = `position:absolute;left:${posX}%;top:${posY}%;transform:translate(-50%,-50%) scale(${scale});max-width:1600px;max-height:900px;object-fit:contain;filter:drop-shadow(0 6px 20px rgba(0,0,0,0.7));visibility:visible !important;transition:transform 0.2s ease, left 0.1s ease, top 0.1s ease;`;
+
+    overlay.style.display = 'block';
+    void overlay.offsetWidth;
+    overlay.style.opacity = '1';
+
+    const durationMs = Math.max(1000, (Number(imageInfo.duration) || 5) * 1000);
+    overlayTimer = setTimeout(() => {
+      overlay.style.opacity = '0';
+      overlayFadeTimer = setTimeout(() => {
+        overlay.style.display = 'none';
+        img.src = '';
+      }, 400);
+    }, durationMs);
+  }
+
   function play(message) {
-    if (!message || message.type !== 'play' || !remember(message.eventId) || !message.src) return;
+    if (!message || message.type !== 'play' || !remember(message.eventId)) return;
     if (!message.overlap) stopPrimary();
+
+    if (message.imageInfo && message.imageInfo.enabled && message.imageInfo.src) {
+      showWelcomeOverlay(message.imageInfo);
+    }
+
+    if (!message.src) {
+      reportPlayback('played', message.eventId);
+      return;
+    }
+
     const audio = new Audio(message.src);
     audio.preload = 'auto';
     audio.volume = Math.max(0, Math.min(1, Number(message.volume) || 0));

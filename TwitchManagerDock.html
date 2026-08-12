@@ -686,7 +686,93 @@
                     </div>
                 </div>
             </div>
-            <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
+                        <div style="background:var(--bg-panel); padding:16px 20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--command-accent);">
+                <details class="raidso-easter-egg" style="margin:0;">
+                    <summary style="display: flex; align-items: center; cursor: pointer; user-select: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align: middle; margin-right: 6px; display: inline-block;">
+                            <rect x="2" y="2" width="20" height="20" rx="5" fill="var(--command-accent, #9146ff)"/>
+                            <text x="12" y="16.5" font-size="15" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">β</text>
+                        </svg>
+                        <span data-i18n="raidSo.foxHint" style="font-weight: bold; font-size: 13px; color: var(--command-accent);">狐が何か知っているようです</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; vertical-align: middle;">
+                            <img src="https://avatars.githubusercontent.com/u/98635212?v=4" alt="uikouka" style="width: 18px; height: 18px; border-radius: 3px; object-fit: contain; display: block;" />
+                            <img src="https://avatars.githubusercontent.com/u/106515274?v=4" alt="frusumi" style="width: 18px; height: 18px; border-radius: 3px; object-fit: contain; display: block;" />
+                        </span>
+                    </summary>
+                    <div class="raidso-easter-body" style="margin-top: 12px;">
+                        <p style="font-size: 11.5px; color: var(--text-main); margin-bottom: 4px;" data-i18n="raidSo.listenerIntro">1. 指定したリスナーが配信のチャット参加者一覧に現れたとき、コメントの有無にかかわらず、配信ごとに一度だけ通知音・ウェルカム画像を再生します。</p>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px;" data-i18n="raidSo.listenerComingSoon">2. 今後のアップデートで追加予定（Coming Soon...）</p>
+                        <ul class="raidso-casual-notes" style="font-size: 10.5px; color: var(--text-muted); padding-left: 18px; margin-bottom: 12px;">
+                            <li data-i18n="raidSo.listenerPlayNote">ちょっとしたお遊び用の機能です。</li>
+                            <li data-i18n="raidSo.listenerPrivacyNote">コメントせず見ている方にも気づける機能です。驚かせないよう、相手への配慮を忘れずにお楽しみください。</li>
+                            <li data-i18n="raidSo.listenerDevNotice" style="color: var(--text-muted);">※開発・テスト中の機能のため、今後のアップデートで仕様変更や実装見送りとなる場合があります。</li>
+                        </ul>
+
+                        <div style="margin: 10px 0 12px 0;">
+                            <label class="field-label" style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="raidSo.audioSourceUrl">ブラウザソースURL</label>
+                            <div class="raidso-audio-url" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin: 0;">
+                                <code id="settings-secret-fox-obs-url" style="overflow-x: auto; white-space: nowrap; padding: 7px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-base); font-size: 11px;"></code>
+                                <button type="button" class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="copyObsAudioSourceUrl()"><span data-i18n="raidSo.copyAudioSourceUrl">コピー</span></button>
+                            </div>
+                        </div>
+                        
+                        <div class="tw-toggle-card" style="margin: 0 0 10px 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box;">
+                            <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: unset; margin: 0; gap: 8px;">
+                                <span style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none;" data-i18n="raidSo.listenerEnable">お出迎え通知音を表示する</span>
+                                <label class="tw-toggle" style="margin: 0;">
+                                    <input type="checkbox" id="settings_listener_arrival_enabled" onchange="setListenerArrivalEnabled(this.checked)" />
+                                    <span class="tw-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="tw-toggle-card" style="margin: 0 0 10px 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box;">
+                            <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: unset; margin: 0; gap: 8px;">
+                                <span style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none;" data-i18n="raidSo.listenerImageEnable">お出迎え画像を表示する</span>
+                                <label class="tw-toggle" style="margin: 0;">
+                                    <input type="checkbox" id="settings_listener_image_enabled" onchange="saveListenerImageSettings()" />
+                                    <span class="tw-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="raidso-welcome-image-controls" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="file" id="raidso-welcome-image-picker" accept="image/*,.gif,.png,.webp,.apng" style="display: none;" onchange="handleWelcomeImagePick(this)">
+                                <button type="button" class="btn-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="document.getElementById('raidso-welcome-image-picker').click()"><span data-i18n="raidSo.listenerImageSelect">画像を選択</span></button>
+                                <button type="button" id="raidso-welcome-image-remove-btn" class="btn-danger-soft" style="padding: 5px 10px; font-size: 11px; display: none;" onclick="removeWelcomeImage()"><span data-i18n="raidSo.listenerImageRemove">画像を削除</span></button>
+                                <span id="raidso-welcome-image-status" style="font-size: 11px; color: var(--text-muted);">未設定</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                                <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; min-width: 75px;" data-i18n="raidSo.listenerImageSizeLabel">表示サイズ:</span>
+                                <input type="range" id="settings_listener_image_size" value="100" min="10" max="200" step="5" style="flex: 1; accent-color: var(--command-accent);" oninput="updateWelcomeImageSizeVal(this.value); saveListenerImageSettings();">
+                                <span id="settings_listener_image_size_val" style="font-size: 11px; font-weight: bold; width: 42px; text-align: right; color: var(--text-main);">100%</span>
+                            </div>
+                            <div style="margin-top: 4px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="raidSo.listenerImagePosLabel">表示位置 (クリック/ドラッグで配置)</span>
+                                    <button type="button" class="btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick="resetWelcomeImagePos()" data-i18n="raidSo.listenerImageResetPos">中央に戻す</button>
+                                </div>
+                                <div id="raidso-image-pos-picker" style="width: 100%; aspect-ratio: 16/9; background: var(--bg-base, #18181b); border: 1px solid var(--border-color, #3f3f46); border-radius: 8px; position: relative; cursor: crosshair; user-select: none; overflow: hidden;">
+                                    <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(239, 68, 68, 0.4); pointer-events: none; z-index: 1;"></div>
+                                    <div style="position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(239, 68, 68, 0.4); pointer-events: none; z-index: 1;"></div>
+                                    <div id="raidso-image-pos-handle" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; display: flex; align-items: center; justify-content: center;">
+                                        <div id="raidso-image-pos-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #38bdf8; border: 2px solid #ffffff; box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);"></div>
+                                        <img id="raidso-image-pos-img" src="" style="display: none; max-width: 140px; max-height: 85px; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.8)); transform-origin: center center;" />
+                                        <div id="raidso-image-pos-center-dot" style="position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #ff4500; border: 1px solid #ffffff; box-shadow: 0 0 6px rgba(255, 69, 0, 0.9); z-index: 3; pointer-events: none; display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                                <span style="font-size: 11px;" data-i18n="raidSo.listenerImageDurationLabel">表示時間(秒):</span>
+                                <input type="number" id="settings_listener_image_duration" value="5" min="1" max="30" step="1" style="width: 55px; padding: 4px 6px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-base); color: var(--text-main);" onchange="saveListenerImageSettings()">
+                                <button type="button" class="btn-primary" style="padding: 5px 12px; font-size: 11px; margin-left: auto;" onclick="testWelcomeImageAndSound()">▶ <span data-i18n="raidSo.listenerImageTest">テスト表示</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+<button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
         </div>
     </div>
 
