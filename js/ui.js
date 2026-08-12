@@ -1535,7 +1535,7 @@ window.copyCommonTag = copyCommonTag;
                 : '';
 
             const pinBtnHtml = isSelf ? '' : `
-                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="${pinStyle}">
+                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 17v5"></path>
                         <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
@@ -1545,7 +1545,7 @@ window.copyCommonTag = copyCommonTag;
             `;
 
             card.innerHTML = `
-            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
+            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})" style="position:relative; padding-right:32px;">
                 <div style="display:flex; flex-direction:column; min-width:0;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span>● ${pinBadge}${raidSoEscape(displayName)}</span>
@@ -1556,8 +1556,8 @@ window.copyCommonTag = copyCommonTag;
                     </div>
                     ${groupTagsHtml}
                 </div>
+                ${pinBtnHtml}
                 <div style="display:flex; gap:5px; flex-shrink:0;">
-                    ${pinBtnHtml}
                     <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
