@@ -893,7 +893,7 @@
             record.isPinned = !record.isPinned;
             saveAllLocal(false);
             render();
-            const msg = record.isPinned ? '譛荳企Κ縺ｫ繝斐Φ逡吶ａ縺励∪縺励◆ 東' : '繝斐Φ逡吶ａ繧定ｧ｣髯､縺励∪縺励◆';
+            const msg = record.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
             showToast(msg, 'info');
         }
         window.toggleTitlePin = toggleTitlePin;
@@ -905,7 +905,7 @@
             });
             saveAllLocal(false);
             render();
-            showToast('縺吶∋縺ｦ縺ｮ繧ｿ繧､繝医Ν繧ｫ繝ｼ繝峨ｒ髢九″縺ｾ縺励◆ 唐', 'info');
+            showToast('すべてのタイトルカードを開きました', 'info');
         }
         window.expandAllTitles = expandAllTitles;
 
@@ -916,7 +916,7 @@
             });
             saveAllLocal(false);
             render();
-            showToast('縺吶∋縺ｦ縺ｮ繧ｿ繧､繝医Ν繧ｫ繝ｼ繝峨ｒ髢峨§縺ｾ縺励◆ 刀', 'info');
+            showToast('すべてのタイトルカードを閉じました', 'info');
         }
         window.collapseAllTitles = collapseAllTitles;
 
@@ -927,7 +927,7 @@
             });
             saveFriendsLocal(false);
             renderFriends();
-            showToast('縺吶∋縺ｦ縺ｮID繧ｫ繝ｼ繝峨ｒ髢九″縺ｾ縺励◆ 唐', 'info');
+            showToast('すべてのIDカードを開きました', 'info');
         }
         window.expandAllFriends = expandAllFriends;
 
@@ -938,14 +938,14 @@
             });
             saveFriendsLocal(false);
             renderFriends();
-            showToast('縺吶∋縺ｦ縺ｮID繧ｫ繝ｼ繝峨ｒ髢峨§縺ｾ縺励◆ 刀', 'info');
+            showToast('すべてのIDカードを閉じました', 'info');
         }
         window.collapseAllFriends = collapseAllFriends;
 
         function _buildTitleCard(r, ci, ri, T, L, A) {
             const isPinned = Boolean(r.isPinned);
-            const pinBadge = isPinned ? `<span title="繝斐Φ逡吶ａ荳ｭ" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">東</span>` : '';
-            const pinTip = isPinned ? '繝斐Φ逡吶ａ繧定ｧ｣髯､' : '譛荳企Κ縺ｫ繝斐Φ逡吶ａ';
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
+            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
             const pinStyle = isPinned
                 ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
                 : '';
@@ -1164,7 +1164,7 @@
         function saveFriendsLocalDebounced() {
             if (saveFriendsTimeout) clearTimeout(saveFriendsTimeout);
             saveFriendsTimeout = setTimeout(() => {
-                saveFriendsLocal(false);
+                        saveFriendsLocal(false);
             }, 300);
         }
 
@@ -1204,7 +1204,7 @@
             if (isPinned) {
                 card.classList.add('is-pinned-card');
             }
-            const pinBadge = isPinned ? `<span title="ピン留め中" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">📌</span>` : '';
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
 
             const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
@@ -1318,7 +1318,7 @@
             friend.isPinned = !friend.isPinned;
             saveFriendsLocal(false);
             renderFriends();
-            const msg = friend.isPinned ? '最上部にピン留めしました 📌' : 'ピン留めを解除しました';
+            const msg = friend.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
             showToast(msg, 'info');
         }
         window.toggleFriendPin = toggleFriendPin;
