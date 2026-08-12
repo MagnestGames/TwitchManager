@@ -1696,10 +1696,14 @@ window.copyCommonTag = copyCommonTag;
                         c.appendChild(card);
                         return;
                     }
+                    const friends = cat.friends || [];
                     const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
                     d.innerHTML = `
                     <div class="category-name" onclick="toggleFriendCategory(this, ${ci})">
-                        <span>${raidSoEscape(cat.name)}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>${raidSoEscape(cat.name)}</span>
+                            <span class="category-count-badge" style="font-size:12px; font-weight:normal; color:var(--text-muted); padding:1px 7px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid var(--border-color);">${friends.length}人</span>
+                        </div>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteFriendCategory(${ci})">${raidSoEscape(L.delete)}</button>
                             <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
@@ -1707,7 +1711,6 @@ window.copyCommonTag = copyCommonTag;
                     </div>
                     <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
 
-                    const friends = cat.friends || [];
                     if (!friends.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
                     }
