@@ -4848,3 +4848,35 @@ body.light-theme .tw-command-copy-btn code {
     border-color: rgba(255, 170, 0, 0.35) !important;
     background: linear-gradient(180deg, rgba(255, 170, 0, 0.04) 0%, var(--bg-card) 100%) !important;
 }
+
+/* Layout Mode: Grid (横並び可) vs List (縦積みのみ) */
+.category-records.layout-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 10px !important;
+}
+.category-records.layout-grid > .record-card {
+    margin-bottom: 0 !important;
+}
+
+.category-records.layout-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+.sortable-container.flat-mode.layout-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 10px !important;
+}
+.sortable-container.flat-mode.layout-grid > .record-card {
+    margin-bottom: 0 !important;
+}
+
+.sortable-container.flat-mode.layout-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+

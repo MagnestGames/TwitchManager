@@ -1,6 +1,9 @@
 const I18N_DATA = {
     "ja": {
         "ui": {
+            "rawIdListCopyBtn": "@ID荳隕ｧ",
+            "layoutGrid": "讓ｪ荳ｦ縺ｳ蜿ｯ",
+            "layoutList": "邵ｦ遨阪∩縺ｮ縺ｿ",
             "tabs": [
                 "タイトル",
                 "通知と紹介",
@@ -1452,6 +1455,8 @@ const I18N_DATA = {
                 "selfCategory": "My Twitch Account",
                 "selfMemo": "Authenticated account / Twitch User ID: {userId}",
                 "sortBy": "Sort By:",
+                "layoutGrid": "Allow Grid",
+                "layoutList": "Vertical Only",
                 "sortGroup": "By Group (Manual)",
                 "sortRecentSo": "Recent Shoutouts",
                 "sortSoCount": "Shoutout Count",
