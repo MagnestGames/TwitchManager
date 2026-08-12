@@ -6624,3 +6624,102 @@ function renderCpTable() {
     });
     tbody.innerHTML = html;
 }
+
+        let activeReleaseInfo = null;
+
+        function setNoticeReleaseInfo(release) {
+            activeReleaseInfo = release;
+        }
+
+        async function renderVersionStatusUI(forcedResult = null) {
+            const statusMsgEl = document.getElementById('app-version-status-msg');
+            const statusIconEl = document.getElementById('app-version-status-icon');
+            const actionBtn = document.getElementById('app-version-action-btn');
+
+            if (!statusMsgEl) return;
+
+            try {
+                const updateModule = window.TwitchManagerUpdate;
+                if (!updateModule) return;
+
+                const curVer = updateModule.currentVersion() || '1.0.3';
+                const result = forcedResult || await updateModule.checkForUpdate({ force: false, allowBeta: true });
+
+                if (result.status === 'available' && result.release) {
+                    setNoticeReleaseInfo(result.release);
+                    if (statusIconEl) statusIconEl.textContent = '🔄';
+                    const tmpl = uiText('extended.updateStatusAvailable') || '最新版 v{version} が利用可能です';
+                    statusMsgEl.textContent = tmpl.replace('{version}', result.release.version);
+                    statusMsgEl.style.color = 'var(--command-accent, #9146ff)';
+                    if (actionBtn) actionBtn.style.display = 'inline-block';
+                } else {
+                    if (statusIconEl) statusIconEl.textContent = '✅';
+                    const tmpl = uiText('extended.updateStatusLatest') || 'バージョン: v{version} (最新です)';
+                    statusMsgEl.textContent = tmpl.replace('{version}', curVer);
+                    statusMsgEl.style.color = 'var(--text-main)';
+                    if (actionBtn) actionBtn.style.display = 'none';
+                }
+            } catch (e) {
+                console.warn('renderVersionStatusUI failed', e);
+            }
+        }
+        window.renderVersionStatusUI = renderVersionStatusUI;
+
+        async function checkUpdateManual() {
+            const checkBtn = document.getElementById('app-version-check-btn');
+            const statusMsgEl = document.getElementById('app-version-status-msg');
+            if (checkBtn) checkBtn.disabled = true;
+            if (statusMsgEl) statusMsgEl.textContent = uiText('extended.updateChecking') || '確認中...';
+
+            try {
+                const updateModule = window.TwitchManagerUpdate;
+                if (!updateModule) return;
+                const result = await updateModule.checkForUpdate({ force: true, allowBeta: true });
+                await renderVersionStatusUI(result);
+                if (result.status === 'available' && result.release) {
+                    showStartupUpdateNoticeModal(result.release);
+                } else if (result.status === 'current' || result.status === 'unavailable') {
+                    const curVer = updateModule.currentVersion() || '1.0.3';
+                    const msgTmpl = uiText('extended.updateStatusLatest') || 'バージョン: v{version} (最新です)';
+                    showToast(msgTmpl.replace('{version}', curVer));
+                }
+            } catch (err) {
+                showToast('更新確認に失敗しました', 'error');
+            } finally {
+                if (checkBtn) checkBtn.disabled = false;
+            }
+        }
+        window.checkUpdateManual = checkUpdateManual;
+
+        function showStartupUpdateNoticeModal(release) {
+            if (!release) return;
+            setNoticeReleaseInfo(release);
+            const msgEl = document.getElementById('update-notice-modal-msg');
+            if (msgEl) {
+                const tmpl = uiText('extended.updateNoticeDesc') || '新しいバージョン ({version}) が公開されています。';
+                msgEl.textContent = tmpl.replace('{version}', release.version || release.name || '');
+            }
+            openModal('updateNoticeModal');
+        }
+        window.showStartupUpdateNoticeModal = showStartupUpdateNoticeModal;
+
+        function openUpdateReleasePage() {
+            const updateModule = window.TwitchManagerUpdate;
+            const targetUrl = activeReleaseInfo?.url || 'https://github.com/MagnestGames/TwitchManager/releases/latest';
+            if (updateModule?.openRelease) {
+                updateModule.openRelease(targetUrl);
+            } else {
+                window.open(targetUrl, '_blank', 'noopener,noreferrer');
+            }
+            closeModal('updateNoticeModal');
+        }
+        window.openUpdateReleasePage = openUpdateReleasePage;
+
+        function deferUpdateNotice() {
+            const updateModule = window.TwitchManagerUpdate;
+            if (updateModule?.deferVersion && activeReleaseInfo?.version) {
+                updateModule.deferVersion(activeReleaseInfo.version);
+            }
+            closeModal('updateNoticeModal');
+        }
+        window.deferUpdateNotice = deferUpdateNotice;

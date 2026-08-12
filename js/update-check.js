@@ -118,7 +118,7 @@
         const now = Number.isFinite(options.now) ? options.now : Date.now();
         const installedVersion = String(options.currentVersion || currentVersion()).trim();
         if (!parseVersion(installedVersion)) return { status: 'unavailable', reason: 'invalid-current-version' };
-        if (isBetaVersion(installedVersion)) return { status: 'unavailable', reason: 'beta-build' };
+        if (!options.allowBeta && !options.force && isBetaVersion(installedVersion)) return { status: 'unavailable', reason: 'beta-build' };
         const pendingNotification = parseNotification(readStorage(storage, NOTIFIED_KEY));
         if (!options.force && pendingNotification && now < pendingNotification.deferredUntil) {
             return { status: 'deferred', reason: 'remind-later' };

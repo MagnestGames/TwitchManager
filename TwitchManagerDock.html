@@ -686,7 +686,18 @@
                     </div>
                 </div>
             </div>
-            <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
+                        <!-- バージョンステータス表示エリア (Feature 3) -->
+            <div id="app-version-status-container" style="background:var(--bg-panel); padding:12px 16px; border-radius:10px; margin-bottom:16px; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px;">
+                <div id="app-version-status-text" style="color:var(--text-main); font-weight:500; display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden;">
+                    <span id="app-version-status-icon">✅</span>
+                    <span id="app-version-status-msg" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">バージョン確認中...</span>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+                    <button type="button" id="app-version-action-btn" class="btn-primary" style="padding:4px 10px; font-size:11px; display:none;" onclick="openUpdateReleasePage()"><span data-i18n="extended.updateDownloadBtn">更新する ↗</span></button>
+                    <button type="button" id="app-version-check-btn" class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="checkUpdateManual()"><span data-i18n="extended.updateCheckBtn">更新を確認</span></button>
+                </div>
+            </div>
+<button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
         </div>
     </div>
 
@@ -900,6 +911,23 @@
             document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
         }
     </script>
+
+    <!-- アップデート通知モーダル (Feature 2) -->
+    <div id="updateNoticeModal" class="modal-overlay" onclick="if(event.target===this)closeModal('updateNoticeModal')">
+        <div class="modal-content" style="max-width: 440px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🚀 <span data-i18n="extended.updateNoticeTitle">新しいバージョンが公開されています</span></h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('updateNoticeModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            <div id="update-notice-modal-msg" style="font-size: 12.5px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px;">
+                新しいバージョンが利用可能です。
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="deferUpdateNotice()" data-i18n="extended.updateSkipBtn" style="padding: 8px 14px; font-size: 12px;">今回はパス</button>
+                <button type="button" class="btn-primary" onclick="openUpdateReleasePage()" data-i18n="extended.updateDownloadBtn" style="padding: 8px 14px; font-size: 12px; font-weight: bold;">ダウンロードページを開く ↗</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 

@@ -121,6 +121,9 @@
         if (clientInput) clientInput.value = keepClientId;
         localStorage.setItem('stream_settings_v16', JSON.stringify(settings));
         updateSettingsAuthStatus();
+            if (typeof renderVersionStatusUI === 'function') {
+                renderVersionStatusUI();
+            }
     };
 
     async function authenticateTwitchFromSettings() {
@@ -768,3 +771,15 @@
         }
         document.addEventListener('click', () => requestAnimationFrame(updateDockLayoutMetrics));
     });
+
+    // 起動時の自動アップデート確認
+    setTimeout(async () => {
+        try {
+            if (window.TwitchManagerUpdate && typeof showStartupUpdateNoticeModal === 'function') {
+                const result = await window.TwitchManagerUpdate.checkForUpdate({ force: false });
+                if (result?.status === 'available' && result?.release) {
+                    showStartupUpdateNoticeModal(result.release);
+                }
+            }
+        } catch (_) {}
+    }, 1500);
