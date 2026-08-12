@@ -1327,8 +1327,141 @@ window.copyCommonTag = copyCommonTag;
             }
             return (r.label && r.label.trim()) || defaultLabel || 'NEW';
         }
+        let titlesSortOrder = localStorage.getItem('stream_titles_sort_order_v16') || 'group';
+
+        function changeTitlesSortOrder(val) {
+            titlesSortOrder = val;
+            localStorage.setItem('stream_titles_sort_order_v16', val);
+            const sel = document.getElementById('titles-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            render();
+        }
+        window.changeTitlesSortOrder = changeTitlesSortOrder;
+
+        function toggleTitlePin(ci, ri) {
+            if (!config[ci] || !config[ci].records[ri]) return;
+            const record = config[ci].records[ri];
+            record.isPinned = !record.isPinned;
+            saveAllLocal(false);
+            render();
+            const msg = record.isPinned ? '最上部にピン留めしました 📌' : 'ピン留めを解除しました';
+            showToast(msg, 'info');
+        }
+        window.toggleTitlePin = toggleTitlePin;
+
+        function expandAllTitles() {
+            (config || []).forEach(cat => {
+                cat.isClosed = false;
+                (cat.records || []).forEach(r => { r.isOpen = true; });
+            });
+            saveAllLocal(false);
+            render();
+            showToast('すべてのタイトルカードを開きました 📂', 'info');
+        }
+        window.expandAllTitles = expandAllTitles;
+
+        function collapseAllTitles() {
+            (config || []).forEach(cat => {
+                cat.isClosed = true;
+                (cat.records || []).forEach(r => { r.isOpen = false; });
+            });
+            saveAllLocal(false);
+            render();
+            showToast('すべてのタイトルカードを閉じました 📁', 'info');
+        }
+        window.collapseAllTitles = collapseAllTitles;
+
+        function expandAllFriends() {
+            (friendsConfig || []).forEach(cat => {
+                cat.isClosed = false;
+                (cat.friends || []).forEach(f => { f.isOpen = true; });
+            });
+            saveFriendsLocal(false);
+            renderFriends();
+            showToast('すべてのIDカードを開きました 📂', 'info');
+        }
+        window.expandAllFriends = expandAllFriends;
+
+        function collapseAllFriends() {
+            (friendsConfig || []).forEach(cat => {
+                cat.isClosed = true;
+                (cat.friends || []).forEach(f => { f.isOpen = false; });
+            });
+            saveFriendsLocal(false);
+            renderFriends();
+            showToast('すべてのIDカードを閉じました 📁', 'info');
+        }
+        window.collapseAllFriends = collapseAllFriends;
+
+        function _buildTitleCard(r, ci, ri, T, L, A) {
+            const isPinned = Boolean(r.isPinned);
+            const pinBadge = isPinned ? `<span title="ピン留め中" style="color:var(--warning-text, #ffaa00); font-size:11px; margin-right:3px;">📌</span>` : '';
+            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
+            const pinStyle = isPinned
+                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
+                : '';
+
+            const pinBtnHtml = `
+                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleTitlePin(${ci}, ${ri})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 17v5"></path>
+                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
+                        <line x1="9" y1="4" x2="15" y2="4"></line>
+                    </svg>
+                </button>
+            `;
+
+            const card = document.createElement('div');
+            card.className = "record-card" + (r.isOpen ? " open" : "") + (isPinned ? " is-pinned-card" : "");
+            card.setAttribute('data-idx', ri);
+
+            card.innerHTML = `
+            <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})" style="position:relative; padding-right:32px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="record-label-${ci}-${ri}">● ${pinBadge}${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
+                    <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                </div>
+                ${pinBtnHtml}
+                <div class="record-actions">
+                    <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                        <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
+                    </button>
+                    <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
+                    </button>
+                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">✕</button>
+                </div>
+            </div>
+            <div class="record-body">
+                <span class="field-label">${L.game}</span>
+                <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                
+                <span class="field-label">${L.title}</span>
+                <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
+                <div style="margin-top:2px; margin-bottom:10px;">
+                    <div style="font-size:10.5px; color:var(--text-muted); font-weight:bold; margin-bottom:2px;">反映プレビュー</div>
+                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                </div>
+
+                <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
+
+                <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+
+                <span class="field-label">${L.memo}</span>
+                <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
+            </div>`;
+            return card;
+        }
+
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', titlesSortOrder !== 'group');
             const T = langMap[currentLang];
             const L = T.labels;
             const A = T.titleActions || langMap.ja.titleActions;
@@ -1337,61 +1470,85 @@ window.copyCommonTag = copyCommonTag;
                 initSortable();
                 return;
             }
-            config.forEach((cat, ci) => {
-                const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
-                const records = cat.records || [];
-                if (!records.length) {
-                    d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
-                }
-                records.forEach((r, ri) => {
-                    const card = document.createElement('div'); card.className = "record-card" + (r.isOpen ? " open" : ""); card.setAttribute('data-idx', ri);
 
-                    card.innerHTML = `
-                <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span id="record-label-${ci}-${ri}">● ${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
-                        <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
+            const sel = document.getElementById('titles-sort-select');
+            if (sel && sel.value !== titlesSortOrder) sel.value = titlesSortOrder;
+
+            // ----- グループ別表示（デフォ・手動ソート・ドラッグ可能） -----
+            if (titlesSortOrder === 'group') {
+                config.forEach((cat, ci) => {
+                    const records = cat.records || [];
+                    const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
+                    d.innerHTML = `
+                    <div class="category-name" onclick="toggleCategory(this, ${ci})">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>${raidSoEscape(cat.name)}</span>
+                            <span class="category-count-badge" style="font-size:12px; font-weight:normal; color:var(--text-muted); padding:1px 7px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid var(--border-color);">${records.length}件</span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button>
+                            <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
+                        </div>
                     </div>
-                    <div class="record-actions">
-                        <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-                            <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
-                        </button>
-                        <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
-                        </button>
-                        <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">✕</button>
-                    </div>
-                </div>
-                <div class="record-body">
-                    <span class="field-label">${L.game}</span>
-                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
-                    
-                    <span class="field-label">${L.title}</span>
-                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
-                    <div style="margin-top:2px; margin-bottom:10px;">
-                        <div style="font-size:10.5px; color:var(--text-muted); font-weight:bold; margin-bottom:2px;">反映プレビュー</div>
-                        <div id="record-title-preview-${ci}-${ri}" class="title-preview-box">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
-                    </div>
+                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
+                    if (!records.length) {
+                        d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
+                    }
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+                    // カテゴリ内でもピン留め対象を最上位へ整列
+                    const sortedCatRecords = [...records].sort((a, b) => {
+                        const pa = a.isPinned ? 1 : 0;
+                        const pb = b.isPinned ? 1 : 0;
+                        return pb - pa;
+                    });
 
-                    <span class="field-label">${L.memo}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
-                </div>`;
-                    d.querySelector('.category-records').appendChild(card);
+                    sortedCatRecords.forEach((r) => {
+                        const ri = records.indexOf(r);
+                        d.querySelector('.category-records').appendChild(_buildTitleCard(r, ci, ri, T, L, A));
+                    });
+                    c.appendChild(d);
                 });
-                c.appendChild(d);
-            });
-            initSortable();
+                initSortable();
+
+            // ----- フラット表示（ソート順表示：カテゴリ順・登録タイトル順・登録名前順など） -----
+            } else {
+                const allRecords = [];
+                config.forEach((cat, ci) => {
+                    (cat.records || []).forEach((r, ri) => {
+                        allRecords.push({ r, ci, ri, catName: cat.name });
+                    });
+                });
+
+                allRecords.sort((a, b) => {
+                    const ra = a.r, rb = b.r;
+                    const pa = ra.isPinned ? 1 : 0;
+                    const pb = rb.isPinned ? 1 : 0;
+                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
+
+                    if (titlesSortOrder === 'name') {
+                        const na = getRecordDisplayLabel(ra, A.newLabel).toLowerCase();
+                        const nb = getRecordDisplayLabel(rb, A.newLabel).toLowerCase();
+                        return na.localeCompare(nb, 'ja');
+                    }
+                    if (titlesSortOrder === 'title') {
+                        const ta = (ra.title || '').toLowerCase();
+                        const tb = (rb.title || '').toLowerCase();
+                        return ta.localeCompare(tb, 'ja');
+                    }
+                    if (titlesSortOrder === 'category') {
+                        const ca = (ra.game || a.catName || '').toLowerCase();
+                        const cb = (rb.game || b.catName || '').toLowerCase();
+                        return ca.localeCompare(cb, 'ja');
+                    }
+                    return 0;
+                });
+
+                allRecords.forEach(({ r, ci, ri }) => {
+                    c.appendChild(_buildTitleCard(r, ci, ri, T, L, A));
+                });
+            }
+
             renderCommonTagBar();
         }
 

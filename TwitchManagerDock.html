@@ -101,6 +101,19 @@
             <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
         </details>
 
+        <!-- Title Sort & Open/Close Toolbar -->
+        <div class="titles-toolbar" style="display: flex; gap: 6px; margin-top: 10px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;">表示順:</span>
+            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" aria-label="表示順" style="flex: 1; min-width: 130px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="group" selected>グループ別 (手動)</option>
+                <option value="category">カテゴリ順 (一覧)</option>
+                <option value="title">登録タイトル順 (2) (一覧)</option>
+                <option value="name">登録名前順 (1) (一覧)</option>
+            </select>
+            <button type="button" class="btn-secondary" onclick="expandAllTitles()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" title="すべてのタイトルカードを開く">📂 すべて開く</button>
+            <button type="button" class="btn-secondary" onclick="collapseAllTitles()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" title="すべてのタイトルカードを閉じる">📁 すべて閉じる</button>
+        </div>
+
         <div id="main-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
@@ -477,15 +490,17 @@
         </details>
 
         <!-- Sort & Filter Toolbar -->
-        <div class="friends-toolbar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
-            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; font-size: 12px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; cursor: pointer; outline: none;">
+        <div class="friends-toolbar" style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
+            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 130px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
                 <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
                 <option value="recent-so" data-i18n="idList.sortRecentSo">直近の応援順</option>
                 <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
                 <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
             </select>
+            <button type="button" class="btn-secondary" onclick="expandAllFriends()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" title="すべてのIDカードを開く">📂 すべて開く</button>
+            <button type="button" class="btn-secondary" onclick="collapseAllFriends()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" title="すべてのIDカードを閉じる">📁 すべて閉じる</button>
         </div>
 
         <!-- タグで絞り込むアコーディオン -->
