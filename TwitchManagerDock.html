@@ -77,6 +77,14 @@
             </div>
         </details>
 
+        <!-- 共通タグバー (ヘルプの真下, 全タイトル共通・開閉対応) -->
+        <details id="common-tag-bar-section" style="padding: 4px 10px; border-bottom: 1px solid var(--border-color);" open>
+            <summary style="font-size: 10px; color: var(--text-muted); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; padding: 2px 0;">
+                <span data-i18n="commonTagBarTitle">共通タグ（クリックでコピー → タイトルに貼り付け）</span>
+                <button type="button" style="margin-left:auto; font-size:10px; padding:1px 6px;" class="btn-secondary" onclick="event.stopPropagation(); openTitleTagModal()">⚙️ 設定</button>
+            </summary>
+            <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
+        </details>
         <div id="main-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
@@ -858,6 +866,201 @@
             </div>
             <div style="display: flex; gap: 8px; justify-content: flex-end;">
                 <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
+                <div class="category-subtitle" id="ui-settings-stream-title" style="margin-bottom:12px;" data-i18n="settingsUi.streamSettingsTitle">配信管理設定</div>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div class="tw-toggle-card" style="margin: 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box; transition: none; transform: none;">
+                        <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; transition: none; transform: none; min-height: unset; margin: 0; gap: 8px;">
+                            <span id="ui-settings-auto-ad-label" data-i18n="settingsUi.autoAdLabel" style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none; flex: 1;">配信開始時に自動で広告（3分）を実行する</span>
+                            <label class="tw-toggle" style="margin: 0; transition: none; transform: none;">
+                                <input type="checkbox" id="settings_auto_ad" aria-labelledby="ui-settings-auto-ad-label" />
+                                <span class="tw-slider" style="transition: .2s; transform: none;"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="tw-toggle-card" style="margin: 0; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; box-sizing: border-box; transition: none; transform: none;">
+                        <div class="tw-toggle-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; transition: none; transform: none; min-height: unset; margin: 0; gap: 8px;">
+                            <span id="ui-settings-auto-pin-label" data-i18n="settingsUi.autoPinLabel" style="font-size:12px; color: var(--text-main); font-weight: bold; user-select: none; flex: 1;">紹介・レイドメッセージを自動でピン留め（20分）</span>
+                            <label class="tw-toggle" style="margin: 0; transition: none; transform: none;">
+                                <input type="checkbox" id="settings_auto_pin" aria-labelledby="ui-settings-auto-pin-label" />
+                                <span class="tw-slider" style="transition: .2s; transform: none;"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" id="ui-settings-save" style="width:100%;" onclick="saveSettings()" data-i18n="extended.saveBtn">保存</button>
+        </div>
+    </div>
+
+    <!-- Birthday Calendar & Full List Modal -->
+    <div id="birthdayCalendarModal" class="modal-overlay" onclick="if(event.target===this)closeModal('birthdayCalendarModal')">
+        <div class="modal-content calendar-modal-content" role="dialog" aria-modal="true" aria-labelledby="ui-calendar-modal-title" style="max-width: 480px; display: flex; flex-direction: column; padding: 20px;">
+            <div class="calendar-modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px;">
+                <h2 id="ui-calendar-modal-title" data-i18n="idList.calendarTitle" style="color: var(--twitch-purple); font-size: 18px; margin: 0;">◆ 記念日カレンダー</h2>
+                <div class="calendar-modal-header-actions" style="display: flex; align-items: center; gap: 8px;">
+                    <button id="btn-calendar-today" data-i18n="idList.today" class="btn-secondary" style="padding: 4px 10px; font-size: 11px; font-weight: bold; height: 26px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;" onclick="goCalendarToday()">今日</button>
+                    <button class="modal-close-top" onclick="closeModal('birthdayCalendarModal')" data-i18n-aria="extended.close" aria-label="閉じる" style="position: static; font-size: 20px; line-height: 1; padding: 0 4px; background: none; border: none; color: var(--text-muted); cursor: pointer;">✕</button>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button id="btn-calendar-tab-list" data-i18n="idList.listView" class="btn-primary" style="flex: 1; padding: 8px; font-weight: bold;" onclick="switchCalendarModalTab('list')">一覧表示</button>
+                <button id="btn-calendar-tab-grid" data-i18n="idList.calendarView" class="btn-secondary" style="flex: 1; padding: 8px; font-weight: bold;" onclick="switchCalendarModalTab('calendar')">カレンダー表示</button>
+            </div>
+
+            <!-- List view container -->
+            <div id="calendar-modal-list-view" style="flex: 1; overflow-y: auto; max-height: 350px;">
+                <!-- Full list of events generated dynamically -->
+            </div>
+
+            <!-- Calendar view container -->
+            <div id="calendar-modal-grid-view" style="display: none; flex: 1; flex-direction: column;">
+                <!-- Monthly Calendar header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <button class="icon-btn" onclick="navigateCalendarMonth(-1)" data-i18n-aria="idList.previousMonth" aria-label="前の月" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&lt;</button>
+                    <!-- 年月タイトル: クリックで年月ピッカー表示 -->
+                    <button id="calendar-month-title" onclick="toggleCalendarYMPicker()" data-i18n-aria="idList.chooseMonthYear" aria-label="年月を選択" style="font-weight: bold; font-size: 14px; color: var(--twitch-purple); background: none; border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: 0.15s; flex: 1; text-align: center;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='transparent'"></button>
+                    <button class="icon-btn" onclick="navigateCalendarMonth(1)" data-i18n-aria="idList.nextMonth" aria-label="次の月" style="padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-record); color: var(--text-main); font-weight: bold; cursor: pointer; flex-shrink:0;">&gt;</button>
+                </div>
+
+                <!-- 年月ピッカー (Googleカレンダー風) -->
+                <div id="cal-ym-picker" class="cal-ym-picker" style="display:none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow-md);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <button onclick="shiftCalendarYear(-1)" data-i18n-aria="idList.previousYear" aria-label="前年" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8249;</button>
+                        <span id="cal-ym-year-label" style="font-weight:bold;color:var(--text-main);font-size:13px;"></span>
+                        <button onclick="shiftCalendarYear(1)" data-i18n-aria="idList.nextYear" aria-label="翌年" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:2px 10px;cursor:pointer;font-weight:bold;">&#8250;</button>
+                    </div>
+                    <div id="cal-ym-months" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;"></div>
+                </div>
+
+                <!-- Calendar grid -->
+                <div class="calendar-grid-header" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 11px; color: var(--text-muted); font-weight: bold; margin-bottom: 4px;">
+                    <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+                </div>
+                <!-- 高さ固定: grid-template-rows で6行固定 -->
+                <div id="calendar-grid-body" style="display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; min-height: 220px;">
+                    <!-- Calendar days generated dynamically -->
+                </div>
+
+                <!-- 日付クリックで開く追加ポップアップ -->
+                <div id="cal-day-popup" style="display:none;margin-top:12px;padding:12px;background:var(--bg-card);border:1px solid var(--twitch-purple);border-radius:10px;box-shadow:var(--shadow-md);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid var(--border-color);padding-bottom:4px;">
+                        <strong id="cal-day-popup-title" style="color:var(--twitch-purple);font-size:13px;"></strong>
+                        <button onclick="document.getElementById('cal-day-popup').style.display='none'" data-i18n-aria="extended.close" aria-label="閉じる" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;">×</button>
+                    </div>
+                    <!-- 既存イベント表示 -->
+                    <div id="cal-day-existing" style="margin-bottom:8px;max-height:80px;overflow-y:auto;"></div>
+                    <!-- 追加フォーム -->
+                    <div id="cal-day-add-form">
+                        <div style="margin-bottom:6px;">
+                            <label for="cal-day-person-select" style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;" data-i18n="idList.selectStreamer">配信者を選択</label>
+                            <select id="cal-day-person-select" onchange="handleCalPersonSelectChange()" style="width: 100%;padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;"></select>
+                            <input type="text" id="cal-day-new-name" placeholder="ニックネームを入力してください" data-i18n-placeholder="idList.enterNickname" style="width:100%; padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;margin-top:4px;display:none;">
+                            <input type="text" id="cal-day-new-twitch" placeholder="Twitch IDを入力してください（任意）" data-i18n-placeholder="idList.newTwitchPlaceholder" style="width:100%; padding:4px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-main);font-size:12px;margin-top:4px;display:none;">
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:2px;" data-i18n="idList.celebrationType">お祝い種別</label>
+                            <input type="hidden" id="cal-day-type-value" value="birthday">
+                            <div style="display:flex;gap:6px;">
+                                <button id="cal-type-btn-birthday" onclick="selectCalDayType('birthday')" data-i18n="idList.birthday" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--twitch-purple);background:var(--twitch-purple);color: var(--text-white);font-size:11px;font-weight:bold;cursor:pointer;">誕生日</button>
+                                <button id="cal-type-btn-anniversary" onclick="selectCalDayType('anniversary')" data-i18n="idList.anniversary" style="flex:1;padding:5px;border-radius:5px;border:1px solid var(--border-color);background:var(--bg-item);color:var(--text-muted);font-size:11px;font-weight:bold;cursor:pointer;">記念日</button>
+                            </div>
+                        </div>
+                        <button onclick="confirmCalDayAdd()" data-i18n="save" style="width:100%;padding:6px;background:var(--twitch-purple);color: var(--text-white);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:bold;">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CP Group Modal -->
+    <div id="cpGroupModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 480px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpGroupModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-group-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.groupModalTitle">グループ設定</h3>
+            <input type="hidden" id="cp-group-edit-id">
+            <div style="margin-bottom: 12px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.groupModalNameLabel">グループ名:</label>
+                <input type="text" id="cp-group-name-input" placeholder="例: ホラゲー用、朝配信セット" data-i18n-placeholder="cpTab.groupModalNamePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="font-size:12px; font-weight:bold;" data-i18n="cpTab.groupModalChecklistLabel">含むチャンネルポイント (複数選択可能):</label>
+                    <select id="cp-modal-sort-select" onchange="changeCpModalSortOrder(this.value)" style="padding: 2px 6px; font-size: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;">
+                        <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
+                        <option value="cost_asc" data-i18n="cpTab.sortCostAsc">コスト昇順</option>
+                        <option value="cost_desc" data-i18n="cpTab.sortCostDesc">コスト降順</option>
+                        <option value="name_asc" data-i18n="cpTab.sortNameAsc">名前昇順</option>
+                        <option value="name_desc" data-i18n="cpTab.sortNameDesc">名前降順</option>
+                    </select>
+                </div>
+                <div id="cp-group-rewards-checklist" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; background: var(--bg-card); display: flex; flex-direction: column; gap: 4px;"></div>
+            </div>
+            
+            <!-- Automation Settings -->
+            <div style="margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--command-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 6px;" data-i18n="cpTab.automationTitle">自動化設定 (オートメーション)</div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px; text-align: left;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
+                        <input type="checkbox" id="cp-group-auto-stream-start" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
+                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnStreamStart">配信開始時に自動ON</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
+                        <input type="checkbox" id="cp-group-auto-raid" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
+                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnRaid">レイド受け取り時に自動ON</span>
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;">
+                        <label style="font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOffMinutes">ONにしてから自動OFF (分):</label>
+                        <div style="display: inline-flex; align-items: center; gap: 6px;">
+                            <input type="number" id="cp-group-auto-off-min" value="0" min="0" max="1440" class="cd-input-field" style="width: 65px; padding: 4px 6px; font-size: 11.5px; text-align: center; box-sizing: border-box;">
+                            <span style="font-size: 10.5px; color: var(--text-muted);" data-i18n="cpTab.autoOffMinutesHint">※0で無効</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpGroupModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveCpGroup()" data-i18n="extended.saveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CP Reward Modal (Create & Edit) -->
+    <div id="cpRewardModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 480px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
+            <input type="hidden" id="cp-reward-edit-id">
+
+            <!-- Template Loader Block (Shown when creating new reward) -->
+            <div id="cp-reward-template-wrapper" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 10px; border-radius: 6px;">
+                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color: #c084fc;" data-i18n="cpTab.loadTemplateLabel">既存ポイントから設定を読み込む:</label>
+                <select id="cp-reward-template-select" onchange="applyCpRewardTemplate(this.value)" style="display:block; width:100%; padding:5px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-item); color:var(--text-main); cursor:pointer; box-sizing:border-box;">
+                    <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
+                </select>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
+                <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalCostLabel">消費ポイント数 (コスト):</label>
+                <input type="number" id="cp-reward-cost-input" value="50" min="1" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalPromptLabel">説明文 (任意):</label>
+                <input type="text" id="cp-reward-prompt-input" placeholder="例: 配信上で効果音が再生されます" data-i18n-placeholder="cpTab.rewardModalPromptPlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
+                <input type="color" id="cp-reward-color-input" value="#9146FF" style="height:32px; width:60px; cursor:pointer;">
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
                 <button type="button" class="btn-primary" onclick="saveCpReward()" data-i18n="extended.saveBtn">保存</button>
             </div>
         </div>
@@ -900,6 +1103,71 @@
             document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
         }
     </script>
+        <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
+                <div style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;" data-i18n="titleTagGuide">
+                    タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
+                </div>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
+                <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
+                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
+                </div>
+                <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
+
+
+
+                <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準システムタグのご案内</summary>
+                    <div style="margin-top: 6px; line-height: 1.6; white-space: pre-line;" data-i18n="titleTagSystemDesc">
+                        【標準システムタグ】
+                        ・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名
+                        ・{コラボ} : IDリストで選択中のコラボ相手名
+                        ・{日付} : 本日の日付 (例: 8/5)
+                        ・{曜日} : 本日の曜日 (例: 水)
+                        ・{時間} : 現在の時刻 (例: 13:30)
+                    </div>
+                </details>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" data-i18n="cancel">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveTitleTagModalSettings()" data-i18n="extended.saveBtn">保存して反映</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重複ID統合・競合解決モーダル -->
+    <div id="idDeduplicateModal" class="modal-overlay" onclick="if(event.target===this)closeModal('idDeduplicateModal')">
+        <div class="modal-content" style="max-width: 580px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🔄 重複IDの統合・競合解決</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="font-size: 11.5px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;">
+                同じ Twitch ID が複数の項目に登録されています。各重複IDについて、残すデータを選択してください（両方のメモやSNS情報を結合して残すこともできます）。
+            </div>
+
+            <div id="id-dedup-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyIdDeduplication()">選択した内容で統合を実行</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 
