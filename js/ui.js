@@ -59,6 +59,9 @@
             updateLanguageButton();
 
             // 自動ローカライズ (data-i18n)
+            if (typeof streamStatsCache !== 'undefined' && streamStatsCache.data && typeof renderStreamStatsPopover === 'function') {
+                renderStreamStatsPopover(streamStatsCache.data);
+            }
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const keys = el.getAttribute('data-i18n').split('.');
                 let val = L;
@@ -1128,6 +1131,7 @@
             const I = L.idList || langMap.ja.idList;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -1365,30 +1369,24 @@
         }
         window.addNewGroupFromFilter = addNewGroupFromFilter;
 
-        async function showEditFriendTagsDialog(ci, fi) {
+                        async function showEditFriendTagsDialog(ci, fi) {
             const L = langMap[currentLang];
-            const E = L.extended || langMap.ja.extended || {};
-            const targetFriend = friendsConfig[ci].friends[fi];
+            const targetCat = friendsConfig[ci];
+            const targetFriend = targetCat?.friends?.[fi];
             if (!targetFriend) return;
 
-            // ターゲット配信者の Twitch ID を小文字化・正規化
-            const targetTwitch = (normalizeFriendTwitch(targetFriend.twitch || targetFriend.name || '') || '').toLowerCase();
-            if (!targetTwitch) {
-                showToast(uiText('idList.tagEditMissingTwitch'), 'error');
-                return;
-            }
-
-            // 現在のすべての所属グループ名を抽出
-            const currentBelongingGroups = [];
-            (friendsConfig || []).forEach(cat => {
+            // 現在所属しているグループのIndex集合を取得
+            const currentBelongingCatIndexes = new Set();
+            (friendsConfig || []).forEach((cat, cIdx) => {
                 if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
-                const hasMe = (cat.friends || []).some(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
-                if (hasMe) currentBelongingGroups.push(cat.name);
+                const hasMe = (cat.friends || []).some(f => f && (f === targetFriend || areFriendsSamePerson(f, targetFriend)));
+                if (hasMe) currentBelongingCatIndexes.add(cIdx);
             });
 
             // 選択肢となる通常のグループ（カテゴリー）一覧
             const availableCategories = (friendsConfig || [])
-                .filter(cat => cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user');
+                .map((cat, cIdx) => ({ cat, cIdx }))
+                .filter(item => item.cat.kind !== 'shoutout-history' && item.cat.kind !== 'authenticated-user');
 
             if (availableCategories.length === 0) {
                 showToast(uiText('idList.noGroups'), 'error');
@@ -1396,11 +1394,11 @@
             }
 
             // ダイアログHTMLの構築
-            const listHtml = availableCategories.map((cat, idx) => {
-                const checked = currentBelongingGroups.includes(cat.name) ? ' checked' : '';
+            const listHtml = availableCategories.map(({ cat, cIdx }) => {
+                const checked = currentBelongingCatIndexes.has(cIdx) ? ' checked' : '';
                 return `
                     <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 6px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" class="edit-tags-cb" value="${raidSoEscape(cat.name)}"${checked} style="width:16px; height:16px; accent-color: var(--twitch-purple);">
+                        <input type="checkbox" class="edit-tags-cb" value="${cIdx}"${checked} style="width:16px; height:16px; accent-color: var(--twitch-purple);">
                         <span style="font-size:13px; color: var(--text-main); font-weight: bold;">${raidSoEscape(cat.name)}</span>
                     </label>
                 `;
@@ -1424,48 +1422,35 @@
                 const btnSubmit = document.getElementById('edit-tags-submit');
                 if (btnSubmit) {
                     btnSubmit.onclick = () => {
-                        // チェックされたグループ（タグ）名一覧
-                        const selectedGroupNames = Array.from(document.querySelectorAll('.edit-tags-cb:checked')).map(cb => cb.value);
+                        const selectedCatIndexes = new Set(
+                            Array.from(document.querySelectorAll('.edit-tags-cb:checked')).map(cb => parseInt(cb.value, 10))
+                        );
 
-                        // 選択されたグループがゼロの場合、強制的に「未分類」に登録する（データ消失防止）
-                        if (selectedGroupNames.length === 0) {
+                        if (selectedCatIndexes.size === 0) {
                             const uncategorizedName = I18N_DATA[currentLang]?.ui?.idList?.uncategorized || I18N_DATA.ja.ui.idList.uncategorized;
-                            selectedGroupNames.push(uncategorizedName);
-                            // 未分類グループがなければ作成
                             let uIdx = (friendsConfig || []).findIndex(cat => cat.name === uncategorizedName);
                             if (uIdx === -1) {
                                 friendsConfig.push({ name: uncategorizedName, friends: [], isClosed: false });
+                                uIdx = friendsConfig.length - 1;
                             }
+                            selectedCatIndexes.add(uIdx);
                         }
 
-                        // 元の配信者オブジェクトの情報を保持する
-                        let baseFriendData = null;
-                        for (let cat of friendsConfig) {
-                            const found = (cat.friends || []).find(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
-                            if (found) {
-                                baseFriendData = { ...found };
-                                break;
-                            }
-                        }
-                        if (!baseFriendData) {
-                            baseFriendData = { ...targetFriend };
-                        }
-
-                        // 各グループの friends 配列を更新する
-                        (friendsConfig || []).forEach(cat => {
+                        // 対象カテゴリのみ差分でピンポイント追加/削除（無駄な全除去・破壊を行わない）
+                        (friendsConfig || []).forEach((cat, cIdx) => {
                             if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+                            if (!Array.isArray(cat.friends)) cat.friends = [];
 
-                            const myIdx = (cat.friends || []).findIndex(friend => (normalizeFriendTwitch(friend.twitch || friend.name || '') || '').toLowerCase() === targetTwitch);
-                            const shouldBelong = selectedGroupNames.includes(cat.name);
+                            const existingIdx = cat.friends.findIndex(f => f && (f === targetFriend || areFriendsSamePerson(f, targetFriend)));
+                            const shouldBelong = selectedCatIndexes.has(cIdx);
 
                             if (shouldBelong) {
-                                if (myIdx === -1) {
-                                    if (!cat.friends) cat.friends = [];
-                                    cat.friends.push({ ...baseFriendData });
+                                if (existingIdx === -1) {
+                                    cat.friends.push({ ...targetFriend });
                                 }
                             } else {
-                                if (myIdx > -1) {
-                                    cat.friends.splice(myIdx, 1);
+                                if (existingIdx > -1) {
+                                    cat.friends.splice(existingIdx, 1);
                                 }
                             }
                         });
@@ -1479,6 +1464,25 @@
             });
         }
         window.showEditFriendTagsDialog = showEditFriendTagsDialog;
+
+
+        function cleanupDuplicateFriendsInCategories() {
+            if (!Array.isArray(friendsConfig)) return;
+            friendsConfig.forEach(cat => {
+                if (!Array.isArray(cat.friends) || cat.friends.length <= 1) return;
+                const uniqueFriends = [];
+                cat.friends.forEach(friend => {
+                    if (!friend) return;
+                    const exists = uniqueFriends.some(f => areFriendsSamePerson(f, friend) || (f === friend));
+                    if (!exists) {
+                        uniqueFriends.push(friend);
+                    }
+                });
+                cat.friends = uniqueFriends;
+            });
+        }
+        window.cleanupDuplicateFriendsInCategories = cleanupDuplicateFriendsInCategories;
+
 
 
         // --- Twitch ID 重複チェック共通関数 ---
@@ -3343,6 +3347,7 @@
         }
 
         async function createRaidSoSubscription(type, condition, sessionId, version = '1') {
+            await new Promise(res => setTimeout(res, 100));
             await raidSoHelix('/eventsub/subscriptions', {
                 method: 'POST',
                 body: JSON.stringify({ type, version, condition, transport: { method: 'websocket', session_id: sessionId } })
@@ -3821,32 +3826,9 @@
             }
         }
 
-        async function handleRaidSoOutboundRaidEvent(event) {
-            const targetLogin = event.to_broadcaster_user_login;
-            const targetName = event.to_broadcaster_user_name;
-            const targetId = event.to_broadcaster_user_id;
+        function handleRaidSoOutboundRaidEvent(event) {
+            const targetName = event.to_broadcaster_user_name || event.to_broadcaster_user_login;
             raidSoLog(uiText('raidSo.outboundRaidDetected', { user: targetName }));
-            
-            if (raidSoSettings.autoSendRaidUrlEnabled) {
-                const url = `https://www.twitch.tv/${targetLogin}`;
-                const rawTemplate = raidSoSettings.outboundRaidTemplate || raidSoText().outboundRaidDefaultTemplate;
-                const channel = await getRaidSoChannel(targetId).catch(() => null);
-                const data = {
-                    username: targetLogin,
-                    displayName: targetName,
-                    game: channel?.game_name || '',
-                    title: channel?.title || '',
-                    viewers: event.viewers || '',
-                    url: url
-                };
-                const message = renderRaidSoTemplate(rawTemplate, data);
-                try {
-                    await sendRaidSoChat(message);
-                    raidSoLog(uiText('raidSo.outboundRaidUrlSent', { message }));
-                } catch (e) {
-                    raidSoLog(uiText('raidSo.outboundRaidUrlFailed', { error: localizeRaidSoError(e) }), 'warn');
-                }
-            }
         }
 
         async function getRaidSoUser(loginOrId) {
@@ -4260,12 +4242,28 @@
         }
 
         function raidSoLog(message, type = 'info') {
+            const msgStr = String(message || '');
             const now = new Date();
             const locale = currentLang === 'ja' ? 'ja-JP' : currentLang === 'zh' ? 'zh-CN' : 'en-US';
             const time = now.toLocaleString(locale, {
                 month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
             });
-            raidSoState.logs.unshift({ at: now.toISOString(), time, message: String(message || ''), type });
+            if (raidSoState.logs && raidSoState.logs.length > 0) {
+                const latest = raidSoState.logs[0];
+                const cleanLatest = latest.message.replace(/\s*\(x\d+\)$/, '');
+                const cleanMsg = msgStr.replace(/\s*\(x\d+\)$/, '');
+                if (cleanLatest === cleanMsg && latest.type === type) {
+                    const countMatch = latest.message.match(/\(x(\d+)\)$/);
+                    const count = countMatch ? parseInt(countMatch[1], 10) + 1 : 2;
+                    latest.message = `${cleanLatest} (x${count})`;
+                    latest.at = now.toISOString();
+                    latest.time = time;
+                    safeSetLocal(RAIDSO_LOG_STORAGE_KEY, JSON.stringify(raidSoState.logs));
+                    renderRaidSoLog();
+                    return;
+                }
+            }
+            raidSoState.logs.unshift({ at: now.toISOString(), time, message: msgStr, type });
             raidSoState.logs = raidSoState.logs.slice(0, RAIDSO_LOG_LIMIT);
             safeSetLocal(RAIDSO_LOG_STORAGE_KEY, JSON.stringify(raidSoState.logs));
             renderRaidSoLog();
@@ -4527,26 +4525,77 @@
                 showToast(uiText('runtime.selectBackupFile'), 'error');
                 return;
             }
-            const reader = new FileReader(); reader.onload = async (e) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
                 try {
                     const d = parseBackupJson(e.target.result);
 
-                    // 復元方法の選択ダイアログ (上書き / マージ / キャンセル)
+                    const hasTitle = (Array.isArray(d.config) && d.config.length > 0) || isBackupRecord(d.titleTagConfig);
+                    const hasId = Array.isArray(d.friends) && d.friends.length > 0;
+                    const hasRaidSo = isBackupRecord(d.raidShoutOut) || (Array.isArray(d.raidShoutOutTemplates) && d.raidShoutOutTemplates.length > 0) || (Array.isArray(d.cpGroups) && d.cpGroups.length > 0);
+                    const hasSettings = isBackupRecord(d.settings) || (Array.isArray(d.memoList) && d.memoList.length > 0) || isBackupRecord(d.ytSettings);
+
+                    const detectedItems = [];
+                    if (hasTitle) detectedItems.push('・タイトル一覧（カテゴリ・テンプレート・識別タグ）');
+                    if (hasId) detectedItems.push('・ID一覧（配信者カード情報）');
+                    if (hasRaidSo) detectedItems.push('・Twitch / 通知と紹介（レイド・チャネポ設定・テンプレート）');
+                    if (hasSettings) detectedItems.push('・ツール設定（環境設定・メモ帳）');
+
+                    if (detectedItems.length === 0) {
+                        showToast('復元可能なデータが含まれていないバックアップファイルです。', 'warn');
+                        return;
+                    }
+
+                    let fileSummaryText = '';
+                    if (hasTitle && !hasId && !hasRaidSo && !hasSettings) {
+                        fileSummaryText = `
+                            <div style="background: rgba(145, 71, 255, 0.1); border: 1px solid var(--twitch-purple); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
+                                <strong style="color: var(--twitch-purple); font-size: 13px;">📄 【タイトル一覧】専用バックアップ</strong>
+                                <div style="font-size: 11.5px; margin-top: 4px; color: var(--text-main); line-height: 1.5;">
+                                    このファイルには<strong>「タイトル一覧」</strong>のデータのみが含まれています。<br>
+                                    <span style="color: var(--command-accent); font-weight: bold;">※ ID一覧や通知設定など他のデータには一切影響を与えません（削除・変更されません）。</span>
+                                </div>
+                            </div>
+                        `;
+                    } else if (hasId && !hasTitle && !hasRaidSo && !hasSettings) {
+                        fileSummaryText = `
+                            <div style="background: rgba(145, 71, 255, 0.1); border: 1px solid var(--twitch-purple); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
+                                <strong style="color: var(--twitch-purple); font-size: 13px;">📄 【ID一覧】専用バックアップ</strong>
+                                <div style="font-size: 11.5px; margin-top: 4px; color: var(--text-main); line-height: 1.5;">
+                                    このファイルには<strong>「ID一覧」</strong>のデータのみが含まれています。<br>
+                                    <span style="color: var(--command-accent); font-weight: bold;">※ タイトル一覧や通知設定など他のデータには一切影響を与えません（削除・変更されません）。</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        fileSummaryText = `
+                            <div style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
+                                <strong style="font-size: 12.5px; color: var(--text-main);">📦 バックアップに含まれるデータ:</strong>
+                                <div style="font-size: 11.5px; margin-top: 6px; line-height: 1.6; color: var(--text-muted);">
+                                    ${detectedItems.join('<br>')}
+                                </div>
+                            </div>
+                        `;
+                    }
+
                     const choice = await showCustomDialog({
-                        title: uiText('runtime.restoreModeTitle'),
+                        title: 'バックアップの復元方法を選択',
                         type: 'alert',
                         messageHtml: `
-                            <div style="font-size:13px; line-height:1.6; margin-bottom:18px; color: var(--text-main);">
-                                ${raidSoEscape(uiText('runtime.restoreModeQuestion'))}<br><br>
-                                <strong>・${raidSoEscape(uiText('runtime.restoreOverwrite'))}</strong><br>
-                                ${raidSoEscape(uiText('runtime.restoreOverwriteDescription'))}<br><br>
-                                <strong>・${raidSoEscape(uiText('runtime.restoreMerge'))}</strong><br>
-                                ${raidSoEscape(uiText('runtime.restoreMergeDescription'))}
+                            <div style="font-size:12.5px; line-height:1.6; margin-bottom:14px; color: var(--text-main);">
+                                ${fileSummaryText}
+                                復元方法を選択してください:
                             </div>
                             <div style="display:flex; flex-direction:column; gap:10px;">
-                                <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreOverwrite'))}</button>
-                                <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(uiText('runtime.restoreMerge'))}</button>
-                                <button class="btn-secondary" id="restore-opt-cancel" style="padding:10px; font-weight:bold; width:100%;">${raidSoEscape(langMap[currentLang].cancel)}</button>
+                                <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span>✨ 統合追加（現在のデータに追加・結合）</span>
+                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">既存のデータを消さずに、バックアップ内のデータを結合します</span>
+                                </button>
+                                <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                                    <span>⚠️ 該当項目のみ上書き（対象項目を置き換え）</span>
+                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">ファイルに含まれる対象項目のみを置き換えます（他の項目は維持されます）</span>
+                                </button>
+                                <button class="btn-secondary" id="restore-opt-cancel" style="padding:8px; font-weight:bold; width:100%; font-size:12px;">${raidSoEscape(langMap[currentLang].cancel)}</button>
                             </div>
                         `,
                         onOpen: ({ resolveWith }) => {
@@ -4560,8 +4609,9 @@
                     });
 
                     if (choice === 'overwrite') {
-                        // 完全上書き
+                        // ファイル内に含まれる項目のみを安全に上書き（含まれない項目は100%維持）
                         if (Array.isArray(d.config)) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (d.titleTagConfig) localStorage.setItem('title_tag_config_v1', JSON.stringify(d.titleTagConfig));
                         if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
                         if (isBackupRecord(d.settings)) {
                             const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
@@ -4569,23 +4619,22 @@
                             localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
                         }
                         if (Array.isArray(d.memoList)) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
-                        if (isBackupRecord(d.raidShoutOut)) {
-                            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(removeDeprecatedRaidSoObsSettings(d.raidShoutOut)));
-                        }
+                        if (isBackupRecord(d.raidShoutOut)) localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(removeDeprecatedRaidSoObsSettings(d.raidShoutOut)));
                         if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
                         if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
                         if (Array.isArray(d.cpGroups)) localStorage.setItem('cp_groups_v1', JSON.stringify(d.cpGroups));
                         if (Array.isArray(d.cpAppRewardIds)) localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set(d.cpAppRewardIds.map(String))]));
+                        if (Array.isArray(d.ytPresetGroups)) localStorage.setItem('yt_manager_dock_preset_groups', JSON.stringify(d.ytPresetGroups));
+                        if (isBackupRecord(d.ytSettings)) localStorage.setItem('yt_manager_dock_settings', JSON.stringify(d.ytSettings));
 
                         raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
-                        showToast(uiText('runtime.restoreOverwriteDone'), 'success');
+                        showToast('該当項目を上書き復元しました', 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else if (choice === 'merge') {
-                        // 差分統合マージ処理
+                        // ファイル内に含まれる項目のみを安全にマージ統合
                         mergeBackupData(d);
-
                         raidSoLog(uiText('runtime.operationLog.backupMergeRestored'));
-                        showToast(uiText('runtime.restoreMergeDone'), 'success');
+                        showToast('該当項目を統合追加しました', 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         showToast(uiText('runtime.restoreCanceled'), 'info');
@@ -4593,7 +4642,8 @@
                 } catch (error) {
                     showToast(uiText('runtime.restoreFailed'), 'error');
                 }
-            }; reader.readAsText(file);
+            };
+            reader.readAsText(file);
             reader.onerror = () => showToast(uiText('runtime.restoreFailed'), 'error');
         }
 
@@ -4612,13 +4662,27 @@
         }
 
         function mergeBackupData(d) {
-            // 1. config
+            // 1. config (タイトルカテゴリ・レコードの統合)
             if (d.config && Array.isArray(d.config)) {
                 let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
                 d.config.forEach(cfg => {
-                    const idx = localConfig.findIndex(c => c.id === cfg.id);
-                    if (idx > -1) localConfig[idx] = cfg;
-                    else localConfig.push(cfg);
+                    if (!cfg) return;
+                    const idx = localConfig.findIndex(c => (c.id && cfg.id && c.id === cfg.id) || (c.name && cfg.name && c.name === cfg.name));
+                    if (idx > -1) {
+                        const localCat = localConfig[idx];
+                        if (!Array.isArray(localCat.records)) localCat.records = [];
+                        (cfg.records || []).forEach(bkRec => {
+                            if (!bkRec) return;
+                            const recIdx = localCat.records.findIndex(r => (r.label && bkRec.label && r.label === bkRec.label) || (r.title && bkRec.title && r.title === bkRec.title));
+                            if (recIdx > -1) {
+                                localCat.records[recIdx] = { ...localCat.records[recIdx], ...bkRec };
+                            } else {
+                                localCat.records.push(bkRec);
+                            }
+                        });
+                    } else {
+                        localConfig.push(cfg);
+                    }
                 });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
@@ -4634,13 +4698,15 @@
             if (d.friends && Array.isArray(d.friends)) {
                 let localFriends = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
                 d.friends.forEach(bkCat => {
+                    if (!bkCat) return;
                     let targetCat = localFriends.find(c => c.name === bkCat.name);
                     if (!targetCat) {
                         localFriends.push(bkCat);
                     } else {
                         if (!targetCat.friends) targetCat.friends = [];
-                        bkCat.friends.forEach(bkF => {
-                            let existingFriend = targetCat.friends.find(f => f.twitch === bkF.twitch || (bkF.name && f.name === bkF.name));
+                        (bkCat.friends || []).forEach(bkF => {
+                            if (!bkF) return;
+                            let existingFriend = targetCat.friends.find(f => (bkF.twitch && f.twitch === bkF.twitch) || (bkF.name && f.name === bkF.name));
                             if (!existingFriend) {
                                 targetCat.friends.push(bkF);
                             } else {
@@ -4656,6 +4722,7 @@
             if (d.memoList && Array.isArray(d.memoList)) {
                 let localMemo = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
                 d.memoList.forEach(bkM => {
+                    if (!bkM) return;
                     let existingMemo = localMemo.find(m => m.title === bkM.title);
                     if (!existingMemo) {
                         localMemo.push(bkM);
@@ -4677,6 +4744,7 @@
             if (d.raidShoutOutTemplates && Array.isArray(d.raidShoutOutTemplates)) {
                 let localRSOTemplates = JSON.parse(localStorage.getItem(RAIDSO_CUSTOM_TEMPLATES_KEY) || '[]');
                 d.raidShoutOutTemplates.forEach(bkT => {
+                    if (!bkT) return;
                     let idx = localRSOTemplates.findIndex(t => t.name === bkT.name);
                     if (idx > -1) localRSOTemplates[idx] = bkT;
                     else localRSOTemplates.push(bkT);
@@ -4688,7 +4756,7 @@
             if (Array.isArray(d.supporterArchives)) {
                 let localArchives = JSON.parse(localStorage.getItem(SUPPORTER_ARCHIVE_STORAGE_KEY) || '[]');
                 d.supporterArchives.forEach(bkA => {
-                    if (!localArchives.some(a => a.id === bkA.id)) {
+                    if (bkA && !localArchives.some(a => a.id === bkA.id)) {
                         localArchives.push(bkA);
                     }
                 });
@@ -4712,28 +4780,80 @@
                 localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
             }
 
-            // 9. rewards created by TwitchManager
-            if (Array.isArray(d.cpAppRewardIds)) {
+            // 9. rewards created by TwitchManager\n            if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
                 localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
             }
         }
-        async function copyBackupToClipboard() {
+        function createSelectedBackupObject() {
             collectRaidSoSettings();
+            const selectVal = document.getElementById('bk-export-select')?.value || 'all';
+
             const d = {
                 backupVersion: 3,
-                config,
-                friends: friendsConfig,
-                settings: backupSettingsWithoutToken(settings),
-                memoList: memoConfig,
-                raidShoutOut: removeDeprecatedRaidSoObsSettings(raidSoSettings),
-                raidShoutOutTemplates: customRaidSoTemplates,
-                supporterArchives: readSupporterArchives(),
-                cpGroups: JSON.parse(localStorage.getItem('cp_groups_v1') || '[]'),
-                cpAppRewardIds: JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]')
+                exportedAt: new Date().toISOString()
             };
-            await copyTextToClipboard(JSON.stringify(d, null, 2));
+
+            if (selectVal === 'all' || selectVal === 'title') {
+                d.config = config;
+                                try {
+                    d.titleTagConfig = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}');
+                } catch(e) {
+                    d.titleTagConfig = {};
+                }
+            }
+            if (selectVal === 'all' || selectVal === 'id') {
+                d.friends = friendsConfig;
+            }
+            if (selectVal === 'all' || selectVal === 'raidso') {
+                d.raidShoutOut = removeDeprecatedRaidSoObsSettings(raidSoSettings);
+                d.raidShoutOutTemplates = customRaidSoTemplates;
+                d.supporterArchives = readSupporterArchives();
+                d.cpGroups = JSON.parse(localStorage.getItem('cp_groups_v1') || '[]');
+                d.cpAppRewardIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
+            }
+            if (selectVal === 'all' || selectVal === 'settings') {
+                d.settings = backupSettingsWithoutToken(settings);
+                d.memoList = memoConfig;
+            }
+            return d;
         }
+
+        function downloadBackupFile() {
+            try {
+                const selectVal = document.getElementById('bk-export-select')?.value || 'all';
+                const d = createSelectedBackupObject();
+                const jsonStr = JSON.stringify(d, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const now = new Date();
+                const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+                const suffix = (selectVal && selectVal !== 'all') ? `_${selectVal}` : '';
+                a.href = url;
+                a.download = `TwitchManager_Backup_${dateStr}${suffix}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('バックアップファイルを保存しました', 'success');
+            } catch (e) {
+                showToast('バックアップ保存に失敗しました: ' + (e.message || ''), 'error');
+            }
+        }
+
+        async function copyBackupToClipboard() {
+            try {
+                const d = createSelectedBackupObject();
+                await copyTextToClipboard(JSON.stringify(d, null, 2));
+                showToast(uiText('runtime.backupCopied'), 'success');
+            } catch (e) {
+                showToast(uiText('runtime.backupCopyFailed'), 'error');
+            }
+        }
+
+        window.downloadBackupFile = downloadBackupFile;
+        window.copyBackupToClipboard = copyBackupToClipboard;
 
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
@@ -5532,6 +5652,9 @@ function applyRaidSoAvailableSoundFiles(sources) {
 
 function readRaidSoSoundFolderSourcesFromIframe(folderUrl) {
             return new Promise(resolve => {
+                if (!folderUrl || !folderUrl.href || folderUrl.href === window.location.href) {
+                    return resolve({ sources: [], readable: false });
+                }
                 const iframe = document.createElement('iframe');
                 let done = false;
                 const finish = result => {

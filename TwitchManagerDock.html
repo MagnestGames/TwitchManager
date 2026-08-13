@@ -14,20 +14,34 @@
         html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
         html.audio-source-mode body { visibility: hidden; }
     </style>
-
     <link rel="stylesheet" href="twitch_manager.css">
 </head>
 
 <body>
 
+    <!-- Initial Loading Overlay Screen -->
+    <div id="app-loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">
+                <span class="loading-title">Twitch Manager</span>
+                <span class="loading-sub">読み込み中...</span>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" role="status" aria-live="polite" aria-atomic="true" data-i18n="extended.toastDone">完了</div>
 
     <div class="sticky-top-wrapper">
         <div class="app-header">
-            <h1 class="app-title app-title-row">◆ <span id="today-date"
-                    style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
-            </h1>
+            <h1 class="app-title app-title-row" style="display: flex; align-items: center; gap: 4px;">◆ <span id="today-date"
+                    style="margin-left: 4px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
+                <div id="stream-time-stats-container" style="position: relative; display: inline-flex; align-items: center;">
+                    <button type="button" id="stream-time-stats-btn" class="btn-head-purple inactive" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; margin-left: 2px; font-size: 12px; cursor: pointer; border-radius: 4px;" onclick="toggleStreamTimeStatsPopover(event)" onmouseenter="showStreamTimeStatsPopover(event)" onmouseleave="hideStreamTimeStatsPopover(event)" data-i18n-tooltip="streamStats.tooltipBtn" data-i18n-aria="streamStats.tooltipBtn" aria-label="配信時間の統計">
+                        ★
+                    </button>
+                    <div id="stream-time-stats-popover" class="stream-stats-popover" style="display: none;" onmouseenter="keepStreamTimeStatsPopover(true)" onmouseleave="hideStreamTimeStatsPopover(event)"></div>
+                </div>            </h1>
             <div class="app-header-controls">
                 <!-- Birthday/Anniversary Indicator -->
                 <div id="birthday-anniversary-indicator" class="birthday-indicator" style="position: relative; display: inline-block; margin-right: 4px; vertical-align: middle;">
@@ -550,22 +564,44 @@
         </details>
         
         <!-- Backup & Restore side by side -->
-        <div class="misc-pair-grid">
-            <div class="category-box" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-backup-title" style="margin-bottom: 8px; font-size: 13px;"><span data-i18n="backupTitle">バックアップ</span></div>
-                <div style="display: flex; flex: 1; align-items: center;">
-                    <button id="ui-backup-copy" class="btn-primary" style="width: 100%; padding: 6px 12px; font-size: 12px;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">コピー</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch;">
+            <div class="category-box" style="margin-bottom: 0; padding: 10px 12px; border-left: 4px solid var(--twitch-purple); display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="category-name" id="ui-backup-title" style="margin-bottom: 6px; font-size: 12px; color: var(--command-accent);">
+                    <span data-i18n="backupTitle">💾 バックアップ作成・保存</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <select id="bk-export-select" style="width: 100%; padding: 5px 6px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-base); color: var(--text-main); font-weight: bold; cursor: pointer; outline: none; box-sizing: border-box;">
+                        <option value="all" selected>すべての項目 (フルバックアップ)</option>
+                        <option value="title">タイトル一覧 のみ</option>
+                        <option value="id">ID一覧 のみ</option>
+                        <option value="raidso">Twitch / 通知と紹介 のみ</option>
+                        <option value="settings">ツール設定 のみ</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <button id="ui-backup-download" class="btn-primary" style="flex: 1; padding: 6px 4px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; white-space: nowrap;" onclick="downloadBackupFile()">
+                        📥 保存 (.json)
+                    </button>
+                    <button id="ui-backup-copy" class="btn-secondary" style="flex: 1; padding: 6px 4px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; white-space: nowrap;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">
+                        📋 コピー
+                    </button>
                 </div>
             </div>
-            <div class="category-box" id="misc-restore-section" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 8px; font-size: 13px; cursor: pointer; user-select: none;"><span data-i18n="restoreTitle">復元</span></div>
-                <div class="tw-body misc-restore-row" style="flex: 1;">
-                    <div class="restore-file-picker">
+
+            <div class="category-box" id="misc-restore-section" style="margin-bottom: 0; padding: 10px 12px; border-left: 4px solid var(--twitch-purple); display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 6px; font-size: 12px; cursor: pointer; user-select: none;">
+                    <span data-i18n="restoreTitle">📂 復元・個別読み込み</span>
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
+                    JSONを選択し、統合・上書き復元:
+                </div>
+                <div class="tw-body misc-restore-row" style="display: flex; gap: 4px; align-items: center;">
+                    <div class="restore-file-picker" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px;">
                         <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,application/json" onchange="updateRestoreFileName(this)">
-                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" data-i18n="footerActions.selectFile">ファイル選択</label>
-                        <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
+                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" style="padding: 6px 6px; font-size: 10.5px; white-space: nowrap; flex-shrink: 0;" data-i18n="footerActions.selectFile">ファイル選択</label>
+                        <span id="ui-restore-file-name" class="restore-file-name" style="font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;" data-i18n="footerActions.noFileSelected">未選択</span>
                     </div>
-                    <button id="ui-restore-btn" class="btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
+                    <button id="ui-restore-btn" class="btn-primary" style="padding: 6px 8px; font-size: 11px; white-space: nowrap; flex-shrink: 0;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
                 </div>
             </div>
         </div>
@@ -888,19 +924,18 @@
             document.body.appendChild(audioSourceScript);
         } else {
             const appScripts = [
-                'twitch_manager_version.js',
-                'twitch_manager_locales.js',
-                'js/update-check.js',
-                'js/storage.js',
-                'js/api.js',
-                'js/eventsub.js',
-                'js/ui.js',
-                'js/main.js'
+                'twitch_manager_version.js?v=20260810_singletag',
+                'twitch_manager_locales.js?v=20260810_singletag',
+                'js/update-check.js?v=20260810_singletag',
+                'js/storage.js?v=20260810_singletag',
+                'js/api.js?v=20260810_singletag',
+                'js/eventsub.js?v=20260810_singletag',
+                'js/ui.js?v=20260810_singletag',
+                'js/main.js?v=20260810_singletag'
             ];
             document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
         }
     </script>
-
 </body>
 
 </html>

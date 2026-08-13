@@ -139,6 +139,381 @@
             btnEl.style.opacity = '1';
         }
 
+        // --- 配信時間統計 (Stream Duration Stats) Logic ---
+        let streamStatsPopoverTimer = null;
+        let streamStatsCache = { data: null, timestamp: 0 };
+
+        function parseTwitchDurationSeconds(durationStr) {
+            if (!durationStr || typeof durationStr !== 'string') return 0;
+            const hMatch = durationStr.match(/(\d+)h/i);
+            const mMatch = durationStr.match(/(\d+)m/i);
+            const sMatch = durationStr.match(/(\d+)s/i);
+
+            const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+            const minutes = mMatch ? parseInt(mMatch[1], 10) : 0;
+            const seconds = sMatch ? parseInt(sMatch[1], 10) : 0;
+
+            return hours * 3600 + minutes * 60 + seconds;
+        }
+
+        function formatDurationSecondsToText(seconds) {
+            const isEn = currentLang === 'en';
+            const isZh = currentLang === 'zh';
+            const zeroText = isEn ? '0h 0m' : (isZh ? '0小时0分' : '0時間0分');
+            if (!seconds || seconds <= 0) return zeroText;
+
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+
+            if (isEn) {
+                if (hrs > 0) return `${hrs}h ${mins}m`;
+                return `${mins}m`;
+            } else if (isZh) {
+                if (hrs > 0) return `${hrs}小时${mins}分`;
+                return `${mins}分`;
+            } else {
+                if (hrs > 0) return `${hrs}時間${mins}分`;
+                return `${mins}分`;
+            }
+        }
+
+        function showStreamTimeStatsPopover(e) {
+            if (streamStatsPopoverTimer) {
+                clearTimeout(streamStatsPopoverTimer);
+                streamStatsPopoverTimer = null;
+            }
+            const popover = document.getElementById('stream-time-stats-popover');
+            const btn = document.getElementById('stream-time-stats-btn');
+            if (!popover) return;
+
+            if (btn) {
+                const rect = btn.getBoundingClientRect();
+                popover.style.position = 'fixed';
+                popover.style.top = `${Math.max(10, rect.bottom + 6)}px`;
+                popover.style.left = `${Math.max(10, Math.min(window.innerWidth - 280, rect.left))}px`;
+                popover.style.zIndex = '99999';
+            }
+            popover.style.display = 'block';
+
+            const now = Date.now();
+            if (!streamStatsCache.data || (now - streamStatsCache.timestamp) > 180000) {
+                loadAndRenderStreamStats();
+            } else {
+                renderStreamStatsPopover(streamStatsCache.data);
+            }
+        }
+
+        function hideStreamTimeStatsPopover(e) {
+            if (streamStatsPopoverTimer) clearTimeout(streamStatsPopoverTimer);
+            streamStatsPopoverTimer = setTimeout(() => {
+                const popover = document.getElementById('stream-time-stats-popover');
+                if (popover) popover.style.display = 'none';
+            }, 250);
+        }
+
+        function keepStreamTimeStatsPopover(keep) {
+            if (keep && streamStatsPopoverTimer) {
+                clearTimeout(streamStatsPopoverTimer);
+                streamStatsPopoverTimer = null;
+            }
+        }
+
+        function toggleStreamTimeStatsPopover(e) {
+            if (e) e.stopPropagation();
+            const popover = document.getElementById('stream-time-stats-popover');
+            if (!popover) return;
+            if (popover.style.display === 'none' || !popover.style.display) {
+                showStreamTimeStatsPopover(e);
+            } else {
+                popover.style.display = 'none';
+            }
+        }
+
+        async function loadAndRenderStreamStats() {
+            const popover = document.getElementById('stream-time-stats-popover');
+            if (!popover) return;
+
+            const langStats = (I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
+                ? I18N_DATA[currentLang].ui.streamStats 
+                : I18N_DATA['ja'].ui.streamStats;
+
+            popover.innerHTML = `<div class="stream-stats-header">★ ${langStats.title}</div>
+                <div style="text-align:center; padding: 12px; color: var(--text-muted); font-size:11px;">
+                    <span class="spinner" style="display:inline-block;animation:spin 1s linear infinite;margin-right:4px;">⏳</span> ${langStats.loading}
+                </div>`;
+
+            if ((!settings.userId || !getEffectiveTwitchClientId()) && cleanRaidSoToken()) {
+                await refreshTwitchAuthFromToken(false);
+            }
+
+            const broadcasterId = settings.userId;
+            if (!broadcasterId) {
+                popover.innerHTML = `<div class="stream-stats-header">★ ${langStats.title}</div>
+                    <div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:11px;">
+                        ${langMap[currentLang].alerts.requireBroadcaster}
+                    </div>`;
+                return;
+            }
+
+            try {
+                const videosRes = await apiRequest(`/videos?user_id=${broadcasterId}&type=archive&first=100`, 'GET', null, true);
+                const streamsRes = await apiRequest(`/streams?user_id=${broadcasterId}`, 'GET', null, true);
+
+                const now = new Date();
+                const videos = (videosRes && Array.isArray(videosRes.data)) ? videosRes.data : [];
+                const liveStream = (streamsRes && Array.isArray(streamsRes.data) && streamsRes.data.length > 0) ? streamsRes.data[0] : null;
+
+                let parsedVideos = videos.map(v => ({
+                    createdAt: new Date(v.created_at),
+                    durationSec: parseTwitchDurationSeconds(v.duration),
+                    isLive: false
+                }));
+
+                let isCurrentlyLive = false;
+                if (liveStream && liveStream.started_at) {
+                    const liveStartedAt = new Date(liveStream.started_at);
+                    const liveDurationSec = Math.max(0, Math.floor((now.getTime() - liveStartedAt.getTime()) / 1000));
+                    parsedVideos.unshift({
+                        createdAt: liveStartedAt,
+                        durationSec: liveDurationSec,
+                        isLive: true
+                    });
+                    isCurrentlyLive = true;
+                }
+
+                let oldestApiDate = now;
+                if (videos.length > 0) {
+                    const oldestV = videos[videos.length - 1];
+                    oldestApiDate = new Date(oldestV.created_at);
+                }
+
+                // 1. Past 7 days (7日前00:00:00〜現在)
+                const past7DaysStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+                past7DaysStart.setHours(0, 0, 0, 0);
+
+                // 2. This Week (Monday 00:00:00 to Sunday 23:59:59)
+                const dayOfWeek = now.getDay();
+                const diffToMon = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+                const thisWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon, 0, 0, 0, 0);
+                const thisWeekEnd = new Date(thisWeekStart.getTime() + 7 * 24 * 3600 * 1000 - 1);
+
+                // 3. This Month (1st 00:00:00 to End of Month 23:59:59)
+                const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+                const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+                function calculateRangeStats(startDate, endDate) {
+                    let totalSec = 0;
+                    parsedVideos.forEach(v => {
+                        if (v.createdAt >= startDate && v.createdAt <= endDate) {
+                            totalSec += v.durationSec;
+                        }
+                    });
+                    const isIncomplete = (videos.length > 0 && oldestApiDate > startDate);
+                    return { totalSec, isIncomplete };
+                }
+
+                const past7Stats = calculateRangeStats(past7DaysStart, now);
+                const weekStats = calculateRangeStats(thisWeekStart, thisWeekEnd);
+                const monthStats = calculateRangeStats(thisMonthStart, thisMonthEnd);
+
+                const resultData = {
+                    past7Stats,
+                    weekStats,
+                    monthStats,
+                    isCurrentlyLive,
+                    currentMonthNum: now.getMonth() + 1,
+                    hasData: parsedVideos.length > 0,
+                    parsedVideos,
+                    now
+                };
+
+                streamStatsCache = { data: resultData, timestamp: Date.now() };
+                renderStreamStatsPopover(resultData);
+
+            } catch (err) {
+                console.error("Stream stats error:", err);
+                popover.innerHTML = `<div class="stream-stats-header">★ ${langStats.title}</div>
+                    <div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:11px;">
+                        ${langStats.noData}
+                    </div>`;
+            }
+        }
+
+        let selectedStreamStatsPeriod = 'past7'; // 'past7' | 'thisWeek' | 'thisMonth'
+
+        function selectStreamStatsPeriod(periodKey) {
+            selectedStreamStatsPeriod = periodKey;
+            if (streamStatsCache && streamStatsCache.data) {
+                renderStreamStatsPopover(streamStatsCache.data);
+            }
+        }
+
+        function buildDailyChartData(parsedVideos, periodKey, now) {
+            const dateSecMap = {};
+            (parsedVideos || []).forEach(v => {
+                const year = v.createdAt.getFullYear();
+                const month = String(v.createdAt.getMonth() + 1).padStart(2, '0');
+                const day = String(v.createdAt.getDate()).padStart(2, '0');
+                const dateKey = `${year}-${month}-${day}`;
+                dateSecMap[dateKey] = (dateSecMap[dateKey] || 0) + v.durationSec;
+            });
+
+            const dayList = [];
+
+            if (periodKey === 'past7') {
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const dayNum = String(d.getDate()).padStart(2, '0');
+                    const key = `${y}-${m}-${dayNum}`;
+                    const sec = dateSecMap[key] || 0;
+                    
+                    const monthDayLabel = `${d.getMonth() + 1}/${d.getDate()}`;
+                    dayList.push({
+                        key,
+                        label: monthDayLabel,
+                        shortLabel: monthDayLabel,
+                        sec
+                    });
+                }
+            } else if (periodKey === 'thisWeek') {
+                const dayOfWeek = now.getDay();
+                const diffToMon = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
+                const monDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon);
+
+                const weekDayNamesJa = ['月', '火', '水', '木', '金', '土', '日'];
+                const weekDayNamesEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const weekDayNamesZh = ['一', '二', '三', '四', '五', '六', '日'];
+                const names = currentLang === 'en' ? weekDayNamesEn : (currentLang === 'zh' ? weekDayNamesZh : weekDayNamesJa);
+
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(monDate.getFullYear(), monDate.getMonth(), monDate.getDate() + i);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const dayNum = String(d.getDate()).padStart(2, '0');
+                    const key = `${y}-${m}-${dayNum}`;
+                    const sec = dateSecMap[key] || 0;
+                    
+                    const fullLabel = `${d.getMonth() + 1}/${d.getDate()} (${names[i]})`;
+                    dayList.push({
+                        key,
+                        label: fullLabel,
+                        shortLabel: names[i],
+                        sec
+                    });
+                }
+            } else if (periodKey === 'thisMonth') {
+                const totalDaysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                for (let dayNum = 1; dayNum <= totalDaysInMonth; dayNum++) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), dayNum);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(dayNum).padStart(2, '0');
+                    const key = `${y}-${m}-${dd}`;
+                    const sec = dateSecMap[key] || 0;
+
+                    let shortLabel = '';
+                    if (dayNum === 1 || dayNum === 5 || dayNum === 10 || dayNum === 15 || dayNum === 20 || dayNum === 25 || dayNum === totalDaysInMonth) {
+                        shortLabel = String(dayNum);
+                    }
+                    const fullLabel = `${d.getMonth() + 1}/${dayNum}`;
+
+                    dayList.push({
+                        key,
+                        label: fullLabel,
+                        shortLabel,
+                        sec
+                    });
+                }
+            }
+
+            return dayList;
+        }
+
+        function renderChartHtml(parsedVideos, periodKey, now) {
+            const days = buildDailyChartData(parsedVideos, periodKey, now);
+            const maxSec = Math.max(...days.map(d => d.sec), 1);
+
+            const langStats = (typeof I18N_DATA !== 'undefined' && I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
+                ? I18N_DATA[currentLang].ui.streamStats 
+                : {};
+
+            const chartTitle = langStats.dailyChartTitle || '日別配信時間グラフ';
+
+            const barCols = days.map(d => {
+                const heightPct = d.sec > 0 ? Math.max(6, Math.round((d.sec / maxSec) * 100)) : 0;
+                const timeText = formatDurationSecondsToText(d.sec);
+                return `<div class="stream-stats-bar-col">
+                    <div class="stream-stats-bar-tooltip">${d.label}: ${timeText}</div>
+                    <div class="stream-stats-bar-track">
+                        <div class="stream-stats-bar-fill" style="height: ${heightPct}%;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            return `<div class="stream-stats-chart-box">
+                <div class="stream-stats-chart-title">
+                    <span>📊 ${chartTitle}</span>
+                </div>
+                <div class="stream-stats-chart">
+                    ${barCols}
+                </div>
+            </div>`;
+        }
+
+        function renderStreamStatsPopover(data) {
+            const popover = document.getElementById('stream-time-stats-popover');
+            if (!popover) return;
+
+            const langStats = (I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
+                ? I18N_DATA[currentLang].ui.streamStats 
+                : I18N_DATA['ja'].ui.streamStats;
+
+            const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthStr = currentLang === 'en' ? (monthNamesEn[data.currentMonthNum - 1] || data.currentMonthNum) : `${data.currentMonthNum}月`;
+            const monthLabel = langStats.thisMonth.replace('{month}', monthStr);
+            let hasAnyIncomplete = false;
+
+            function renderItemHtml(label, stats, periodKey) {
+                const textVal = formatDurationSecondsToText(stats.totalSec);
+                const grayClass = stats.isIncomplete ? 'stream-stats-grayed' : '';
+                const selectedClass = selectedStreamStatsPeriod === periodKey ? 'selected' : '';
+                if (stats.isIncomplete) hasAnyIncomplete = true;
+                
+                return `<div class="stream-stats-item ${grayClass} ${selectedClass}" onclick="selectStreamStatsPeriod('${periodKey}')">
+                    <div class="stream-stats-label">
+                        <span>${label}</span>
+                        ${stats.isIncomplete ? `<span class="stream-stats-badge-incomplete">⚠️ ${langStats.incompleteBadge}</span>` : ''}
+                    </div>
+                    <div class="stream-stats-value">${textVal}</div>
+                </div>`;
+            }
+
+            const html = `<div class="stream-stats-header">
+                <span>★ ${langStats.title}</span>
+                <button type="button" class="btn-secondary" style="padding:1px 6px;font-size:10px;line-height:1.2;" onclick="loadAndRenderStreamStats()">🔄</button>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
+                <div>${langStats.archiveNote || '※公開されているアーカイブ動画の合計時間'}</div>
+                <div style="opacity: 0.85;">${langStats.startDateNote || '※日付を跨ぐ配信の長さは「配信開始日」に合算されます。'}</div>
+                <div style="opacity: 0.85;">${langStats.selectPrompt || '※タップでグラフ切替'}</div>
+            </div>
+            ${data.hasData ? `
+                ${renderItemHtml(langStats.past7Days, data.past7Stats, 'past7')}
+                ${renderItemHtml(langStats.thisWeek, data.weekStats, 'thisWeek')}
+                ${renderItemHtml(monthLabel, data.monthStats, 'thisMonth')}
+                ${data.isCurrentlyLive ? `<div style="font-size:10px;color:#a855f7;text-align:right;margin-bottom:4px;">🔴 ${langStats.liveNow}</div>` : ''}
+                ${renderChartHtml(data.parsedVideos, selectedStreamStatsPeriod, data.now)}
+                ${hasAnyIncomplete ? `<div class="stream-stats-footer-note">${langStats.incompleteNote}</div>` : ''}
+            ` : `
+                <div style="text-align:center; padding: 10px; color: var(--text-muted); font-size:11px;">
+                    ${langStats.noData}
+                </div>
+            `}`;
+
+            popover.innerHTML = html;
+        }
 
         // ソート状態管理
         let friendsSortOrder = 'name';
