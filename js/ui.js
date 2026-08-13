@@ -2403,6 +2403,255 @@
         }
 
 
+        
+        
+        
+        
+        
+        const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+        const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+
+        function renderMarkdownToHtml(src, memoIndex = null) {
+            if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText('memoEmptyHint'))}</div>`;
+            let html = raidSoEscape(src);
+
+            // Code blocks
+            html = html.replace(/```([\s\S]*?)```/g, (m, code) => `<pre class="md-code-block"><code>${code.trim()}</code></pre>`);
+            
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>');
+
+            // Headings
+            html = html.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
+
+            // Text Styles
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // Interactive Task Checkboxes
+            let taskIdx = 0;
+            html = html.replace(/^- \[(x| )\] (.*$)/gim, (match, checkedChar, itemText) => {
+                const isChecked = checkedChar === 'x';
+                const currentTaskIdx = taskIdx++;
+                const onclickAttr = (memoIndex !== null && memoIndex !== undefined)
+                    ? `onclick="toggleMemoTaskCheckbox(${memoIndex}, ${currentTaskIdx}, this.checked)"`
+                    : 'disabled';
+                const checkedAttr = isChecked ? 'checked' : '';
+                const spanClass = isChecked ? 'class="md-done"' : '';
+                return `<div class="md-task-item"><input type="checkbox" ${checkedAttr} ${onclickAttr}><span ${spanClass}>${itemText}</span></div>`;
+            });
+
+            // Blockquotes
+            html = html.replace(/^&gt; (.*$)/gim, '<blockquote class="md-quote">$1</blockquote>');
+
+            // HR
+            html = html.replace(/^---$/gim, '<hr class="md-hr">');
+
+            // Links
+            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
+
+            // Line-by-line Smart List Processor (Auto連番 & 柔軟ネスト)
+            const lines = html.split('\n');
+            let inOl = false;
+            let olCounter = 1;
+            let currentOlIndent = 0;
+
+            const processed = lines.map(line => {
+                const rawIndentMatch = line.match(/^(\s*)/);
+                const indentStr = rawIndentMatch ? rawIndentMatch[1] : '';
+                const spacesCount = indentStr.replace(/\t/g, '  ').length;
+
+                const trimmed = line.trim();
+                if (!trimmed) {
+                    inOl = false;
+                    return '<div style="height: 4px;"></div>';
+                }
+
+                // Handle "- - テキスト" notation as nested level 1
+                const dashDashMatch = trimmed.match(/^[-*+]\s+[-*+]\s+(.*)$/);
+                if (dashDashMatch) {
+                    inOl = false;
+                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span> <span>${dashDashMatch[1]}</span></div>`;
+                }
+
+                // Handle Numbered List (Auto-Increment 1., 2., 3...)
+                const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+                if (olMatch) {
+                    const indentLevel = Math.min(Math.floor(spacesCount / 2), 4);
+                    if (!inOl || indentLevel !== currentOlIndent) {
+                        inOl = true;
+                        olCounter = 1;
+                        currentOlIndent = indentLevel;
+                    }
+                    const numStr = `${olCounter}.`;
+                    olCounter++;
+
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span> <span>${olMatch[2]}</span></div>`;
+                } else {
+                    inOl = false;
+                }
+
+                // Handle Bullet List (- Item or * Item)
+                const ulMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+                if (ulMatch) {
+                    const indentLevel = Math.min(Math.max(Math.floor(spacesCount / 2), spacesCount >= 2 ? 1 : 0), 4);
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span> <span>${ulMatch[1]}</span></div>`;
+                }
+
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+                    return line;
+                }
+                return line + '<br>';
+            });
+
+            return processed.join('');
+        }
+        window.renderMarkdownToHtml = renderMarkdownToHtml;
+
+        function handleMemoKeydown(e, memoIndex) {
+            const textarea = e.target;
+            if (!textarea) return;
+
+            // Tab key: Insert 2 spaces for indent
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = textarea.selectionStart || 0;
+                const end = textarea.selectionEnd || 0;
+                const value = textarea.value || '';
+
+                if (!e.shiftKey) {
+                    textarea.value = value.substring(0, start) + '  ' + value.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 2;
+                } else {
+                    if (start >= 2 && value.substring(start - 2, start) === '  ') {
+                        textarea.value = value.substring(0, start - 2) + value.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = start - 2;
+                    }
+                }
+                memoConfig[memoIndex].content = textarea.value;
+                saveMemoLocal();
+                return;
+            }
+
+            // Enter key: Auto continue list
+            if (e.key === 'Enter') {
+                const start = textarea.selectionStart || 0;
+                const value = textarea.value || '';
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+
+                const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s+(.*)$/);
+                const ulMatch = currentLine.match(/^(\s*)[-*+]\s+(.*)$/);
+                const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
+
+                if (taskMatch) {
+                    if (!taskMatch[2].trim()) return;
+                    e.preventDefault();
+                    const prefix = `\n${taskMatch[1]}- [ ] `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                } else if (ulMatch) {
+                    if (!ulMatch[2].trim()) return;
+                    e.preventDefault();
+                    const prefix = `\n${ulMatch[1]}- `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                } else if (olMatch) {
+                    if (!olMatch[3].trim()) return;
+                    e.preventDefault();
+                    const nextNum = parseInt(olMatch[2], 10) + 1;
+                    const prefix = `\n${olMatch[1]}${nextNum}. `;
+                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    memoConfig[memoIndex].content = textarea.value;
+                    saveMemoLocal();
+                }
+            }
+        }
+        window.handleMemoKeydown = handleMemoKeydown;
+
+        function toggleMemoTaskCheckbox(memoIndex, taskIndex, isChecked) {
+            const memo = memoConfig[memoIndex];
+            if (!memo || !memo.content) return;
+
+            let currentTaskCount = 0;
+            const lines = memo.content.split('\n');
+            const updatedLines = lines.map(line => {
+                const match = line.match(/^(- \[(?:x| )\] )(.*)$/);
+                if (match) {
+                    if (currentTaskCount === taskIndex) {
+                        currentTaskCount++;
+                        return isChecked ? `- [x] ${match[2]}` : `- [ ] ${match[2]}`;
+                    }
+                    currentTaskCount++;
+                }
+                return line;
+            });
+
+            memo.content = updatedLines.join('\n');
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoTaskCheckbox = toggleMemoTaskCheckbox;
+
+        function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
+            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+            if (!textarea) return;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            const selectedText = text.substring(start, end) || 'テキスト';
+            const replacement = prefix + selectedText + suffix;
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.selectionStart = start + prefix.length;
+            textarea.selectionEnd = start + prefix.length + selectedText.length;
+            textarea.focus();
+            memoConfig[memoIndex].content = textarea.value;
+            saveMemoLocal();
+        }
+        window.insertMarkdownSyntax = insertMarkdownSyntax;
+
+        function toggleMemoMode(memoIndex, mode) {
+            if (!memoConfig[memoIndex]) return;
+            memoConfig[memoIndex].mode = mode;
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoMode = toggleMemoMode;
+
+        
+        function toggleMemoMode(memoIndex, mode) {
+            if (!memoConfig[memoIndex]) return;
+            memoConfig[memoIndex].mode = mode;
+            memoConfig[memoIndex].isClosed = false;
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoMode = toggleMemoMode;
+
+        function toggleMemoCategory(el, i) {
+            memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed');
+            if (memoConfig[i].isClosed) {
+                let p = (memoConfig[i].content || '').replace(/\n/g, ' ').substring(0, 15);
+                if ((memoConfig[i].content || '').length > 15) p += '...';
+                const previewEl = el.querySelector('.memo-preview');
+                if (previewEl) previewEl.textContent = p;
+            }
+            saveMemoLocal(false);
+        }
+        window.toggleMemoCategory = toggleMemoCategory;
+
         function renderMemo() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
@@ -2411,23 +2660,54 @@
                 return;
             }
             memoConfig.forEach((m, i) => {
-                const d = document.createElement('div'); d.className = "category-box" + (m.isClosed ? " closed" : ""); d.setAttribute('data-idx', i);
+                const mode = m.mode || (m.content ? 'preview' : 'edit');
+                const d = document.createElement('div');
+                d.className = "category-box" + (m.isClosed ? " closed" : "");
+                d.setAttribute('data-idx', i);
+
                 let previewText = (m.content || '').replace(/\n/g, ' ').substring(0, 15);
                 if ((m.content || '').length > 15) previewText += '...';
+
+                const modeBtnHtml = mode === 'preview'
+                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+
+                const toolbarHtml = `
+                    <div class="memo-toolbar">
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("memoBold"))}"><b>B</b> ${raidSoEscape(uiText("memoBold"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("memoList"))}">• ${raidSoEscape(uiText("memoList"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("memoOl"))}">1. ${raidSoEscape(uiText("memoOl"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("memoTask"))}">☑ ${raidSoEscape(uiText("memoTask"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("memoLink"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("memoCode"))}</button>
+                    </div>
+                `;
+
+                const bodyContentHtml = mode === 'edit'
+                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
+                    : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '', i)}</div>`;
+
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
                         <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
                         <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
-                    <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${modeBtnHtml}
+                        <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    </div>
                 </div>
-            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${raidSoEscape(m.content || '')}</textarea>`;
+                ${bodyContentHtml}`;
                 c.appendChild(d);
             });
             initSortable();
         }
+        window.renderMemo = renderMemo;
 
-        function initSortable() {
+
+function initSortable() {
             if (typeof Sortable === 'undefined') return;
             sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
             const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
