@@ -593,6 +593,13 @@
             el.style.display = 'flex';
             el.classList.add('modal-open');
         }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.id) {
+                closeModal(e.target.id);
+            }
+        });
+
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -864,6 +871,19 @@
             return `<div class="empty-state">${raidSoEscape(text || '')}</div>`;
         }
 
+
+        function getRecordDisplayLabel(r, defaultLabel) {
+            if (r.isCustomLabel && r.label && r.label.trim()) {
+                return r.label.trim();
+            }
+            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
+                return r.label.trim();
+            }
+            if (r.title && r.title.trim()) {
+                return r.title.trim();
+            }
+            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
+        }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
             const T = langMap[currentLang];
@@ -887,7 +907,7 @@
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
+                        <span id="record-label-${ci}-${ri}">● ${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
                         <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -909,7 +929,7 @@
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
+                    <textarea oninput="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false); if (!config[${ci}].records[${ri}].isCustomLabel) { const lbl = document.getElementById('record-label-${ci}-${ri}'); if (lbl) lbl.textContent = '● ' + (this.value.trim() || A.newLabel); }">${raidSoEscape(r.title || '')}</textarea>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -929,12 +949,16 @@
 
         // --- 追加機能：リネーム ---
         async function renameRecord(ci, ri) {
+            const rec = config[ci].records[ri];
+            const currentCustom = rec.isCustomLabel ? rec.label : '';
             const newName = await customPrompt({
                 ...dialogCopy('titleRecordRename'),
-                defaultValue: config[ci].records[ri].label || ''
+                defaultValue: currentCustom || (rec.isCustomLabel ? rec.label : '') || ''
             });
             if (newName !== null) {
-                config[ci].records[ri].label = newName;
+                const trimmed = newName.trim();
+                rec.label = trimmed;
+                rec.isCustomLabel = trimmed.length > 0;
                 saveAllLocal(false);
                 render();
             }
@@ -2474,7 +2498,7 @@
         }
         function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
 
-        function addRecord(i) { config[i].records.push({ label: "NEW", game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
+        function addRecord(i) { config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
         async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
         async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
         async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
@@ -4715,7 +4739,11 @@
             // 9. rewards created by TwitchManager
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
-                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
+                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
+                if (typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = merged;
+                }
             }
         }
         async function copyBackupToClipboard() {
@@ -5971,9 +5999,9 @@ function loadCpGroupsFromStorage() {
             cpState.groups = JSON.parse(saved).map(migrateCpDefaultGroup);
         } else {
             cpState.groups = [
-                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 }
+                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 }
             ];
             saveCpGroupsToStorage();
         }
@@ -6030,6 +6058,11 @@ async function fetchTwitchCustomRewards() {
         const broadcasterId = await ensureCpAuth();
         const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`);
         cpState.rewards = data.data || [];
+        (cpState.rewards || []).forEach(reward => {
+            if (isAppCreatedReward(reward)) {
+                markRewardAsAppCreated(reward.id);
+            }
+        });
         loadCpGroupsFromStorage();
         reconcileCpGroupsWithRewards();
         renderCpTab();
@@ -6043,6 +6076,157 @@ async function fetchTwitchCustomRewards() {
         cpState.isLoading = false;
     }
 }
+
+
+
+async function setCustomRewardState(rewardId, targetState) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    const patchBody = {};
+    if (targetState === 'on') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = false;
+    } else if (targetState === 'pause') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = true;
+    } else if (targetState === 'off') {
+        patchBody.is_enabled = false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patchBody)
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab();
+        return true;
+    } catch (e) {
+        console.error('setCustomRewardState error:', e);
+        showToast(cpCopy('toggleFail') + ' ' + (e.message || ''), 'warn');
+        return false;
+    }
+}
+
+async function batchSetCpGroupState(groupId, targetState) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const patchBody = {};
+    if (targetState === 'on') { patchBody.is_enabled = true; patchBody.is_paused = false; }
+    else if (targetState === 'pause') { patchBody.is_enabled = true; patchBody.is_paused = true; }
+    else if (targetState === 'off') { patchBody.is_enabled = false; }
+
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patchBody)
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchSetCpGroupState error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = targetState === 'on' ? cpCopy('statusEnabled') : (targetState === 'pause' ? cpCopy('statusPaused') : cpCopy('statusDisabled'));
+    showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel, automatic: '' }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab();
+}
+
+window.setCustomRewardState = setCustomRewardState;
+window.batchSetCpGroupState = batchSetCpGroupState;
+
+async function toggleCustomRewardPaused(rewardId, isPaused) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_paused: isPaused })
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab();
+        return true;
+    } catch (e) {
+        console.error('toggleCustomRewardPaused error:', e);
+        const failPrefix = cpCopy('toggleFail');
+        let errMsg = e.message || '';
+        if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
+            errMsg = cpCopy('cantModifyExternalReward');
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
+        return false;
+    }
+}
+
+async function batchPauseCpGroup(groupId, isPaused) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_paused: isPaused })
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchPauseCpGroup error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = isPaused ? (cpCopy('statusPaused') || '一時停止') : (cpCopy('statusResumed') || '再開');
+    showToast(cpCopy('batchPauseResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab();
+}
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+window.toggleCustomRewardPaused = toggleCustomRewardPaused;
+window.batchPauseCpGroup = batchPauseCpGroup;
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
 
 async function toggleCustomRewardEnabled(rewardId, isEnabled) {
     if (!isManageableCpRewardId(rewardId)) {
@@ -6130,6 +6314,20 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
         }
     }
 }
+
+async function triggerCpAutoOff(triggerType, detail = {}) {
+    if (!cpState.groups || cpState.groups.length === 0) return;
+    for (const g of cpState.groups) {
+        let shouldTrigger = false;
+        if (triggerType === 'stream_offline' && g.autoOffStreamEnd) {
+            shouldTrigger = true;
+        }
+        if (shouldTrigger) {
+            await batchToggleCpGroup(g.id, false, true);
+        }
+    }
+}
+window.triggerCpAutoOff = triggerCpAutoOff;
 
 async function triggerCpAutoOn(triggerType, detail = {}) {
     if (!cpState.groups || cpState.groups.length === 0) return;
@@ -6338,10 +6536,12 @@ function openCpGroupModal(groupId = null) {
     nameInput.value = targetGroup ? cpGroupName(targetGroup) : '';
 
     const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
+    const autoStreamEndCheck = document.getElementById('cp-group-auto-stream-end');
     const autoRaidCheck = document.getElementById('cp-group-auto-raid');
     const autoOffMinInput = document.getElementById('cp-group-auto-off-min');
 
     if (autoStreamCheck) autoStreamCheck.checked = targetGroup ? !!targetGroup.autoOnStreamStart : false;
+    if (autoStreamEndCheck) autoStreamEndCheck.checked = targetGroup ? !!targetGroup.autoOffStreamEnd : false;
     if (autoRaidCheck) autoRaidCheck.checked = targetGroup ? !!targetGroup.autoOnRaid : false;
     if (autoOffMinInput) autoOffMinInput.value = targetGroup ? (targetGroup.autoOffMinutes || 0) : 0;
 
@@ -6359,6 +6559,7 @@ function openCpGroupModal(groupId = null) {
             const checked = selectedIds.has(r.id) ? 'checked' : '';
             html += `<label style="display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; padding: 6px 10px; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; width: 100%; box-sizing: border-box; transition: 0.15s;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
                 <input type="checkbox" class="cp-group-reward-check" value="${raidSoEscape(r.id)}" ${checked} style="margin: 0; flex-shrink: 0; cursor: pointer; width: 15px; height: 15px; accent-color: var(--twitch-purple);">
+                ${getCpRewardIconUrl(r) ? `<span class="cp-reward-icon-badge is-small" style="background:${r.background_color || '#9146FF'};"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></span>` : `<div class="cp-reward-color" style="background:${r.background_color || '#9146FF'};"></div>`}
                 <span style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); font-weight: 500;">${raidSoEscape(r.title)}</span>
                 <span style="color: var(--twitch-purple); font-weight: bold; font-size: 11px; flex-shrink: 0; margin-left: 6px;">(${r.cost} pt)</span>
             </label>`;
@@ -6379,6 +6580,7 @@ function saveCpGroup() {
     const selectedRewardIds = Array.from(checkedNodes).map(node => node.value);
 
     const autoOnStreamStart = !!document.getElementById('cp-group-auto-stream-start')?.checked;
+    const autoOffStreamEnd = !!document.getElementById('cp-group-auto-stream-end')?.checked;
     const autoOnRaid = !!document.getElementById('cp-group-auto-raid')?.checked;
     const autoOffMinutes = parseInt(document.getElementById('cp-group-auto-off-min')?.value || '0', 10) || 0;
 
@@ -6389,6 +6591,7 @@ function saveCpGroup() {
             delete cpState.groups[idx].defaultNameKey;
             cpState.groups[idx].rewardIds = selectedRewardIds;
             cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
+            cpState.groups[idx].autoOffStreamEnd = autoOffStreamEnd;
             cpState.groups[idx].autoOnRaid = autoOnRaid;
             delete cpState.groups[idx].autoOnObsScene;
             cpState.groups[idx].autoOffMinutes = autoOffMinutes;
@@ -6399,6 +6602,7 @@ function saveCpGroup() {
             name: name,
             rewardIds: selectedRewardIds,
             autoOnStreamStart: autoOnStreamStart,
+            autoOffStreamEnd: autoOffStreamEnd,
             autoOnRaid: autoOnRaid,
             autoOffMinutes: autoOffMinutes
         };
@@ -6423,6 +6627,149 @@ function deleteCpGroup(groupId) {
     showToast(cpCopy('groupDeleteSuccess'));
 }
 
+
+
+async function pickCpColorWithEyedropper(isBulk = false) {
+    if (!window.EyeDropper) {
+        showToast(cpCopy('eyedropperNotSupported'), 'info');
+        return;
+    }
+    try {
+        const eyeDropper = new EyeDropper();
+        const result = await eyeDropper.open();
+        if (result && result.sRGBHex) {
+            if (isBulk) {
+                setCpBulkColorSwatch(result.sRGBHex);
+            } else {
+                updateCpColorPreview(result.sRGBHex);
+            }
+        }
+    } catch (e) {
+        // User canceled eyedropper selection
+    }
+}
+window.pickCpColorWithEyedropper = pickCpColorWithEyedropper;
+
+function updateCpColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-reward-color-input');
+    const hexInput = document.getElementById('cp-reward-color-hex-input');
+    const previewBox = document.getElementById('cp-reward-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpColorPreview(cleanHex);
+    }
+}
+
+
+
+
+function setCpBulkPauseValue(val) {
+    const hidden = document.getElementById('cp-bulk-pause-val');
+    const btnPause = document.getElementById('cp-bulk-pause-btn-pause');
+    const btnResume = document.getElementById('cp-bulk-pause-btn-resume');
+    if (hidden) hidden.value = val;
+
+    if (val === 'pause') {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause active';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on';
+    } else {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on active';
+    }
+}
+
+function setCpBulkUserInputVal(isReq) {
+    const hidden = document.getElementById('cp-bulk-user-input-val');
+    const btnTrue = document.getElementById('cp-bulk-user-input-btn-true');
+    const btnFalse = document.getElementById('cp-bulk-user-input-btn-false');
+    if (hidden) hidden.value = isReq ? 'true' : 'false';
+
+    if (isReq) {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple active';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off';
+    } else {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off active';
+    }
+}
+
+window.setCpBulkPauseValue = setCpBulkPauseValue;
+window.setCpBulkUserInputVal = setCpBulkUserInputVal;
+
+function updateCpBulkColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const hexInput = document.getElementById('cp-bulk-color-hex-input');
+    const previewBox = document.getElementById('cp-bulk-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpBulkColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpBulkColorPreview(cleanHex);
+    }
+}
+
+function setCpBulkColorSwatch(hex) {
+    updateCpBulkColorPreview(hex);
+}
+
+window.updateCpBulkColorPreview = updateCpBulkColorPreview;
+window.syncCpBulkColorFromHex = syncCpBulkColorFromHex;
+window.setCpBulkColorSwatch = setCpBulkColorSwatch;
+
+function renderCpUsedColorSwatches(containerId, isBulk = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const usedColors = new Map();
+    (cpState.rewards || []).forEach(r => {
+        if (r.background_color) {
+            const hex = r.background_color.toUpperCase();
+            if (!usedColors.has(hex)) usedColors.set(hex, []);
+            usedColors.get(hex).push(r.title);
+        }
+    });
+
+    if (usedColors.size === 0) {
+        container.innerHTML = `<span style="font-size: 10px; color: var(--text-muted);">(使用中カラーなし)</span>`;
+        return;
+    }
+
+    let html = '';
+    usedColors.forEach((titles, hex) => {
+        const titleTooltip = `${hex} (${titles.slice(0, 3).join(', ')}${titles.length > 3 ? '...' : ''})`;
+        const clickFn = isBulk ? `setCpBulkColorSwatch('${hex}')` : `setCpRewardColorSwatch('${hex}')`;
+        html += `<button type="button" class="cp-swatch" style="background:${hex}; width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,0.7); cursor:pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2);" onclick="${clickFn}" title="${raidSoEscape(titleTooltip)}"></button>`;
+    });
+    container.innerHTML = html;
+}
+
+window.renderCpUsedColorSwatches = renderCpUsedColorSwatches;
+
+function setCpRewardColorSwatch(hex) {
+    updateCpColorPreview(hex);
+}
+
+window.updateCpColorPreview = updateCpColorPreview;
+window.syncCpColorFromHex = syncCpColorFromHex;
+window.setCpRewardColorSwatch = setCpRewardColorSwatch;
+
 function applyCpRewardTemplate(selectedRewardId) {
     if (!selectedRewardId) return;
     const targetReward = cpState.rewards.find(r => r.id === selectedRewardId);
@@ -6436,7 +6783,9 @@ function applyCpRewardTemplate(selectedRewardId) {
     if (titleInput) titleInput.value = targetReward.title || '';
     if (costInput) costInput.value = targetReward.cost || 50;
     if (promptInput) promptInput.value = targetReward.prompt || '';
-    if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = !!targetReward.is_paused;
+    if (targetReward.background_color) updateCpColorPreview(targetReward.background_color);
 
     const toastMsg = cpCopy('templateLoadedToast', { name: targetReward.title || '' });
     showToast(toastMsg);
@@ -6470,15 +6819,21 @@ function openCpRewardModal(rewardId = null) {
         titleInput.value = targetReward.title || '';
         costInput.value = targetReward.cost || 50;
         if (promptInput) promptInput.value = targetReward.prompt || '';
-        if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
+        updateCpColorPreview(targetReward.background_color || '#9146FF');
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
+        const idWrapper = document.getElementById('cp-reward-id-wrapper');
+        const idDisplay = document.getElementById('cp-reward-id-display');
+        if (idWrapper) idWrapper.style.display = 'none';
+        if (idDisplay) idDisplay.value = '';
         editIdInput.value = '';
         titleInput.value = '';
         costInput.value = 50;
         if (promptInput) promptInput.value = '';
-        if (colorInput) colorInput.value = '#9146FF';
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = false;
+        updateCpColorPreview('#9146FF');
 
         if (tplWrapper && tplSelect) {
             tplWrapper.style.display = 'block';
@@ -6491,6 +6846,7 @@ function openCpRewardModal(rewardId = null) {
             tplSelect.value = '';
         }
     }
+    renderCpUsedColorSwatches('cp-reward-used-colors-swatches', false);
     openModal('cpRewardModal');
 }
 
@@ -6524,15 +6880,19 @@ function renderCpGroups() {
             const rTitle = rewardObj ? rewardObj.title : rId;
             const sharedCount = cpState.groups.filter(grp => grp.rewardIds.includes(rId)).length;
             const isShared = sharedCount > 1;
-            rewardTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
+            const iconUrl = getCpRewardIconUrl(rewardObj);
+            const iconBadgeTag = iconUrl ? `<span class="cp-reward-icon-badge is-tag" style="background:${rewardObj?.background_color || '#9146FF'};"><img src="${iconUrl}" alt="" loading="lazy"></span>` : '';
+            rewardTagsHtml += `<span class="cp-group-reward-tag${isShared ? ' is-shared' : ''}" style="display:inline-flex; align-items:center; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${iconBadgeTag}${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
         });
 
         let autoBadgesHtml = '';
         const bStream = cpCopy('badgeStreamStart');
+        const bStreamEnd = cpCopy('badgeStreamEnd');
         const bRaid = cpCopy('badgeRaid');
-        if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
-        if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
-        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
+        if (g.autoOnStreamStart) autoBadgesHtml += `<span class="cp-auto-badge is-stream-start" style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
+        if (g.autoOffStreamEnd) autoBadgesHtml += `<span class="cp-auto-badge is-stream-end" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStreamEnd)}</span>`;
+        if (g.autoOnRaid) autoBadgesHtml += `<span class="cp-auto-badge is-raid" style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
+        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span class="cp-auto-badge is-auto-off" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
         html += `
         <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
@@ -6547,6 +6907,7 @@ function renderCpGroups() {
             <div style="display:flex; gap:4px;">
                 <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
                 <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
+                <button type="button" class="btn-secondary" onclick="openCpBulkEditModal('group', '${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
@@ -6554,6 +6915,81 @@ function renderCpGroups() {
     });
     container.innerHTML = html;
 }
+
+
+function getCpRewardIconUrl(r) {
+    if (!r) return '';
+    return r.image?.url_2x || r.image?.url_1x || r.default_image?.url_2x || r.default_image?.url_1x || '';
+}
+window.getCpRewardIconUrl = getCpRewardIconUrl;
+
+
+
+function safeOpenExternalUrl(url) {
+    if (!url) return;
+    try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (e) {
+        try {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+            window.location.href = url;
+        }
+    }
+}
+window.safeOpenExternalUrl = safeOpenExternalUrl;
+
+async function openTwitchImageResizerTool() {
+    const url = 'https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html';
+    const confirmTitle = cpCopy('imageResizerConfirmTitle');
+    const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const devNote = cpCopy('imageResizerDeveloperNote');
+    const hintMsg = cpCopy('imageResizerPopupHint');
+    const okText = langMap[currentLang]?.extended?.ok || '開く';
+    const cancelText = langMap[currentLang]?.extended?.cancelBtn || 'キャンセル';
+
+    const messageHtml = `<div>${raidSoEscape(confirmMsg)}</div>` +
+        `<div style="font-size: 11.5px; color: var(--command-accent, #c084fc); margin-top: 4px; font-weight: bold;">${raidSoEscape(devNote)}</div>` +
+        `<div style="margin-top: 10px; word-break: break-all;">` +
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--twitch-purple); font-weight: bold; text-decoration: underline; font-size: 12px;">` +
+        `${url} ↗</a></div>` +
+        `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${raidSoEscape(hintMsg)}</div>`;
+
+    const ok = await presentCustomDialog({
+        type: 'confirm',
+        title: confirmTitle,
+        messageHtml: messageHtml,
+        okText: okText,
+        cancelText: cancelText
+    });
+
+    if (ok) {
+        safeOpenExternalUrl(url);
+    }
+}
+window.openTwitchImageResizerTool = openTwitchImageResizerTool;
+
+function copyCpRewardIdToClipboard(rewardId) {
+    if (!rewardId) return;
+    writeClipboardTextSync(rewardId);
+    showToast(cpCopy('rewardIdCopied', { id: rewardId }), 'success');
+}
+
+function copyCpRewardIdModal() {
+    const el = document.getElementById('cp-reward-id-display');
+    if (el && el.value) {
+        copyCpRewardIdToClipboard(el.value);
+    }
+}
+
+window.copyCpRewardIdToClipboard = copyCpRewardIdToClipboard;
+window.copyCpRewardIdModal = copyCpRewardIdModal;
 
 function renderCpTable() {
     const tbody = document.getElementById('cp-rewards-tbody');
@@ -6597,24 +7033,25 @@ function renderCpTable() {
 
         html += `
         <tr class="cp-reward-row">
+            <td style="width:32px; text-align:center; vertical-align:middle;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
             <td class="cp-reward-main">
                 <div class="cp-reward-identity">
-                    <div class="cp-reward-color" style="background:${color};"></div>
+                    ${getCpRewardIconUrl(r) 
+                    ? `<div class="cp-reward-icon-badge" style="background:${color};" title="${raidSoEscape(r.title)}"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></div>`
+                    : `<div class="cp-reward-color" style="background:${color};"></div>`}
                     <div class="cp-reward-copy">
                         <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
-                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}</div>
+                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}<span class="cp-id-badge" onclick="copyCpRewardIdToClipboard('${r.id}')" title="クリックで報酬IDをコピー (ID: ${r.id})">ID: ${r.id.substring(0, 8)}... 📋</span></div>
                     </div>
                 </div>
             </td>
             <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
-            <td class="cp-reward-status">
-                <span class="${isEnabled ? 'is-enabled' : 'is-disabled'}">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
-            </td>
-            <td class="cp-reward-switch">
-                <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''}${disabledAttribute}${isAppOwned ? ` onchange="toggleCustomRewardEnabled('${r.id}', this.checked)"` : ''}>
-                    <span class="cp-reward-toggle-track"></span>
-                </label>
+            <td class="cp-reward-control-cell" style="text-align: center;">
+                <div class="cp-segmented-control${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(actionTitle)}">
+                    <button type="button" class="cp-segment-btn is-on${isEnabled && !r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'on')"` : ''}>ON</button>
+                    <button type="button" class="cp-segment-btn is-pause${isEnabled && r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'pause')"` : ''}>⏸ 停止</button>
+                    <button type="button" class="cp-segment-btn is-off${!isEnabled ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'off')"` : ''}>OFF</button>
+                </div>
             </td>
             <td class="cp-reward-actions">
                 <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
@@ -6624,3 +7061,215 @@ function renderCpTable() {
     });
     tbody.innerHTML = html;
 }
+
+
+/* --- CP Bulk Edit Logic --- */
+function updateCpBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+    const bar = document.getElementById('cp-bulk-action-bar');
+    const countEl = document.getElementById('cp-bulk-selected-count');
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+
+    if (countEl) countEl.textContent = checked.length;
+
+    if (bar) {
+        bar.style.display = checked.length > 0 ? 'flex' : 'none';
+    }
+
+    if (selectAllCheck && checkboxes.length > 0) {
+        selectAllCheck.checked = checked.length === checkboxes.length;
+        selectAllCheck.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+}
+
+function toggleSelectAllCpRewards(isChecked) {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = isChecked; });
+    updateCpBulkActionBar();
+}
+
+function clearCpRewardSelection() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+    if (selectAllCheck) { selectAllCheck.checked = false; selectAllCheck.indeterminate = false; }
+    updateCpBulkActionBar();
+}
+
+function toggleCpBulkColorSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-color-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkUserInputSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-user-input-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkOption(optionName, enabled) {
+    if (optionName === 'color') toggleCpBulkColorSection(enabled);
+    else if (optionName === 'cost') toggleCpBulkCostSection(enabled);
+    else if (optionName === 'pause') toggleCpBulkPauseSection(enabled);
+    else if (optionName === 'user-input') toggleCpBulkUserInputSection(enabled);
+}
+
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
+window.toggleCpBulkUserInputSection = toggleCpBulkUserInputSection;
+window.toggleCpBulkOption = toggleCpBulkOption;
+
+function toggleCpBulkCostSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-cost-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function setCpBulkSwatch(hex) {
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const colorEnable = document.getElementById('cp-bulk-enable-color');
+    if (colorInput) colorInput.value = hex;
+    if (colorEnable && !colorEnable.checked) {
+        colorEnable.checked = true;
+        toggleCpBulkColorSection(true);
+    }
+}
+
+function openCpBulkEditModal(mode, groupId = null) {
+    const hiddenMode = document.getElementById('cp-bulk-mode');
+    const hiddenGroup = document.getElementById('cp-bulk-group-id');
+    const modalTitle = document.getElementById('cp-bulk-modal-title');
+    const enableColor = document.getElementById('cp-bulk-enable-color');
+    const enableCost = document.getElementById('cp-bulk-enable-cost');
+
+    if (hiddenMode) hiddenMode.value = mode;
+    if (hiddenGroup) hiddenGroup.value = groupId || '';
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoSelection'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditModalTitle', { count: targetRewardIds.length });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (!group) return;
+        targetRewardIds = group.rewardIds || [];
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoGroupRewards'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditGroupTitle', { name: cpGroupName(group) });
+    }
+
+    if (enableColor) { enableColor.checked = false; toggleCpBulkColorSection(false); }
+    if (enableCost) { enableCost.checked = false; toggleCpBulkCostSection(false); }
+    const enablePause = document.getElementById("cp-bulk-enable-pause");
+    if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); } setCpBulkPauseValue('pause');
+    const enableUserInput = document.getElementById('cp-bulk-enable-user-input');
+    if (enableUserInput) { enableUserInput.checked = false; toggleCpBulkUserInputSection(false); } setCpBulkUserInputVal(true);
+
+    renderCpUsedColorSwatches('cp-bulk-used-colors-swatches', true);
+    openModal('cpBulkEditModal');
+}
+
+async function applyCpBulkEdit() {
+    const mode = document.getElementById('cp-bulk-mode')?.value;
+    const groupId = document.getElementById('cp-bulk-group-id')?.value;
+    const enableColor = !!document.getElementById('cp-bulk-enable-color')?.checked;
+    const enableCost = !!document.getElementById('cp-bulk-enable-cost')?.checked;
+    const colorVal = document.getElementById('cp-bulk-color-input')?.value || '#9146FF';
+    const costVal = parseInt(document.getElementById('cp-bulk-cost-input')?.value || '50', 10) || 50;
+
+    if (!enableColor && !enableCost) {
+        showToast(cpCopy('bulkNoOptionsChecked'), 'warn');
+        return;
+    }
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (group) targetRewardIds = group.rewardIds || [];
+    }
+
+    const manageableIds = targetRewardIds.filter(id => isManageableCpRewardId(id));
+    const externalCount = targetRewardIds.length - manageableIds.length;
+
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('bulkExternalSkipped', { count: externalCount }), 'warn');
+        closeModal('cpBulkEditModal');
+        return;
+    }
+
+    const patchBody = {};
+    if (enableColor) patchBody.background_color = colorVal;
+    if (enableCost) patchBody.cost = costVal;
+    if (enablePause) patchBody.is_paused = pauseVal;
+
+    let successCount = 0;
+    try {
+        const broadcasterId = await ensureCpAuth();
+        for (let i = 0; i < manageableIds.length; i++) {
+            const rId = manageableIds[i];
+            showToast(cpCopy('bulkApplying', { current: i + 1, total: manageableIds.length }), 'info');
+            try {
+                const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(patchBody)
+                });
+                if (data.data?.[0]) {
+                    const idx = cpState.rewards.findIndex(r => r.id === rId);
+                    if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                    successCount++;
+                }
+            } catch (err) {
+                console.error('Bulk PATCH error for ID:', rId, err);
+            }
+            await new Promise(res => setTimeout(res, 60));
+        }
+
+        let toastMsg = cpCopy('bulkSuccess', { success: successCount, total: manageableIds.length });
+        if (externalCount > 0) {
+            toastMsg += ' ' + cpCopy('bulkExternalSkipped', { count: externalCount });
+        }
+        showToast(toastMsg, successCount > 0 ? 'success' : 'warn');
+    } catch (err) {
+        console.error('applyCpBulkEdit outer error:', err);
+        showToast(cpCopy('bulkFail') || '一括更新に失敗しました: ' + (err.message || ''), 'warn');
+    }
+
+    closeModal('cpBulkEditModal');
+    clearCpRewardSelection();
+    renderCpTab();
+}
+
+window.updateCpBulkActionBar = updateCpBulkActionBar;
+window.toggleSelectAllCpRewards = toggleSelectAllCpRewards;
+window.clearCpRewardSelection = clearCpRewardSelection;
+window.toggleCpBulkColorSection = toggleCpBulkColorSection;
+window.toggleCpBulkCostSection = toggleCpBulkCostSection;
+window.setCpBulkSwatch = setCpBulkSwatch;
+window.openCpBulkEditModal = openCpBulkEditModal;
+window.applyCpBulkEdit = applyCpBulkEdit;

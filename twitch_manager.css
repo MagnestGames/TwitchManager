@@ -2017,46 +2017,57 @@
         }
 
         .sync-action-btn {
-            border-color: var(--info-border);
-            background: rgba(79, 140, 255, 0.22);
-            color: var(--info-text);
+            border-color: rgba(79, 140, 255, 0.55) !important;
+            background: rgba(79, 140, 255, 0.18) !important;
+            color: #60a5fa !important;
         }
 
         .sync-action-btn:hover {
-            border-color: var(--info-border);
-            background: rgba(79, 140, 255, 0.34);
-            color: var(--text-on-purple);
+            border-color: #60a5fa !important;
+            background: rgba(79, 140, 255, 0.32) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 8px rgba(79, 140, 255, 0.4) !important;
+        }
+
+        body.light-theme .sync-action-btn {
+            border-color: #3b82f6 !important;
+            background: #eff6ff !important;
+            color: #1d4ed8 !important;
         }
 
         body.light-theme .sync-action-btn:hover {
-            background: rgba(79, 140, 255, 0.22);
-            color: var(--info-text);
+            border-color: #2563eb !important;
+            background: #dbeafe !important;
+            color: #1e40af !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
         }
 
         .push-action-btn {
-            border-color: var(--twitch-purple-hover);
-            background: rgba(145, 70, 255, 0.34);
-            color: var(--text-on-purple);
-            box-shadow: 0 0 0 1px rgba(191, 148, 255, 0.22), 0 6px 14px rgba(145, 70, 255, 0.22);
+            border-color: var(--twitch-purple) !important;
+            background: var(--twitch-purple) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(145, 70, 255, 0.35) !important;
         }
 
         .push-action-btn:hover {
-            border-color: var(--text-light-purple);
-            background: rgba(145, 70, 255, 0.48);
-            box-shadow: 0 0 0 1px rgba(215, 195, 255, 0.28), 0 8px 18px rgba(145, 70, 255, 0.28);
+            border-color: var(--twitch-purple-hover) !important;
+            background: var(--twitch-purple-hover) !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 16px rgba(145, 70, 255, 0.45) !important;
         }
 
         body.light-theme .push-action-btn {
-            border-color: rgba(119, 44, 232, 0.65);
-            background: #772ce8;
-            color: #ffffff;
-            box-shadow: 0 0 0 1px rgba(119, 44, 232, 0.12), 0 6px 14px rgba(119, 44, 232, 0.18);
+            border-color: #772ce8 !important;
+            background: #772ce8 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(119, 44, 232, 0.25) !important;
         }
 
         body.light-theme .push-action-btn:hover {
-            border-color: #5c16c5;
-            background: #5c16c5;
-            color: #ffffff;
+            border-color: #5c16c5 !important;
+            background: #5c16c5 !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 16px rgba(119, 44, 232, 0.35) !important;
         }
 
         .id-action-btn {
@@ -2831,15 +2842,6 @@
             border-color: var(--twitch-purple-hover);
             background: rgba(145, 70, 255, 0.12);
             color: var(--text-on-purple);
-        }
-
-        body.light-theme .btn-outline:hover,
-        body.light-theme .cmd-copy-btn:hover,
-        body.light-theme .tw-command-copy-btn:hover,
-        body.light-theme .raidso-token-item:hover,
-        body.light-theme .icon-btn:hover {
-            color: var(--twitch-purple) !important;
-            background: rgba(119, 44, 232, 0.12);
         }
 
         body.light-theme .language-option:hover,
@@ -4306,18 +4308,6 @@ body.light-theme .has-tooltip[data-tooltip]::after {
     box-shadow: 0 4px 12px rgba(31, 31, 35, 0.16);
 }
 
-body.light-theme .btn-head-purple:hover,
-body.light-theme #birthday-indicator-btn:hover,
-body.light-theme .btn-outline:hover,
-body.light-theme .cmd-copy-btn:hover,
-body.light-theme .tw-command-copy-btn:hover,
-body.light-theme .raidso-token-item:hover,
-body.light-theme .icon-btn:hover {
-    background: rgba(119, 44, 232, 0.12) !important;
-    border-color: var(--twitch-purple-hover) !important;
-    color: var(--twitch-purple) !important;
-}
-
 body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
 
 /* Channel Points controls use the same visual hierarchy as the rest of the dock. */
@@ -4643,12 +4633,69 @@ body.light-theme .supporter-output-options {
     border-color: #cfd6df !important;
 }
 
-body.light-theme .cmd-copy-btn,
-body.light-theme .tw-command-copy-btn,
-body.light-theme .raidso-token-item {
+/* Unified Dark & Light Mode Button/Card Hover & Active States */
+body:not(.light-theme) .btn-outline:not(.active-toggle):hover,
+body:not(.light-theme) .cmd-copy-btn:not(.active-toggle):hover,
+body:not(.light-theme) .tw-command-copy-btn:not(.active-toggle):hover,
+body:not(.light-theme) .raidso-token-item:not(.active-toggle):hover,
+body:not(.light-theme) .icon-btn:not(.active-toggle):hover {
+    background: rgba(145, 70, 255, 0.16) !important;
+    border-color: var(--twitch-purple-hover) !important;
+    color: var(--command-accent) !important;
+}
+
+body:not(.light-theme) .active-toggle,
+body:not(.light-theme) .cmd-copy-btn.active-toggle {
+    background: rgba(145, 70, 255, 0.28) !important;
+    border-color: var(--command-accent) !important;
+    box-shadow: 0 0 8px rgba(145, 70, 255, 0.4) !important;
+    color: #bf94ff !important;
+    font-weight: 700;
+}
+
+body:not(.light-theme) .active-toggle:hover,
+body:not(.light-theme) .cmd-copy-btn.active-toggle:hover {
+    background: rgba(145, 70, 255, 0.42) !important;
+    border-color: var(--command-accent) !important;
+    color: #ffffff !important;
+}
+
+/* Light Theme Unified States */
+body.light-theme .btn-outline:not(.active-toggle),
+body.light-theme .cmd-copy-btn:not(.active-toggle),
+body.light-theme .tw-command-copy-btn:not(.active-toggle),
+body.light-theme .raidso-token-item:not(.active-toggle) {
     background: #f4f6fb !important;
     border-color: #cfd6df !important;
     color: #34343d !important;
+}
+
+body.light-theme .btn-head-purple:hover,
+body.light-theme #birthday-indicator-btn:hover,
+body.light-theme .btn-outline:not(.active-toggle):not(.sync-action-btn):hover,
+body.light-theme .cmd-copy-btn:not(.active-toggle):hover,
+body.light-theme .tw-command-copy-btn:not(.active-toggle):hover,
+body.light-theme .raidso-token-item:not(.active-toggle):hover,
+body.light-theme .icon-btn:not(.sync-action-btn):hover {
+    background: #f5edff !important;
+    border-color: #a855f7 !important;
+    color: #6b21a8 !important;
+}
+
+body.light-theme .active-toggle,
+body.light-theme .cmd-copy-btn.active-toggle {
+    background: #e9d5ff !important;
+    border-color: #9333ea !important;
+    box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.25), 0 2px 5px rgba(147, 51, 234, 0.15) !important;
+    color: #4c1d95 !important;
+    font-weight: 600;
+}
+
+body.light-theme .active-toggle:hover,
+body.light-theme .cmd-copy-btn.active-toggle:hover {
+    background: #ddd6fe !important;
+    border-color: #7e22ce !important;
+    color: #3b0764 !important;
 }
 
 body.light-theme .raidso-token-item code,
@@ -4739,4 +4786,383 @@ body.light-theme .tw-command-copy-btn code {
 /* タグフィルタアコーディオンのデフォルト三角形マーカー（▶/▼）を消去 */
 #friends-tag-filter-details > summary::before {
     content: none !important;
+}
+
+/* Light Theme CP Tab Green Contrast Fixes */
+body.light-theme .cp-source-badge.is-app {
+    color: #047857 !important;
+    border-color: #10b981 !important;
+    background: #d1fae5 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-reward-status .is-enabled {
+    color: #047857 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-toggle-action.is-enable,
+body.light-theme .cp-group-toggle.is-enable {
+    color: #047857 !important;
+    border-color: #10b981 !important;
+    background: #ecfdf5 !important;
+    font-weight: 600 !important;
+}
+
+body.light-theme .cp-toggle-action.is-enable:hover,
+body.light-theme .cp-group-toggle.is-enable:hover {
+    color: #065f46 !important;
+    border-color: #059669 !important;
+    background: #d1fae5 !important;
+    box-shadow: none !important;
+}
+
+/* Light Theme CP Group Badges & Tags Legibility Fixes */
+body.light-theme .cp-auto-badge.is-stream-start {
+    color: #047857 !important;
+    border-color: #10b981 !important;
+    background: #d1fae5 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-auto-badge.is-raid {
+    color: #6b21a8 !important;
+    border-color: #a855f7 !important;
+    background: #f5edff !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-auto-badge.is-auto-off {
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+    background: #fee2e2 !important;
+    font-weight: 700 !important;
+}
+
+body.light-theme .cp-group-reward-tag {
+    color: #34343d !important;
+    border-color: #cfd6df !important;
+    background: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+body.light-theme .cp-group-reward-tag.is-shared {
+    color: #6b21a8 !important;
+    border-color: #a855f7 !important;
+    background: #f5edff !important;
+    font-weight: 600 !important;
+}
+
+body.light-theme .cp-auto-badge.is-stream-end {
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+    background: #fee2e2 !important;
+    font-weight: 700 !important;
+}
+
+/* Twitch Channel Point Reward Icon Badge */
+.cp-reward-icon-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    flex: 0 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    vertical-align: middle;
+}
+.cp-reward-icon-badge img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+}
+.cp-reward-icon-badge.is-small {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 3px;
+}
+.cp-reward-icon-badge.is-small img {
+    width: 13px;
+    height: 13px;
+}
+.cp-reward-icon-badge.is-tag {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: -2px;
+}
+.cp-reward-icon-badge.is-tag img {
+    width: 10px;
+    height: 10px;
+}
+
+/* Pause & Resume Styling */
+.cp-reward-status .is-paused {
+    color: #f59e0b;
+}
+body.light-theme .cp-reward-status .is-paused {
+    color: #d97706 !important;
+    font-weight: 700 !important;
+}
+
+.cp-reward-icon-button.is-paused-active {
+    color: #f59e0b;
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+}
+
+.cp-group-toggle.is-pause { border-color: rgba(245, 158, 11, 0.45); }
+.cp-group-toggle.is-resume { border-color: rgba(59, 130, 246, 0.45); }
+
+.cp-group-toggle.is-pause:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+}
+.cp-group-toggle.is-resume:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: #3b82f6;
+}
+
+/* Table Pause Toggle Column & Yellow Styling */
+.cp-th-reward { width: 33%; }
+.cp-th-group { width: 16%; }
+.cp-th-status { width: 13%; }
+.cp-th-toggle { width: 10%; text-align: center; }
+.cp-th-pause-toggle { width: 11%; text-align: center; }
+.cp-th-actions { width: 12%; text-align: right; }
+
+.cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track {
+    background-color: #f59e0b;
+}
+.cp-reward-pause-toggle-track {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    background-color: var(--border-color);
+    border-radius: 9px;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    vertical-align: middle;
+}
+.cp-reward-pause-toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    transition: transform 0.2s;
+}
+.cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track::after {
+    transform: translateX(14px);
+}
+
+.cp-group-toggle.is-pause {
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+}
+.cp-group-toggle.is-pause:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+body.light-theme .cp-reward-toggle.is-pause-toggle input:checked + .cp-reward-pause-toggle-track {
+    background-color: #d97706 !important;
+}
+
+body.light-theme .cp-group-toggle.is-pause {
+    border-color: #d97706 !important;
+    color: #b45309 !important;
+    background: #fef3c7 !important;
+    font-weight: 700 !important;
+}
+
+/* Unified 3-Segment Redemption Control Box */
+.cp-th-reward { width: 38%; }
+.cp-th-group { width: 18%; }
+.cp-th-control { width: 28%; text-align: center; }
+.cp-th-actions { width: 12%; text-align: right; }
+
+.cp-segmented-control {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+    box-sizing: border-box;
+}
+
+.cp-segment-btn {
+    padding: 3px 7px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.cp-segment-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cp-segment-btn.is-on.active {
+    background: rgba(0, 200, 117, 0.2);
+    color: #00f59b;
+    border-color: #00c875;
+    font-weight: 700;
+}
+
+.cp-segment-btn.is-pause.active {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-color: #f59e0b;
+    font-weight: 700;
+}
+
+.cp-segment-btn.is-off.active {
+    background: rgba(233, 61, 58, 0.2);
+    color: #f87171;
+    border-color: #e93d3a;
+    font-weight: 700;
+}
+
+.cp-segmented-control.is-disabled .cp-segment-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+body.light-theme .cp-segment-btn.is-on.active {
+    background: #d1fae5 !important;
+    color: #047857 !important;
+    border-color: #10b981 !important;
+}
+
+body.light-theme .cp-segment-btn.is-pause.active {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border-color: #d97706 !important;
+}
+
+body.light-theme .cp-segment-btn.is-off.active {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+}
+
+/* Pixel-Perfect Color Picker Row Alignment */
+.cp-color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    height: 28px;
+}
+
+.cp-color-picker-row input[type="color"] {
+    width: 38px !important;
+    height: 28px !important;
+    padding: 1px 2px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    background: var(--bg-item) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.cp-color-picker-row .cp-swatch-preview {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 4px !important;
+    border: 1px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.cp-color-picker-row input[type="text"] {
+    width: 76px !important;
+    height: 28px !important;
+    padding: 0 6px !important;
+    font-size: 11.5px !important;
+    font-family: monospace !important;
+    text-transform: uppercase !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    background: var(--bg-item) !important;
+    color: var(--text-main) !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    line-height: 26px !important;
+}
+
+.cp-color-picker-row span {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    line-height: 28px !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+
+.cp-segment-btn.is-purple.active {
+    background: rgba(145, 70, 255, 0.2);
+    color: #c084fc;
+    border-color: #9146ff;
+    font-weight: 700;
+}
+body.light-theme .cp-segment-btn.is-purple.active {
+    background: #e9d5ff !important;
+    color: #7e22ce !important;
+    border-color: #9146ff !important;
+}
+
+
+.cp-id-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: monospace, SFMono-Regular, Consolas, sans-serif;
+    font-size: 9.5px;
+    color: var(--text-muted);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    padding: 1px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: all;
+    margin-left: 4px;
+}
+.cp-id-badge:hover {
+    color: var(--text-main);
+    background: var(--bg-card);
+    border-color: var(--twitch-purple);
 }
