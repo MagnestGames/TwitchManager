@@ -1582,14 +1582,6 @@ window.copyCommonTag = copyCommonTag;
             }
         }
 
-        function changeFriendsSortOrder(val) {
-            friendsSortOrder = val;
-            const sel = document.getElementById('friends-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            renderFriends();
-        }
-        window.changeFriendsSortOrder = changeFriendsSortOrder;
-
         // カード生成ヘルパー
         // 遅延保存用のタイマー
         let saveFriendsTimeout = null;
@@ -7557,17 +7549,8 @@ async function batchPauseCpGroup(groupId, isPaused) {
     renderCpTab();
 }
 
-function toggleCpBulkPauseSection(enabled) {
-    const ctrl = document.getElementById('cp-bulk-pause-controls');
-    if (ctrl) {
-        ctrl.style.opacity = enabled ? '1' : '0.4';
-        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
-    }
-}
-
 window.toggleCustomRewardPaused = toggleCustomRewardPaused;
 window.batchPauseCpGroup = batchPauseCpGroup;
-window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
 
 async function toggleCustomRewardEnabled(rewardId, isEnabled) {
     if (!isManageableCpRewardId(rewardId)) {
