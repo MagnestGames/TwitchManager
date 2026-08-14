@@ -85,6 +85,12 @@ const I18N_DATA = {
                 "sortTitle": "登録タイトル順 (2) (一覧)",
                 "sortName": "登録名前順 (1) (一覧)"
             },
+            "commands": {
+                "sortBy": "表示順:",
+                "sortGroup": "グループ別 (標準)",
+                "sortName": "名前順 (A-Z)",
+                "sortCommand": "コマンド順"
+            },
             "footerActions": {
                 "selectFile": "ファイル選択",
                 "noFileSelected": "未選択",
@@ -1450,6 +1456,12 @@ const I18N_DATA = {
                 "xUrl": "X ID or URL",
                 "youtubeUrl": "YouTube Link"
             },
+            "commands": {
+                "sortBy": "Sort By:",
+                "sortGroup": "Group (Default)",
+                "sortName": "Name (A-Z)",
+                "sortCommand": "Command"
+            },
             "idList": {
                 "autoCategory": "Shoutout History",
                 "shoutoutMeta": "Shoutouts: {count} / Last: {date}",
@@ -2800,6 +2812,12 @@ const I18N_DATA = {
                 "twitchId": "Twitch ID 或 URL",
                 "xUrl": "X ID 或 URL",
                 "youtubeUrl": "YouTube 链接"
+            },
+            "commands": {
+                "sortBy": "排序:",
+                "sortGroup": "按分组 (默认)",
+                "sortName": "按名称 (A-Z)",
+                "sortCommand": "按指令"
             },
             "idList": {
                 "autoCategory": "介绍记录",

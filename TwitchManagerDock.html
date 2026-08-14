@@ -465,10 +465,10 @@
         <!-- Command Sort Toolbar -->
         <div class="cmd-toolbar" style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 8px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
             <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="commands.sortBy">表示順:</span>
-            <select id="cmd-sort-select" onchange="changeCmdSortOrder(this.value)" aria-label="表示順" style="flex: 1; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
-                <option value="group" selected>グループ別 (標準)</option>
-                <option value="name">名前順 (A-Z)</option>
-                <option value="command">コマンド順</option>
+            <select id="cmd-sort-select" onchange="changeCmdSortOrder(this.value)" data-i18n-aria="commands.sortBy" aria-label="表示順" style="flex: 1; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="group" data-i18n="commands.sortGroup" selected>グループ別 (標準)</option>
+                <option value="name" data-i18n="commands.sortName">名前順 (A-Z)</option>
+                <option value="command" data-i18n="commands.sortCommand">コマンド順</option>
             </select>
         </div>
         <div id="cmd-container"></div>
