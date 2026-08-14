@@ -992,7 +992,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                         <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
                     </button>
-                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">笨・/button>
+                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">${raidSoEscape(T.delete)}</button>
                 </div>
             </div>
             <div class="record-body">
