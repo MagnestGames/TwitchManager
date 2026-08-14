@@ -21,9 +21,31 @@ function updateRecordTitleValue(ci, ri, val) {
     const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
     if (previewEl) {
         const game = config[ci].records[ri].game || '';
-        const resolved = resolveStreamTitleTemplate(val, { game });
+        const count = config[ci].records[ri].count;
+        const resolved = resolveStreamTitleTemplate(val, { game, count });
         previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
     }
+}
+
+function updateRecordCount(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const num = Math.max(1, parseInt(val, 10) || 1);
+    config[ci].records[ri].count = num;
+    saveAllLocal(false);
+
+    const input = document.getElementById(`record-count-input-${ci}-${ri}`);
+    if (input && parseInt(input.value, 10) !== num) {
+        input.value = num;
+    }
+
+    const r = config[ci].records[ri];
+    updateRecordTitleValue(ci, ri, r.title || '');
+}
+
+function stepRecordCount(ci, ri, delta) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const current = (config[ci].records[ri].count !== undefined) ? parseInt(config[ci].records[ri].count, 10) : 1;
+    updateRecordCount(ci, ri, current + delta);
 }
 
 function insertTagToRecordTitle(ci, ri, tagText) {
@@ -40,6 +62,8 @@ function insertTagToRecordTitle(ci, ri, tagText) {
 }
 
 window.updateRecordTitleValue = updateRecordTitleValue;
+window.updateRecordCount = updateRecordCount;
+window.stepRecordCount = stepRecordCount;
 window.insertTagToRecordTitle = insertTagToRecordTitle;
 
 
@@ -179,52 +203,6 @@ window.saveTitleTagConfig = saveTitleTagConfig;
 window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
 
-function renderCommonTagBar() {
-    loadTitleTagConfig();
-    const bar = document.getElementById('common-tag-chip-bar');
-    if (!bar) return;
-    let html = '';
-
-    // 1. カスタム共通タグ (言葉セット)
-    (titleTagConfig.customTags || []).forEach(tag => {
-        if (!tag.name) return;
-        const tagText = '{' + tag.name + '}';
-        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
-        html += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
-    });
-
-    // 2. {Category}
-    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
-
-    // 3. {コラボ} (シンプル表示)
-    const selectedNames = getSelectedCollabNames();
-    const collabCat = titleTagConfig.collabCategoryName || '';
-    const collabTitle = selectedNames 
-        ? `選択中のコラボ相手 (${collabCat || '全体'}):${selectedNames}` 
-        : `コラボ相手未選択 (IDリストでチェックを入れてください)`;
-
-    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{コラボ}')" onmouseenter="showCollabHoverHint('{コラボ}')" title="${raidSoEscape(collabTitle)}">＋{コラボ}</button>`;
-
-    // 4. IDリストの各タグ名を表示 -> クリックで該当メンバーの (半角空白)@XXX (半角空白)@YYY... を横並びコピー
-    const catNames = (friendsConfig || [])
-        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
-        .map(cat => cat.name.trim())
-        .filter(name => name);
-    const uniqueCats = [...new Set(catNames)];
-
-    uniqueCats.forEach(catName => {
-        const formattedCatNames = getCategoryCollabNames(catName);
-        const catTagText = '{' + catName + '}';
-        const catTitle = formattedCatNames ? `IDリスト【${catName}】: ${formattedCatNames.trim()}` : `IDリスト【${catName}】: 未選択`;
-        html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="${raidSoEscape(catTitle)}">＋${raidSoEscape(catTagText)}</button>`;
-    });
-
-    // 5. {date}
-    html += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
-
-    bar.innerHTML = html;
-}
-
 function extractTwitchId(str) {
     if (!str) return '';
     let val = String(str).trim();
@@ -328,6 +306,10 @@ function resolveStreamTitleTemplate(templateStr, context = {}) {
     result = result.replace(/{(年|year)}/g, yearVal);
     result = result.replace(/{(月|month)}/g, monthVal);
     result = result.replace(/{(時間|time)}/g, timeVal);
+
+    // 5. Count Tag ({count} or {回数} or {カウント}) -> replaces with numeric count value only
+    const countVal = context.count !== undefined ? String(context.count) : (context.recordCount !== undefined ? String(context.recordCount) : '1');
+    result = result.replace(/{(count|回数|カウント)}/g, countVal);
 
     return result;
 }
@@ -463,16 +445,15 @@ function renderCommonTagBar() {
         if (!tag.name) return;
         const tagText = '{' + tag.name + '}';
         const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
-        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">＋${raidSoEscape(tagText)}</button>`;
+        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
     });
 
-    // 2. {Category}
-    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">＋{Category}</button>`;
+    // 2. 標準システムタグ ({Category}, {date}, {count})
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">{Category}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付・日時">{date}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{count}')" title="シリーズもの配信回数 (数字のみ+)">{count}</button>`;
 
-    // 3. {date}
-    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付 (例: 8/5)">＋{date}</button>`;
-
-    // 4. コラボ・IDリスト用タグ（タグ名コピーと @ID一覧コピーの横並びセグメントボタン）
+    // 3. コラボ・IDリスト用タグ（タグ名コピーと @ID コピーの横並びセグメントボタン）
     let collabHtml = '';
     const catNames = (friendsConfig || [])
         .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
@@ -486,10 +467,10 @@ function renderCommonTagBar() {
         collabHtml += `
             <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
                 <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
-                    ＋${raidSoEscape(catTagText)}
+                    ${raidSoEscape(catTagText)}
                 </button>
-                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID一覧をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
-                    ${I18N_DATA[currentLang]?.ui?.rawIdListCopyBtn || '@ID一覧'}
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                    @ID
                 </button>
             </div>
         `;
@@ -1406,6 +1387,15 @@ window.copyCommonTag = copyCommonTag;
                         </button>
                     </div>
                     <div class="record-actions">
+                        <div style="display:inline-flex; align-items:center; gap:3px; margin-right:6px; height:34px; box-sizing:border-box; padding:2px 4px; background:rgba(255,255,255,0.05); border-radius:6px; border:1px solid var(--border-color); align-self:center;" onclick="event.stopPropagation();" title="配信回数 {count} の現在値">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:40px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:3px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を+1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
                         <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
                             <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
@@ -1424,7 +1414,7 @@ window.copyCommonTag = copyCommonTag;
                     <span class="field-label">${L.title}</span>
 
                     <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
-                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '' })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -5140,14 +5130,6 @@ window.copyCommonTag = copyCommonTag;
                     if (idx > -1) localConfig[idx] = cfg;
                     else localConfig.push(cfg);
                 });
-            // 1. config
-            if (d.config && Array.isArray(d.config)) {
-                let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
-                d.config.forEach(cfg => {
-                    const idx = localConfig.findIndex(c => c.id === cfg.id);
-                    if (idx > -1) localConfig[idx] = cfg;
-                    else localConfig.push(cfg);
-                });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
 
@@ -5260,48 +5242,6 @@ window.copyCommonTag = copyCommonTag;
             collectRaidSoSettings();
             const d = {
                 backupVersion: 3,
-=======
-                localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(localArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
-            }
-
-            // 8. channel point groups
-            if (Array.isArray(d.cpGroups)) {
-                const localGroups = JSON.parse(localStorage.getItem('cp_groups_v1') || '[]');
-                const groupsById = new Map(localGroups.filter(isBackupRecord).map(group => [String(group.id || ''), group]));
-                d.cpGroups.filter(isBackupRecord).forEach(group => {
-                    const id = String(group.id || '');
-                    if (!id) return;
-                    const existing = groupsById.get(id) || {};
-                    groupsById.set(id, {
-                        ...existing,
-                        ...group,
-                        rewardIds: [...new Set([...(existing.rewardIds || []), ...(group.rewardIds || [])].map(String))]
-                    });
-                });
-                localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
-            }
-
-            // 10. titleTagConfig
-            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
-                titleTagConfig = d.titleTagConfig;
-                saveTitleTagConfig();
-            }
-
-            // 9. rewards created by TwitchManager
-            if (Array.isArray(d.cpAppRewardIds)) {
-                const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
-                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
-                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
-                if (typeof cpState !== 'undefined') {
-                    cpState.appRewardIds = merged;
-                }
-            }
-        }
-        async function copyBackupToClipboard() {
-            collectRaidSoSettings();
-            const d = {
-                backupVersion: 3,
->>>>>>> a8bf03f (feat(ui): Add Stream Title Word Sets & Dynamic Tag Replacement Engine with inline header badges and sorted @collab formatting)
                 config,
                 friends: friendsConfig,
                 settings: backupSettingsWithoutToken(settings),
@@ -6589,7 +6529,7 @@ function getSortedCpRewards(rewards, sortBy) {
 function changeCpSortOrder(val) {
     cpState.sortBy = val;
     try { localStorage.setItem('cp_sort_by_v1', val); } catch (e) {}
-    renderCpTable();
+    if (typeof renderCpTable === 'function') renderCpTable();
 }
 
 function changeCpModalSortOrder(val) {
@@ -7135,7 +7075,7 @@ function openCpRewardModal(rewardId = null) {
 
 function renderCpTab() {
     renderCpGroups();
-    renderCpTable();
+    if (typeof renderCpTable === 'function') renderCpTable();
 }
 
 function renderCpGroups() {
@@ -7263,25 +7203,81 @@ function renderTitleTagModalRows() {
     container.innerHTML = html;
 }
 
+function getRegisteredCategoryList() {
+    const games = [];
+    if (Array.isArray(config)) {
+        config.forEach(c => {
+            if (c && Array.isArray(c.records)) {
+                c.records.forEach(r => {
+                    if (r && r.game && r.game.trim()) {
+                        const trimmed = r.game.trim();
+                        const lower = trimmed.toLowerCase();
+                        if (!games.some(g => g.toLowerCase() === lower)) {
+                            games.push(trimmed);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    games.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    return games;
+}
+
+function handleCatMapFromSelectChange(idx, val) {
+    if (!titleTagConfig.categoryMap || !titleTagConfig.categoryMap[idx]) return;
+    if (val === '__custom__') {
+        titleTagConfig.categoryMap[idx].isCustomFrom = true;
+    } else {
+        titleTagConfig.categoryMap[idx].isCustomFrom = false;
+        titleTagConfig.categoryMap[idx].from = val;
+    }
+    renderCategoryMapModalRows();
+}
+window.handleCatMapFromSelectChange = handleCatMapFromSelectChange;
+
 function renderCategoryMapModalRows() {
     const container = document.getElementById('title-tag-category-map-container');
     if (!container) return;
+
     if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
         container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
         return;
     }
+
+    const registeredGames = getRegisteredCategoryList();
+
     let html = '';
     titleTagConfig.categoryMap.forEach((item, idx) => {
+        const currentFrom = (item.from || '').trim();
+        const optionsList = [...registeredGames];
+        if (currentFrom && !optionsList.some(g => g.toLowerCase() === currentFrom.toLowerCase())) {
+            optionsList.unshift(currentFrom);
+        }
+
+        let selectOptionsHtml = '<option value="">登録カテゴリを選択...</option>';
+        optionsList.forEach(g => {
+            const sel = (g.toLowerCase() === currentFrom.toLowerCase() && !item.isCustomFrom) ? 'selected' : '';
+            selectOptionsHtml += `<option value="${raidSoEscape(g)}" ${sel}>${raidSoEscape(g)}</option>`;
+        });
+        const customSel = item.isCustomFrom ? 'selected' : '';
+        selectOptionsHtml += `<option value="__custom__" ${customSel}>✏️ 直接入力 (その他)...</option>`;
+
+        const isCustom = item.isCustomFrom;
+
         html += `
         <div style="display:flex; gap:6px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
-            <div style="flex:1.2;">
-                <input type="text" class="cd-input-field cat-map-row-from" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名 (例: Just Chatting)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            <div style="flex:1.2; display:flex; flex-direction:column; gap:4px;">
+                <select class="cd-input-field cat-map-row-from-select" data-idx="${idx}" onchange="handleCatMapFromSelectChange(${idx}, this.value)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;">
+                    ${selectOptionsHtml}
+                </select>
+                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名を入力" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
             </div>
-            <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">➔</div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:bold; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; transform:translateY(0);">➔</div>
             <div style="flex:1.2;">
                 <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
-            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
         </div>`;
     });
     container.innerHTML = html;
@@ -7345,12 +7341,16 @@ function saveTitleTagModalSettings(silent = false) {
         titleTagConfig.customTags = newTags;
     }
 
-    const catFromInputs = document.querySelectorAll('.cat-map-row-from');
+    const catFromSelects = document.querySelectorAll('.cat-map-row-from-select');
     const catToInputs = document.querySelectorAll('.cat-map-row-to');
-    if (catFromInputs && catFromInputs.length > 0) {
+    if (catFromSelects && catFromSelects.length > 0) {
         const newMaps = [];
-        catFromInputs.forEach((fInput, idx) => {
-            const from = (fInput.value || '').trim();
+        catFromSelects.forEach((sInput, idx) => {
+            let from = (sInput.value || '').trim();
+            if (from === '__custom__') {
+                const customEl = document.querySelector(`.cat-map-row-from-custom[data-idx="${idx}"]`);
+                from = customEl ? (customEl.value || '').trim() : '';
+            }
             const to = (catToInputs[idx]?.value || '').trim();
             if (from) {
                 newMaps.push({ id: 'cat_map_' + idx, from, to });

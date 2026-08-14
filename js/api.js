@@ -90,7 +90,7 @@
 
             let finalTitle = record.title || "";
             if (typeof resolveStreamTitleTemplate === 'function') {
-                finalTitle = resolveStreamTitleTemplate(finalTitle, { game: record.game || '' });
+                finalTitle = resolveStreamTitleTemplate(finalTitle, { game: record.game || '', count: record.count });
             } else if (finalTitle.includes('{date}')) {
                 finalTitle = finalTitle.replace(/{date}/g, formatDateToken(new Date(), settings.dateFormat || "MM/DD"));
             }
@@ -99,8 +99,15 @@
             if (gameId) body.game_id = gameId;
 
             const result = await apiRequest(`/channels?broadcaster_id=${broadcasterId}`, 'PATCH', body);
-            if (result) showToast(langMap[currentLang].alerts.pushSuccess, "success");
-            else await customAlert(langMap[currentLang].alerts.pushFail);
+            if (result) {
+                showToast(langMap[currentLang].alerts.pushSuccess, "success");
+                // PUSH成功時に配信回数カウントを自動的に +1 加算して次回に備える
+                record.count = (parseInt(record.count, 10) || 1) + 1;
+                saveAllLocal(false);
+                if (typeof render === 'function') render();
+            } else {
+                await customAlert(langMap[currentLang].alerts.pushFail);
+            }
 
             btnEl.innerHTML = originalContent;
             btnEl.disabled = false;

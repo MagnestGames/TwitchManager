@@ -509,7 +509,7 @@
             transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
-        .tab-help {
+        .tab-help, .tab-help-box {
             margin-bottom: 10px;
             padding: 0 5px;
         }
@@ -4754,4 +4754,45 @@ body.light-theme .tw-command-copy-btn code {
     margin-bottom: 12px;
     line-height: 1.5;
     word-break: break-all;
+}
+
+/* 共通タグチップバーと統一チップスタイル */
+.tag-chip-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+}
+
+.tag-chip {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card, #26262c);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.tag-chip:hover {
+    background: var(--bg-hover, #323239);
+    border-color: var(--twitch-purple, #9146ff);
+    color: #ffffff;
+}
+
+/* システムタグチップ ({Category}, {date}, {コラボ} 等) のデザイン一貫化 */
+.tag-chip.is-system {
+    background: rgba(145, 70, 255, 0.12);
+    border-color: rgba(145, 70, 255, 0.35);
+    color: var(--text-main);
+}
+
+.tag-chip.is-system:hover {
+    background: rgba(145, 70, 255, 0.25);
+    border-color: var(--twitch-purple, #9146ff);
+    color: #ffffff;
 }

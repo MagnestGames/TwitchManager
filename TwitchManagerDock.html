@@ -7,8 +7,13 @@
     <title>TwitchManagerDock</title>
     <script>
         const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
-        if (twitchManagerAudioSourceMode) document.documentElement.classList.add('audio-source-mode');
-        else document.write('<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"><\/script>');
+        if (twitchManagerAudioSourceMode) {
+            document.documentElement.classList.add('audio-source-mode');
+        } else {
+            const sortableScript = document.createElement('script');
+            sortableScript.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+            document.head.appendChild(sortableScript);
+        }
     </script>
     <style>
         html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
@@ -26,7 +31,6 @@
         <div class="app-header">
             <h1 class="app-title app-title-row">◆ <span id="today-date"
                     style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
                 <!-- Birthday/Anniversary Indicator -->
@@ -67,6 +71,7 @@
     </div>
 
     <div id="main-tab" class="tab-content active">
+        <!-- ヘルプ (タブ個別解説) -->
         <details class="tab-help">
             <summary id="ui-info-summary" class="tab-help-summary">
                 <span id="ui-info-summary-text" data-i18n="infoSummary">ヘルプ</span>
@@ -78,10 +83,13 @@
         </details>
 
         <!-- 共通タグバー (ヘルプの真下, 全タイトル共通・開閉対応) -->
-        <details id="common-tag-bar-section" style="padding: 4px 10px; border-bottom: 1px solid var(--border-color);" open>
-            <summary style="font-size: 10px; color: var(--text-muted); cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; padding: 2px 0;">
+        <details id="common-tag-bar-section" class="tab-help" style="margin-bottom: 8px;" open>
+            <summary class="tab-help-summary">
                 <span data-i18n="commonTagBarTitle">共通タグ（クリックでコピー → タイトルに貼り付け）</span>
-                <button type="button" style="margin-left:auto; font-size:10px; padding:1px 6px;" class="btn-secondary" onclick="event.stopPropagation(); openTitleTagModal()">⚙️ 設定</button>
+                <button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTitleTagModal()" style="margin-left: auto; font-size: 10px; padding: 2px 7px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="titleTagConfig.modalTitle" title="単語セット・タグ設定">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span data-i18n="settings">設定</span>
+                </button>
             </summary>
             <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
         </details>
@@ -1100,9 +1108,18 @@
                 'js/ui.js',
                 'js/main.js'
             ];
-            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+            const ts = Date.now();
+            appScripts.forEach(src => {
+                const s = document.createElement('script');
+                s.src = src + '?v=' + ts;
+                s.async = false;
+                document.body.appendChild(s);
+            });
         }
     </script>
+
+    <!-- 配信タイトル単語セット・タグ設定モーダル -->
+    <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
         <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                 <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
@@ -1124,19 +1141,23 @@
                     ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
                 </div>
                 <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                <datalist id="registered-categories-list"></datalist>
                 <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
 
 
 
                 <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
-                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準システムタグのご案内</summary>
-                    <div style="margin-top: 6px; line-height: 1.6; white-space: pre-line;" data-i18n="titleTagSystemDesc">
-                        【標準システムタグ】
-                        ・{カテゴリ} : Twitchの配信ゲーム/カテゴリ名
-                        ・{コラボ} : IDリストで選択中のコラボ相手名
-                        ・{日付} : 本日の日付 (例: 8/5)
-                        ・{曜日} : 本日の曜日 (例: 水)
-                        ・{時間} : 現在の時刻 (例: 13:30)
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準タグ</summary>
+                    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : Twitch配信カテゴリ名</span>
+                        </div>
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : 本日の日付・日時</span>
+                        </div>
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : シリーズもの配信回数（数字のみ+）</span>
+                        </div>
                     </div>
                 </details>
             </div>
