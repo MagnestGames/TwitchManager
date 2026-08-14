@@ -659,6 +659,50 @@
             margin-top: 8px;
         }
 
+        /* ----- レイアウト切替トグルスイッチ ----- */
+        .layout-toggle-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+            padding: 2px 4px;
+        }
+
+        .toggle-switch-track {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+            background: var(--bg-base, #18181b);
+            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+            border-radius: 999px;
+            transition: background 0.2s, border-color 0.2s;
+            vertical-align: middle;
+        }
+
+        .toggle-switch-thumb {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 14px;
+            height: 14px;
+            background: var(--text-muted, #adadb8);
+            border-radius: 50%;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .layout-toggle-label input:checked + .toggle-switch-track {
+            background: var(--twitch-purple, #9146ff);
+            border-color: var(--twitch-purple, #9146ff);
+        }
+
+        .layout-toggle-label input:checked + .toggle-switch-track .toggle-switch-thumb {
+            transform: translateX(14px);
+            background: #ffffff;
+        }
+
         .settings-help {
             color: var(--text-muted);
             font-size: 12px;

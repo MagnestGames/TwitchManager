@@ -209,7 +209,7 @@
             if (guideEl) guideEl.innerHTML = L.guideHtml;
             try { if (typeof updateCreatorsDOM === 'function') updateCreatorsDOM(); } catch(e) {}
             const cmdEl = document.getElementById('cmd-container');
-            if (cmdEl) cmdEl.innerHTML = L.cmdHtml;
+            if (cmdEl) renderCommands();
             refreshTwitchChoicePlaceholders();
             renderShoutoutSuggestions();
             renderRaidShoutOutPanel();
@@ -877,7 +877,7 @@
             return (r.label && r.label.trim()) || defaultLabel || 'NEW';
         }
         let titlesSortOrder = localStorage.getItem('stream_titles_sort_order_v16') || 'group';
-        let titlesLayoutMode = localStorage.getItem('stream_titles_layout_mode_v16') || 'grid';
+        let titlesLayoutMode = localStorage.getItem('stream_titles_layout_mode_v16') || 'list';
 
         function changeTitlesSortOrder(val) {
             titlesSortOrder = val;
@@ -891,8 +891,9 @@
         function changeTitlesLayoutMode(val) {
             titlesLayoutMode = val;
             localStorage.setItem('stream_titles_layout_mode_v16', val);
-            const sel = document.getElementById('titles-layout-select');
-            if (sel && sel.value !== val) sel.value = val;
+            const toggle = document.getElementById('titles-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
             render();
         }
         window.changeTitlesLayoutMode = changeTitlesLayoutMode;
@@ -908,11 +909,14 @@
         }
         window.toggleTitlePin = toggleTitlePin;
 
+        let isTitlesAllExpanded = false;
         function expandAllTitles() {
             (config || []).forEach(cat => {
                 cat.isClosed = false;
                 (cat.records || []).forEach(r => { r.isOpen = true; });
             });
+            isTitlesAllExpanded = true;
+            updateTitlesToggleAllBtn();
             saveAllLocal(false);
             render();
             showToast('すべてのタイトルカードを開きました', 'info');
@@ -924,17 +928,40 @@
                 cat.isClosed = true;
                 (cat.records || []).forEach(r => { r.isOpen = false; });
             });
+            isTitlesAllExpanded = false;
+            updateTitlesToggleAllBtn();
             saveAllLocal(false);
             render();
             showToast('すべてのタイトルカードを閉じました', 'info');
         }
         window.collapseAllTitles = collapseAllTitles;
 
+        function toggleAllTitlesExpandCollapse() {
+            if (isTitlesAllExpanded) {
+                collapseAllTitles();
+            } else {
+                expandAllTitles();
+            }
+        }
+        window.toggleAllTitlesExpandCollapse = toggleAllTitlesExpandCollapse;
+
+        function updateTitlesToggleAllBtn() {
+            const svgOpen = document.getElementById('titles-toggle-all-svg-open');
+            const svgClose = document.getElementById('titles-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isTitlesAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isTitlesAllExpanded ? 'none' : 'inline-block';
+            }
+        }
+
+        let isFriendsAllExpanded = false;
         function expandAllFriends() {
             (friendsConfig || []).forEach(cat => {
                 cat.isClosed = false;
                 (cat.friends || []).forEach(f => { f.isOpen = true; });
             });
+            isFriendsAllExpanded = true;
+            updateFriendsToggleAllBtn();
             saveFriendsLocal(false);
             renderFriends();
             showToast('すべてのIDカードを開きました', 'info');
@@ -946,11 +973,31 @@
                 cat.isClosed = true;
                 (cat.friends || []).forEach(f => { f.isOpen = false; });
             });
+            isFriendsAllExpanded = false;
+            updateFriendsToggleAllBtn();
             saveFriendsLocal(false);
             renderFriends();
             showToast('すべてのIDカードを閉じました', 'info');
         }
         window.collapseAllFriends = collapseAllFriends;
+
+        function toggleAllFriendsExpandCollapse() {
+            if (isFriendsAllExpanded) {
+                collapseAllFriends();
+            } else {
+                expandAllFriends();
+            }
+        }
+        window.toggleAllFriendsExpandCollapse = toggleAllFriendsExpandCollapse;
+
+        function updateFriendsToggleAllBtn() {
+            const svgOpen = document.getElementById('friends-toggle-all-svg-open');
+            const svgClose = document.getElementById('friends-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isFriendsAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isFriendsAllExpanded ? 'none' : 'inline-block';
+            }
+        }
 
         function _buildTitleCard(r, ci, ri, T, L, A) {
             const isPinned = Boolean(r.isPinned);
@@ -1029,8 +1076,13 @@
 
             const sel = document.getElementById('titles-sort-select');
             if (sel && sel.value !== titlesSortOrder) sel.value = titlesSortOrder;
-            const layoutSel = document.getElementById('titles-layout-select');
-            if (layoutSel && layoutSel.value !== titlesLayoutMode) layoutSel.value = titlesLayoutMode;
+            const titlesToggle = document.getElementById('titles-layout-toggle');
+            const titlesToggleText = document.getElementById('titles-layout-toggle-text');
+            const isTitlesGrid = titlesLayoutMode === 'grid';
+            if (titlesToggle && titlesToggle.checked !== isTitlesGrid) titlesToggle.checked = isTitlesGrid;
+            if (titlesToggleText) {
+                titlesToggleText.textContent = isTitlesGrid ? (T.layoutGrid || '横並び可') : (T.layoutList || '縦積みのみ');
+            }
 
             // ----- グループ別表示（デフォ・手動ソート・ドラッグ可能） -----
             if (titlesSortOrder === 'group') {
@@ -1122,13 +1174,7 @@
             }
         }
 
-        function changeFriendsSortOrder(val) {
-            friendsSortOrder = val;
-            const sel = document.getElementById('friends-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            renderFriends();
-        }
-        window.changeFriendsSortOrder = changeFriendsSortOrder;
+
 
         // カード生成ヘルパー
         // 遅延保存用のタイマー
@@ -1338,7 +1384,7 @@
         window.toggleFriendPin = toggleFriendPin;
 
         let friendsSortOrder = localStorage.getItem('stream_friends_sort_order_v16') || 'name';
-        let friendsLayoutMode = localStorage.getItem('stream_friends_layout_mode_v16') || 'grid';
+        let friendsLayoutMode = localStorage.getItem('stream_friends_layout_mode_v16') || 'list';
 
         function changeFriendsSortOrder(val) {
             friendsSortOrder = val;
@@ -1352,11 +1398,279 @@
         function changeFriendsLayoutMode(val) {
             friendsLayoutMode = val;
             localStorage.setItem('stream_friends_layout_mode_v16', val);
-            const sel = document.getElementById('friends-layout-select');
-            if (sel && sel.value !== val) sel.value = val;
+            const toggle = document.getElementById('friends-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
             renderFriends();
         }
         window.changeFriendsLayoutMode = changeFriendsLayoutMode;
+
+        /* ==========================================================================
+         *  コマンドタブ (cmd-tab) のソート・PIN・レイアウト処理
+         * ========================================================================== */
+        let cmdSortOrder = localStorage.getItem('stream_cmd_sort_order_v16') || 'group';
+        let cmdLayoutMode = localStorage.getItem('stream_cmd_layout_mode_v16') || 'list';
+        let pinnedCmds = JSON.parse(localStorage.getItem('stream_cmd_pins_v16') || '[]');
+
+        function changeCmdSortOrder(val) {
+            cmdSortOrder = val;
+            localStorage.setItem('stream_cmd_sort_order_v16', val);
+            const sel = document.getElementById('cmd-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderCommands();
+        }
+        window.changeCmdSortOrder = changeCmdSortOrder;
+
+        function changeCmdLayoutMode(val) {
+            cmdLayoutMode = val;
+            localStorage.setItem('stream_cmd_layout_mode_v16', val);
+            const toggle = document.getElementById('cmd-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
+            renderCommands();
+        }
+        window.changeCmdLayoutMode = changeCmdLayoutMode;
+
+        function toggleCmdPin(cmdId) {
+            const idx = pinnedCmds.indexOf(cmdId);
+            if (idx >= 0) {
+                pinnedCmds.splice(idx, 1);
+                showToast('ピン留めを解除しました', 'info');
+            } else {
+                pinnedCmds.push(cmdId);
+                showToast('最上部にピン留めしました', 'info');
+            }
+            localStorage.setItem('stream_cmd_pins_v16', JSON.stringify(pinnedCmds));
+            renderCommands();
+        }
+        window.toggleCmdPin = toggleCmdPin;
+
+        let isCmdAllExpanded = false;
+        function toggleAllCmdExpandCollapse() {
+            isCmdAllExpanded = !isCmdAllExpanded;
+            const catBoxes = document.querySelectorAll('#cmd-container .category-box');
+            catBoxes.forEach(box => {
+                if (isCmdAllExpanded) {
+                    box.classList.remove('closed');
+                } else {
+                    box.classList.add('closed');
+                }
+            });
+            updateCmdToggleAllBtn();
+        }
+        window.toggleAllCmdExpandCollapse = toggleAllCmdExpandCollapse;
+
+        function updateCmdToggleAllBtn() {
+            const svgOpen = document.getElementById('cmd-toggle-all-svg-open');
+            const svgClose = document.getElementById('cmd-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isCmdAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isCmdAllExpanded ? 'none' : 'inline-block';
+            }
+        }
+
+        function renderCommands() {
+            const cmdEl = document.getElementById('cmd-container');
+            if (!cmdEl) return;
+
+            const sel = document.getElementById('cmd-sort-select');
+            if (sel && sel.value !== cmdSortOrder) sel.value = cmdSortOrder;
+            const toggle = document.getElementById('cmd-layout-toggle');
+            if (toggle && toggle.checked !== (cmdLayoutMode === 'grid')) toggle.checked = (cmdLayoutMode === 'grid');
+
+            const s = cmdSets[currentLang] || cmdSets.ja;
+            const b = s.buttons;
+            const c = s.categories;
+            const units = I18N_DATA[currentLang]?.ui?.extended || I18N_DATA.ja.ui.extended;
+
+            const categoriesData = [
+                {
+                    key: 'stream',
+                    name: c.stream,
+                    boxId: 'cmd-box-stream',
+                    items: [
+                        { id: 'title', type: 'btn', data: b.title },
+                        { id: 'game', type: 'btn', data: b.game },
+                        { id: 'marker', type: 'btn', data: b.marker },
+                        { id: 'raid', type: 'btn', data: b.raid },
+                        { id: 'unraid', type: 'btn', data: b.unraid },
+                        { id: 'ads30', type: 'btn', data: b.ads30 },
+                        { id: 'ads60', type: 'btn', data: b.ads60 },
+                        { id: 'ads180', type: 'btn', data: b.ads180 }
+                    ]
+                },
+                {
+                    key: 'chat',
+                    name: c.chat,
+                    boxId: 'cmd-box-chat',
+                    items: [
+                        { id: 'announce', type: 'btn', data: b.announce },
+                        { id: 'clear', type: 'btn', data: b.clear },
+                        { id: 'color', type: 'btn', data: b.color },
+                        { id: 'me', type: 'btn', data: b.me },
+                        { id: 'disconnect', type: 'btn', data: b.disconnect },
+                        { id: 'emoteOnly', type: 'chatToggle', label: b.emoteOnly[0], onCmdInfo: b.emoteOnly, offCmdInfo: b.emoteOff },
+                        { id: 'sub', type: 'chatToggle', label: b.sub[0], onCmdInfo: b.sub, offCmdInfo: b.subOff },
+                        { id: 'unique', type: 'chatToggle', label: b.unique[0], onCmdInfo: b.unique, offCmdInfo: b.uniqueOff },
+                        { id: 'followerOnly', type: 'chatToggle', label: b.followerOnly[0], onCmdInfo: b.followerOnly, offCmdInfo: b.followerOff, inputConfig: { id: 'follower-time', type: 'number', value: 0, min: 0, max: 129600, step: 1, unit: units.unitMinute, width: '40px' } },
+                        { id: 'slow', type: 'chatToggle', label: b.slow[0], onCmdInfo: b.slow, offCmdInfo: b.slowOff, inputConfig: { id: 'slow-time', type: 'number', value: 30, min: 3, max: 120, step: 1, unit: units.unitSecond, width: '40px' } }
+                    ]
+                },
+                {
+                    key: 'user',
+                    name: c.user,
+                    boxId: 'cmd-box-user',
+                    items: [
+                        { id: 'ban', type: 'btn', data: b.ban },
+                        { id: 'unban', type: 'btn', data: b.unban },
+                        { id: 'timeout', type: 'btn', data: b.timeout },
+                        { id: 'mod', type: 'btn', data: b.mod },
+                        { id: 'unmod', type: 'btn', data: b.unmod },
+                        { id: 'vip', type: 'btn', data: b.vip },
+                        { id: 'unvip', type: 'btn', data: b.unvip },
+                        { id: 'mods', type: 'btn', data: b.mods },
+                        { id: 'vips', type: 'btn', data: b.vips },
+                        { id: 'user', type: 'btn', data: b.user },
+                        { id: 'monitor', type: 'btn', data: b.monitor },
+                        { id: 'unmonitor', type: 'btn', data: b.unmonitor },
+                        { id: 'restrict', type: 'btn', data: b.restrict },
+                        { id: 'unrestrict', type: 'btn', data: b.unrestrict },
+                        { id: 'block', type: 'btn', data: b.block },
+                        { id: 'unblock', type: 'btn', data: b.unblock },
+                        { id: 'w', type: 'btn', data: b.w }
+                    ]
+                },
+                {
+                    key: 'interact',
+                    name: c.interact,
+                    boxId: 'cmd-box-interact',
+                    items: [
+                        { id: 'poll', type: 'btn', data: b.poll },
+                        { id: 'predict', type: 'btn', data: b.predict },
+                        { id: 'pin', type: 'btn', data: b.pin },
+                        { id: 'unpin', type: 'btn', data: b.unpin },
+                        { id: 'shoutout', type: 'btn', data: b.shoutout }
+                    ]
+                }
+            ];
+
+            const renderCard = (item) => {
+                const isPinned = pinnedCmds.includes(item.id);
+                const pinStyle = isPinned ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.6); background: rgba(255, 170, 0, 0.12);' : '';
+                const pinBtn = `
+                    <button class="icon-btn id-action-btn ${isPinned ? 'is-pinned' : ''}" title="${isPinned ? 'ピン留め解除' : '最上部にピン留め'}" onclick="event.stopPropagation(); toggleCmdPin('${item.id}')" style="position:absolute; top:4px; right:4px; z-index:3; width:18px; height:18px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid ${isPinned ? 'var(--warning-text, #ffaa00)' : 'var(--border-color)'}; cursor:pointer; ${pinStyle}">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="${isPinned ? 'var(--warning-text, #ffaa00)' : 'currentColor'}" stroke-width="2">
+                            <path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line>
+                        </svg>
+                    </button>
+                `;
+
+                if (item.type === 'btn') {
+                    const [label, command, tip] = item.data;
+                    const isAutoExec = !command.endsWith(' ');
+                    const autoExecIcon = isAutoExec ? `<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span>` : '';
+                    const displayCmd = command.trim();
+                    const actionTip = isAutoExec ? (s.directTip || s.copyTip) : s.copyTip;
+                    const tipText = tip && tip !== label ? (tip + ' / ' + actionTip) : actionTip;
+
+                    return `
+                    <div style="position: relative; height: 100%;">
+                        ${pinBtn}
+                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" style="padding: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: var(--transition-fast); ${pinStyle}"
+                            data-tooltip="${label}: ${command}&#10;${tipText}" 
+                            onclick="handleCommandClick('${command}', '${label}', ${isAutoExec})">
+                            <span class="cmd-label" style="margin-bottom: 2px; display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}${autoExecIcon}</span>
+                            <span class="cmd-code">${displayCmd}</span>
+                        </button>
+                    </div>`;
+                } else {
+                    const label = item.label;
+                    const onCmdBase = item.onCmdInfo[1].trim();
+                    const offCmd = item.offCmdInfo[1].trim();
+                    const toggleBtnId = 'chat-toggle-btn-' + offCmd.replace(/[^a-zA-Z]/g, '');
+
+                    let inputHtml = '';
+                    if (item.inputConfig) {
+                        const ic = item.inputConfig;
+                        inputHtml = `
+                        <div class="cmd-time-control" onclick="event.stopPropagation()">
+                            <input type="${ic.type}" id="${ic.id}" value="${ic.value}"${ic.min !== undefined ? ` min="${ic.min}"` : ''}${ic.max !== undefined ? ` max="${ic.max}"` : ''}${ic.step !== undefined ? ` step="${ic.step}"` : ''}${ic.min !== undefined && ic.max !== undefined ? ` onchange="this.value=clampInt(this.value,${ic.min},${ic.max},${ic.value})"` : ''}>
+                            <span>${ic.unit}</span>
+                        </div>`;
+                    }
+
+                    return `
+                    <div style="position: relative; display: flex; flex-direction: column; height: 100%;">
+                        ${pinBtn}
+                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" id="${toggleBtnId}" style="flex: 1; padding: 8px 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: all 0.2s ease; ${pinStyle}"
+                            data-tooltip="${label}: ${onCmdBase} / ${offCmd}&#10;${s.directTip || s.copyTip}" 
+                            onclick="handleChatToggleButton(this, '${onCmdBase}', '${offCmd}', '${item.inputConfig ? item.inputConfig.id : ''}')">
+                            <span class="cmd-label" style="display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span></span>
+                        </button>
+                        ${inputHtml}
+                    </div>`;
+                }
+            };
+
+            const gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 6px;';
+
+            let html = `
+            <div class="command-stack" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="tab-lead-note" style="margin-top: 2px; margin-bottom: 2px;">
+                    <span><span style="color: var(--command-accent);">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
+                </div>`;
+
+            if (cmdSortOrder === 'group') {
+                categoriesData.forEach(cat => {
+                    const sortedItems = [...cat.items].sort((a, b) => {
+                        const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
+                        const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
+                        return pinB - pinA;
+                    });
+
+                    html += `
+                    <div class="category-box tw-section" id="${cat.boxId}" style="margin-bottom: 0;">
+                        <div class="category-name" onclick="twToggle('${cat.boxId}')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                            <span>${cat.name}</span>
+                            <span class="category-arrow" style="font-size: 10px; opacity: 0.6;">▼</span>
+                        </div>
+                        <div class="tw-body" style="${gridStyle}">${sortedItems.map(renderCard).join('')}</div>
+                    </div>`;
+                });
+            } else {
+                let allItems = [];
+                categoriesData.forEach(cat => {
+                    cat.items.forEach(item => {
+                        allItems.push(item);
+                    });
+                });
+
+                allItems.sort((a, b) => {
+                    const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
+                    const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
+                    if (pinA !== pinB) return pinB - pinA;
+
+                    const getLabel = (item) => item.type === 'btn' ? item.data[0] : item.label;
+                    const getCmd = (item) => item.type === 'btn' ? item.data[1].trim() : item.onCmdInfo[1].trim();
+
+                    if (cmdSortOrder === 'name') {
+                        return getLabel(a).localeCompare(getLabel(b), currentLang === 'ja' ? 'ja' : 'en');
+                    } else {
+                        return getCmd(a).localeCompare(getCmd(b));
+                    }
+                });
+
+                html += `
+                <div class="category-box tw-section" style="margin-bottom: 0;">
+                    <div class="tw-body" style="${gridStyle}">${allItems.map(renderCard).join('')}</div>
+                </div>`;
+            }
+
+            html += `</div>`;
+            cmdEl.innerHTML = html;
+            restoreCategoryVisibility('cmd-tab');
+        }
+        window.renderCommands = renderCommands;
 
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
@@ -1370,8 +1684,13 @@
 
             const sortSel = document.getElementById('friends-sort-select');
             if (sortSel && sortSel.value !== friendsSortOrder) sortSel.value = friendsSortOrder;
-            const layoutSel = document.getElementById('friends-layout-select');
-            if (layoutSel && layoutSel.value !== friendsLayoutMode) layoutSel.value = friendsLayoutMode;
+            const friendsToggle = document.getElementById('friends-layout-toggle');
+            const friendsToggleText = document.getElementById('friends-layout-toggle-text');
+            const isFriendsGrid = friendsLayoutMode === 'grid';
+            if (friendsToggle && friendsToggle.checked !== isFriendsGrid) friendsToggle.checked = isFriendsGrid;
+            if (friendsToggleText) {
+                friendsToggleText.textContent = isFriendsGrid ? (L.layoutGrid || '横並び可') : (L.layoutList || '縦積みのみ');
+            }
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);

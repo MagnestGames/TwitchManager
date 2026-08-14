@@ -78,24 +78,35 @@
         </details>
 
         <!-- Title Sort & Open/Close Toolbar -->
-        <div class="titles-toolbar" style="display: flex; gap: 6px; margin-top: 10px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="titles.sortBy">表示順:</span>
-            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" data-i18n-aria="titles.sortBy" aria-label="表示順" style="flex: 1; min-width: 120px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+        <div class="titles-toolbar" style="display: flex; gap: 8px; margin-top: 10px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: nowrap; overflow-x: auto;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="titles.sortBy">表示順:</span>
+            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" data-i18n-aria="titles.sortBy" aria-label="表示順" style="flex: 1; min-width: 100px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="group" data-i18n="titles.sortGroup" selected>グループ別 (手動)</option>
                 <option value="category" data-i18n="titles.sortCategory">カテゴリ順 (一覧)</option>
                 <option value="title" data-i18n="titles.sortTitle">登録タイトル順 (2) (一覧)</option>
                 <option value="name" data-i18n="titles.sortName">登録名前順 (1) (一覧)</option>
             </select>
-            <select id="titles-layout-select" onchange="changeTitlesLayoutMode(this.value)" aria-label="レイアウト" style="font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
-                <option value="grid" data-i18n="layoutGrid" selected>横並び可</option>
-                <option value="list" data-i18n="layoutList">縦積みのみ</option>
-            </select>
-            <button type="button" class="btn-secondary" onclick="expandAllTitles()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="expandAllTitlesTip" title="すべてのタイトルカードを開く">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg><span data-i18n="expandAll">すべて開く</span>
-            </button>
-            <button type="button" class="btn-secondary" onclick="collapseAllTitles()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="collapseAllTitlesTip" title="すべてのタイトルカードを閉じる">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span data-i18n="collapseAll">すべて閉じる</span>
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0;">
+                <!-- 横並び トグルボタン (デフォルトOFF) -->
+                <label class="layout-toggle-label" title="横並び表示の切り替え（ON: カードを横並び配置 / OFF: 縦積みリスト表示）" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; font-size: 11px;">
+                    <span style="font-size: 11px; color: var(--text-main); font-weight: 500;" data-i18n="extended.layoutGridLabel">横並び</span>
+                    <input type="checkbox" id="titles-layout-toggle" onchange="changeTitlesLayoutMode(this.checked ? 'grid' : 'list')" style="display:none;">
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
+
+                <!-- 開閉 一括トグルボタン (フォルダSVG切り替え) -->
+                <button type="button" id="titles-toggle-all-btn" class="btn-secondary" onclick="toggleAllTitlesExpandCollapse()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 4px;" title="すべてのフォルダ・カードを一括で開く / 閉じる">
+                    <svg id="titles-toggle-all-svg-open" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; display: none;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    <svg id="titles-toggle-all-svg-close" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="extended.toggleAllFolder">開閉</span>
+                </button>
+            </div>
         </div>
         <div id="main-container" class="sortable-container"></div>
 
@@ -451,6 +462,15 @@
     </div>
 
     <div id="cmd-tab" class="tab-content">
+        <!-- Command Sort Toolbar -->
+        <div class="cmd-toolbar" style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 8px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="commands.sortBy">表示順:</span>
+            <select id="cmd-sort-select" onchange="changeCmdSortOrder(this.value)" aria-label="表示順" style="flex: 1; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="group" selected>グループ別 (標準)</option>
+                <option value="name">名前順 (A-Z)</option>
+                <option value="command">コマンド順</option>
+            </select>
+        </div>
         <div id="cmd-container"></div>
     </div>
 
@@ -473,25 +493,36 @@
         </details>
 
         <!-- Sort & Filter Toolbar -->
-        <div class="friends-toolbar" style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
-            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 120px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
+        <div class="friends-toolbar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: nowrap; overflow-x: auto;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="idList.sortBy">表示順:</span>
+            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 100px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
                 <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
                 <option value="recent-so" data-i18n="idList.sortRecentSo">直近の応援順</option>
                 <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
                 <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
             </select>
-            <select id="friends-layout-select" onchange="changeFriendsLayoutMode(this.value)" aria-label="レイアウト" style="font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 6px; border-radius: 5px; cursor: pointer; outline: none;">
-                <option value="grid" data-i18n="layoutGrid" selected>横並び可</option>
-                <option value="list" data-i18n="layoutList">縦積みのみ</option>
-            </select>
-            <button type="button" class="btn-secondary" onclick="expandAllFriends()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="expandAllFriendsTip" title="すべてのIDカードを開く">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg><span data-i18n="expandAll">すべて開く</span>
-            </button>
-            <button type="button" class="btn-secondary" onclick="collapseAllFriends()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="collapseAllFriendsTip" title="すべてのIDカードを閉じる">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span data-i18n="collapseAll">すべて閉じる</span>
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0;">
+                <!-- 横並び トグルボタン (デフォルトOFF) -->
+                <label class="layout-toggle-label" title="横並び表示の切り替え（ON: カードを横並び配置 / OFF: 縦積みリスト表示）" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; font-size: 11px;">
+                    <span style="font-size: 11px; color: var(--text-main); font-weight: 500;" data-i18n="extended.layoutGridLabel">横並び</span>
+                    <input type="checkbox" id="friends-layout-toggle" onchange="changeFriendsLayoutMode(this.checked ? 'grid' : 'list')" style="display:none;">
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
+
+                <!-- 開閉 一括トグルボタン (フォルダSVG切り替え) -->
+                <button type="button" id="friends-toggle-all-btn" class="btn-secondary" onclick="toggleAllFriendsExpandCollapse()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 4px;" title="すべてのフォルダ・カードを一括で開く / 閉じる">
+                    <svg id="friends-toggle-all-svg-open" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; display: none;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    <svg id="friends-toggle-all-svg-close" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="extended.toggleAllFolder">開閉</span>
+                </button>
+            </div>
         </div>
 
         <!-- タグで絞り込むアコーディオン -->
@@ -956,7 +987,8 @@
                 'js/ui.js',
                 'js/main.js'
             ];
-            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+            const cacheBuster = Date.now();
+            document.write(appScripts.map(source => `<script src="${source}?v=${cacheBuster}"><\/script>`).join(''));
         }
     </script>
 

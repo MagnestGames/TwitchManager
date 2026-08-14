@@ -1,9 +1,9 @@
 const I18N_DATA = {
     "ja": {
         "ui": {
-            "rawIdListCopyBtn": "@ID荳隕ｧ",
-            "layoutGrid": "讓ｪ荳ｦ縺ｳ蜿ｯ",
-            "layoutList": "邵ｦ遨阪∩縺ｮ縺ｿ",
+            "rawIdListCopyBtn": "@ID一覧",
+            "layoutGrid": "横並び可",
+            "layoutList": "縦積みのみ",
             "tabs": [
                 "タイトル",
                 "通知と紹介",
@@ -522,6 +522,8 @@ const I18N_DATA = {
                 "unitMinute": "分",
                 "unitSecond": "秒",
                 "cancelBtn": "キャンセル",
+                "layoutGridLabel": "横並び",
+                "toggleAllFolder": "開閉",
                 "endBtn": "終了",
                 "subscribersTab": "サブスクライバー",
                 "fetchBtn": "一覧を取得",
@@ -1871,6 +1873,8 @@ const I18N_DATA = {
                 "unitMinute": "min",
                 "unitSecond": "sec",
                 "cancelBtn": "Cancel",
+                "layoutGridLabel": "Grid",
+                "toggleAllFolder": "Toggle All",
                 "endBtn": "End",
                 "subscribersTab": "Subscribers",
                 "fetchBtn": "Fetch List",
@@ -3204,6 +3208,8 @@ const I18N_DATA = {
                 "unitMinute": "分",
                 "unitSecond": "秒",
                 "cancelBtn": "取消",
+                "layoutGridLabel": "横排",
+                "toggleAllFolder": "展开/折叠",
                 "endBtn": "结束",
                 "subscribersTab": "订阅者",
                 "fetchBtn": "获取列表",
