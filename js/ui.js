@@ -599,6 +599,8 @@
             el.style.display = 'none';
             el.classList.remove('modal-open');
         }
+        window.openModal = openModal;
+        window.closeModal = closeModal;
 
         // 非セキュアコンテキスト（file:///やOBSドック）向け：ブラウザ制限を回避するため、完全に同期処理でコピーを実行
         function writeClipboardTextSync(value) {
@@ -6647,13 +6649,13 @@ function renderCpTable() {
 
                 if (result.status === 'available' && result.release) {
                     setNoticeReleaseInfo(result.release);
-                    if (statusIconEl) statusIconEl.textContent = '🔄';
+                    if (statusIconEl) statusIconEl.textContent = '';
                     const tmpl = uiText('extended.updateStatusAvailable') || '最新版 v{version} が利用可能です';
                     statusMsgEl.textContent = tmpl.replace('{version}', result.release.version);
                     statusMsgEl.style.color = 'var(--command-accent, #9146ff)';
                     if (actionBtn) actionBtn.style.display = 'inline-block';
                 } else {
-                    if (statusIconEl) statusIconEl.textContent = '✅';
+                    if (statusIconEl) statusIconEl.textContent = '';
                     const tmpl = uiText('extended.updateStatusLatest') || 'バージョン: v{version} (最新です)';
                     statusMsgEl.textContent = tmpl.replace('{version}', curVer);
                     statusMsgEl.style.color = 'var(--text-main)';
@@ -6691,14 +6693,34 @@ function renderCpTable() {
         }
         window.checkUpdateManual = checkUpdateManual;
 
+        function toggleUpdateNoticeDetails() {
+            const area = document.getElementById('update-notice-details-area');
+            const arrow = document.getElementById('update-details-arrow');
+            if (!area) return;
+            const isHidden = area.style.display === 'none';
+            area.style.display = isHidden ? 'block' : 'none';
+            if (arrow) arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        window.toggleUpdateNoticeDetails = toggleUpdateNoticeDetails;
+
         function showStartupUpdateNoticeModal(release) {
             if (!release) return;
             setNoticeReleaseInfo(release);
             const msgEl = document.getElementById('update-notice-modal-msg');
             if (msgEl) {
-                const tmpl = uiText('extended.updateNoticeDesc') || '新しいバージョン ({version}) が公開されています。';
+                const tmpl = uiText('extended.updateNoticeDesc') || '新しいバージョン ({version}) が公開されています。最新機能や改善が含まれています。';
                 msgEl.textContent = tmpl.replace('{version}', release.version || release.name || '');
             }
+            const detailsContent = document.getElementById('update-notice-details-content');
+            if (detailsContent) {
+                const bodyText = String(release.body || '').trim();
+                detailsContent.textContent = bodyText || '・主要機能の改善および不具合修正\n・詳細な変更履歴はリリースページにてご確認いただけます。';
+            }
+            const detailsArea = document.getElementById('update-notice-details-area');
+            if (detailsArea) detailsArea.style.display = 'none';
+            const arrow = document.getElementById('update-details-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+
             openModal('updateNoticeModal');
         }
         window.showStartupUpdateNoticeModal = showStartupUpdateNoticeModal;

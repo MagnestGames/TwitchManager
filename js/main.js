@@ -772,14 +772,55 @@
         document.addEventListener('click', () => requestAnimationFrame(updateDockLayoutMetrics));
     });
 
-    // 起動時の自動アップデート確認
+    // 起動時・再読み込み時の自動アップデート確認と設定UI事前反映
     setTimeout(async () => {
         try {
-            if (window.TwitchManagerUpdate && typeof showStartupUpdateNoticeModal === 'function') {
-                const result = await window.TwitchManagerUpdate.checkForUpdate({ force: false });
-                if (result?.status === 'available' && result?.release) {
+            if (window.TwitchManagerUpdate) {
+                const result = await window.TwitchManagerUpdate.checkForUpdate({ force: false, allowBeta: true });
+                if (typeof renderVersionStatusUI === 'function') {
+                    await renderVersionStatusUI(result);
+                }
+                if (result?.status === 'available' && result?.release && typeof showStartupUpdateNoticeModal === 'function') {
                     showStartupUpdateNoticeModal(result.release);
                 }
             }
         } catch (_) {}
     }, 1500);
+
+/* ==========================================================================
+   [DEBUG / TEST ONLY] アプデ通知ダイアログ動作確認用デバッグ機能
+   ※ テスト完了後、このブロック（〜末尾まで）を削除することで綺麗に外せます。
+   --------------------------------------------------------------------------
+   使用方法:
+   1. ブラウザのコンソール(F12)で `testDebugUpdateModal('v1.0.4')` を実行
+   2. または URL に `?debug-update=1` を付けてページを開く
+   ========================================================================== */
+window.testDebugUpdateModal = function(mockVersion = 'v1.0.4') {
+    const mockRelease = {
+        version: mockVersion,
+        name: `TwitchManager ${mockVersion} (テスト)`,
+        url: 'https://github.com/MagnestGames/TwitchManager/releases',
+        body: '・配信タイトル タグ置換エンジン＆単語帳の追加\n・チャンネルポイントの一括編集・一時停止制御\n・メモ帳のマークダウン対応＆ツールバー固定\n・個別バックアップ＆起動画面の軽量化・最適化'
+    };
+    if (typeof showStartupUpdateNoticeModal === 'function') {
+        showStartupUpdateNoticeModal(mockRelease);
+    }
+    const modal = document.getElementById('updateNoticeModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('modal-open');
+    }
+    console.log(`[DEBUG] Update notice modal displayed with mock version: ${mockVersion}`);
+};
+
+(function checkDebugUpdateUrlParam() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('debug-update')) {
+            const val = params.get('debug-update');
+            const customVer = (val && val !== '1' && val !== 'true') ? val : 'v1.0.4';
+            setTimeout(() => window.testDebugUpdateModal(customVer), 800);
+        }
+    } catch (_) {}
+})();
+/* ========================================================================== */

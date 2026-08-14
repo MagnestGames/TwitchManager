@@ -603,7 +603,6 @@
             <!-- バージョンステータス表示エリア -->
             <div id="app-version-status-container" style="background:var(--bg-panel); padding:10px 14px; border-radius:10px; margin-bottom:20px; border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px;">
                 <div id="app-version-status-text" style="color:var(--text-main); font-weight:500; display:flex; align-items:center; gap:6px; flex:1; min-width:0; overflow:hidden;">
-                    <span id="app-version-status-icon" style="font-size:13px;">✅</span>
                     <span id="app-version-status-msg" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">バージョン確認中...</span>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
@@ -914,17 +913,33 @@
 
     <!-- アップデート通知モーダル (Feature 2) -->
     <div id="updateNoticeModal" class="modal-overlay" onclick="if(event.target===this)closeModal('updateNoticeModal')">
-        <div class="modal-content" style="max-width: 440px; padding: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🚀 <span data-i18n="extended.updateNoticeTitle">新しいバージョンが公開されています</span></h3>
+        <div class="modal-content" style="max-width: 480px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="34" height="18" viewBox="0 0 34 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                        <rect width="34" height="18" rx="4" fill="var(--command-accent, #9146ff)" />
+                        <text x="17" y="13" font-size="10" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" letter-spacing="0.5">NEW</text>
+                    </svg>
+                    <span data-i18n="extended.updateNoticeTitle">新しいバージョンが公開されています</span>
+                </h3>
                 <button type="button" class="btn-secondary" onclick="closeModal('updateNoticeModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
             </div>
-            <div id="update-notice-modal-msg" style="font-size: 12.5px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px;">
-                新しいバージョンが利用可能です。
+            <div id="update-notice-modal-msg" style="font-size: 13px; color: var(--text-main); line-height: 1.6; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px 14px; border-radius: 8px; margin-bottom: 12px;">
+                新しいバージョンが利用可能です。最新機能や改善が含まれています。
             </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="deferUpdateNotice()" data-i18n="extended.updateSkipBtn" style="padding: 8px 14px; font-size: 12px;">今回はパス</button>
-                <button type="button" class="btn-primary" onclick="openUpdateReleasePage()" data-i18n="extended.updateDownloadBtn" style="padding: 8px 14px; font-size: 12px; font-weight: bold;">ダウンロードページを開く ↗</button>
+
+            <!-- アコーディオン展開用：アップデート項目（詳細エリア） -->
+            <div id="update-notice-details-area" style="display: none; margin-bottom: 16px; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; max-height: 160px; overflow-y: auto; font-size: 12px; color: var(--text-muted); line-height: 1.5; white-space: pre-wrap;">
+                <div id="update-notice-details-content"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                <button type="button" id="update-notice-toggle-details-btn" class="btn-secondary" onclick="toggleUpdateNoticeDetails()" style="padding: 8px 12px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                    <span>アップデート項目</span> <span id="update-details-arrow" style="font-size: 10px; transition: transform 0.2s;">▾</span>
+                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn-primary" onclick="openUpdateReleasePage()" data-i18n="extended.updateDownloadBtn" style="padding: 8px 14px; font-size: 12px; font-weight: bold;">ダウンロードページを開く ↗</button>
+                </div>
             </div>
         </div>
     </div>
