@@ -2605,13 +2605,26 @@
         }
         window.toggleMemoTaskCheckbox = toggleMemoTaskCheckbox;
 
+                let activeMemoIndex = 0;
+        function setActiveMemoIndex(idx) {
+            activeMemoIndex = idx;
+        }
+        window.setActiveMemoIndex = setActiveMemoIndex;
+
         function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
+            if (memoIndex === null || memoIndex === undefined) {
+                memoIndex = activeMemoIndex;
+            }
+            if (memoConfig[memoIndex] && memoConfig[memoIndex].mode === 'preview') {
+                toggleMemoMode(memoIndex, 'edit');
+            }
             const textarea = document.getElementById(`memo-input-${memoIndex}`);
             if (!textarea) return;
             const start = textarea.selectionStart || 0;
             const end = textarea.selectionEnd || 0;
             const text = textarea.value || '';
-            const selectedText = text.substring(start, end) || 'テキスト';
+            const sample = uiText('extended.memoSampleText') || 'テキスト';
+            const selectedText = text.substring(start, end) || (prefix.endsWith(' ') ? '' : sample);
             const replacement = prefix + selectedText + suffix;
             textarea.value = text.substring(0, start) + replacement + text.substring(end);
             textarea.selectionStart = start + prefix.length;

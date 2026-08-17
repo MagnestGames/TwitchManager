@@ -4853,3 +4853,53 @@ body.light-theme .tw-command-copy-btn code {
     font-size: 12px;
     flex-shrink: 0;
 }
+
+.memo-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-base);
+    padding: 6px 0 8px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.memo-global-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.memo-toolbar-btn {
+    height: 24px;
+    min-height: 24px;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-main);
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    box-sizing: border-box;
+    line-height: 1;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.memo-toolbar-btn:hover {
+    background: var(--twitch-purple);
+    color: var(--text-on-purple, #ffffff);
+    border-color: var(--twitch-purple);
+}

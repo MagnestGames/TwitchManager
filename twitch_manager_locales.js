@@ -644,7 +644,13 @@ const I18N_DATA = {
                 "supporterListCopied": "リストをコピーしました",
                 "pastLogCopied": "過去ログをコピーしました",
                 "noPastLog": "過去ログはありません",
-                "statsReset": "サポーター集計をリセットしました"
+                "statsReset": "サポーター集計をリセットしました",
+                "memoListShort": "リスト",
+                "memoOlShort": "番号",
+                "memoTaskShort": "タスク",
+                "memoLinkShort": "リンク",
+                "memoCodeShort": "コード",
+                "memoSampleText": "テキスト"
             },
             "logs": {
                 "errNotSet": "アクセストークンが未設定です。設定(⚙)で保存すると使えるようになります。",
@@ -1995,7 +2001,13 @@ const I18N_DATA = {
                 "supporterListCopied": "List copied",
                 "pastLogCopied": "Past log copied",
                 "noPastLog": "No past log",
-                "statsReset": "Supporter stats reset"
+                "statsReset": "Supporter stats reset",
+                "memoListShort": "List",
+                "memoOlShort": "Numbered",
+                "memoTaskShort": "Task",
+                "memoLinkShort": "Link",
+                "memoCodeShort": "Code",
+                "memoSampleText": "Text"
             },
             "logs": {
                 "errNotSet": "Access token is not set. Save it in settings (⚙) to use this feature.",
@@ -3346,7 +3358,13 @@ const I18N_DATA = {
                 "supporterListCopied": "列表已复制",
                 "pastLogCopied": "历史日志已复制",
                 "noPastLog": "暂无历史日志",
-                "statsReset": "支持者统计已重置"
+                "statsReset": "支持者统计已重置",
+                "memoListShort": "列表",
+                "memoOlShort": "编号",
+                "memoTaskShort": "任务",
+                "memoLinkShort": "链接",
+                "memoCodeShort": "代码",
+                "memoSampleText": "文本"
             },
             "logs": {
                 "errNotSet": "未设置访问令牌。请在设置 (⚙) 中保存后使用。",
