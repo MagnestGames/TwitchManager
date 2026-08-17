@@ -5007,7 +5007,8 @@ body.light-theme .cp-group-toggle.is-pause {
 }
 
 .cp-segment-btn {
-    padding: 3px 7px;
+    min-height: 22px;
+    padding: 2px 8px;
     font-size: 10px;
     font-weight: 600;
     border: 1px solid transparent;
@@ -5018,6 +5019,10 @@ body.light-theme .cp-group-toggle.is-pause {
     transition: all 0.15s ease;
     line-height: 1.2;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .cp-segment-btn:hover:not(:disabled) {
@@ -5047,8 +5052,22 @@ body.light-theme .cp-group-toggle.is-pause {
 }
 
 .cp-segmented-control.is-disabled .cp-segment-btn {
-    opacity: 0.5;
-    cursor: not-allowed;
+    min-height: 22px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 body.light-theme .cp-segment-btn.is-on.active {
@@ -5165,4 +5184,293 @@ body.light-theme .cp-segment-btn.is-purple.active {
     color: var(--text-main);
     background: var(--bg-card);
     border-color: var(--twitch-purple);
+}
+
+/* Professional Polish: Section Titles & Bulk Bar */
+.cp-section-title {
+    font-weight: 700;
+    font-size: 11.5px;
+    margin-bottom: 6px;
+    color: var(--command-accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.01em;
+}
+
+.cp-bulk-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-item);
+    border: 1px solid var(--twitch-purple);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    gap: 8px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(145, 70, 255, 0.12);
+}
+
+/* Swatch Interactive Animations */
+.cp-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.cp-swatch:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    z-index: 2;
+}
+.cp-swatch:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--command-accent);
+}
+
+/* Form & Modal Structural Polish */
+.cp-modal-field {
+    margin-bottom: 12px;
+}
+.cp-modal-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+.cp-modal-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.cp-notice-bullet {
+    color: #c084fc;
+    font-weight: 700;
+    margin-right: 4px;
+}
+
+.cp-notice-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.cp-notice-actions .cp-notice-link {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Group Card Responsive Layout & Overflow Fixes */
+#cp-groups-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important;
+    gap: 8px;
+}
+
+#cp-groups-container > div {
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+}
+
+#cp-groups-container > div > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px 6px !important;
+    flex-wrap: wrap !important;
+    margin-top: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#cp-groups-container .cp-group-toggle {
+    flex: 1 1 50px !important;
+    min-width: 48px !important;
+    padding: 3px 5px !important;
+    font-size: 10px !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+}
+
+#cp-groups-container > div > div:last-child > button:not(.cp-group-toggle) {
+    padding: 3px 5px !important;
+    font-size: 10px !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Toolbar Select Width & Height Alignment Fix */
+.cp-toolbar-select {
+    width: 160px !important;
+    min-width: 145px !important;
+    max-width: 180px !important;
+    height: 28px !important;
+    line-height: 26px !important;
+    padding: 0 6px !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+}
+
+.cp-toolbar-btn {
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+}
+
+/* ID Badge Right Edge Alignment (お尻を揃える) */
+.cp-reward-identity {
+    flex: 1 1 auto;
+    width: 100%;
+}
+.cp-reward-copy {
+    flex: 1 1 auto;
+    width: 100%;
+}
+.cp-reward-meta {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.cp-id-badge {
+    margin-left: auto !important;
+    flex-shrink: 0;
+}
+
+/* CP Test Trigger Button Hover Style */
+.cp-reward-icon-button.cp-reward-test-btn:hover {
+    color: #f59e0b !important;
+    border-color: #f59e0b !important;
+    background: rgba(245, 158, 11, 0.15) !important;
+}
+
+
+/* === Channel Points Enhanced Visual States & Badges === */
+.cp-origin-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 3px;
+    line-height: 1.2;
+    vertical-align: middle;
+    margin-left: 4px;
+    letter-spacing: 0.02em;
+}
+.cp-origin-badge.is-app {
+    background: rgba(145, 70, 255, 0.18);
+    color: #c084fc;
+    border: 1px solid rgba(145, 70, 255, 0.4);
+}
+.cp-origin-badge.is-external {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted, #a1a1aa);
+    border: 1px solid var(--border-color, #3f3f46);
+}
+
+.cp-status-chip {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    line-height: 1.2;
+    vertical-align: middle;
+}
+.cp-status-chip.is-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.cp-status-chip.is-paused {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.cp-status-chip.is-disabled {
+    background: rgba(113, 113, 122, 0.15);
+    color: #71717a;
+    border: 1px solid rgba(113, 113, 122, 0.35);
+}
+
+/* Card Visual States */
+.cp-reward-row.is-paused {
+    border-left: 3px solid #f59e0b !important;
+}
+.cp-reward-row.is-disabled {
+    opacity: 0.55;
+}
+
+/* Button Loading State */
+.btn-secondary.is-loading, .btn-primary.is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+}
+
+.cp-bulk-btn {
+    min-height: 26px;
+    padding: 3px 10px;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.cp-group-toggle {
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 1 auto !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+
+.cp-group-icon-btn {
+    height: 24px !important;
+    min-height: 24px !important;
+    min-width: 24px !important;
+    width: 24px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
 }

@@ -248,7 +248,7 @@
             }
 
             // 描画更新
-            render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab();
+            render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab(); updateCpBulkActionBar();
             if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
                 fetchTwitchCustomRewards();
             }
@@ -517,7 +517,7 @@
                 tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
             if (id === 'cp-tab' && typeof renderCpTab === 'function') {
-                renderCpTab();
+                renderCpTab(); updateCpBulkActionBar();
                 if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
                     fetchTwitchCustomRewards();
                 }
@@ -5902,6 +5902,10 @@ function markRewardAsAppCreated(rewardId) {
     }
 }
 
+
+/* ========================================================================= */
+/* 🟣 SECTION: CHANNEL POINTS (CP) SYSTEM - STATE & STORAGE                 */
+/* ========================================================================= */
 let cpState = {
     rewards: [],
     groups: [],
@@ -6048,6 +6052,10 @@ async function ensureCpAuth() {
     return settings.userId;
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 🌐 CP HELIX API & NETWORK COMMUNICATION                                   */
+/* ------------------------------------------------------------------------- */
 async function fetchTwitchCustomRewards() {
     cpState.isLoading = true;
     const tbody = document.getElementById('cp-rewards-tbody');
@@ -6065,13 +6073,32 @@ async function fetchTwitchCustomRewards() {
         });
         loadCpGroupsFromStorage();
         reconcileCpGroupsWithRewards();
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         showToast(cpCopy('fetchSuccess'));
     } catch (e) {
         console.error('fetchTwitchCustomRewards error:', e);
-        const failPrefix = cpCopy('fetchFail');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
-        showToast(`${failPrefix} ${e.message}`, 'warn');
+        const isAuthError = e.message?.includes('OAuth') || e.message?.includes('401') || e.message?.includes('Unauthorized') || e.message?.includes('token');
+        if (tbody) {
+            if (isAuthError) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:28px 16px;">
+                    <div style="color:var(--accent-red, #ef4444); font-weight:700; font-size:12.5px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span>${raidSoEscape(cpCopy('authErrorTitle'))}</span>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                        ${raidSoEscape(cpCopy('authErrorDesc'))}
+                    </div>
+                    <button type="button" class="btn-primary" onclick="openModal('settingModal')" style="font-size:11px; padding:5px 12px; display:inline-flex; align-items:center; gap:5px; margin:0 auto;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        <span>${raidSoEscape(cpCopy('openSettingsForAuthBtn'))}</span>
+                    </button>
+                </td></tr>`;
+            } else {
+                const failPrefix = cpCopy('fetchFail');
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
+            }
+        }
+        showToast(isAuthError ? cpCopy('authErrorToast') : `${cpCopy('fetchFail')} ${e.message}`, 'warn');
     } finally {
         cpState.isLoading = false;
     }
@@ -6105,7 +6132,7 @@ async function setCustomRewardState(rewardId, targetState) {
             const idx = cpState.rewards.findIndex(r => r.id === rewardId);
             if (idx !== -1) cpState.rewards[idx] = updated;
         }
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         return true;
     } catch (e) {
         console.error('setCustomRewardState error:', e);
@@ -6148,7 +6175,7 @@ async function batchSetCpGroupState(groupId, targetState) {
     }
     const stateLabel = targetState === 'on' ? cpCopy('statusEnabled') : (targetState === 'pause' ? cpCopy('statusPaused') : cpCopy('statusDisabled'));
     showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel, automatic: '' }), successCount > 0 ? 'success' : 'warn');
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
 }
 
 window.setCustomRewardState = setCustomRewardState;
@@ -6170,7 +6197,7 @@ async function toggleCustomRewardPaused(rewardId, isPaused) {
             const idx = cpState.rewards.findIndex(r => r.id === rewardId);
             if (idx !== -1) cpState.rewards[idx] = updated;
         }
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         return true;
     } catch (e) {
         console.error('toggleCustomRewardPaused error:', e);
@@ -6213,7 +6240,7 @@ async function batchPauseCpGroup(groupId, isPaused) {
     }
     const stateLabel = isPaused ? (cpCopy('statusPaused') || '一時停止') : (cpCopy('statusResumed') || '再開');
     showToast(cpCopy('batchPauseResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel }), successCount > 0 ? 'success' : 'warn');
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
 }
 
 function toggleCpBulkPauseSection(enabled) {
@@ -6244,7 +6271,7 @@ async function toggleCustomRewardEnabled(rewardId, isEnabled) {
             const idx = cpState.rewards.findIndex(r => r.id === rewardId);
             if (idx !== -1) cpState.rewards[idx] = updated;
         }
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         return true;
     } catch (e) {
         console.error('toggleCustomRewardEnabled error:', e);
@@ -6455,7 +6482,10 @@ async function saveCpReward() {
     const title = document.getElementById('cp-reward-title-input')?.value?.trim();
     const cost = parseInt(document.getElementById('cp-reward-cost-input')?.value || '50', 10);
     const prompt = document.getElementById('cp-reward-prompt-input')?.value?.trim();
-    const color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
+    let color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
+    if (!color.startsWith('#')) color = '#' + color;
+    if (color.length === 4) color = '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+    if (!/^#[0-9A-Fa-f]{6}$/.test(color)) color = '#9146FF';
 
     if (!title) {
         showToast(cpCopy('enterRewardName'), 'warn');
@@ -6521,6 +6551,10 @@ async function deleteCpReward(rewardId) {
     }
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 📁 CP GROUP & AUTOMATION MANAGEMENT                                       */
+/* ------------------------------------------------------------------------- */
 function openCpGroupModal(groupId = null) {
     const editIdInput = document.getElementById('cp-group-edit-id');
     const nameInput = document.getElementById('cp-group-name-input');
@@ -6611,7 +6645,7 @@ function saveCpGroup() {
 
     saveCpGroupsToStorage();
     closeModal('cpGroupModal');
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
     showToast(cpCopy('groupSaveSuccess'));
 }
 
@@ -6623,12 +6657,15 @@ function deleteCpGroup(groupId) {
     cpState.activeGroups.delete(groupId);
     cpState.groups = cpState.groups.filter(g => g.id !== groupId);
     saveCpGroupsToStorage();
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
     showToast(cpCopy('groupDeleteSuccess'));
 }
 
 
 
+/* ------------------------------------------------------------------------- */
+/* 🎨 CP COLOR PALETTE & SWATCHES                                            */
+/* ------------------------------------------------------------------------- */
 async function pickCpColorWithEyedropper(isBulk = false) {
     if (!window.EyeDropper) {
         showToast(cpCopy('eyedropperNotSupported'), 'info');
@@ -6791,6 +6828,10 @@ function applyCpRewardTemplate(selectedRewardId) {
     showToast(toastMsg);
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 📝 CP REWARD MODAL & EDITING                                              */
+/* ------------------------------------------------------------------------- */
 function openCpRewardModal(rewardId = null) {
     const editIdInput = document.getElementById('cp-reward-edit-id');
     const titleInput = document.getElementById('cp-reward-title-input');
@@ -6850,6 +6891,10 @@ function openCpRewardModal(rewardId = null) {
     openModal('cpRewardModal');
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 🖥️ CP UI RENDERING & DOM BUILDERS                                         */
+/* ------------------------------------------------------------------------- */
 function renderCpTab() {
     renderCpGroups();
     renderCpTable();
@@ -7049,7 +7094,7 @@ function renderCpTable() {
             <td class="cp-reward-control-cell" style="text-align: center;">
                 <div class="cp-segmented-control${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(actionTitle)}">
                     <button type="button" class="cp-segment-btn is-on${isEnabled && !r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'on')"` : ''}>ON</button>
-                    <button type="button" class="cp-segment-btn is-pause${isEnabled && r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'pause')"` : ''}>⏸ 停止</button>
+                    <button type="button" class="cp-segment-btn is-pause${isEnabled && r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'pause')"` : ''}>${raidSoEscape(cpCopy('pauseAction') || '❚❚ 停止')}</button>
                     <button type="button" class="cp-segment-btn is-off${!isEnabled ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'off')"` : ''}>OFF</button>
                 </div>
             </td>
@@ -7068,10 +7113,12 @@ function updateCpBulkActionBar() {
     const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
     const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
     const bar = document.getElementById('cp-bulk-action-bar');
-    const countEl = document.getElementById('cp-bulk-selected-count');
+    const labelEl = document.getElementById('cp-bulk-selected-label');
     const selectAllCheck = document.getElementById('cp-select-all-checkbox');
 
-    if (countEl) countEl.textContent = checked.length;
+    if (labelEl) {
+        labelEl.textContent = cpCopy('selectedItemsCount', { count: checked.length }) || `☑ ${checked.length}件選択中`;
+    }
 
     if (bar) {
         bar.style.display = checked.length > 0 ? 'flex' : 'none';
@@ -7081,12 +7128,6 @@ function updateCpBulkActionBar() {
         selectAllCheck.checked = checked.length === checkboxes.length;
         selectAllCheck.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
     }
-}
-
-function toggleSelectAllCpRewards(isChecked) {
-    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
-    checkboxes.forEach(cb => { cb.checked = isChecked; });
-    updateCpBulkActionBar();
 }
 
 function clearCpRewardSelection() {
@@ -7151,6 +7192,10 @@ function setCpBulkSwatch(hex) {
     }
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* ⚡ CP BULK OPERATIONS & BATCH ACTIONS                                     */
+/* ------------------------------------------------------------------------- */
 function openCpBulkEditModal(mode, groupId = null) {
     const hiddenMode = document.getElementById('cp-bulk-mode');
     const hiddenGroup = document.getElementById('cp-bulk-group-id');
@@ -7262,7 +7307,7 @@ async function applyCpBulkEdit() {
 
     closeModal('cpBulkEditModal');
     clearCpRewardSelection();
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
 }
 
 window.updateCpBulkActionBar = updateCpBulkActionBar;
