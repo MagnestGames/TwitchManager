@@ -2682,97 +2682,41 @@
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'preview'
-                    ? `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
-                    : `<button class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+                    ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
 
-                const toolbarHtml = `
-                    <div class="memo-toolbar">
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("extended.memoBold"))}"><b>B</b> ${raidSoEscape(uiText("extended.memoBold"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("extended.memoList"))}">• ${raidSoEscape(uiText("extended.memoList"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("extended.memoOl"))}">1. ${raidSoEscape(uiText("extended.memoOl"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("extended.memoTask"))}">☑ ${raidSoEscape(uiText("extended.memoTask"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("extended.memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("extended.memoLink"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("extended.memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("extended.memoCode"))}</button>
+                const editorHtml = `
+                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)">${raidSoEscape(m.content || '')}</textarea>
+                `;
+
+                const previewHtml = `
+                    <div id="memo-preview-${i}" class="memo-markdown-preview" onclick="toggleMemoMode(${i}, 'edit')">
+                        ${renderMarkdownPreview(m.content || '', i)}
                     </div>
                 `;
 
-                const bodyContentHtml = mode === 'edit'
-                    ? `${toolbarHtml}<textarea id="memo-input-${i}" style="min-height:150px; border-top-left-radius:0; border-top-right-radius:0;" onkeydown="handleMemoKeydown(event, ${i})" oninput="memoConfig[${i}].content=this.value; saveMemoLocal()">${raidSoEscape(m.content || '')}</textarea>`
-                    : `<div class="memo-markdown-preview">${renderMarkdownToHtml(m.content || '', i)}</div>`;
-
-                d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
-                    <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
-                        <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
-                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
+                d.innerHTML = `
+                    <div class="category-header memo-header" onclick="toggleMemoBox(${i})">
+                        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:0;">
+                            <span class="handle" onclick="event.stopPropagation()">:::</span>
+                            <span class="category-title" id="memo-title-${i}">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
+                            <span class="closed-preview-text" id="memo-preview-text-${i}">${raidSoEscape(previewText)}</span>
+                        </div>
+                        <div class="category-header-actions" style="display:flex; align-items:center; gap:6px;">
+                            ${modeBtnHtml}
+                            <button type="button" class="btn-icon" onclick="event.stopPropagation(); editMemoTitle(${i})" title="${raidSoEscape(langMap[currentLang].editTitle || 'タイトル編集')}">${SVG_EDIT}</button>
+                            <button type="button" class="btn-icon" onclick="event.stopPropagation(); deleteMemo(${i})" title="${raidSoEscape(langMap[currentLang].delete || '削除')}">${SVG_TRASH}</button>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        ${modeBtnHtml}
-                        <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    <div class="tw-body memo-body" style="padding-top:8px;">
+                        ${mode === 'preview' ? previewHtml : editorHtml}
                     </div>
-                </div>
-                ${bodyContentHtml}`;
+                `;
                 c.appendChild(d);
             });
             initSortable();
         }
-        window.renderMemo = renderMemo;
-
-
-function initSortable() {
-            if (typeof Sortable === 'undefined') return;
-            sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
-            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
-                animation: 150, handle: '.record-header', disabled: isSortLocked, group: groupName,
-                onEnd: (evt) => {
-                    const fromIdx = parseInt(evt.from.getAttribute('data-cat-idx')), toIdx = parseInt(evt.to.getAttribute('data-cat-idx'));
-                    const item = list[fromIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.oldIndex, 1)[0];
-                    list[toIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.newIndex, 0, item);
-                    save(false); renderFunc();
-                }
-            });
-
-            const mc = document.getElementById('main-container'); if (mc) {
-                sortableInstances.push(new Sortable(mc, { ...opts, onEnd: (e) => { const i = config.splice(e.oldIndex, 1)[0]; config.splice(e.newIndex, 0, i); saveAllLocal(false); render(); } }));
-                mc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(config, saveAllLocal, render, 'main'))));
-            }
-            const fc = document.getElementById('friends-container'); if (fc) {
-                sortableInstances.push(new Sortable(fc, { ...opts, onEnd: (e) => { const i = friendsConfig.splice(e.oldIndex, 1)[0]; friendsConfig.splice(e.newIndex, 0, i); saveFriendsLocal(false); renderFriends(); } }));
-                fc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(friendsConfig, saveFriendsLocal, renderFriends, 'friends'))));
-            }
-            const memc = document.getElementById('memo-container'); if (memc) {
-                sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => { const i = memoConfig.splice(e.oldIndex, 1)[0]; memoConfig.splice(e.newIndex, 0, i); saveMemoLocal(); renderMemo(); } }));
-            }
-            const tn = document.getElementById('tab-navigation');
-            if (tn) {
-                sortableInstances.push(new Sortable(tn, {
-                    animation: 150,
-                    disabled: isSortLocked
-                }));
-            }
-        }
-
-        function toggleCategory(el, i) { config[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveAllLocal(false); }
-        function toggleFriendCategory(el, i) { friendsConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveFriendsLocal(false); }
-        function toggleMemoCategory(el, i) { 
-            memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); 
-            if (memoConfig[i].isClosed) {
-                let p = (memoConfig[i].content || '').replace(/\n/g, ' ').substring(0, 15);
-                if ((memoConfig[i].content || '').length > 15) p += '...';
-                const previewEl = el.querySelector('.memo-preview');
-                if (previewEl) previewEl.textContent = p;
-            }
-            saveMemoLocal(false); 
-        }
-        function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
-
-        function addRecord(i) { config[i].records.push({ label: "NEW", game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
-        async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
-        async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
-        async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
-        async function deleteFriendRecord(ci, fi) { if (await customConfirm(dialogCopy('deleteIdRecord'))) { friendsConfig[ci].friends.splice(fi, 1); renderFriends(); saveFriendsLocal(false); } }
-        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
+        function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
         async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
 
         function cleanupTitleTestData() {

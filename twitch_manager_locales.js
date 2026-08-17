@@ -650,7 +650,8 @@ const I18N_DATA = {
                 "memoTaskShort": "タスク",
                 "memoLinkShort": "リンク",
                 "memoCodeShort": "コード",
-                "memoSampleText": "テキスト"
+                "memoSampleText": "テキスト",
+                "memoBoldShort": "太字"
             },
             "logs": {
                 "errNotSet": "アクセストークンが未設定です。設定(⚙)で保存すると使えるようになります。",
@@ -2007,7 +2008,8 @@ const I18N_DATA = {
                 "memoTaskShort": "Task",
                 "memoLinkShort": "Link",
                 "memoCodeShort": "Code",
-                "memoSampleText": "Text"
+                "memoSampleText": "Text",
+                "memoBoldShort": "Bold"
             },
             "logs": {
                 "errNotSet": "Access token is not set. Save it in settings (⚙) to use this feature.",
@@ -3364,7 +3366,8 @@ const I18N_DATA = {
                 "memoTaskShort": "任务",
                 "memoLinkShort": "链接",
                 "memoCodeShort": "代码",
-                "memoSampleText": "文本"
+                "memoSampleText": "文本",
+                "memoBoldShort": "粗体"
             },
             "logs": {
                 "errNotSet": "未设置访问令牌。请在设置 (⚙) 中保存后使用。",
