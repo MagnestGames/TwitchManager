@@ -2413,7 +2413,7 @@
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
 
         function renderMarkdownToHtml(src, memoIndex = null) {
-            if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText('memoEmptyHint'))}</div>`;
+            if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText("extended.memoEmptyHint"))}</div>`;
             let html = raidSoEscape(src);
 
             // Code blocks
@@ -2674,14 +2674,14 @@
 
                 const toolbarHtml = `
                     <div class="memo-toolbar">
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("memoBold"))}"><b>B</b> ${raidSoEscape(uiText("memoBold"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '**', '**')" title="${raidSoEscape(uiText("extended.memoBold"))}"><b>B</b> ${raidSoEscape(uiText("extended.memoBold"))}</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '# ')" title="大見出し">H1</button>
                         <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '## ')" title="中見出し">H2</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("memoList"))}">• ${raidSoEscape(uiText("memoList"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("memoOl"))}">1. ${raidSoEscape(uiText("memoOl"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("memoTask"))}">☑ ${raidSoEscape(uiText("memoTask"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("memoLink"))}</button>
-                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("memoCode"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- ')" title="${raidSoEscape(uiText("extended.memoList"))}">• ${raidSoEscape(uiText("extended.memoList"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '1. ')" title="${raidSoEscape(uiText("extended.memoOl"))}">1. ${raidSoEscape(uiText("extended.memoOl"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '- [ ] ')" title="${raidSoEscape(uiText("extended.memoTask"))}">☑ ${raidSoEscape(uiText("extended.memoTask"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '[', '](https://)')" title="${raidSoEscape(uiText("extended.memoLink"))}" style="display:inline-flex; align-items:center;">${MEMO_SVG_LINK}${raidSoEscape(uiText("extended.memoLink"))}</button>
+                        <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(${i}, '\x60', '\x60')" title="${raidSoEscape(uiText("extended.memoCode"))}">&lt;&gt; ${raidSoEscape(uiText("extended.memoCode"))}</button>
                     </div>
                 `;
 
