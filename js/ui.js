@@ -2411,6 +2411,7 @@
         const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+        const MEMO_SVG_TRASH = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
         function renderMarkdownToHtml(src, memoIndex = null) {
             if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText("extended.memoEmptyHint"))}</div>`;
@@ -2665,57 +2666,58 @@
         }
         window.toggleMemoCategory = toggleMemoCategory;
 
-        function renderMemo() {
-            const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
-            if (!memoConfig.length) {
-                c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
-                initSortable();
-                return;
-            }
-            memoConfig.forEach((m, i) => {
-                const mode = m.mode || (m.content ? 'preview' : 'edit');
-                const d = document.createElement('div');
-                d.className = "category-box" + (m.isClosed ? " closed" : "");
-                d.setAttribute('data-idx', i);
-
-                let previewText = (m.content || '').replace(/\n/g, ' ').substring(0, 15);
-                if ((m.content || '').length > 15) previewText += '...';
-
-                const modeBtnHtml = mode === 'preview'
-                    ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
-                    : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
-
-                const editorHtml = `
-                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)">${raidSoEscape(m.content || '')}</textarea>
-                `;
-
-                const previewHtml = `
-                    <div id="memo-preview-${i}" class="memo-markdown-preview" onclick="toggleMemoMode(${i}, 'edit')">
-                        ${renderMarkdownPreview(m.content || '', i)}
-                    </div>
-                `;
-
-                d.innerHTML = `
-                    <div class="category-header memo-header" onclick="toggleMemoBox(${i})">
-                        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:0;">
-                            <span class="handle" onclick="event.stopPropagation()">:::</span>
-                            <span class="category-title" id="memo-title-${i}">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
-                            <span class="closed-preview-text" id="memo-preview-text-${i}">${raidSoEscape(previewText)}</span>
-                        </div>
-                        <div class="category-header-actions" style="display:flex; align-items:center; gap:6px;">
-                            ${modeBtnHtml}
-                            <button type="button" class="btn-icon" onclick="event.stopPropagation(); editMemoTitle(${i})" title="${raidSoEscape(langMap[currentLang].editTitle || 'タイトル編集')}">${SVG_EDIT}</button>
-                            <button type="button" class="btn-icon" onclick="event.stopPropagation(); deleteMemo(${i})" title="${raidSoEscape(langMap[currentLang].delete || '削除')}">${SVG_TRASH}</button>
-                        </div>
-                    </div>
-                    <div class="tw-body memo-body" style="padding-top:8px;">
-                        ${mode === 'preview' ? previewHtml : editorHtml}
-                    </div>
-                `;
-                c.appendChild(d);
+        function initSortable() {
+            if (typeof Sortable === 'undefined') return;
+            sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
+            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
+                animation: 150, handle: '.record-header', disabled: isSortLocked, group: groupName,
+                onEnd: (evt) => {
+                    const fromIdx = parseInt(evt.from.getAttribute('data-cat-idx')), toIdx = parseInt(evt.to.getAttribute('data-cat-idx'));
+                    const item = list[fromIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.oldIndex, 1)[0];
+                    list[toIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.newIndex, 0, item);
+                    save(false); renderFunc();
+                }
             });
-            initSortable();
+
+            const mc = document.getElementById('main-container'); if (mc) {
+                sortableInstances.push(new Sortable(mc, { ...opts, onEnd: (e) => { const i = config.splice(e.oldIndex, 1)[0]; config.splice(e.newIndex, 0, i); saveAllLocal(false); render(); } }));
+                mc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(config, saveAllLocal, render, 'main'))));
+            }
+            const fc = document.getElementById('friends-container'); if (fc) {
+                sortableInstances.push(new Sortable(fc, { ...opts, onEnd: (e) => { const i = friendsConfig.splice(e.oldIndex, 1)[0]; friendsConfig.splice(e.newIndex, 0, i); saveFriendsLocal(false); renderFriends(); } }));
+                fc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(friendsConfig, saveFriendsLocal, renderFriends, 'friends'))));
+            }
+            const memc = document.getElementById('memo-container'); if (memc) {
+                sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => { const i = memoConfig.splice(e.oldIndex, 1)[0]; memoConfig.splice(e.newIndex, 0, i); saveMemoLocal(); renderMemo(); } }));
+            }
+            const tn = document.getElementById('tab-navigation');
+            if (tn) {
+                sortableInstances.push(new Sortable(tn, {
+                    animation: 150,
+                    disabled: isSortLocked
+                }));
+            }
         }
+
+        function toggleCategory(el, i) { config[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveAllLocal(false); }
+        function toggleFriendCategory(el, i) { friendsConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveFriendsLocal(false); }
+        function toggleMemoCategory(el, i) { 
+            memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); 
+            if (memoConfig[i].isClosed) {
+                let p = (memoConfig[i].content || '').replace(/\n/g, ' ').substring(0, 15);
+                if ((memoConfig[i].content || '').length > 15) p += '...';
+                const previewEl = el.querySelector('.memo-preview');
+                if (previewEl) previewEl.textContent = p;
+            }
+            saveMemoLocal(false); 
+        }
+        function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
+
+        function addRecord(i) { config[i].records.push({ label: "NEW", game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
+        async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
+        async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
+        async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
+        async function deleteFriendRecord(ci, fi) { if (await customConfirm(dialogCopy('deleteIdRecord'))) { friendsConfig[ci].friends.splice(fi, 1); renderFriends(); saveFriendsLocal(false); } }
         async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
         async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
 
@@ -6861,3 +6863,94 @@ function renderCpTable() {
     });
     tbody.innerHTML = html;
 }
+        function renderMemo() {
+            const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
+            if (!memoConfig.length) {
+                c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
+                initSortable();
+                return;
+            }
+            memoConfig.forEach((m, i) => {
+                const mode = m.mode || (m.content ? 'preview' : 'edit');
+                const d = document.createElement('div');
+                d.className = "category-box" + (m.isClosed ? " closed" : "");
+                d.setAttribute('data-idx', i);
+
+                let previewText = (m.content || '').replace(/\n/g, ' ').substring(0, 15);
+                if ((m.content || '').length > 15) previewText += '...';
+
+                const modeBtnHtml = mode === 'preview'
+                    ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+
+                const editorHtml = `
+                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px; box-sizing:border-box;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)">${raidSoEscape(m.content || '')}</textarea>
+                `;
+
+                const previewHtml = `
+                    <div id="memo-preview-${i}" class="memo-markdown-preview" onclick="toggleMemoMode(${i}, 'edit')">
+                        ${renderMarkdownToHtml(m.content || '', i)}
+                    </div>
+                `;
+
+                d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
+                    <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
+                        <span style="white-space:nowrap;">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
+                        <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${modeBtnHtml}
+                        <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    </div>
+                </div>
+                <div class="tw-body memo-body" style="padding-top:8px;">
+                    ${mode === 'preview' ? previewHtml : editorHtml}
+                </div>`;
+                c.appendChild(d);
+            });
+            initSortable();
+        }
+        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
+        async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
+
+
+
+        function cleanupTitleTestData() {
+            if (!Array.isArray(config)) return;
+            const testNames = new Set(['あ', '４', '4', 'て']);
+            const before = JSON.stringify(config);
+            config = config
+                .filter(cat => !testNames.has(String(cat.name || '').trim()))
+                .map(cat => ({
+                    ...cat,
+                    records: (cat.records || []).filter(record => {
+                        const label = String(record.label || '').trim();
+                        const title = String(record.title || '').trim();
+                        return !testNames.has(label) && !testNames.has(title);
+                    })
+                }));
+            if (JSON.stringify(config) !== before) saveAllLocal(false);
+        }
+
+        function cleanupIdListTestData() {
+            if (!Array.isArray(friendsConfig)) return;
+            const testNames = new Set(['あ', '４', '4', 'て']);
+            const memoCategoryNames = new Set(['移行したメモ', 'Imported Memos', '已迁移备忘录']);
+            const before = JSON.stringify(friendsConfig);
+            friendsConfig = friendsConfig
+                .filter(cat => {
+                    const categoryName = String(cat.name || '').trim();
+                    return cat.kind !== 'imported-memos' && !memoCategoryNames.has(categoryName) && !testNames.has(categoryName);
+                })
+                .map(cat => ({
+                    ...cat,
+                    friends: (cat.friends || []).filter(friend => {
+                        const name = String(friend.name || '').trim();
+                        const twitch = String(friend.twitch || '').trim();
+                        return !testNames.has(name) && !testNames.has(twitch);
+                    })
+                }))
+                .filter(cat => (cat.friends || []).length || cat.kind !== 'shoutout-history');
+            if (JSON.stringify(friendsConfig) !== before) saveFriendsLocal(false);
+            localStorage.removeItem('stream_memo_merged_into_friends_v1');
+        }
