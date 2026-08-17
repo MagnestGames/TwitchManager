@@ -2716,7 +2716,7 @@
             });
             initSortable();
         }
-        function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
+        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
         async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
 
         function cleanupTitleTestData() {
