@@ -4688,6 +4688,12 @@
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
 
+            // 1.1 titleTagConfig
+            if (isBackupRecord(d.titleTagConfig)) {
+                let localTagConfig = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}');
+                localStorage.setItem('title_tag_config_v1', JSON.stringify({ ...localTagConfig, ...d.titleTagConfig }));
+            }
+
             // 2. settings
             if (isBackupRecord(d.settings)) {
                 let localSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
@@ -4786,6 +4792,18 @@
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
                 localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
             }
+
+            // 10. YouTube preset groups & settings
+            if (Array.isArray(d.ytPresetGroups)) {
+                const localPresets = JSON.parse(localStorage.getItem('yt_manager_dock_preset_groups') || '[]');
+                const presetsByName = new Map(localPresets.map(p => [p.name, p]));
+                d.ytPresetGroups.forEach(p => { if (p && p.name) presetsByName.set(p.name, p); });
+                localStorage.setItem('yt_manager_dock_preset_groups', JSON.stringify([...presetsByName.values()]));
+            }
+            if (isBackupRecord(d.ytSettings)) {
+                const localYt = JSON.parse(localStorage.getItem('yt_manager_dock_settings') || '{}');
+                localStorage.setItem('yt_manager_dock_settings', JSON.stringify({ ...localYt, ...d.ytSettings }));
+            }
         }
         function createSelectedBackupObject() {
             collectRaidSoSettings();
@@ -4854,8 +4872,165 @@
             }
         }
 
+        async function promptClearAllCache() {
+            const currentSelection = {
+                title: true,
+                id: true,
+                raidso: true,
+                memo: true
+            };
+            window._cacheClearSelection = currentSelection;
+            window._toggleAllCacheCheckboxes = function(checked) {
+                document.querySelectorAll('.cache-clear-checkbox').forEach(cb => {
+                    cb.checked = checked;
+                    if (window._cacheClearSelection) window._cacheClearSelection[cb.value] = checked;
+                });
+            };
+            window._onCacheClearCheckboxChange = function(cb) {
+                if (window._cacheClearSelection) window._cacheClearSelection[cb.value] = cb.checked;
+            };
+
+            const confirm1 = await customConfirm({
+                title: uiText('runtime.clearCacheTitle1'),
+                messageHtml: `
+                    <div style="font-size:12.5px; line-height:1.6; color: var(--text-main);">
+                        <div style="margin-bottom: 8px;">${raidSoEscape(uiText('runtime.clearCacheMsg1'))}</div>
+                        <div class="cache-clear-toggle-row">
+                            <button type="button" class="cache-clear-toggle-btn" onclick="window._toggleAllCacheCheckboxes(true)">${raidSoEscape(uiText('extended.clearCacheSelectAll'))}</button>
+                            <button type="button" class="cache-clear-toggle-btn" onclick="window._toggleAllCacheCheckboxes(false)">${raidSoEscape(uiText('extended.clearCacheDeselectAll'))}</button>
+                        </div>
+                        <div class="cache-clear-selection-container">
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="title" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemTitle'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="id" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemId'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="raidso" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemRaidSo'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="memo" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemMemo'))}</strong>
+                                </div>
+                            </label>
+                        </div>
+                        <div style="background: rgba(233, 30, 99, 0.1); border: 1px solid var(--danger-border, #e91e63); border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-weight: bold; color: var(--danger-text, #ff5252);">
+                            ${raidSoEscape(uiText('runtime.clearCacheWarning1'))}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">
+                            ${raidSoEscape(uiText('runtime.clearCacheTokenNote'))}
+                        </div>
+                    </div>
+                `,
+                okText: uiText('runtime.clearCacheNextBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (!confirm1) {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+                return;
+            }
+
+            const selectedKeys = Object.keys(currentSelection).filter(k => currentSelection[k]);
+
+            if (selectedKeys.length === 0) {
+                showToast(uiText('runtime.clearCacheNoSelection'), 'warning');
+                return;
+            }
+
+            const itemLabelsMap = {
+                title: uiText('extended.clearCacheItemTitle'),
+                id: uiText('extended.clearCacheItemId'),
+                raidso: uiText('extended.clearCacheItemRaidSo'),
+                memo: uiText('extended.clearCacheItemMemo')
+            };
+            const selectedListHtml = selectedKeys.map(k => `<li style="margin-bottom: 3px;">${raidSoEscape(itemLabelsMap[k] || k)}</li>`).join('');
+
+            const confirm2 = await customConfirm({
+                title: uiText('runtime.clearCacheTitle2'),
+                messageHtml: `
+                    <div style="font-size:12.5px; line-height:1.6; color: var(--text-main);">
+                        <div style="margin-bottom: 8px;">${raidSoEscape(uiText('runtime.clearCacheMsg2'))}</div>
+                        <ul style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px 8px 26px; margin-bottom: 10px; color: var(--text-main); font-size: 12px;">
+                            ${selectedListHtml}
+                        </ul>
+                        <div style="background: rgba(233, 30, 99, 0.15); border: 1px solid var(--danger, #e91e63); border-radius: 6px; padding: 10px; font-weight: bold; color: var(--danger-text, #ff5252); text-align: center;">
+                            ${raidSoEscape(uiText('runtime.clearCacheWarning2'))}
+                        </div>
+                    </div>
+                `,
+                okText: uiText('runtime.clearCacheExecuteBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (!confirm2) {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+                return;
+            }
+
+            executeSelectedCacheClear(selectedKeys);
+        }
+
+        function executeSelectedCacheClear(selectedKeys) {
+            try {
+                const keysSet = new Set(selectedKeys);
+                const clearedLabels = [];
+                const itemLabelsMap = {
+                    title: uiText('extended.clearCacheItemTitle'),
+                    id: uiText('extended.clearCacheItemId'),
+                    raidso: uiText('extended.clearCacheItemRaidSo'),
+                    memo: uiText('extended.clearCacheItemMemo')
+                };
+
+                if (keysSet.has('title')) {
+                    localStorage.setItem('stream_config_v16', JSON.stringify([]));
+                    localStorage.setItem('title_tag_config_v1', JSON.stringify({}));
+                    clearedLabels.push(itemLabelsMap.title);
+                }
+
+                if (keysSet.has('id')) {
+                    localStorage.setItem('stream_friends_v16', JSON.stringify([]));
+                    clearedLabels.push(itemLabelsMap.id);
+                }
+
+                if (keysSet.has('raidso')) {
+                    localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify({}));
+                    localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify([]));
+                    localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify([]));
+                    localStorage.setItem('cp_groups_v1', JSON.stringify([]));
+                    localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([]));
+                    localStorage.removeItem('stream_fav_clips_v16');
+                    localStorage.removeItem('stream_vip_cache_v16');
+                    clearedLabels.push(itemLabelsMap.raidso);
+                }
+
+                if (keysSet.has('memo')) {
+                    localStorage.setItem('stream_memo_v16', JSON.stringify([]));
+                    clearedLabels.push(itemLabelsMap.memo);
+                }
+
+                raidSoLog(uiText('runtime.operationLog.selectedCacheCleared', { items: clearedLabels.join(', ') }));
+                showToast(uiText('runtime.clearCacheDone'), 'success');
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                showToast(uiText('runtime.clearCacheFailed', { error: e.message || '' }), 'error');
+            }
+        }
+
         window.downloadBackupFile = downloadBackupFile;
         window.copyBackupToClipboard = copyBackupToClipboard;
+        window.promptClearAllCache = promptClearAllCache;
 
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');

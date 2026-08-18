@@ -5020,6 +5020,107 @@ body.light-theme .tw-command-copy-btn code {
     }
 }
 
+/* その他タブ: 削除モード時のみ表示されるキャッシュ削除ボタン（背景なし・赤文字） */
+#btn-clear-all-cache {
+    display: none !important;
+}
+#misc-tab.delete-mode-on #btn-clear-all-cache {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    color: var(--button-danger-border, #ff5c70) !important;
+    font-weight: bold;
+    border: 1px solid var(--button-danger-border, #ff5c70) !important;
+    border-radius: var(--radius-md) !important;
+    animation: fadeIn 0.2s ease-in-out;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+#misc-tab.delete-mode-on #btn-clear-all-cache:hover {
+    background: rgba(255, 92, 112, 0.12) !important;
+    border-color: #ff3b53 !important;
+    color: #ff3b53 !important;
+}
+body.light-theme #misc-tab.delete-mode-on #btn-clear-all-cache {
+    background: transparent !important;
+    color: var(--danger, #b91c1c) !important;
+    border: 1px solid var(--danger, #b91c1c) !important;
+}
+body.light-theme #misc-tab.delete-mode-on #btn-clear-all-cache:hover {
+    background: rgba(185, 28, 28, 0.08) !important;
+    border-color: #991b1b !important;
+    color: #991b1b !important;
+}
+#misc-tab:not(.delete-mode-on) #del-mode-misc {
+    flex: 1 !important;
+    width: 100%;
+}
+
+/* キャッシュ削除モーダル用アイテムリスト */
+.cache-clear-selection-container {
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.cache-clear-toggle-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+.cache-clear-toggle-btn {
+    padding: 3px 8px;
+    font-size: 11px;
+    background: var(--bg-base);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.cache-clear-toggle-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border-color: var(--primary-accent, var(--twitch-purple));
+}
+.cache-clear-item-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm, 6px);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+}
+.cache-clear-item-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover, var(--twitch-purple));
+}
+.cache-clear-item-card input[type="checkbox"] {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--twitch-purple);
+    margin: 0;
+    flex-shrink: 0;
+}
+.cache-clear-item-text {
+    font-size: 12px;
+    color: var(--text-main);
+    flex: 1;
+    line-height: 1.4;
+}
+.cache-clear-item-desc {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+}
+
 /* Initial Loading Overlay Screen */
 #app-loading-screen {
     position: fixed;

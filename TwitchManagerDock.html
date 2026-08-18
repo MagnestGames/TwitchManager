@@ -614,7 +614,7 @@
         </div>
 
         <!-- Logs closed by default using details/summary -->
-        <details class="category-box" open style="margin-bottom: 0; padding: 10px 15px;">
+        <details class="category-box" open style="margin-bottom: 12px; padding: 10px 15px;">
             <summary class="category-name" id="ui-backup-log-title" style="cursor: pointer; user-select: none; margin-bottom: 0; font-size: 13px;" data-i18n="jsMsgs.eventLogTitle">イベントログ（クリックで開閉）</summary>
             <div style="margin-top: 10px;">
                 
@@ -628,6 +628,11 @@
 
             </div>
         </details>
+
+        <div class="sticky-footer-wrapper" style="z-index: 1000;">
+            <button id="del-mode-misc" class="btn-secondary" style="flex: 2;" onclick="toggleDeleteMode('misc-tab')" data-i18n="extended.deleteBtn">削除</button>
+            <button id="btn-clear-all-cache" class="btn-secondary" style="flex: 3; display: none;" onclick="promptClearAllCache()" data-i18n="extended.clearAllCacheBtn">キャッシュを削除</button>
+        </div>
 
       </div>
     </div>
