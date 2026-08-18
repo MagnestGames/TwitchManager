@@ -5518,3 +5518,210 @@ body.light-theme .cp-segment-btn.is-purple.active {
     border-color: var(--twitch-purple, #9146ff);
     color: #ffffff;
 }
+
+
+
+/* ==========================================================================
+   Channel Points (CP) Table & Row Clean Styles
+   ========================================================================== */
+.cp-rewards-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0;
+}
+
+.cp-rewards-table th {
+    padding: 6px 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.cp-rewards-table th:first-child {
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    text-align: center;
+}
+
+.cp-reward-row {
+    border-bottom: 1px solid var(--border-color);
+    background: transparent !important;
+    transition: background var(--transition-fast);
+}
+
+.cp-reward-row:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.cp-reward-row td {
+    padding: 6px 4px;
+    vertical-align: middle;
+}
+
+.cp-reward-row td:first-child {
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    text-align: center;
+}
+
+.cp-reward-main {
+    text-align: left;
+    padding-left: 2px !important;
+}
+
+.cp-reward-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cp-reward-icon-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cp-reward-icon-badge img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.cp-reward-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.cp-reward-copy {
+    min-width: 0;
+    flex: 1;
+}
+
+.cp-reward-title {
+    font-weight: bold;
+    font-size: 12px;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cp-reward-meta {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cp-group-tag {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    background: rgba(145, 70, 255, 0.15);
+    border: 1px solid rgba(145, 70, 255, 0.35);
+    border-radius: 3px;
+    color: var(--text-main);
+    display: inline-block;
+    margin: 1px 2px;
+}
+
+.cp-group-tag.is-shared {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.cp-source-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.cp-source-badge.is-app {
+    background: rgba(145, 70, 255, 0.18);
+    color: #c084fc;
+    border: 1px solid rgba(145, 70, 255, 0.4);
+}
+
+.cp-source-badge.is-external {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.cp-id-badge {
+    font-size: 9px;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0.75;
+}
+
+.cp-id-badge:hover {
+    opacity: 1;
+    color: var(--twitch-purple);
+}
+
+.cp-reward-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.cp-reward-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.cp-segmented-control {
+    display: inline-flex;
+    background: var(--bg-item, #26262c);
+    border: 1px solid var(--border-color, #3f3f46);
+    border-radius: 4px;
+    padding: 1px;
+    gap: 1px;
+}
+
+.cp-segment-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.cp-segment-btn.active.is-on {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.cp-segment-btn.active.is-pause {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.cp-segment-btn.active.is-off {
+    background: #ef4444;
+    color: #ffffff;
+}
