@@ -1,73 +1,4 @@
-
-function updateRecordTitleValue(ci, ri, val) {
-    if (!config[ci] || !config[ci].records[ri]) return;
-    config[ci].records[ri].title = val;
-    saveAllLocal(false);
-    
-    // Update card header label if auto
-    if (!config[ci].records[ri].isCustomLabel) {
-        const lbl = document.getElementById(`record-label-${ci}-${ri}`);
-        if (lbl) {
-            const newLabel = langMap[currentLang]?.titleActions?.newLabel || langMap.ja.titleActions.newLabel;
-            lbl.textContent = '● ' + (val.trim() || newLabel);
-        }
-    }
-    // Update inline header tag badges
-    const headerTagsEl = document.getElementById(`record-header-tags-${ci}-${ri}`);
-    if (headerTagsEl) {
-        headerTagsEl.innerHTML = getTagBadgesHtmlForTitle(val);
-    }
-    // Update live preview box
-    const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
-    if (previewEl) {
-        const game = config[ci].records[ri].game || '';
-        const count = config[ci].records[ri].count;
-        const resolved = resolveStreamTitleTemplate(val, { game, count });
-        previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
-    }
-}
-
-function updateRecordCount(ci, ri, val) {
-    if (!config[ci] || !config[ci].records[ri]) return;
-    const num = Math.max(1, parseInt(val, 10) || 1);
-    config[ci].records[ri].count = num;
-    saveAllLocal(false);
-
-    const input = document.getElementById(`record-count-input-${ci}-${ri}`);
-    if (input && parseInt(input.value, 10) !== num) {
-        input.value = num;
-    }
-
-    const r = config[ci].records[ri];
-    updateRecordTitleValue(ci, ri, r.title || '');
-}
-
-function stepRecordCount(ci, ri, delta) {
-    if (!config[ci] || !config[ci].records[ri]) return;
-    const current = (config[ci].records[ri].count !== undefined) ? parseInt(config[ci].records[ri].count, 10) : 1;
-    updateRecordCount(ci, ri, current + delta);
-}
-
-function insertTagToRecordTitle(ci, ri, tagText) {
-    const textarea = document.getElementById(`record-title-input-${ci}-${ri}`);
-    if (!textarea) return;
-    const start = textarea.selectionStart || 0;
-    const end = textarea.selectionEnd || 0;
-    const val = textarea.value || '';
-    const newVal = val.substring(0, start) + tagText + val.substring(end);
-    textarea.value = newVal;
-    textarea.selectionStart = textarea.selectionEnd = start + tagText.length;
-    textarea.focus();
-    updateRecordTitleValue(ci, ri, newVal);
-}
-
-window.updateRecordTitleValue = updateRecordTitleValue;
-window.updateRecordCount = updateRecordCount;
-window.stepRecordCount = stepRecordCount;
-window.insertTagToRecordTitle = insertTagToRecordTitle;
-
-
-let titleTagConfig = {
+var titleTagConfig = {
     customTags: [
         { id: 'tag_1', name: '識別', value: '内容' },
         { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
@@ -203,290 +134,8 @@ window.saveTitleTagConfig = saveTitleTagConfig;
 window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
 
-function extractTwitchId(str) {
-    if (!str) return '';
-    let val = String(str).trim();
-    val = val.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '');
-    val = val.replace(/^twitch\.tv\//i, '');
-    val = val.split('/')[0].split('?')[0].split('#')[0];
-    val = val.replace(/^@/, '').trim();
-    return val;
-}
-window.extractTwitchId = extractTwitchId;
 
-function getCategoryCollabNames(catName) {
-    try {
-        const selectedIds = [];
-        (friendsConfig || []).forEach(cat => {
-            if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
-                (cat.friends || []).forEach(f => {
-                    const rawVal = f.twitch || f.name || f.id || '';
-                    const twitchId = extractTwitchId(rawVal);
-                    if (twitchId && !selectedIds.includes(twitchId)) {
-                        selectedIds.push(twitchId);
-                    }
-                });
-            }
-        });
 
-        if (selectedIds.length === 0) return '';
-        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-        return selectedIds.map(id => ' @' + id).join('');
-    } catch (e) {
-        return '';
-    }
-}
-
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function resolveStreamTitleTemplate(templateStr, context = {}) {
-    if (!templateStr) return '';
-    loadTitleTagConfig();
-    let result = String(templateStr);
-
-    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
-    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
-        titleTagConfig.customTags.forEach(tag => {
-            if (tag && tag.name) {
-                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
-                result = result.replace(regex, tag.value || '');
-            }
-        });
-    }
-
-    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
-    const collabName = titleTagConfig.collabTagName || 'コラボ';
-    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
-    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
-    result = result.replace(collabRegex, collabVal);
-
-    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
-    (friendsConfig || []).forEach(cat => {
-        if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
-            const catName = cat.name.trim();
-            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
-                const catVal = getCategoryCollabNames(catName);
-                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
-                result = result.replace(reg, catVal);
-            }
-        }
-    });
-
-    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
-    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
-    let gameVal = context.game !== undefined ? context.game : '';
-
-    // 手動カテゴリ変換マッピングの優先適用
-    if (gameVal && titleTagConfig && Array.isArray(titleTagConfig.categoryMap)) {
-        const trimmedGame = String(gameVal).trim();
-        const matched = titleTagConfig.categoryMap.find(item =>
-            item && item.from && String(item.from).trim().toLowerCase() === trimmedGame.toLowerCase()
-        );
-        if (matched && matched.to !== undefined && matched.to !== null && String(matched.to).trim() !== '') {
-            gameVal = String(matched.to);
-        }
-    }
-
-    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
-    result = result.replace(catRegex, gameVal);
-
-    // 4. Built-in Date & Time Tags
-    const now = new Date();
-    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
-    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-    const dayVal = '(' + dayNames[now.getDay()] + ')';
-    const yearVal = String(now.getFullYear());
-    const monthVal = String(now.getMonth() + 1);
-    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-    result = result.replace(/{(日付|date)}/g, dateVal);
-    result = result.replace(/{(曜日|day)}/g, dayVal);
-    result = result.replace(/{(年|year)}/g, yearVal);
-    result = result.replace(/{(月|month)}/g, monthVal);
-    result = result.replace(/{(時間|time)}/g, timeVal);
-
-    // 5. Count Tag ({count} or {回数} or {カウント}) -> replaces with numeric count value only
-    const countVal = context.count !== undefined ? String(context.count) : (context.recordCount !== undefined ? String(context.recordCount) : '1');
-    result = result.replace(/{(count|回数|カウント)}/g, countVal);
-
-    return result;
-}
-
-function getTagBadgesHtmlForTitle(templateStr) {
-    if (!templateStr) return '';
-    const matches = templateStr.match(/{[^{}]+}/g);
-    if (!matches || matches.length === 0) return '';
-    const uniqueTags = [...new Set(matches)];
-    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
-}
-
-window.loadTitleTagConfig = loadTitleTagConfig;
-window.saveTitleTagConfig = saveTitleTagConfig;
-window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
-window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
-window.escapeRegExp = escapeRegExp;
-
-function showCollabHoverHint(tagNameOrCat) {
-    try {
-        let msg = '';
-        if (tagNameOrCat === '{コラボ}') {
-            const selectedNames = getSelectedCollabNames();
-            const collabCat = titleTagConfig.collabCategoryName || '';
-            msg = selectedNames 
-                ? `選択中コラボ (${collabCat || '全体'}):${selectedNames}` 
-                : `コラボメンバー未選択 (IDリストでチェックを入れてください)`;
-        } else {
-            // Specific ID list category name
-            const catSelected = [];
-            (friendsConfig || []).forEach(cat => {
-                if (cat.name === tagNameOrCat) {
-                    (cat.friends || []).forEach(f => {
-                        if (f.isSelected) {
-                            const n = f.name || f.twitch || '';
-                            if (n && !catSelected.includes(n)) catSelected.push(n);
-                        }
-                    });
-                }
-            });
-            const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
-            msg = `IDリスト【${tagNameOrCat}】選択中: ${membersStr}`;
-        }
-        showToast(msg, 'info');
-    } catch (e) {}
-}
-
-function copyCommonTag(tagText) {
-    let toastMsg = 'コピー: ' + tagText;
-    if (tagText === '{コラボ}') {
-        const names = getSelectedCollabNames();
-        if (names) {
-            toastMsg += ' (展開:' + names.trim() + ')';
-        }
-    }
-    try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(tagText).then(() => {
-                showToast(toastMsg, 'success');
-            }).catch(() => {
-                fallbackCopyText(tagText, toastMsg);
-            });
-        } else {
-            fallbackCopyText(tagText, toastMsg);
-        }
-    } catch (e) {
-        fallbackCopyText(tagText, toastMsg);
-    }
-}
-
-function fallbackCopyText(tagText, customMsg) {
-    try {
-        const ta = document.createElement('textarea');
-        ta.value = tagText;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast(customMsg || ('コピー: ' + tagText), 'success');
-    } catch (e) {
-        showToast('コピーできませんでした', 'warn');
-    }
-}
-
-let isCollabTagGroupExpanded = true;
-try {
-    const savedExp = localStorage.getItem('common_collab_tags_expanded');
-    if (savedExp !== null) isCollabTagGroupExpanded = savedExp === 'true';
-} catch (e) {}
-
-function toggleCollabTagGroup() {
-    isCollabTagGroupExpanded = !isCollabTagGroupExpanded;
-    try {
-        localStorage.setItem('common_collab_tags_expanded', String(isCollabTagGroupExpanded));
-    } catch (e) {}
-    renderCommonTagBar();
-}
-window.toggleCollabTagGroup = toggleCollabTagGroup;
-
-function copyCategoryRawIds(catName) {
-    const rawIds = getCategoryCollabNames(catName);
-    if (!rawIds) {
-        showToast(`IDリスト【${catName}】に選択中のメンバーがいません`, 'warn');
-        return;
-    }
-    const copyString = rawIds;
-    const toastMsg = `IDリスト【${catName}】の@ID一覧をコピー:${copyString.trim()}`;
-
-    try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(copyString).then(() => {
-                showToast(toastMsg, 'success');
-            }).catch(() => {
-                fallbackCopyText(copyString, toastMsg);
-            });
-        } else {
-            fallbackCopyText(copyString, toastMsg);
-        }
-    } catch (e) {
-        fallbackCopyText(copyString, toastMsg);
-    }
-}
-window.copyCategoryRawIds = copyCategoryRawIds;
-
-function renderCommonTagBar() {
-    loadTitleTagConfig();
-    const bar = document.getElementById('common-tag-chip-bar');
-    if (!bar) return;
-
-    let mainHtml = '';
-    // 1. カスタム共通タグ (言葉セット)
-    (titleTagConfig.customTags || []).forEach(tag => {
-        if (!tag.name) return;
-        const tagText = '{' + tag.name + '}';
-        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
-        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
-    });
-
-    // 2. 標準システムタグ ({Category}, {date}, {count})
-    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">{Category}</button>`;
-    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付・日時">{date}</button>`;
-    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{count}')" title="シリーズもの配信回数 (数字のみ+)">{count}</button>`;
-
-    // 3. コラボ・IDリスト用タグ（タグ名コピーと @ID コピーの横並びセグメントボタン）
-    let collabHtml = '';
-    const catNames = (friendsConfig || [])
-        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
-        .map(cat => cat.name.trim())
-        .filter(name => name && name !== '未分類' && name !== 'Uncategorized');
-    const uniqueCats = [...new Set(catNames)];
-
-    uniqueCats.forEach(catName => {
-        const formattedCatNames = getCategoryCollabNames(catName);
-        const catTagText = '{' + catName + '}';
-        collabHtml += `
-            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
-                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
-                    ${raidSoEscape(catTagText)}
-                </button>
-                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
-                    @ID
-                </button>
-            </div>
-        `;
-    });
-
-    let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
-    if (collabHtml) {
-        fullHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px;">${collabHtml}</div>`;
-    }
-
-    bar.innerHTML = fullHtml;
-}
-
-window.renderCommonTagBar = renderCommonTagBar;
-window.showCollabHoverHint = showCollabHoverHint;
-window.copyCommonTag = copyCommonTag;
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
             let value = resolve(langMap[currentLang]);
@@ -737,7 +386,7 @@ window.copyCommonTag = copyCommonTag;
             }
 
             // 描画更新
-            render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab();
+            render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab(); updateCpBulkActionBar();
             if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
                 fetchTwitchCustomRewards();
             }
@@ -1006,7 +655,7 @@ window.copyCommonTag = copyCommonTag;
                 tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
             if (id === 'cp-tab' && typeof renderCpTab === 'function') {
-                renderCpTab();
+                renderCpTab(); updateCpBulkActionBar();
                 if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
                     fetchTwitchCustomRewards();
                 }
@@ -1082,14 +731,16 @@ window.copyCommonTag = copyCommonTag;
             el.style.display = 'flex';
             el.classList.add('modal-open');
         }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('modal-overlay') && e.target.id) {
+                closeModal(e.target.id);
+            }
+        });
+
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
-            if (id === 'titleTagModal' && typeof saveTitleTagModalSettings === 'function') {
-                try {
-                    saveTitleTagModalSettings(true);
-                } catch (e) {}
-            }
             el.style.display = 'none';
             el.classList.remove('modal-open');
         }
@@ -1358,6 +1009,19 @@ window.copyCommonTag = copyCommonTag;
             return `<div class="empty-state">${raidSoEscape(text || '')}</div>`;
         }
 
+
+        function getRecordDisplayLabel(r, defaultLabel) {
+            if (r.isCustomLabel && r.label && r.label.trim()) {
+                return r.label.trim();
+            }
+            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
+                return r.label.trim();
+            }
+            if (r.title && r.title.trim()) {
+                return r.title.trim();
+            }
+            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
+        }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
             const T = langMap[currentLang];
@@ -1381,21 +1045,12 @@ window.copyCommonTag = copyCommonTag;
                     card.innerHTML = `
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
+                        <span id="record-label-${ci}-${ri}">● ${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
                         <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
                     <div class="record-actions">
-                        <div style="display:inline-flex; align-items:center; gap:3px; margin-right:6px; height:34px; box-sizing:border-box; padding:2px 4px; background:rgba(255,255,255,0.05); border-radius:6px; border:1px solid var(--border-color); align-self:center;" onclick="event.stopPropagation();" title="配信回数 {count} の現在値">
-                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を-1">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                            </button>
-                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:40px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:3px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
-                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を+1">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                            </button>
-                        </div>
                         <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
                             <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
@@ -1412,9 +1067,7 @@ window.copyCommonTag = copyCommonTag;
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-
-                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
-                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
+                    <textarea oninput="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false); if (!config[${ci}].records[${ri}].isCustomLabel) { const lbl = document.getElementById('record-label-${ci}-${ri}'); if (lbl) lbl.textContent = '● ' + (this.value.trim() || A.newLabel); }">${raidSoEscape(r.title || '')}</textarea>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -1430,17 +1083,20 @@ window.copyCommonTag = copyCommonTag;
                 c.appendChild(d);
             });
             initSortable();
-            renderCommonTagBar();
         }
 
         // --- 追加機能：リネーム ---
         async function renameRecord(ci, ri) {
+            const rec = config[ci].records[ri];
+            const currentCustom = rec.isCustomLabel ? rec.label : '';
             const newName = await customPrompt({
                 ...dialogCopy('titleRecordRename'),
-                defaultValue: config[ci].records[ri].label || ''
+                defaultValue: currentCustom || (rec.isCustomLabel ? rec.label : '') || ''
             });
             if (newName !== null) {
-                config[ci].records[ri].label = newName;
+                const trimmed = newName.trim();
+                rec.label = trimmed;
+                rec.isCustomLabel = trimmed.length > 0;
                 saveAllLocal(false);
                 render();
             }
@@ -1657,9 +1313,6 @@ window.copyCommonTag = copyCommonTag;
                 <button type="button" onclick="addNewGroupFromFilter()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(145, 70, 255, 0.08); border: 1px dashed var(--twitch-purple); border-radius: 12px; cursor: pointer; color: var(--twitch-purple); font-size: 11px; font-weight: bold; height: 26px; transition: background var(--transition-fast); outline: none;">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     ${raidSoEscape(I.addTag)}
-                </button>
-                <button type="button" onclick="checkAndConsolidateDuplicateIds()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(255, 170, 0, 0.12); border: 1px solid var(--warning-border, #ffaa00); border-radius: 12px; cursor: pointer; color: var(--warning-text, #ffaa00); font-size: 11px; font-weight: bold; height: 26px; margin-left: 4px; outline: none;" title="登録されているIDリスト内の重複IDを検索し統合・整理します">
-                    🔄 重複IDを統合・整理
                 </button>`;
             }
 
@@ -1810,7 +1463,6 @@ window.copyCommonTag = copyCommonTag;
             if (countEl) {
                 countEl.innerText = activeTags.length > 0 ? `(${activeTags.length})` : '';
             }
-            renderCommonTagBar();
 
             const isGroupMode = friendsSortOrder === 'group';
 
@@ -2984,7 +2636,7 @@ window.copyCommonTag = copyCommonTag;
         }
         function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
 
-        function addRecord(i) { config[i].records.push({ label: "NEW", game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
+        function addRecord(i) { config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
         async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
         async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
         async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
@@ -3966,6 +3618,7 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function getShoutoutSuggestionItems() {
+        window.getShoutoutSuggestionItems = getShoutoutSuggestionItems;
             const items = [];
             for (const category of friendsConfig || []) {
                 const isHistoryCategory = category.kind === 'shoutout-history';
@@ -5222,12 +4875,6 @@ window.copyCommonTag = copyCommonTag;
                 localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
             }
 
-            // 10. titleTagConfig
-            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
-                titleTagConfig = d.titleTagConfig;
-                saveTitleTagConfig();
-            }
-
             // 9. rewards created by TwitchManager
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
@@ -5255,63 +4902,8 @@ window.copyCommonTag = copyCommonTag;
             await copyTextToClipboard(JSON.stringify(d, null, 2));
         }
 
-function getDefaultTitleConfig() {
-    return [
-        {
-            name: "ゲーム配信",
-            isClosed: false,
-            records: [
-                {
-                    label: "【参加型】ゲーム配信",
-                    isCustomLabel: true,
-                    game: "Just Chatting",
-                    title: "{識別}【参加型】のんびりゲーム配信中！ {Category} {コラボ} {date}",
-                    notif: "のんびり配信スタートしました！",
-                    tags: "参加型, Vtuber",
-                    memo: "",
-                    isOpen: true
-                }
-            ]
-        },
-        {
-            name: "雑談配信",
-            isClosed: false,
-            records: [
-                {
-                    label: "雑談配信",
-                    isCustomLabel: true,
-                    game: "Just Chatting",
-                    title: "{識別} のんびり雑談タイム！ {コラボ} {date}",
-                    notif: "雑談配信はじまりました！",
-                    tags: "雑談, 初見歓迎",
-                    memo: "",
-                    isOpen: false
-                }
-            ]
-        }
-    ];
-}
-
-function restoreDefaultTitleConfig() {
-    config = getDefaultTitleConfig();
-    saveAllLocal(true);
-    render();
-}
-window.restoreDefaultTitleConfig = restoreDefaultTitleConfig;
-
         window.onload = () => {
-            let loadedConfig = null;
-            try {
-                loadedConfig = JSON.parse(localStorage.getItem('stream_config_v16') || 'null');
-            } catch (e) {
-                loadedConfig = null;
-            }
-            if (!loadedConfig || !Array.isArray(loadedConfig) || loadedConfig.length === 0) {
-                config = getDefaultTitleConfig();
-                saveAllLocal(false);
-            } else {
-                config = loadedConfig;
-            }
+            config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
             friendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
             memoConfig = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
             customRaidSoTemplates = loadRaidSoCustomTemplates();
@@ -6449,6 +6041,10 @@ function markRewardAsAppCreated(rewardId) {
     }
 }
 
+
+/* ========================================================================= */
+/* 🟣 SECTION: CHANNEL POINTS (CP) SYSTEM - STATE & STORAGE                 */
+/* ========================================================================= */
 let cpState = {
     rewards: [],
     groups: [],
@@ -6529,7 +6125,7 @@ function getSortedCpRewards(rewards, sortBy) {
 function changeCpSortOrder(val) {
     cpState.sortBy = val;
     try { localStorage.setItem('cp_sort_by_v1', val); } catch (e) {}
-    if (typeof renderCpTable === 'function') renderCpTable();
+    renderCpTable();
 }
 
 function changeCpModalSortOrder(val) {
@@ -6546,9 +6142,9 @@ function loadCpGroupsFromStorage() {
             cpState.groups = JSON.parse(saved).map(migrateCpDefaultGroup);
         } else {
             cpState.groups = [
-                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 },
-                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffMinutes: 0 }
+                { id: 'g_horror', name: '', defaultNameKey: 'defaultGroupHorror', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_morning', name: '', defaultNameKey: 'defaultGroupMorning', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 },
+                { id: 'g_afk', name: '', defaultNameKey: 'defaultGroupAfk', rewardIds: [], autoOnStreamStart: false, autoOnRaid: false, autoOffStreamEnd: false, autoOffMinutes: 0 }
             ];
             saveCpGroupsToStorage();
         }
@@ -6595,6 +6191,10 @@ async function ensureCpAuth() {
     return settings.userId;
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 🌐 CP HELIX API & NETWORK COMMUNICATION                                   */
+/* ------------------------------------------------------------------------- */
 async function fetchTwitchCustomRewards() {
     cpState.isLoading = true;
     const tbody = document.getElementById('cp-rewards-tbody');
@@ -6605,19 +6205,194 @@ async function fetchTwitchCustomRewards() {
         const broadcasterId = await ensureCpAuth();
         const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}`);
         cpState.rewards = data.data || [];
+        (cpState.rewards || []).forEach(reward => {
+            if (isAppCreatedReward(reward)) {
+                markRewardAsAppCreated(reward.id);
+            }
+        });
         loadCpGroupsFromStorage();
         reconcileCpGroupsWithRewards();
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         showToast(cpCopy('fetchSuccess'));
     } catch (e) {
         console.error('fetchTwitchCustomRewards error:', e);
-        const failPrefix = cpCopy('fetchFail');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
-        showToast(`${failPrefix} ${e.message}`, 'warn');
+        const isAuthError = e.message?.includes('OAuth') || e.message?.includes('401') || e.message?.includes('Unauthorized') || e.message?.includes('token');
+        if (tbody) {
+            if (isAuthError) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:28px 16px;">
+                    <div style="color:var(--accent-red, #ef4444); font-weight:700; font-size:12.5px; margin-bottom:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <span>${raidSoEscape(cpCopy('authErrorTitle'))}</span>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+                        ${raidSoEscape(cpCopy('authErrorDesc'))}
+                    </div>
+                    <button type="button" class="btn-primary" onclick="openModal('settingModal')" style="font-size:11px; padding:5px 12px; display:inline-flex; align-items:center; gap:5px; margin:0 auto;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        <span>${raidSoEscape(cpCopy('openSettingsForAuthBtn'))}</span>
+                    </button>
+                </td></tr>`;
+            } else {
+                const failPrefix = cpCopy('fetchFail');
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--accent-red);">${raidSoEscape(failPrefix)} ${raidSoEscape(e.message)}</td></tr>`;
+            }
+        }
+        showToast(isAuthError ? cpCopy('authErrorToast') : `${cpCopy('fetchFail')} ${e.message}`, 'warn');
     } finally {
         cpState.isLoading = false;
     }
 }
+
+
+
+async function setCustomRewardState(rewardId, targetState) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    const patchBody = {};
+    if (targetState === 'on') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = false;
+    } else if (targetState === 'pause') {
+        patchBody.is_enabled = true;
+        patchBody.is_paused = true;
+    } else if (targetState === 'off') {
+        patchBody.is_enabled = false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patchBody)
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab(); updateCpBulkActionBar();
+        return true;
+    } catch (e) {
+        console.error('setCustomRewardState error:', e);
+        showToast(cpCopy('toggleFail') + ' ' + (e.message || ''), 'warn');
+        return false;
+    }
+}
+
+async function batchSetCpGroupState(groupId, targetState) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const patchBody = {};
+    if (targetState === 'on') { patchBody.is_enabled = true; patchBody.is_paused = false; }
+    else if (targetState === 'pause') { patchBody.is_enabled = true; patchBody.is_paused = true; }
+    else if (targetState === 'off') { patchBody.is_enabled = false; }
+
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patchBody)
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchSetCpGroupState error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = targetState === 'on' ? cpCopy('statusEnabled') : (targetState === 'pause' ? cpCopy('statusPaused') : cpCopy('statusDisabled'));
+    showToast(cpCopy('batchResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel, automatic: '' }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab(); updateCpBulkActionBar();
+}
+
+window.setCustomRewardState = setCustomRewardState;
+window.batchSetCpGroupState = batchSetCpGroupState;
+
+async function toggleCustomRewardPaused(rewardId, isPaused) {
+    if (!isManageableCpRewardId(rewardId)) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return false;
+    }
+    try {
+        const broadcasterId = await ensureCpAuth();
+        const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rewardId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_paused: isPaused })
+        });
+        const updated = data.data?.[0];
+        if (updated) {
+            const idx = cpState.rewards.findIndex(r => r.id === rewardId);
+            if (idx !== -1) cpState.rewards[idx] = updated;
+        }
+        renderCpTab(); updateCpBulkActionBar();
+        return true;
+    } catch (e) {
+        console.error('toggleCustomRewardPaused error:', e);
+        const failPrefix = cpCopy('toggleFail');
+        let errMsg = e.message || '';
+        if (errMsg.includes('Client-Id') || errMsg.includes('created') || errMsg.includes('client ID')) {
+            errMsg = cpCopy('cantModifyExternalReward');
+        }
+        showToast(`${failPrefix} ${errMsg}`, 'warn');
+        return false;
+    }
+}
+
+async function batchPauseCpGroup(groupId, isPaused) {
+    const group = cpState.groups.find(g => g.id === groupId);
+    if (!group || !group.rewardIds || group.rewardIds.length === 0) return;
+    const manageableIds = group.rewardIds.filter(id => isManageableCpRewardId(id));
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('cantModifyExternalReward'), 'warn');
+        return;
+    }
+    const broadcasterId = await ensureCpAuth();
+    let successCount = 0;
+    for (let i = 0; i < manageableIds.length; i++) {
+        const rId = manageableIds[i];
+        try {
+            const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_paused: isPaused })
+            });
+            if (data.data?.[0]) {
+                const idx = cpState.rewards.findIndex(r => r.id === rId);
+                if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                successCount++;
+            }
+        } catch (err) {
+            console.error('batchPauseCpGroup error for ID:', rId, err);
+        }
+        await new Promise(res => setTimeout(res, 50));
+    }
+    const stateLabel = isPaused ? (cpCopy('statusPaused') || '一時停止') : (cpCopy('statusResumed') || '再開');
+    showToast(cpCopy('batchPauseResult', { name: cpGroupName(group), success: successCount, total: manageableIds.length, state: stateLabel }), successCount > 0 ? 'success' : 'warn');
+    renderCpTab(); updateCpBulkActionBar();
+}
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+window.toggleCustomRewardPaused = toggleCustomRewardPaused;
+window.batchPauseCpGroup = batchPauseCpGroup;
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
 
 async function toggleCustomRewardEnabled(rewardId, isEnabled) {
     if (!isManageableCpRewardId(rewardId)) {
@@ -6635,7 +6410,7 @@ async function toggleCustomRewardEnabled(rewardId, isEnabled) {
             const idx = cpState.rewards.findIndex(r => r.id === rewardId);
             if (idx !== -1) cpState.rewards[idx] = updated;
         }
-        renderCpTab();
+        renderCpTab(); updateCpBulkActionBar();
         return true;
     } catch (e) {
         console.error('toggleCustomRewardEnabled error:', e);
@@ -6705,6 +6480,20 @@ async function batchToggleCpGroup(groupId, targetState, isAutomatic = false) {
         }
     }
 }
+
+async function triggerCpAutoOff(triggerType, detail = {}) {
+    if (!cpState.groups || cpState.groups.length === 0) return;
+    for (const g of cpState.groups) {
+        let shouldTrigger = false;
+        if (triggerType === 'stream_offline' && g.autoOffStreamEnd) {
+            shouldTrigger = true;
+        }
+        if (shouldTrigger) {
+            await batchToggleCpGroup(g.id, false, true);
+        }
+    }
+}
+window.triggerCpAutoOff = triggerCpAutoOff;
 
 async function triggerCpAutoOn(triggerType, detail = {}) {
     if (!cpState.groups || cpState.groups.length === 0) return;
@@ -6832,7 +6621,10 @@ async function saveCpReward() {
     const title = document.getElementById('cp-reward-title-input')?.value?.trim();
     const cost = parseInt(document.getElementById('cp-reward-cost-input')?.value || '50', 10);
     const prompt = document.getElementById('cp-reward-prompt-input')?.value?.trim();
-    const color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
+    let color = document.getElementById('cp-reward-color-input')?.value || '#9146FF';
+    if (!color.startsWith('#')) color = '#' + color;
+    if (color.length === 4) color = '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+    if (!/^#[0-9A-Fa-f]{6}$/.test(color)) color = '#9146FF';
 
     if (!title) {
         showToast(cpCopy('enterRewardName'), 'warn');
@@ -6898,6 +6690,10 @@ async function deleteCpReward(rewardId) {
     }
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 📁 CP GROUP & AUTOMATION MANAGEMENT                                       */
+/* ------------------------------------------------------------------------- */
 function openCpGroupModal(groupId = null) {
     const editIdInput = document.getElementById('cp-group-edit-id');
     const nameInput = document.getElementById('cp-group-name-input');
@@ -6913,10 +6709,12 @@ function openCpGroupModal(groupId = null) {
     nameInput.value = targetGroup ? cpGroupName(targetGroup) : '';
 
     const autoStreamCheck = document.getElementById('cp-group-auto-stream-start');
+    const autoStreamEndCheck = document.getElementById('cp-group-auto-stream-end');
     const autoRaidCheck = document.getElementById('cp-group-auto-raid');
     const autoOffMinInput = document.getElementById('cp-group-auto-off-min');
 
     if (autoStreamCheck) autoStreamCheck.checked = targetGroup ? !!targetGroup.autoOnStreamStart : false;
+    if (autoStreamEndCheck) autoStreamEndCheck.checked = targetGroup ? !!targetGroup.autoOffStreamEnd : false;
     if (autoRaidCheck) autoRaidCheck.checked = targetGroup ? !!targetGroup.autoOnRaid : false;
     if (autoOffMinInput) autoOffMinInput.value = targetGroup ? (targetGroup.autoOffMinutes || 0) : 0;
 
@@ -6934,6 +6732,7 @@ function openCpGroupModal(groupId = null) {
             const checked = selectedIds.has(r.id) ? 'checked' : '';
             html += `<label style="display: flex; align-items: center; justify-content: flex-start; text-align: left; gap: 8px; padding: 6px 10px; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; width: 100%; box-sizing: border-box; transition: 0.15s;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
                 <input type="checkbox" class="cp-group-reward-check" value="${raidSoEscape(r.id)}" ${checked} style="margin: 0; flex-shrink: 0; cursor: pointer; width: 15px; height: 15px; accent-color: var(--twitch-purple);">
+                ${getCpRewardIconUrl(r) ? `<span class="cp-reward-icon-badge is-small" style="background:${r.background_color || '#9146FF'};"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></span>` : `<div class="cp-reward-color" style="background:${r.background_color || '#9146FF'};"></div>`}
                 <span style="flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-main); font-weight: 500;">${raidSoEscape(r.title)}</span>
                 <span style="color: var(--twitch-purple); font-weight: bold; font-size: 11px; flex-shrink: 0; margin-left: 6px;">(${r.cost} pt)</span>
             </label>`;
@@ -6954,6 +6753,7 @@ function saveCpGroup() {
     const selectedRewardIds = Array.from(checkedNodes).map(node => node.value);
 
     const autoOnStreamStart = !!document.getElementById('cp-group-auto-stream-start')?.checked;
+    const autoOffStreamEnd = !!document.getElementById('cp-group-auto-stream-end')?.checked;
     const autoOnRaid = !!document.getElementById('cp-group-auto-raid')?.checked;
     const autoOffMinutes = parseInt(document.getElementById('cp-group-auto-off-min')?.value || '0', 10) || 0;
 
@@ -6964,6 +6764,7 @@ function saveCpGroup() {
             delete cpState.groups[idx].defaultNameKey;
             cpState.groups[idx].rewardIds = selectedRewardIds;
             cpState.groups[idx].autoOnStreamStart = autoOnStreamStart;
+            cpState.groups[idx].autoOffStreamEnd = autoOffStreamEnd;
             cpState.groups[idx].autoOnRaid = autoOnRaid;
             delete cpState.groups[idx].autoOnObsScene;
             cpState.groups[idx].autoOffMinutes = autoOffMinutes;
@@ -6974,6 +6775,7 @@ function saveCpGroup() {
             name: name,
             rewardIds: selectedRewardIds,
             autoOnStreamStart: autoOnStreamStart,
+            autoOffStreamEnd: autoOffStreamEnd,
             autoOnRaid: autoOnRaid,
             autoOffMinutes: autoOffMinutes
         };
@@ -6982,7 +6784,7 @@ function saveCpGroup() {
 
     saveCpGroupsToStorage();
     closeModal('cpGroupModal');
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
     showToast(cpCopy('groupSaveSuccess'));
 }
 
@@ -6994,9 +6796,155 @@ function deleteCpGroup(groupId) {
     cpState.activeGroups.delete(groupId);
     cpState.groups = cpState.groups.filter(g => g.id !== groupId);
     saveCpGroupsToStorage();
-    renderCpTab();
+    renderCpTab(); updateCpBulkActionBar();
     showToast(cpCopy('groupDeleteSuccess'));
 }
+
+
+
+/* ------------------------------------------------------------------------- */
+/* 🎨 CP COLOR PALETTE & SWATCHES                                            */
+/* ------------------------------------------------------------------------- */
+async function pickCpColorWithEyedropper(isBulk = false) {
+    if (!window.EyeDropper) {
+        showToast(cpCopy('eyedropperNotSupported'), 'info');
+        return;
+    }
+    try {
+        const eyeDropper = new EyeDropper();
+        const result = await eyeDropper.open();
+        if (result && result.sRGBHex) {
+            if (isBulk) {
+                setCpBulkColorSwatch(result.sRGBHex);
+            } else {
+                updateCpColorPreview(result.sRGBHex);
+            }
+        }
+    } catch (e) {
+        // User canceled eyedropper selection
+    }
+}
+window.pickCpColorWithEyedropper = pickCpColorWithEyedropper;
+
+function updateCpColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-reward-color-input');
+    const hexInput = document.getElementById('cp-reward-color-hex-input');
+    const previewBox = document.getElementById('cp-reward-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpColorPreview(cleanHex);
+    }
+}
+
+
+
+
+function setCpBulkPauseValue(val) {
+    const hidden = document.getElementById('cp-bulk-pause-val');
+    const btnPause = document.getElementById('cp-bulk-pause-btn-pause');
+    const btnResume = document.getElementById('cp-bulk-pause-btn-resume');
+    if (hidden) hidden.value = val;
+
+    if (val === 'pause') {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause active';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on';
+    } else {
+        if (btnPause) btnPause.className = 'cp-segment-btn is-pause';
+        if (btnResume) btnResume.className = 'cp-segment-btn is-on active';
+    }
+}
+
+function setCpBulkUserInputVal(isReq) {
+    const hidden = document.getElementById('cp-bulk-user-input-val');
+    const btnTrue = document.getElementById('cp-bulk-user-input-btn-true');
+    const btnFalse = document.getElementById('cp-bulk-user-input-btn-false');
+    if (hidden) hidden.value = isReq ? 'true' : 'false';
+
+    if (isReq) {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple active';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off';
+    } else {
+        if (btnTrue) btnTrue.className = 'cp-segment-btn is-purple';
+        if (btnFalse) btnFalse.className = 'cp-segment-btn is-off active';
+    }
+}
+
+window.setCpBulkPauseValue = setCpBulkPauseValue;
+window.setCpBulkUserInputVal = setCpBulkUserInputVal;
+
+function updateCpBulkColorPreview(hex) {
+    if (!hex) hex = '#9146FF';
+    if (!hex.startsWith('#')) hex = '#' + hex;
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const hexInput = document.getElementById('cp-bulk-color-hex-input');
+    const previewBox = document.getElementById('cp-bulk-color-swatch-preview');
+
+    if (colorInput) colorInput.value = hex;
+    if (hexInput) hexInput.value = hex.toUpperCase();
+    if (previewBox) previewBox.style.background = hex;
+}
+
+function syncCpBulkColorFromHex(val) {
+    let cleanHex = val.trim();
+    if (cleanHex && !cleanHex.startsWith('#')) cleanHex = '#' + cleanHex;
+    if (/^#[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+        updateCpBulkColorPreview(cleanHex);
+    }
+}
+
+function setCpBulkColorSwatch(hex) {
+    updateCpBulkColorPreview(hex);
+}
+
+window.updateCpBulkColorPreview = updateCpBulkColorPreview;
+window.syncCpBulkColorFromHex = syncCpBulkColorFromHex;
+window.setCpBulkColorSwatch = setCpBulkColorSwatch;
+
+function renderCpUsedColorSwatches(containerId, isBulk = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const usedColors = new Map();
+    (cpState.rewards || []).forEach(r => {
+        if (r.background_color) {
+            const hex = r.background_color.toUpperCase();
+            if (!usedColors.has(hex)) usedColors.set(hex, []);
+            usedColors.get(hex).push(r.title);
+        }
+    });
+
+    if (usedColors.size === 0) {
+        container.innerHTML = `<span style="font-size: 10px; color: var(--text-muted);">(使用中カラーなし)</span>`;
+        return;
+    }
+
+    let html = '';
+    usedColors.forEach((titles, hex) => {
+        const titleTooltip = `${hex} (${titles.slice(0, 3).join(', ')}${titles.length > 3 ? '...' : ''})`;
+        const clickFn = isBulk ? `setCpBulkColorSwatch('${hex}')` : `setCpRewardColorSwatch('${hex}')`;
+        html += `<button type="button" class="cp-swatch" style="background:${hex}; width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,0.7); cursor:pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2);" onclick="${clickFn}" title="${raidSoEscape(titleTooltip)}"></button>`;
+    });
+    container.innerHTML = html;
+}
+
+window.renderCpUsedColorSwatches = renderCpUsedColorSwatches;
+
+function setCpRewardColorSwatch(hex) {
+    updateCpColorPreview(hex);
+}
+
+window.updateCpColorPreview = updateCpColorPreview;
+window.syncCpColorFromHex = syncCpColorFromHex;
+window.setCpRewardColorSwatch = setCpRewardColorSwatch;
 
 function applyCpRewardTemplate(selectedRewardId) {
     if (!selectedRewardId) return;
@@ -7011,12 +6959,18 @@ function applyCpRewardTemplate(selectedRewardId) {
     if (titleInput) titleInput.value = targetReward.title || '';
     if (costInput) costInput.value = targetReward.cost || 50;
     if (promptInput) promptInput.value = targetReward.prompt || '';
-    if (colorInput && targetReward.background_color) colorInput.value = targetReward.background_color;
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = !!targetReward.is_paused;
+    if (targetReward.background_color) updateCpColorPreview(targetReward.background_color);
 
     const toastMsg = cpCopy('templateLoadedToast', { name: targetReward.title || '' });
     showToast(toastMsg);
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 📝 CP REWARD MODAL & EDITING                                              */
+/* ------------------------------------------------------------------------- */
 function openCpRewardModal(rewardId = null) {
     const editIdInput = document.getElementById('cp-reward-edit-id');
     const titleInput = document.getElementById('cp-reward-title-input');
@@ -7045,7 +6999,7 @@ function openCpRewardModal(rewardId = null) {
         titleInput.value = targetReward.title || '';
         costInput.value = targetReward.cost || 50;
         if (promptInput) promptInput.value = targetReward.prompt || '';
-        if (colorInput) colorInput.value = targetReward.background_color || '#9146FF';
+        updateCpColorPreview(targetReward.background_color || '#9146FF');
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
@@ -7057,7 +7011,9 @@ function openCpRewardModal(rewardId = null) {
         titleInput.value = '';
         costInput.value = 50;
         if (promptInput) promptInput.value = '';
-        if (colorInput) colorInput.value = '#9146FF';
+        const pausedInput = document.getElementById('cp-reward-paused-input');
+        if (pausedInput) pausedInput.checked = false;
+        updateCpColorPreview('#9146FF');
 
         if (tplWrapper && tplSelect) {
             tplWrapper.style.display = 'block';
@@ -7070,12 +7026,17 @@ function openCpRewardModal(rewardId = null) {
             tplSelect.value = '';
         }
     }
+    renderCpUsedColorSwatches('cp-reward-used-colors-swatches', false);
     openModal('cpRewardModal');
 }
 
+
+/* ------------------------------------------------------------------------- */
+/* 🖥️ CP UI RENDERING & DOM BUILDERS                                         */
+/* ------------------------------------------------------------------------- */
 function renderCpTab() {
     renderCpGroups();
-    if (typeof renderCpTable === 'function') renderCpTable();
+    renderCpTable();
 }
 
 function renderCpGroups() {
@@ -7103,15 +7064,19 @@ function renderCpGroups() {
             const rTitle = rewardObj ? rewardObj.title : rId;
             const sharedCount = cpState.groups.filter(grp => grp.rewardIds.includes(rId)).length;
             const isShared = sharedCount > 1;
-            rewardTagsHtml += `<span style="display:inline-block; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
+            const iconUrl = getCpRewardIconUrl(rewardObj);
+            const iconBadgeTag = iconUrl ? `<span class="cp-reward-icon-badge is-tag" style="background:${rewardObj?.background_color || '#9146FF'};"><img src="${iconUrl}" alt="" loading="lazy"></span>` : '';
+            rewardTagsHtml += `<span class="cp-group-reward-tag${isShared ? ' is-shared' : ''}" style="display:inline-flex; align-items:center; background:${isShared ? 'rgba(145,70,255,0.15)' : 'var(--bg-item)'}; border:1px solid ${isShared ? 'var(--twitch-purple)' : 'var(--border-color)'}; color:${isShared ? '#c084fc' : 'var(--text-main)'}; font-size:9px; padding:1px 5px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${iconBadgeTag}${raidSoEscape(rTitle)}${isShared ? ' ★' : ''}</span>`;
         });
 
         let autoBadgesHtml = '';
         const bStream = cpCopy('badgeStreamStart');
+        const bStreamEnd = cpCopy('badgeStreamEnd');
         const bRaid = cpCopy('badgeRaid');
-        if (g.autoOnStreamStart) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
-        if (g.autoOnRaid) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
-        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
+        if (g.autoOnStreamStart) autoBadgesHtml += `<span class="cp-auto-badge is-stream-start" style="display:inline-block; font-size:9px; background:rgba(0,200,117,0.15); border:1px solid #00c875; color:#00f59b; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStream)}</span>`;
+        if (g.autoOffStreamEnd) autoBadgesHtml += `<span class="cp-auto-badge is-stream-end" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bStreamEnd)}</span>`;
+        if (g.autoOnRaid) autoBadgesHtml += `<span class="cp-auto-badge is-raid" style="display:inline-block; font-size:9px; background:rgba(145,70,255,0.15); border:1px solid var(--twitch-purple); color:#c084fc; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(bRaid)}</span>`;
+        if (g.autoOffMinutes > 0) autoBadgesHtml += `<span class="cp-auto-badge is-auto-off" style="display:inline-block; font-size:9px; background:rgba(233,61,58,0.15); border:1px solid #e93d3a; color:#f87171; padding:1px 4px; border-radius:3px; margin-right:3px; margin-bottom:3px;">${raidSoEscape(cpCopy('badgeAutoOff', { min: g.autoOffMinutes }))}</span>`;
 
         html += `
         <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
@@ -7126,6 +7091,7 @@ function renderCpGroups() {
             <div style="display:flex; gap:4px;">
                 <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
                 <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
+                <button type="button" class="btn-secondary" onclick="openCpBulkEditModal('group', '${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
@@ -7134,449 +7100,360 @@ function renderCpGroups() {
     container.innerHTML = html;
 }
 
-function openTitleTagModal() {
-    loadTitleTagConfig();
-    renderTitleTagModalRows();
-    renderCategoryMapModalRows();
 
-    // Populate collab datalist from IDリスト category names
-    const datalist = document.getElementById('collab-tag-name-datalist');
-    const hint = document.getElementById('collab-tag-name-hint');
-    if (datalist) {
-        // Get unique category names from friendsConfig (exclude shoutout-history and authenticated-user)
-        const catNames = (friendsConfig || [])
-            .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
-            .map(cat => cat.name.trim())
-            .filter(name => name && name.length <= 10);
-        const uniqueNames = [...new Set(catNames)];
-        datalist.innerHTML = uniqueNames.map(n => `<option value="${raidSoEscape(n)}">`).join('');
-
-        if (hint) {
-            if (uniqueNames.length > 0) {
-                hint.textContent = 'IDリストのカテゴリ: ' + uniqueNames.join(' / ');
-            } else {
-                hint.textContent = '';
-            }
-        }
-    }
-    openModal('titleTagModal');
+function getCpRewardIconUrl(r) {
+    if (!r) return '';
+    return r.image?.url_2x || r.image?.url_1x || r.default_image?.url_2x || r.default_image?.url_1x || '';
 }
+window.getCpRewardIconUrl = getCpRewardIconUrl;
 
-function sanitizeTitleTagName(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/[\{\}\[\]\s]/g, '')
-        .replace(/\p{Extended_Pictographic}|\p{Emoji}/gu, '')
-        .replace(/[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F700-\u1F77F\u1F780-\u1F7FF\u1F800-\u1F8FF\u1F900-\u1F9FF\u1FA00-\u1FA6F\u1FA70-\u1FAFF\u2600-\u26FF\u2700-\u27BF]/g, '');
-}
 
-function sanitizeTitleTagNameInput(inputEl) {
-    if (!inputEl) return;
-    const cleaned = sanitizeTitleTagName(inputEl.value);
-    if (inputEl.value !== cleaned) {
-        inputEl.value = cleaned;
-    }
-}
-window.sanitizeTitleTagName = sanitizeTitleTagName;
-window.sanitizeTitleTagNameInput = sanitizeTitleTagNameInput;
 
-function renderTitleTagModalRows() {
-    const container = document.getElementById('title-tag-list-container');
-    if (!container) return;
-    if (!titleTagConfig.customTags || titleTagConfig.customTags.length === 0) {
-        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">(登録されているカスタム識別タグはありません)</div>';
-        return;
-    }
-    let html = '';
-    titleTagConfig.customTags.forEach((tag, idx) => {
-        html += `
-        <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
-            <div style="flex:1;">
-                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
-            </div>
-            <div style="flex:2;">
-                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
-            </div>
-            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
-        </div>`;
-    });
-    container.innerHTML = html;
-}
-
-function getRegisteredCategoryList() {
-    const games = [];
-    if (Array.isArray(config)) {
-        config.forEach(c => {
-            if (c && Array.isArray(c.records)) {
-                c.records.forEach(r => {
-                    if (r && r.game && r.game.trim()) {
-                        const trimmed = r.game.trim();
-                        const lower = trimmed.toLowerCase();
-                        if (!games.some(g => g.toLowerCase() === lower)) {
-                            games.push(trimmed);
-                        }
-                    }
-                });
-            }
-        });
-    }
-    games.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-    return games;
-}
-
-function handleCatMapFromSelectChange(idx, val) {
-    if (!titleTagConfig.categoryMap || !titleTagConfig.categoryMap[idx]) return;
-    if (val === '__custom__') {
-        titleTagConfig.categoryMap[idx].isCustomFrom = true;
-    } else {
-        titleTagConfig.categoryMap[idx].isCustomFrom = false;
-        titleTagConfig.categoryMap[idx].from = val;
-    }
-    renderCategoryMapModalRows();
-}
-window.handleCatMapFromSelectChange = handleCatMapFromSelectChange;
-
-function renderCategoryMapModalRows() {
-    const container = document.getElementById('title-tag-category-map-container');
-    if (!container) return;
-
-    if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
-        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
-        return;
-    }
-
-    const registeredGames = getRegisteredCategoryList();
-
-    let html = '';
-    titleTagConfig.categoryMap.forEach((item, idx) => {
-        const currentFrom = (item.from || '').trim();
-        const optionsList = [...registeredGames];
-        if (currentFrom && !optionsList.some(g => g.toLowerCase() === currentFrom.toLowerCase())) {
-            optionsList.unshift(currentFrom);
-        }
-
-        let selectOptionsHtml = '<option value="">登録カテゴリを選択...</option>';
-        optionsList.forEach(g => {
-            const sel = (g.toLowerCase() === currentFrom.toLowerCase() && !item.isCustomFrom) ? 'selected' : '';
-            selectOptionsHtml += `<option value="${raidSoEscape(g)}" ${sel}>${raidSoEscape(g)}</option>`;
-        });
-        const customSel = item.isCustomFrom ? 'selected' : '';
-        selectOptionsHtml += `<option value="__custom__" ${customSel}>✏️ 直接入力 (その他)...</option>`;
-
-        const isCustom = item.isCustomFrom;
-
-        html += `
-        <div style="display:flex; gap:6px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
-            <div style="flex:1.2; display:flex; flex-direction:column; gap:4px;">
-                <select class="cd-input-field cat-map-row-from-select" data-idx="${idx}" onchange="handleCatMapFromSelectChange(${idx}, this.value)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;">
-                    ${selectOptionsHtml}
-                </select>
-                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名を入力" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
-            </div>
-            <div style="font-size:12px; color:var(--text-muted); font-weight:bold; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; transform:translateY(0);">➔</div>
-            <div style="flex:1.2;">
-                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
-            </div>
-            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
-        </div>`;
-    });
-    container.innerHTML = html;
-}
-
-function addCustomCategoryMappingRow(fromVal = '', toVal = '') {
-    if (!titleTagConfig.categoryMap) titleTagConfig.categoryMap = [];
-    const newId = 'cat_map_' + Date.now();
-    titleTagConfig.categoryMap.push({ id: newId, from: fromVal, to: toVal });
-    renderCategoryMapModalRows();
-}
-
-function deleteCustomCategoryMappingRow(idx) {
-    if (!titleTagConfig.categoryMap) return;
-    titleTagConfig.categoryMap.splice(idx, 1);
-    renderCategoryMapModalRows();
-}
-
-function addCustomTitleTagRow() {
-    if (!titleTagConfig.customTags) titleTagConfig.customTags = [];
-    const newId = 'tag_' + Date.now();
-    titleTagConfig.customTags.push({ id: newId, name: '識別' + (titleTagConfig.customTags.length + 1), value: '' });
-    renderTitleTagModalRows();
-}
-
-function deleteCustomTitleTagRow(idx) {
-    if (!titleTagConfig.customTags) return;
-    titleTagConfig.customTags.splice(idx, 1);
-    renderTitleTagModalRows();
-}
-
-function updateAllTitlePreviews() {
-    loadTitleTagConfig();
-    if (!Array.isArray(config)) return;
-    config.forEach((c, ci) => {
-        if (!c || !Array.isArray(c.records)) return;
-        c.records.forEach((r, ri) => {
-            const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
-            if (previewEl) {
-                const game = r.game || '';
-                const resolved = resolveStreamTitleTemplate(r.title || '', { game });
-                previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
-            }
-        });
-    });
-}
-window.updateAllTitlePreviews = updateAllTitlePreviews;
-
-function saveTitleTagModalSettings(silent = false) {
-    const nameInputs = document.querySelectorAll('.tag-row-name');
-    const valInputs = document.querySelectorAll('.tag-row-val');
-    if (nameInputs && nameInputs.length > 0) {
-        const newTags = [];
-        nameInputs.forEach((nInput, idx) => {
-            const name = sanitizeTitleTagName((nInput.value || '').trim());
-            const value = (valInputs[idx]?.value || '');
-            if (name) {
-                newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
-            }
-        });
-        titleTagConfig.customTags = newTags;
-    }
-
-    const catFromSelects = document.querySelectorAll('.cat-map-row-from-select');
-    const catToInputs = document.querySelectorAll('.cat-map-row-to');
-    if (catFromSelects && catFromSelects.length > 0) {
-        const newMaps = [];
-        catFromSelects.forEach((sInput, idx) => {
-            let from = (sInput.value || '').trim();
-            if (from === '__custom__') {
-                const customEl = document.querySelector(`.cat-map-row-from-custom[data-idx="${idx}"]`);
-                from = customEl ? (customEl.value || '').trim() : '';
-            }
-            const to = (catToInputs[idx]?.value || '').trim();
-            if (from) {
-                newMaps.push({ id: 'cat_map_' + idx, from, to });
-            }
-        });
-        titleTagConfig.categoryMap = newMaps;
-    } else {
-        titleTagConfig.categoryMap = [];
-    }
-
-    const collabSelect = document.getElementById('title-tag-collab-category-select');
-    if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
-
-    saveTitleTagConfig();
-    if (!silent) {
-        closeModal('titleTagModal');
-        showToast('識別タグおよびカテゴリ変換の設定を保存しました', 'success');
-    }
-    renderCommonTagBar();
-    updateAllTitlePreviews();
-}
-
-window.openTitleTagModal = openTitleTagModal;
-window.renderTitleTagModalRows = renderTitleTagModalRows;
-window.renderCategoryMapModalRows = renderCategoryMapModalRows;
-window.addCustomTitleTagRow = addCustomTitleTagRow;
-window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
-window.addCustomCategoryMappingRow = addCustomCategoryMappingRow;
-window.deleteCustomCategoryMappingRow = deleteCustomCategoryMappingRow;
-window.saveTitleTagModalSettings = saveTitleTagModalSettings;
-
-let pendingDedupConflicts = [];
-
-function checkAndConsolidateDuplicateIds() {
-    if (!Array.isArray(friendsConfig)) return;
-
-    const map = new Map();
-
-    friendsConfig.forEach((cat, ci) => {
-        if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
-        (cat.friends || []).forEach((f, fi) => {
-            const raw = f.twitch || f.name || f.id || '';
-            const twitchId = extractTwitchId(raw);
-            if (!twitchId) return;
-            const key = twitchId.toLowerCase();
-
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push({ ci, fi, friend: f, catName: cat.name || '未分類', twitchId });
-        });
-    });
-
-    let autoMergedCount = 0;
-    const conflicts = [];
-
-    map.forEach((items) => {
-        if (items.length <= 1) return;
-
-        const first = items[0].friend;
-        const isIdentical = items.every(item => {
-            const f = item.friend;
-            return (f.name || '') === (first.name || '') &&
-                   (f.x || '') === (first.x || '') &&
-                   (f.youtube || '') === (first.youtube || '') &&
-                   (f.birthday || '') === (first.birthday || '') &&
-                   (f.anniversary || '') === (first.anniversary || '') &&
-                   (f.memo || '') === (first.memo || '');
-        });
-
-        if (isIdentical) {
-            autoMergedCount += (items.length - 1);
-        } else {
-            conflicts.push({ twitchId: items[0].twitchId, items });
-        }
-    });
-
-    if (autoMergedCount === 0 && conflicts.length === 0) {
-        showToast('重複するIDは見つかりませんでした。データは正常です。', 'info');
-        return;
-    }
-
-    if (conflicts.length === 0) {
-        performAutoDeduplicate(map);
-        showToast(`${autoMergedCount}件の完全重複IDを自動統合しました`, 'success');
-        renderFriends();
-        saveFriendsLocalDebounced();
-        return;
-    }
-
-    pendingDedupConflicts = conflicts;
-    renderDeduplicateModalRows(conflicts);
-    openModal('idDeduplicateModal');
-}
-
-function performAutoDeduplicate(map) {
-    map.forEach((items) => {
-        if (items.length <= 1) return;
-        for (let i = items.length - 1; i >= 1; i--) {
-            const removeItem = items[i];
-            if (friendsConfig[removeItem.ci] && friendsConfig[removeItem.ci].friends) {
-                friendsConfig[removeItem.ci].friends.splice(removeItem.fi, 1);
-            }
-        }
-    });
-}
-
-function renderDeduplicateModalRows(conflicts) {
-    const container = document.getElementById('id-dedup-list-container');
-    if (!container) return;
-
-    let html = '';
-    conflicts.forEach((group, gIdx) => {
-        const idName = '@' + group.twitchId;
-        html += `
-        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
-            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:8px; display:flex; justify-content:space-between;">
-                <span>ID: ${raidSoEscape(idName)}</span>
-                <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(重複検出: ${group.items.length}件)</span>
-            </div>
-            
-            <div style="display:flex; flex-direction:column; gap:8px;">`;
-
-        group.items.forEach((item, iIdx) => {
-            const f = item.friend;
-            const details = [];
-            if (f.name && f.name !== item.twitchId) details.push(`表示名: ${f.name}`);
-            if (f.x) details.push(`X: ${f.x}`);
-            if (f.youtube) details.push(`YT: ${f.youtube}`);
-            if (f.birthday) details.push(`誕生日: ${f.birthday}`);
-            if (f.memo) details.push(`メモ: ${f.memo}`);
-
-            const checked = iIdx === 0 ? ' checked' : '';
-            html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--text-main);">
-                            [${raidSoEscape(item.catName)}] ${raidSoEscape(f.name || idName)}
-                        </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
-                            ${raidSoEscape(details.join(' | ') || '(追加情報なし)')}
-                        </div>
-                    </div>
-                </label>`;
-        });
-
-        html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--twitch-purple);">
-                            ✨ 両方の情報（メモ・SNS等）を結合して残す
-                        </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
-                            表示名やメモなどの情報を並列でまとめて1つの項目に統合します
-                        </div>
-                    </div>
-                </label>
-            </div>
-        </div>`;
-    });
-
-    container.innerHTML = html;
-}
-
-function applyIdDeduplication() {
-    if (!pendingDedupConflicts || pendingDedupConflicts.length === 0) {
-        closeModal('idDeduplicateModal');
-        return;
-    }
-
-    let resolvedCount = 0;
-    const itemsToRemove = [];
-
-    pendingDedupConflicts.forEach((group, gIdx) => {
-        const selectedEl = document.querySelector(`input[name="dedup-choice-${gIdx}"]:checked`);
-        if (!selectedEl) return;
-        const val = selectedEl.value;
-
-        if (val === 'merge') {
-            const keep = group.items[0];
-            const mergedMemos = group.items.map(it => it.friend.memo).filter(Boolean);
-            if (mergedMemos.length > 0) {
-                keep.friend.memo = [...new Set(mergedMemos)].join(' / ');
-            }
-            const mergedX = group.items.map(it => it.friend.x).filter(Boolean);
-            if (mergedX.length > 0) keep.friend.x = mergedX[0];
-
-            for (let i = 1; i < group.items.length; i++) {
-                itemsToRemove.push(group.items[i]);
-            }
-        } else {
-            const keepIdx = parseInt(val, 10);
-            group.items.forEach((item, iIdx) => {
-                if (iIdx !== keepIdx) {
-                    itemsToRemove.push(item);
-                }
-            });
-        }
-        resolvedCount++;
-    });
-
-    itemsToRemove.sort((a, b) => {
-        if (a.ci !== b.ci) return b.ci - a.ci;
-        return b.fi - a.fi;
-    });
-
-    itemsToRemove.forEach(item => {
-        if (friendsConfig[item.ci] && friendsConfig[item.ci].friends) {
-            friendsConfig[item.ci].friends.splice(item.fi, 1);
-        }
-    });
-
-    closeModal('idDeduplicateModal');
-    showToast(`${resolvedCount}件の重複IDを統合・整理しました`, 'success');
-    renderFriends();
-    saveFriendsLocalDebounced();
-}
-
-window.checkAndConsolidateDuplicateIds = checkAndConsolidateDuplicateIds;
-window.renderDeduplicateModalRows = renderDeduplicateModalRows;
-window.applyIdDeduplication = applyIdDeduplication;
-
-document.addEventListener('DOMContentLoaded', () => {
+function safeOpenExternalUrl(url) {
+    if (!url) return;
     try {
-        loadTitleTagConfig();
-        renderCommonTagBar();
-    } catch (e) {}
-});
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    } catch (e) {
+        try {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+            window.location.href = url;
+        }
+    }
+}
+window.safeOpenExternalUrl = safeOpenExternalUrl;
 
+async function openTwitchImageResizerTool() {
+    const url = 'https://raetniar.github.io/ShinyaNoOekaKitune/tools/Twitch_Image_Resizer_02.html';
+    const confirmTitle = cpCopy('imageResizerConfirmTitle');
+    const confirmMsg = cpCopy('imageResizerConfirmMsg');
+    const devNote = cpCopy('imageResizerDeveloperNote');
+    const hintMsg = cpCopy('imageResizerPopupHint');
+    const okText = langMap[currentLang]?.extended?.ok || '開く';
+    const cancelText = langMap[currentLang]?.extended?.cancelBtn || 'キャンセル';
+
+    const messageHtml = `<div>${raidSoEscape(confirmMsg)}</div>` +
+        `<div style="font-size: 11.5px; color: var(--command-accent, #c084fc); margin-top: 4px; font-weight: bold;">${raidSoEscape(devNote)}</div>` +
+        `<div style="margin-top: 10px; word-break: break-all;">` +
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: var(--twitch-purple); font-weight: bold; text-decoration: underline; font-size: 12px;">` +
+        `${url} ↗</a></div>` +
+        `<div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">${raidSoEscape(hintMsg)}</div>`;
+
+    const ok = await presentCustomDialog({
+        type: 'confirm',
+        title: confirmTitle,
+        messageHtml: messageHtml,
+        okText: okText,
+        cancelText: cancelText
+    });
+
+    if (ok) {
+        safeOpenExternalUrl(url);
+    }
+}
+window.openTwitchImageResizerTool = openTwitchImageResizerTool;
+
+function copyCpRewardIdToClipboard(rewardId) {
+    if (!rewardId) return;
+    writeClipboardTextSync(rewardId);
+    showToast(cpCopy('rewardIdCopied', { id: rewardId }), 'success');
+}
+
+function copyCpRewardIdModal() {
+    const el = document.getElementById('cp-reward-id-display');
+    if (el && el.value) {
+        copyCpRewardIdToClipboard(el.value);
+    }
+}
+
+window.copyCpRewardIdToClipboard = copyCpRewardIdToClipboard;
+window.copyCpRewardIdModal = copyCpRewardIdModal;
+
+function renderCpTable() {
+    const tbody = document.getElementById('cp-rewards-tbody');
+    const totalEl = document.getElementById('cp-total-count');
+    const mainSortSelect = document.getElementById('cp-sort-select');
+    if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
+    if (!tbody) return;
+
+    if (totalEl) totalEl.textContent = cpCopy('count', { count: cpState.rewards.length });
+
+    if (cpState.rewards.length === 0) {
+        const noRewardText = cpCopy('noRewards');
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">${raidSoEscape(noRewardText)}</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
+    const enabledText = cpCopy('statusEnabled');
+    const disabledText = cpCopy('statusDisabled');
+    const editText = cpCopy('edit');
+    const deleteAria = langMap[currentLang]?.delete || langMap.ja.delete;
+    const appBadgeText = cpCopy('badgeAppCreated');
+    const extBadgeText = cpCopy('badgeExternalCreated');
+
+    sortedRewards.forEach(r => {
+        const isEnabled = r.is_enabled;
+        const color = r.background_color || '#9146FF';
+        const assignedGroups = cpState.groups.filter(g => g.rewardIds && g.rewardIds.includes(r.id));
+        let groupTagsHtml = '';
+        assignedGroups.forEach(g => {
+            const isShared = assignedGroups.length > 1;
+            groupTagsHtml += `<span class="cp-group-tag${isShared ? ' is-shared' : ''}">${raidSoEscape(cpGroupName(g))}</span>`;
+        });
+        const isAppOwned = isAppCreatedReward(r);
+        const actionTitle = isAppOwned ? editText : cpCopy('cantModifyExternalReward');
+        const disabledAttribute = isAppOwned ? '' : ' disabled aria-disabled="true"';
+        const sourceBadgeHtml = isAppOwned
+            ? `<span class="cp-source-badge is-app">${raidSoEscape(appBadgeText)}</span>`
+            : `<span class="cp-source-badge is-external">${raidSoEscape(extBadgeText)}</span>`;
+
+        html += `
+        <tr class="cp-reward-row">
+            <td style="width:32px; text-align:center; vertical-align:middle;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
+            <td class="cp-reward-main">
+                <div class="cp-reward-identity">
+                    ${getCpRewardIconUrl(r) 
+                    ? `<div class="cp-reward-icon-badge" style="background:${color};" title="${raidSoEscape(r.title)}"><img src="${getCpRewardIconUrl(r)}" alt="" loading="lazy"></div>`
+                    : `<div class="cp-reward-color" style="background:${color};"></div>`}
+                    <div class="cp-reward-copy">
+                        <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
+                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}<span class="cp-id-badge" onclick="copyCpRewardIdToClipboard('${r.id}')" title="クリックで報酬IDをコピー (ID: ${r.id})">ID: ${r.id.substring(0, 8)}... 📋</span></div>
+                    </div>
+                </div>
+            </td>
+            <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
+            <td class="cp-reward-control-cell" style="text-align: center;">
+                <div class="cp-segmented-control${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(actionTitle)}">
+                    <button type="button" class="cp-segment-btn is-on${isEnabled && !r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'on')"` : ''}>ON</button>
+                    <button type="button" class="cp-segment-btn is-pause${isEnabled && r.is_paused ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'pause')"` : ''}>${raidSoEscape(cpCopy('pauseAction') || '❚❚ 停止')}</button>
+                    <button type="button" class="cp-segment-btn is-off${!isEnabled ? ' active' : ''}"${disabledAttribute}${isAppOwned ? ` onclick="setCustomRewardState('${r.id}', 'off')"` : ''}>OFF</button>
+                </div>
+            </td>
+            <td class="cp-reward-actions">
+                <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                <button type="button" class="btn-secondary cp-reward-icon-button is-delete"${disabledAttribute}${isAppOwned ? ` onclick="deleteCpReward('${r.id}')"` : ''} aria-label="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}" title="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+
+/* --- CP Bulk Edit Logic --- */
+function updateCpBulkActionBar() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+    const bar = document.getElementById('cp-bulk-action-bar');
+    const labelEl = document.getElementById('cp-bulk-selected-label');
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+
+    if (labelEl) {
+        labelEl.textContent = cpCopy('selectedItemsCount', { count: checked.length }) || `☑ ${checked.length}件選択中`;
+    }
+
+    if (bar) {
+        bar.style.display = checked.length > 0 ? 'flex' : 'none';
+    }
+
+    if (selectAllCheck && checkboxes.length > 0) {
+        selectAllCheck.checked = checked.length === checkboxes.length;
+        selectAllCheck.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+}
+
+function clearCpRewardSelection() {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = false; });
+    const selectAllCheck = document.getElementById('cp-select-all-checkbox');
+    if (selectAllCheck) { selectAllCheck.checked = false; selectAllCheck.indeterminate = false; }
+    updateCpBulkActionBar();
+}
+
+function toggleCpBulkColorSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-color-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+
+function toggleCpBulkPauseSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-pause-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkUserInputSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-user-input-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function toggleCpBulkOption(optionName, enabled) {
+    if (optionName === 'color') toggleCpBulkColorSection(enabled);
+    else if (optionName === 'cost') toggleCpBulkCostSection(enabled);
+    else if (optionName === 'pause') toggleCpBulkPauseSection(enabled);
+    else if (optionName === 'user-input') toggleCpBulkUserInputSection(enabled);
+}
+
+window.toggleCpBulkPauseSection = toggleCpBulkPauseSection;
+window.toggleCpBulkUserInputSection = toggleCpBulkUserInputSection;
+window.toggleCpBulkOption = toggleCpBulkOption;
+
+function toggleCpBulkCostSection(enabled) {
+    const ctrl = document.getElementById('cp-bulk-cost-controls');
+    if (ctrl) {
+        ctrl.style.opacity = enabled ? '1' : '0.4';
+        ctrl.style.pointerEvents = enabled ? 'auto' : 'none';
+    }
+}
+
+function setCpBulkSwatch(hex) {
+    const colorInput = document.getElementById('cp-bulk-color-input');
+    const colorEnable = document.getElementById('cp-bulk-enable-color');
+    if (colorInput) colorInput.value = hex;
+    if (colorEnable && !colorEnable.checked) {
+        colorEnable.checked = true;
+        toggleCpBulkColorSection(true);
+    }
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* ⚡ CP BULK OPERATIONS & BATCH ACTIONS                                     */
+/* ------------------------------------------------------------------------- */
+function openCpBulkEditModal(mode, groupId = null) {
+    const hiddenMode = document.getElementById('cp-bulk-mode');
+    const hiddenGroup = document.getElementById('cp-bulk-group-id');
+    const modalTitle = document.getElementById('cp-bulk-modal-title');
+    const enableColor = document.getElementById('cp-bulk-enable-color');
+    const enableCost = document.getElementById('cp-bulk-enable-cost');
+
+    if (hiddenMode) hiddenMode.value = mode;
+    if (hiddenGroup) hiddenGroup.value = groupId || '';
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoSelection'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditModalTitle', { count: targetRewardIds.length });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (!group) return;
+        targetRewardIds = group.rewardIds || [];
+        if (targetRewardIds.length === 0) {
+            showToast(cpCopy('bulkNoGroupRewards'), 'warn');
+            return;
+        }
+        if (modalTitle) modalTitle.textContent = cpCopy('bulkEditGroupTitle', { name: cpGroupName(group) });
+    }
+
+    if (enableColor) { enableColor.checked = false; toggleCpBulkColorSection(false); }
+    if (enableCost) { enableCost.checked = false; toggleCpBulkCostSection(false); }
+    const enablePause = document.getElementById("cp-bulk-enable-pause");
+    if (enablePause) { enablePause.checked = false; toggleCpBulkPauseSection(false); } setCpBulkPauseValue('pause');
+    const enableUserInput = document.getElementById('cp-bulk-enable-user-input');
+    if (enableUserInput) { enableUserInput.checked = false; toggleCpBulkUserInputSection(false); } setCpBulkUserInputVal(true);
+
+    renderCpUsedColorSwatches('cp-bulk-used-colors-swatches', true);
+    openModal('cpBulkEditModal');
+}
+
+async function applyCpBulkEdit() {
+    const mode = document.getElementById('cp-bulk-mode')?.value;
+    const groupId = document.getElementById('cp-bulk-group-id')?.value;
+    const enableColor = !!document.getElementById('cp-bulk-enable-color')?.checked;
+    const enableCost = !!document.getElementById('cp-bulk-enable-cost')?.checked;
+    const colorVal = document.getElementById('cp-bulk-color-input')?.value || '#9146FF';
+    const costVal = parseInt(document.getElementById('cp-bulk-cost-input')?.value || '50', 10) || 50;
+
+    if (!enableColor && !enableCost) {
+        showToast(cpCopy('bulkNoOptionsChecked'), 'warn');
+        return;
+    }
+
+    let targetRewardIds = [];
+    if (mode === 'selected') {
+        const checked = document.querySelectorAll('.cp-reward-checkbox:checked');
+        checked.forEach(cb => { if (cb.dataset.id) targetRewardIds.push(cb.dataset.id); });
+    } else if (mode === 'group') {
+        const group = (cpState.groups || []).find(g => g.id === groupId);
+        if (group) targetRewardIds = group.rewardIds || [];
+    }
+
+    const manageableIds = targetRewardIds.filter(id => isManageableCpRewardId(id));
+    const externalCount = targetRewardIds.length - manageableIds.length;
+
+    if (manageableIds.length === 0) {
+        showToast(cpCopy('bulkExternalSkipped', { count: externalCount }), 'warn');
+        closeModal('cpBulkEditModal');
+        return;
+    }
+
+    const patchBody = {};
+    if (enableColor) patchBody.background_color = colorVal;
+    if (enableCost) patchBody.cost = costVal;
+    if (enablePause) patchBody.is_paused = pauseVal;
+
+    let successCount = 0;
+    try {
+        const broadcasterId = await ensureCpAuth();
+        for (let i = 0; i < manageableIds.length; i++) {
+            const rId = manageableIds[i];
+            showToast(cpCopy('bulkApplying', { current: i + 1, total: manageableIds.length }), 'info');
+            try {
+                const data = await raidSoHelix(`/channel_points/custom_rewards?broadcaster_id=${broadcasterId}&id=${rId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(patchBody)
+                });
+                if (data.data?.[0]) {
+                    const idx = cpState.rewards.findIndex(r => r.id === rId);
+                    if (idx !== -1) cpState.rewards[idx] = data.data[0];
+                    successCount++;
+                }
+            } catch (err) {
+                console.error('Bulk PATCH error for ID:', rId, err);
+            }
+            await new Promise(res => setTimeout(res, 60));
+        }
+
+        let toastMsg = cpCopy('bulkSuccess', { success: successCount, total: manageableIds.length });
+        if (externalCount > 0) {
+            toastMsg += ' ' + cpCopy('bulkExternalSkipped', { count: externalCount });
+        }
+        showToast(toastMsg, successCount > 0 ? 'success' : 'warn');
+    } catch (err) {
+        console.error('applyCpBulkEdit outer error:', err);
+        showToast(cpCopy('bulkFail') || '一括更新に失敗しました: ' + (err.message || ''), 'warn');
+    }
+
+    closeModal('cpBulkEditModal');
+    clearCpRewardSelection();
+    renderCpTab(); updateCpBulkActionBar();
+}
+
+window.updateCpBulkActionBar = updateCpBulkActionBar;
+window.toggleSelectAllCpRewards = toggleSelectAllCpRewards;
+window.clearCpRewardSelection = clearCpRewardSelection;
+window.toggleCpBulkColorSection = toggleCpBulkColorSection;
+window.toggleCpBulkCostSection = toggleCpBulkCostSection;
+window.setCpBulkSwatch = setCpBulkSwatch;
+window.openCpBulkEditModal = openCpBulkEditModal;
+window.applyCpBulkEdit = applyCpBulkEdit;

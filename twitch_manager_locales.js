@@ -1,3 +1,8 @@
+/**
+ * Twitch Manager Localization Dictionary
+ * Supported Languages: ja (Japanese), en (English), zh (Simplified Chinese)
+ */
+
 const I18N_DATA = {
     "ja": {
         "ui": {
@@ -1112,7 +1117,25 @@ const I18N_DATA = {
                 "sortAppFirst": "本ツール作成優先",
                 "sortExternalFirst": "外部作成優先",
                 "badgeAppCreated": "本ツール",
-                "badgeExternalCreated": "外部"
+                "badgeExternalCreated": "外部",
+                "selectedItemsCount": "☑ {count}件選択中",
+                "recreatedSuffix": "再作成",
+                "noColorHistory": "使用履歴なし",
+                "copyRewardIdTip": "報酬の内部IDをコピー",
+                "pauseAction": "❚❚ 停止",
+                "clearSelection": "選択解除",
+                "authErrorToast": "Twitch認証の期限切れです。設定から再連携してください",
+                "openSettingsForAuthBtn": "設定を開いてTwitch再連携を行う",
+                "authErrorDesc": "チャネルポイント管理に必要な権限の更新が必要です。「設定」からTwitch再連携を行ってください。",
+                "authErrorTitle": "Twitch認証の期限切れ、または権限が不足しています",
+                "resizerHint": "カスタムアイコン画像を作成",
+                "originExternalTitle": "Twitch公式/外部で作成（クリックで複製してアプリ管理へ移行可能）",
+                "originAppTitle": "このアプリで作成・完全管理中",
+                "copyTwitchDashboardUrl": "URLをコピー",
+                "copyTwitchDashboardSuccess": "Twitch CP管理画面のURLをコピーしました",
+                "testTriggerBtn": "⚡ テスト発動",
+                "testTriggerTooltip": "このチャンネルポイントをテスト発動（ポン出し）します",
+                "testTriggerToast": "「{name}」をテスト発動しました"
             }
         },
         "twitch": {
@@ -2501,7 +2524,25 @@ const I18N_DATA = {
                 "sortAppFirst": "This Tool First",
                 "sortExternalFirst": "External First",
                 "badgeAppCreated": "This tool",
-                "badgeExternalCreated": "External"
+                "badgeExternalCreated": "External",
+                "selectedItemsCount": "☑ {count} selected",
+                "recreatedSuffix": "Recreated",
+                "noColorHistory": "No color history",
+                "copyRewardIdTip": "Copy Reward ID",
+                "pauseAction": "❚❚ Pause",
+                "clearSelection": "選択解除",
+                "authErrorToast": "Twitch認証の期限切れです。設定から再連携してください",
+                "openSettingsForAuthBtn": "設定を開いてTwitch再連携を行う",
+                "authErrorDesc": "チャネルポイント管理に必要な権限の更新が必要です。「設定」からTwitch再連携を行ってください。",
+                "authErrorTitle": "Twitch認証の期限切れ、または権限が不足しています",
+                "resizerHint": "カスタムアイコン画像を作成",
+                "originExternalTitle": "Twitch公式/外部で作成（クリックで複製してアプリ管理へ移行可能）",
+                "originAppTitle": "このアプリで作成・完全管理中",
+                "copyTwitchDashboardUrl": "Copy Link",
+                "copyTwitchDashboardSuccess": "Copied Twitch CP Dashboard URL",
+                "testTriggerBtn": "⚡ Test Trigger",
+                "testTriggerTooltip": "Test trigger (pong) this channel point",
+                "testTriggerToast": "Test triggered “{name}”"
             }
         },
         "twitch": {
@@ -3890,7 +3931,25 @@ const I18N_DATA = {
                 "sortAppFirst": "本工具创建优先",
                 "sortExternalFirst": "外部创建优先",
                 "badgeAppCreated": "本工具",
-                "badgeExternalCreated": "外部"
+                "badgeExternalCreated": "外部",
+                "selectedItemsCount": "☑ 已选择 {count} 项",
+                "recreatedSuffix": "重新创建",
+                "noColorHistory": "无使用记录",
+                "copyRewardIdTip": "复制奖励ID",
+                "pauseAction": "❚❚ 暂停",
+                "clearSelection": "選択解除",
+                "authErrorToast": "Twitch認証の期限切れです。設定から再連携してください",
+                "openSettingsForAuthBtn": "設定を開いてTwitch再連携を行う",
+                "authErrorDesc": "チャネルポイント管理に必要な権限の更新が必要です。「設定」からTwitch再連携を行ってください。",
+                "authErrorTitle": "Twitch認証の期限切れ、または権限が不足しています",
+                "resizerHint": "カスタムアイコン画像を作成",
+                "originExternalTitle": "Twitch公式/外部で作成（クリックで複製してアプリ管理へ移行可能）",
+                "originAppTitle": "このアプリで作成・完全管理中",
+                "copyTwitchDashboardUrl": "复制链接",
+                "copyTwitchDashboardSuccess": "已复制 Twitch 频道点数管理页面 URL",
+                "testTriggerBtn": "⚡ 测试触发",
+                "testTriggerTooltip": "测试触发（一键播放）此频道积分",
+                "testTriggerToast": "已测试触发“{name}”"
             }
         },
         "twitch": {
@@ -4167,3 +4226,7 @@ const I18N_DATA = {
         }
     }
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { I18N_DATA };
+}

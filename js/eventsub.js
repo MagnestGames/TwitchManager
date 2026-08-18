@@ -222,14 +222,8 @@
             _esWs.onopen = () => esLog('SYS', uiText('runtime.supporter.websocketConnected'));
 
             _esWs.onmessage = async (e) => {
-                let msg;
-                try {
-                    msg = JSON.parse(e.data);
-                } catch (err) {
-                    esLog('ERR', `WebSocket parse error: ${err.message}`);
-                    return;
-                }
-                const mtype = msg?.metadata?.message_type;
+                const msg = JSON.parse(e.data);
+                const mtype = msg.metadata?.message_type;
                 if (mtype === 'session_welcome') {
                     _esSessionId = msg.payload?.session?.id;
                     esSetStatus(true);
@@ -245,8 +239,12 @@
                     await esSubscribe('channel.hype_train.begin', '2', { broadcaster_user_id: bId });
                     await esSubscribe('channel.hype_train.end', '2', { broadcaster_user_id: bId });
                     await esSubscribe('stream.online', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('stream.offline', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.chat.message', '1', { broadcaster_user_id: bId, user_id: bId });
                     await esSubscribe('channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.add', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.update', '1', { broadcaster_user_id: bId });
+                    await esSubscribe('channel.channel_points_custom_reward.remove', '1', { broadcaster_user_id: bId });
                     await esSubscribe('channel.channel_points_automatic_reward_redemption.add', '2', { broadcaster_user_id: bId });
                     esLog('SYS', uiText('runtime.supporter.subscriptionsReady', { count: 12 }));
                 } else if (mtype === 'notification') {
@@ -259,6 +257,13 @@
                     if (subtype === 'stream.online') {
                         const didReset = handleSupporterStreamStart(ev.id || ev.started_at || '');
                         logMsg = `📡 ${uiText(didReset ? 'runtime.supporter.streamStarted' : 'runtime.supporter.streamStartedNoReset')}`;
+                    } else if (subtype === 'stream.offline') {
+                        logMsg = `📡 Stream offline detected`;
+                        if (typeof triggerCpAutoOff === 'function') {
+                            Promise.resolve(triggerCpAutoOff('stream_offline')).catch(error => {
+                                console.warn('Channel point stream-offline automation failed:', error);
+                            });
+                        }
                     } else if (subtype === 'channel.subscribe') {
                         if (document.getElementById('es-f-sub')?.checked === false) showLog = false;
                         logMsg = `🎉 ${uiText('runtime.supporter.subscription', { user: ev.user_name, tier: ev.tier?.charAt(0) || '' })}`;
@@ -319,14 +324,8 @@
                         const isOutbound = ev.from_broadcaster_user_id === settings.userId;
                         if (isOutbound) {
                             logMsg = `🚀 Outbound Raid to ${ev.to_broadcaster_user_name} with ${ev.viewers} viewers!`;
-                            const targetLogin = ev.to_broadcaster_user_login;
-                            const timeDiff = Date.now() - (raidSoState.lastOutboundRaidAt || 0);
-                            const isDuplicate = raidSoState.lastOutboundRaidTarget === targetLogin.toLowerCase() && timeDiff < 60000;
-                            
-                            if (raidSoSettings.autoSendRaidUrlEnabled && !isDuplicate) {
-                                if (typeof handleRaidSoOutboundRaidEvent === 'function') {
-                                    handleRaidSoOutboundRaidEvent(ev);
-                                }
+                            if (typeof handleRaidSoOutboundRaidEvent === 'function') {
+                                handleRaidSoOutboundRaidEvent(ev);
                             }
                         } else {
                             if (document.getElementById('es-f-raid')?.checked === false) showLog = false;
