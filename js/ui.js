@@ -118,6 +118,7 @@
                 addMemoBtn.title = L.extended?.addMemoAria || L.addMemo;
                 addMemoBtn.setAttribute('aria-label', L.extended?.addMemoAria || L.addMemo);
             }
+            updateAllMemoModesButton();
             const footerActions = L.footerActions || langMap.ja.footerActions;
             const restoreFileInput = document.getElementById('ui-restore-file');
             const restoreFileName = document.getElementById('ui-restore-file-name');
@@ -2417,11 +2418,18 @@
             if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText("extended.memoEmptyHint"))}</div>`;
             let html = raidSoEscape(src);
 
-            // Code blocks
-            html = html.replace(/```([\s\S]*?)```/g, (m, code) => `<pre class="md-code-block"><code>${code.trim()}</code></pre>`);
-            
-            // Inline code
-            html = html.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>');
+            // Code blocks and inline code protection via placeholders
+            const codePlaceholders = [];
+            html = html.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+                const idx = codePlaceholders.length;
+                codePlaceholders.push(`<pre class="md-code-block"><code>${code.trim()}</code></pre>`);
+                return `@@MD_CODE_BLOCK_${idx}@@`;
+            });
+            html = html.replace(/`([^`]+)`/g, (m, code) => {
+                const idx = codePlaceholders.length;
+                codePlaceholders.push(`<code class="md-inline-code">${code}</code>`);
+                return `@@MD_CODE_BLOCK_${idx}@@`;
+            });
 
             // Headings
             html = html.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
@@ -2440,7 +2448,7 @@
                 const isChecked = checkedChar === 'x';
                 const currentTaskIdx = taskIdx++;
                 const onclickAttr = (memoIndex !== null && memoIndex !== undefined)
-                    ? `onclick="toggleMemoTaskCheckbox(${memoIndex}, ${currentTaskIdx}, this.checked)"`
+                    ? `onclick="event.stopPropagation(); toggleMemoTaskCheckbox(${memoIndex}, ${currentTaskIdx}, this.checked)"`
                     : 'disabled';
                 const checkedAttr = isChecked ? 'checked' : '';
                 const spanClass = isChecked ? 'class="md-done"' : '';
@@ -2453,8 +2461,37 @@
             // HR
             html = html.replace(/^---$/gim, '<hr class="md-hr">');
 
-            // Links
-            html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, `<a href="$2" target="_blank" rel="noopener noreferrer" class="md-link">$1 ${MEMO_SVG_LINK}</a>`);
+            // Links protection via placeholders (Prevents nested <a> tags)
+            const linkPlaceholders = [];
+            html = html.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (match, text, url) => {
+                const idx = linkPlaceholders.length;
+                let targetUrl = url;
+                if (/^https?:\/\//i.test(url)) {
+                    targetUrl = url;
+                } else if (/^www\./i.test(url)) {
+                    targetUrl = 'https://' + url;
+                } else {
+                    linkPlaceholders.push(`<span class="md-link" style="opacity: 0.8; text-decoration: underline dotted;">${text} (${url})</span>`);
+                    return `@@MD_LINK_BLOCK_${idx}@@`;
+                }
+                const safeUrlAttr = raidSoEscape(targetUrl);
+                linkPlaceholders.push(`<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="md-link" onclick="openMemoExternalLink(event, '${safeUrlAttr}')">${text} ${MEMO_SVG_LINK}</a>`);
+                return `@@MD_LINK_BLOCK_${idx}@@`;
+            });
+
+            // Auto-link bare URLs: https://... or http://...
+            html = html.replace(/(^|[\s\n>])(https?:\/\/[^\s<>"'()]+)/g, (match, prefix, url) => {
+                const idx = linkPlaceholders.length;
+                const safeUrlAttr = raidSoEscape(url);
+                linkPlaceholders.push(`<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="md-link" onclick="openMemoExternalLink(event, '${safeUrlAttr}')">${url} ${MEMO_SVG_LINK}</a>`);
+                return `${prefix}@@MD_LINK_BLOCK_${idx}@@`;
+            });
+
+            // Restore Links
+            html = html.replace(/@@MD_LINK_BLOCK_(\d+)@@/g, (m, idx) => linkPlaceholders[Number(idx)] || '');
+
+            // Restore Code Blocks and Inline Code
+            html = html.replace(/@@MD_CODE_BLOCK_(\d+)@@/g, (m, idx) => codePlaceholders[Number(idx)] || '');
 
             // Line-by-line Smart List Processor (Auto連番 & 柔軟ネスト)
             const lines = html.split('\n');
@@ -2477,7 +2514,7 @@
                 const dashDashMatch = trimmed.match(/^[-*+]\s+[-*+]\s+(.*)$/);
                 if (dashDashMatch) {
                     inOl = false;
-                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span> <span>${dashDashMatch[1]}</span></div>`;
+                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span><span>${dashDashMatch[1]}</span></div>`;
                 }
 
                 // Handle Numbered List (Auto-Increment 1., 2., 3...)
@@ -2493,7 +2530,7 @@
                     olCounter++;
 
                     const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
-                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span> <span>${olMatch[2]}</span></div>`;
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span><span>${olMatch[2]}</span></div>`;
                 } else {
                     inOl = false;
                 }
@@ -2503,7 +2540,7 @@
                 if (ulMatch) {
                     const indentLevel = Math.min(Math.max(Math.floor(spacesCount / 2), spacesCount >= 2 ? 1 : 0), 4);
                     const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
-                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span> <span>${ulMatch[1]}</span></div>`;
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span><span>${ulMatch[1]}</span></div>`;
                 }
 
                 if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
@@ -2516,9 +2553,43 @@
         }
         window.renderMarkdownToHtml = renderMarkdownToHtml;
 
+        async function openMemoExternalLink(e, url) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (!url) return;
+
+            const title = uiText('extended.memoExternalLinkTitle') || '外部リンクへの移動';
+            const msg = uiText('extended.memoExternalLinkMsg') || '外部のWebサイトを開こうとしています。\n外部サイトでの動作や安全性については当ツールの保証対象外となりますが、移動しますか？';
+            const note = uiText('extended.memoExternalLinkNote') || 'リンク先: ';
+
+            const messageHtml = `<div style="display:grid; gap:10px; font-size:13px; line-height:1.6;">
+                <div>${raidSoEscape(msg).replace(/\n/g, '<br>')}</div>
+                <div style="background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; word-break:break-all; font-size:11.5px; color:var(--text-muted);">
+                    <strong>${raidSoEscape(note)}</strong><span style="color:var(--twitch-purple);">${raidSoEscape(url)}</span>
+                </div>
+            </div>`;
+
+            const ok = await customConfirm({
+                title: title,
+                messageHtml: messageHtml,
+                okText: uiText('extended.memoExternalLinkOk') || '移動する',
+                cancelText: uiText('extended.memoExternalLinkCancel') || 'キャンセル'
+            });
+
+            if (ok) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+        window.openMemoExternalLink = openMemoExternalLink;
+
         function handleMemoKeydown(e, memoIndex) {
             const textarea = e.target;
             if (!textarea) return;
+
+            // Ignore IME composition Enter
+            if (e.isComposing || e.keyCode === 229) return;
 
             // Tab key: Insert 2 spaces for indent
             if (e.key === 'Tab') {
@@ -2536,8 +2607,7 @@
                         textarea.selectionStart = textarea.selectionEnd = start - 2;
                     }
                 }
-                memoConfig[memoIndex].content = textarea.value;
-                saveMemoLocal();
+                updateMemoContent(memoIndex, textarea.value);
                 return;
             }
 
@@ -2548,35 +2618,44 @@
                 const lineStart = value.lastIndexOf('\n', start - 1) + 1;
                 const currentLine = value.substring(lineStart, start);
 
-                const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s+(.*)$/);
-                const ulMatch = currentLine.match(/^(\s*)[-*+]\s+(.*)$/);
-                const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s+(.*)$/);
+                const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s*(.*)$/);
+                const ulMatch = currentLine.match(/^(\s*)[-*+]\s*(.*)$/);
+                const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s*(.*)$/);
 
                 if (taskMatch) {
-                    if (!taskMatch[2].trim()) return;
                     e.preventDefault();
-                    const prefix = `\n${taskMatch[1]}- [ ] `;
-                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
-                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
-                    memoConfig[memoIndex].content = textarea.value;
-                    saveMemoLocal();
+                    if (!taskMatch[2].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const prefix = `\n${taskMatch[1]}- [ ] `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
                 } else if (ulMatch) {
-                    if (!ulMatch[2].trim()) return;
                     e.preventDefault();
-                    const prefix = `\n${ulMatch[1]}- `;
-                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
-                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
-                    memoConfig[memoIndex].content = textarea.value;
-                    saveMemoLocal();
+                    if (!ulMatch[2].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const prefix = `\n${ulMatch[1]}- `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
                 } else if (olMatch) {
-                    if (!olMatch[3].trim()) return;
                     e.preventDefault();
-                    const nextNum = parseInt(olMatch[2], 10) + 1;
-                    const prefix = `\n${olMatch[1]}${nextNum}. `;
-                    textarea.value = value.substring(0, start) + prefix + value.substring(start);
-                    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
-                    memoConfig[memoIndex].content = textarea.value;
-                    saveMemoLocal();
+                    if (!olMatch[3].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const nextNum = parseInt(olMatch[2], 10) + 1;
+                        const prefix = `\n${olMatch[1]}${nextNum}. `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
                 }
             }
         }
@@ -2589,10 +2668,14 @@
             let currentTaskCount = 0;
             const lines = memo.content.split('\n');
             const updatedLines = lines.map(line => {
-                const match = line.match(/^(- \[(?:x| )\] )(.*)$/);
+                const match = line.match(/^(\s*-\s*\[(?:x| )\]\s*)(.*)$/);
                 if (match) {
                     if (currentTaskCount === taskIndex) {
                         currentTaskCount++;
+                        const prefix = line.match(/^(\s*-\s*\[)(?:x| )(\]\s*)/);
+                        if (prefix) {
+                            return `${prefix[1]}${isChecked ? 'x' : ' '}${prefix[2]}${match[2]}`;
+                        }
                         return isChecked ? `- [x] ${match[2]}` : `- [ ] ${match[2]}`;
                     }
                     currentTaskCount++;
@@ -2601,6 +2684,7 @@
             });
 
             memo.content = updatedLines.join('\n');
+            memo.mode = 'preview';
             saveMemoLocal(false);
             renderMemo();
         }
@@ -2613,8 +2697,8 @@
         window.setActiveMemoIndex = setActiveMemoIndex;
 
         function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
-            if (memoIndex === null || memoIndex === undefined) {
-                memoIndex = activeMemoIndex;
+            if (memoIndex === null || memoIndex === undefined || memoIndex >= memoConfig.length) {
+                memoIndex = (activeMemoIndex >= 0 && activeMemoIndex < memoConfig.length) ? activeMemoIndex : 0;
             }
             if (memoConfig[memoIndex] && memoConfig[memoIndex].mode === 'preview') {
                 toggleMemoMode(memoIndex, 'edit');
@@ -2628,31 +2712,83 @@
             const selectedText = text.substring(start, end) || (prefix.endsWith(' ') ? '' : sample);
             const replacement = prefix + selectedText + suffix;
             textarea.value = text.substring(0, start) + replacement + text.substring(end);
-            textarea.selectionStart = start + prefix.length;
-            textarea.selectionEnd = start + prefix.length + selectedText.length;
+            if (suffix === '](URL)' && start !== end) {
+                textarea.selectionStart = start + prefix.length + selectedText.length + 2;
+                textarea.selectionEnd = start + prefix.length + selectedText.length + 5;
+            } else {
+                textarea.selectionStart = start + prefix.length;
+                textarea.selectionEnd = start + prefix.length + selectedText.length;
+            }
             textarea.focus();
             memoConfig[memoIndex].content = textarea.value;
             saveMemoLocal();
         }
         window.insertMarkdownSyntax = insertMarkdownSyntax;
 
-        function toggleMemoMode(memoIndex, mode) {
+        function updateMemoContent(memoIndex, val) {
             if (!memoConfig[memoIndex]) return;
-            memoConfig[memoIndex].mode = mode;
+            memoConfig[memoIndex].content = val;
+            const catBox = document.querySelector(`.category-box[data-idx="${memoIndex}"]`);
+            if (catBox) {
+                let p = (val || '').replace(/\n/g, ' ').substring(0, 15);
+                if ((val || '').length > 15) p += '...';
+                const previewEl = catBox.querySelector('.memo-preview');
+                if (previewEl) previewEl.textContent = p;
+            }
             saveMemoLocal(false);
-            renderMemo();
         }
-        window.toggleMemoMode = toggleMemoMode;
+        window.updateMemoContent = updateMemoContent;
 
-        
         function toggleMemoMode(memoIndex, mode) {
             if (!memoConfig[memoIndex]) return;
+            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+            if (textarea) {
+                memoConfig[memoIndex].content = textarea.value;
+            }
             memoConfig[memoIndex].mode = mode;
             memoConfig[memoIndex].isClosed = false;
             saveMemoLocal(false);
             renderMemo();
         }
         window.toggleMemoMode = toggleMemoMode;
+
+        function updateAllMemoModesButton() {
+            const btn = document.getElementById('ui-toggle-all-memos');
+            if (!btn) return;
+            if (!Array.isArray(memoConfig) || !memoConfig.length) {
+                btn.style.display = 'none';
+                return;
+            }
+            btn.style.display = 'inline-flex';
+            const allPreview = memoConfig.every(m => (m.mode || 'edit') === 'preview');
+            if (allPreview) {
+                btn.innerHTML = `${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoAllEdit") || "全編集")}</span>`;
+                btn.setAttribute('data-tooltip', uiText("extended.memoAllEditTip") || uiText("extended.memoAllToggleTip") || 'すべてのメモを編集モードに切り替え');
+                btn.setAttribute('aria-label', uiText("extended.memoAllEdit") || "全編集");
+            } else {
+                btn.innerHTML = `${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoAllPreview") || "全プレビュー")}</span>`;
+                btn.setAttribute('data-tooltip', uiText("extended.memoAllPreviewTip") || uiText("extended.memoAllToggleTip") || 'すべてのメモをプレビューモードに切り替え');
+                btn.setAttribute('aria-label', uiText("extended.memoAllPreview") || "全プレビュー");
+            }
+        }
+        window.updateAllMemoModesButton = updateAllMemoModesButton;
+
+        function toggleAllMemoModes() {
+            if (!Array.isArray(memoConfig) || !memoConfig.length) return;
+            memoConfig.forEach((m, idx) => {
+                const textarea = document.getElementById(`memo-input-${idx}`);
+                if (textarea) m.content = textarea.value;
+            });
+            const allPreview = memoConfig.every(m => (m.mode || 'edit') === 'preview');
+            const targetMode = allPreview ? 'edit' : 'preview';
+            memoConfig.forEach(m => {
+                m.mode = targetMode;
+                m.isClosed = false;
+            });
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleAllMemoModes = toggleAllMemoModes;
 
         function toggleMemoCategory(el, i) {
             memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed');
@@ -2688,7 +2824,16 @@
                 fc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(friendsConfig, saveFriendsLocal, renderFriends, 'friends'))));
             }
             const memc = document.getElementById('memo-container'); if (memc) {
-                sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => { const i = memoConfig.splice(e.oldIndex, 1)[0]; memoConfig.splice(e.newIndex, 0, i); saveMemoLocal(); renderMemo(); } }));
+                sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => {
+                    memoConfig.forEach((m, idx) => {
+                        const textarea = document.getElementById(`memo-input-${idx}`);
+                        if (textarea) m.content = textarea.value;
+                    });
+                    const i = memoConfig.splice(e.oldIndex, 1)[0];
+                    memoConfig.splice(e.newIndex, 0, i);
+                    saveMemoLocal(false);
+                    renderMemo();
+                } }));
             }
             const tn = document.getElementById('tab-navigation');
             if (tn) {
@@ -6867,11 +7012,12 @@ function renderCpTable() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
                 c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
+                updateAllMemoModesButton();
                 initSortable();
                 return;
             }
             memoConfig.forEach((m, i) => {
-                const mode = m.mode || (m.content ? 'preview' : 'edit');
+                const mode = m.mode || 'edit';
                 const d = document.createElement('div');
                 d.className = "category-box" + (m.isClosed ? " closed" : "");
                 d.setAttribute('data-idx', i);
@@ -6880,11 +7026,11 @@ function renderCpTable() {
                 if ((m.content || '').length > 15) previewText += '...';
 
                 const modeBtnHtml = mode === 'preview'
-                    ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
-                    : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')" style="padding:2px 8px; font-size:10px; display:inline-flex; align-items:center; gap:4px;">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+                    ? `<button type="button" class="btn-secondary memo-mode-toggle-btn" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button type="button" class="btn-secondary memo-mode-toggle-btn" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
 
                 const editorHtml = `
-                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px; box-sizing:border-box;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)">${raidSoEscape(m.content || '')}</textarea>
+                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px; box-sizing:border-box;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)" onkeydown="handleMemoKeydown(event, ${i})">${raidSoEscape(m.content || '')}</textarea>
                 `;
 
                 const previewHtml = `
@@ -6908,9 +7054,10 @@ function renderCpTable() {
                 </div>`;
                 c.appendChild(d);
             });
+            updateAllMemoModesButton();
             initSortable();
         }
-        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
+        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false, mode: 'edit' }); renderMemo(); saveMemoLocal(); } }
         async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
 
 
