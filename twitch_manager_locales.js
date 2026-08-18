@@ -1227,7 +1227,9 @@ const I18N_DATA = {
             "layoutGrid": "横並び可",
             "layoutList": "縦並びのみ",
             "expandAll": "すべて展開",
-            "collapseAll": "すべて折りたたむ"
+            "collapseAll": "すべて折りたたむ",
+            "appTitle": "OBS Twitch Manager",
+            "appSubtitle": "配信管理ツール"
         },
         "twitch": {
             "so": "応援 / シャウトアウト",
@@ -2731,7 +2733,9 @@ const I18N_DATA = {
             "layoutGrid": "Grid Layout",
             "layoutList": "List Layout",
             "expandAll": "Expand All",
-            "collapseAll": "Collapse All"
+            "collapseAll": "Collapse All",
+            "appTitle": "OBS Twitch Manager",
+            "appSubtitle": "Stream Management Tool"
         },
         "twitch": {
             "so": "Shoutout",
@@ -4235,7 +4239,9 @@ const I18N_DATA = {
             "layoutGrid": "可并排",
             "layoutList": "仅纵向",
             "expandAll": "全部展开",
-            "collapseAll": "全部折叠"
+            "collapseAll": "全部折叠",
+            "appTitle": "OBS Twitch Manager",
+            "appSubtitle": "直播管理工具"
         },
         "twitch": {
             "so": "推荐 / Shoutout",
