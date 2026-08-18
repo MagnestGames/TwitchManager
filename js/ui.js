@@ -36,28 +36,30 @@ function saveTitleTagConfig() {
     }
 }
 
-function getSelectedCollabNames() {
-    try {
-        const collabCat = titleTagConfig.collabCategoryName || '';
-        const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
-        const activeTags = Array.from(activeTagEls).map(el => el.value);
+function extractTwitchId(str) {
+    if (!str) return '';
+    let val = String(str).trim();
+    val = val.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '');
+    val = val.replace(/^twitch\.tv\//i, '');
+    val = val.split('/')[0].split('?')[0].split('#')[0];
+    val = val.replace(/^@/, '').trim();
+    return val;
+}
+window.extractTwitchId = extractTwitchId;
 
+function getCategoryCollabNames(catName) {
+    try {
         const selectedIds = [];
         (friendsConfig || []).forEach(cat => {
-            if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
-            if (collabCat && cat.name !== collabCat) return;
-
-            const isCatChecked = activeTags.length === 0 || activeTags.includes(cat.name);
-
-            (cat.friends || []).forEach(f => {
-                if (f.isSelected || isCatChecked) {
+            if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+                (cat.friends || []).forEach(f => {
                     const rawVal = f.twitch || f.name || f.id || '';
                     const twitchId = extractTwitchId(rawVal);
                     if (twitchId && !selectedIds.includes(twitchId)) {
                         selectedIds.push(twitchId);
                     }
-                }
-            });
+                });
+            }
         });
 
         if (selectedIds.length === 0) return '';
@@ -66,37 +68,61 @@ function getSelectedCollabNames() {
     } catch (e) {
         return '';
     }
+}
 
-    // 2. Collab Tag ({コラボ} or {collab} or custom collabTagName)
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    loadTitleTagConfig();
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
     const collabName = titleTagConfig.collabTagName || 'コラボ';
     const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
     const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
     result = result.replace(collabRegex, collabVal);
 
-    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend})
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
     (friendsConfig || []).forEach(cat => {
         if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
             const catName = cat.name.trim();
             if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
-                const catSelected = [];
-                (cat.friends || []).forEach(f => {
-                    if (f.isSelected) {
-                        const n = f.name || f.twitch || '';
-                        if (n && !catSelected.includes(n)) catSelected.push(n);
-                    }
-                });
-                catSelected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-                const catVal = catSelected.length > 0 ? catSelected.map(n => ' @' + n.replace(/^@/, '')).join('') : '';
+                const catVal = getCategoryCollabNames(catName);
                 const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
                 result = result.replace(reg, catVal);
             }
         }
     });
 
-    // 3. Category Tag ({カテゴリ} or {category} or {game})
+    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
     const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
-    const gameVal = context.game !== undefined ? context.game : '';
-    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|カテゴリ|category|game)}', 'g');
+    let gameVal = context.game !== undefined ? context.game : '';
+
+    // 手動カテゴリ変換マッピングの優先適用
+    if (gameVal && titleTagConfig && Array.isArray(titleTagConfig.categoryMap)) {
+        const trimmedGame = String(gameVal).trim();
+        const matched = titleTagConfig.categoryMap.find(item =>
+            item && item.from && String(item.from).trim().toLowerCase() === trimmedGame.toLowerCase()
+        );
+        if (matched && matched.to !== undefined && matched.to !== null && String(matched.to).trim() !== '') {
+            gameVal = String(matched.to);
+        }
+    }
+
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
     result = result.replace(catRegex, gameVal);
 
     // 4. Built-in Date & Time Tags
@@ -114,11 +140,11 @@ function getSelectedCollabNames() {
     result = result.replace(/{(月|month)}/g, monthVal);
     result = result.replace(/{(時間|time)}/g, timeVal);
 
-    return result;
-}
+    // 5. Count Tag ({count} or {回数} or {カウント}) -> replaces with numeric count value only
+    const countVal = context.count !== undefined ? String(context.count) : (context.recordCount !== undefined ? String(context.recordCount) : '1');
+    result = result.replace(/{(count|回数|カウント)}/g, countVal);
 
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^$${}()|[\]\\]/g, '\\$&');
+    return result;
 }
 
 function getTagBadgesHtmlForTitle(templateStr) {
@@ -126,15 +152,175 @@ function getTagBadgesHtmlForTitle(templateStr) {
     const matches = templateStr.match(/{[^{}]+}/g);
     if (!matches || matches.length === 0) return '';
     const uniqueTags = [...new Set(matches)];
-    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="識別タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
 }
 
 window.loadTitleTagConfig = loadTitleTagConfig;
 window.saveTitleTagConfig = saveTitleTagConfig;
 window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
 window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+window.escapeRegExp = escapeRegExp;
 
+function showCollabHoverHint(tagNameOrCat) {
+    try {
+        let msg = '';
+        if (tagNameOrCat === '{コラボ}') {
+            const selectedNames = getSelectedCollabNames();
+            const collabCat = titleTagConfig.collabCategoryName || '';
+            msg = selectedNames 
+                ? `選択中コラボ (${collabCat || '全体'}):${selectedNames}` 
+                : `コラボメンバー未選択 (IDリストでチェックを入れてください)`;
+        } else {
+            // Specific ID list category name
+            const catSelected = [];
+            (friendsConfig || []).forEach(cat => {
+                if (cat.name === tagNameOrCat) {
+                    (cat.friends || []).forEach(f => {
+                        if (f.isSelected) {
+                            const n = f.name || f.twitch || '';
+                            if (n && !catSelected.includes(n)) catSelected.push(n);
+                        }
+                    });
+                }
+            });
+            const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
+            msg = `IDリスト【${tagNameOrCat}】選択中: ${membersStr}`;
+        }
+        showToast(msg, 'info');
+    } catch (e) {}
+}
 
+function copyCommonTag(tagText) {
+    let toastMsg = 'コピー: ' + tagText;
+    if (tagText === '{コラボ}') {
+        const names = getSelectedCollabNames();
+        if (names) {
+            toastMsg += ' (展開:' + names.trim() + ')';
+        }
+    }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(tagText).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(tagText, toastMsg);
+            });
+        } else {
+            fallbackCopyText(tagText, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(tagText, toastMsg);
+    }
+}
+
+function fallbackCopyText(tagText, customMsg) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = tagText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(customMsg || ('コピー: ' + tagText), 'success');
+    } catch (e) {
+        showToast('コピーできませんでした', 'warn');
+    }
+}
+
+let isCollabTagGroupExpanded = true;
+try {
+    const savedExp = localStorage.getItem('common_collab_tags_expanded');
+    if (savedExp !== null) isCollabTagGroupExpanded = savedExp === 'true';
+} catch (e) {}
+
+function toggleCollabTagGroup() {
+    isCollabTagGroupExpanded = !isCollabTagGroupExpanded;
+    try {
+        localStorage.setItem('common_collab_tags_expanded', String(isCollabTagGroupExpanded));
+    } catch (e) {}
+    renderCommonTagBar();
+}
+window.toggleCollabTagGroup = toggleCollabTagGroup;
+
+function copyCategoryRawIds(catName) {
+    const rawIds = getCategoryCollabNames(catName);
+    if (!rawIds) {
+        showToast(`IDリスト【${catName}】に選択中のメンバーがいません`, 'warn');
+        return;
+    }
+    const copyString = rawIds;
+    const toastMsg = `IDリスト【${catName}】の@ID一覧をコピー:${copyString.trim()}`;
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copyString).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(copyString, toastMsg);
+            });
+        } else {
+            fallbackCopyText(copyString, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(copyString, toastMsg);
+    }
+}
+window.copyCategoryRawIds = copyCategoryRawIds;
+
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+
+    let mainHtml = '';
+    // 1. カスタム共通タグ (言葉セット)
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
+    });
+
+    // 2. 標準システムタグ ({Category}, {date}, {count})
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">{Category}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付・日時">{date}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{count}')" title="シリーズもの配信回数 (数字のみ+)">{count}</button>`;
+
+    // 3. コラボ・IDリスト用タグ（タグ名コピーと @ID コピーの横並びセグメントボタン）
+    let collabHtml = '';
+    const catNames = (friendsConfig || [])
+        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+        .map(cat => cat.name.trim())
+        .filter(name => name && name !== '未分類' && name !== 'Uncategorized');
+    const uniqueCats = [...new Set(catNames)];
+
+    uniqueCats.forEach(catName => {
+        const formattedCatNames = getCategoryCollabNames(catName);
+        const catTagText = '{' + catName + '}';
+        collabHtml += `
+            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
+                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
+                    ${raidSoEscape(catTagText)}
+                </button>
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                    @ID
+                </button>
+            </div>
+        `;
+    });
+
+    let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
+    if (collabHtml) {
+        fullHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px;">${collabHtml}</div>`;
+    }
+
+    bar.innerHTML = fullHtml;
+}
+
+window.renderCommonTagBar = renderCommonTagBar;
+window.showCollabHoverHint = showCollabHoverHint;
+window.copyCommonTag = copyCommonTag;
+        
 
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
