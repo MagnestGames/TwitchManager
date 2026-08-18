@@ -1,675 +1,4 @@
 <!DOCTYPE html>
-
-    <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
-        <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
-                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
-            </div>
-            
-            <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
-                <div style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;" data-i18n="titleTagGuide">
-                    タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
-                </div>
-
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
-                <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
-
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
-                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
-                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
-                </div>
-                <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                <datalist id="registered-categories-list"></datalist>
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
-
-
-
-                <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
-                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準タグ</summary>
-                    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : Twitch配信カテゴリ名</span>
-                        </div>
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : 本日の日付・日時</span>
-                        </div>
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : シリーズもの配信回数（数字のみ+）</span>
-                        </div>
-                    </div>
-                </details>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" data-i18n="cancel">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveTitleTagModalSettings()" data-i18n="extended.saveBtn">保存して反映</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpRewardModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpRewardModal')">
-        <div class="modal-content" style="max-width: 480px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
-            <input type="hidden" id="cp-reward-edit-id">
-
-            <!-- Template Loader Block (Shown when creating new reward) -->
-            <div id="cp-reward-template-wrapper" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 10px; border-radius: 6px;">
-                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color: #c084fc;" data-i18n="cpTab.loadTemplateLabel">既存ポイントから設定を読み込む:</label>
-                <select id="cp-reward-template-select" onchange="applyCpRewardTemplate(this.value)" style="display:block; width:100%; padding:5px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-item); color:var(--text-main); cursor:pointer; box-sizing:border-box;">
-                    <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
-                </select>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
-            </div>
-                        <!-- <div class="cp-resizer-shortcut-banner" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.06); border: 1px solid rgba(145, 70, 255, 0.2); padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; color: var(--text-main);"><i class="fa-solid fa-images" style="color: #9146FF; margin-right: 4px;"></i><span data-i18n="cpTab.resizerHint">カスタムアイコン画像を作成</span></span>
-                <button type="button" class="btn-secondary" onclick="openTwitchImageResizerTool()" style="font-size: 10.5px; padding: 2px 8px; height: 24px; color: #c084fc; border-color: rgba(145, 70, 255, 0.4); display: inline-flex; align-items: center; gap: 4px;">
-                    <span>Image Resizer</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px;"></i>
-                </button>
-            </div> -->
-            <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
-                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <input type="text" id="cp-reward-id-display" readonly style="font-family: monospace; font-size: 11px; padding: 4px 6px; background: var(--bg-item); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; flex: 1; box-sizing: border-box;" onclick="this.select()">
-                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>コピー</button>
-                </div>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
-                <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
-                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
-                </label>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalCostLabel">消費ポイント数 (コスト):</label>
-                <input type="number" id="cp-reward-cost-input" value="50" min="1" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalPromptLabel">説明文 (任意):</label>
-                <input type="text" id="cp-reward-prompt-input" placeholder="例: 配信上で効果音が再生されます" data-i18n-placeholder="cpTab.rewardModalPromptPlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
-                <div class="cp-color-picker-row">
-                    <input type="color" id="cp-reward-color-input" value="#9146FF" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
-                    <div id="cp-reward-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
-                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpColorFromHex(this.value)">
-                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
-                    <span>カラーコード / パレット選択</span>
-                </div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
-                    <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpRewardColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
-                    <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpRewardColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
-                    <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpRewardColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
-                    <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpRewardColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
-                    <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpRewardColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
-                    <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpRewardColorSwatch('#26262C')" title="#26262C (Dark)"></button>
-                </div>
-                <div style="margin-top: 6px;">
-                    <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
-                    <div id="cp-reward-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
-                </div>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
-                    <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                    <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
-                </label>
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveCpReward()" data-i18n="extended.saveBtn">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpBulkEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpBulkEditModal')">
-        <div class="modal-content" style="max-width: 460px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpBulkEditModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-bulk-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.bulkEditModalTitle">チャンネルポイントの一括編集</h3>
-            <input type="hidden" id="cp-bulk-mode">
-            <input type="hidden" id="cp-bulk-group-id">
-
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-                <span style="color: var(--twitch-purple); font-weight: bold;">※</span> 選択した報酬の「背景色」および「消費ポイント数」を一括で変更できます。<br>
-                <span style="font-size: 10px;" data-i18n="cpTab.bulkExternalNotice">（※Twitchの仕様上、外部作成された報酬は変更されません）</span>
-            </div>
-
-            <!-- Color Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-color" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkColorSection(this.checked)">
-                    <span data-i18n="cpTab.enableColorChange">🎨 背景色を変更する</span>
-                </label>
-                <div id="cp-bulk-color-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <div class="cp-color-picker-row">
-                        <input type="color" id="cp-bulk-color-input" value="#9146FF" oninput="updateCpBulkColorPreview(this.value)" onchange="updateCpBulkColorPreview(this.value)">
-                        <div id="cp-bulk-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
-                        <input type="text" id="cp-bulk-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpBulkColorFromHex(this.value)">
-                        <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(true)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
-                        <span>カラーコード / パレット選択</span>
-                    </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpBulkColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpBulkColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
-                        <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpBulkColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
-                        <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpBulkColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpBulkColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
-                        <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpBulkColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
-                        <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpBulkColorSwatch('#26262C')" title="#26262C (Dark)"></button>
-                    </div>
-                    <div style="margin-top: 6px;">
-                        <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
-                        <div id="cp-bulk-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pause / Resume Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-pause" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkPauseSection(this.checked)">
-                    <span data-i18n="cpTab.enablePauseChange">⏸️ 引き換え一時停止 / 再開を変更する</span>
-                </label>
-                <div id="cp-bulk-pause-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <input type="hidden" id="cp-bulk-pause-val" value="pause">
-                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
-                        <button type="button" id="cp-bulk-pause-btn-pause" class="cp-segment-btn is-pause active" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('pause')" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</button>
-                        <button type="button" id="cp-bulk-pause-btn-resume" class="cp-segment-btn is-on" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('resume')" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する (受付中)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Input Requirement Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkUserInputSection(this.checked)">
-                    <span data-i18n="cpTab.bulkChangeUserInput">💬 視聴者コメント必須 (テキスト入力必須) を変更する</span>
-                </label>
-                <div id="cp-bulk-user-input-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <input type="hidden" id="cp-bulk-user-input-val" value="true">
-                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
-                        <button type="button" id="cp-bulk-user-input-btn-true" class="cp-segment-btn is-purple active" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(true)" data-i18n="cpTab.bulkUserInputTrue">💬 必須にする (ON)</button>
-                        <button type="button" id="cp-bulk-user-input-btn-false" class="cp-segment-btn is-off" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(false)" data-i18n="cpTab.bulkUserInputFalse">💬 必須にしない (OFF)</button>
-                    </div>
-                </div>
-            </div>
-
-                        <!-- Cost Section -->
-            <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-cost" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkCostSection(this.checked)">
-                    <span data-i18n="cpTab.enableCostChange">💎 報酬額 (消費ポイント数) を変更する</span>
-                </label>
-                <div id="cp-bulk-cost-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <input type="number" id="cp-bulk-cost-input" value="50" min="1" max="2000000000" class="cd-input-field" style="width: 100px; padding: 6px; font-size: 12px;">
-                        <span style="font-size: 11px; color: var(--text-main);">pt</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpBulkEditModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="applyCpBulkEdit()" data-i18n="cpTab.applyBulkEdit">一括適用</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpGroupModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpGroupModal')">
-        <div class="modal-content" style="max-width: 480px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpGroupModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-group-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.groupModalTitle">グループ設定</h3>
-            <input type="hidden" id="cp-group-edit-id">
-            <div style="margin-bottom: 12px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.groupModalNameLabel">グループ名:</label>
-                <input type="text" id="cp-group-name-input" placeholder="例: ホラゲー用、朝配信セット" data-i18n-placeholder="cpTab.groupModalNamePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <label style="font-size:12px; font-weight:bold;" data-i18n="cpTab.groupModalChecklistLabel">含むチャンネルポイント (複数選択可能):</label>
-                    <select id="cp-modal-sort-select" onchange="changeCpModalSortOrder(this.value)" style="padding: 2px 6px; font-size: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;">
-                        <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
-                        <option value="cost_asc" data-i18n="cpTab.sortCostAsc">コスト昇順</option>
-                        <option value="cost_desc" data-i18n="cpTab.sortCostDesc">コスト降順</option>
-                        <option value="name_asc" data-i18n="cpTab.sortNameAsc">名前昇順</option>
-                        <option value="name_desc" data-i18n="cpTab.sortNameDesc">名前降順</option>
-                    </select>
-                </div>
-                <div id="cp-group-rewards-checklist" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; background: var(--bg-card); display: flex; flex-direction: column; gap: 4px;"></div>
-            </div>
-            
-            <!-- Automation Settings -->
-            <div style="margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px;">
-                <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--command-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 6px;" data-i18n="cpTab.automationTitle">自動化設定 (オートメーション)</div>
-                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px; text-align: left;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-stream-start" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnStreamStart">配信開始時に自動ON</span>
-                    </label>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-stream-end" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOffStreamEnd">配信終了時に自動OFF</span>
-                    </label>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-raid" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnRaid">レイド受け取り時に自動ON</span>
-                    </label>
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;">
-                        <label style="font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOffMinutes">ONにしてから自動OFF (分):</label>
-                        <div style="display: inline-flex; align-items: center; gap: 6px;">
-                            <input type="number" id="cp-group-auto-off-min" value="0" min="0" max="1440" class="cd-input-field" style="width: 65px; padding: 4px 6px; font-size: 11.5px; text-align: center; box-sizing: border-box;">
-                            <span style="font-size: 10.5px; color: var(--text-muted);" data-i18n="cpTab.autoOffMinutesHint">※0で無効</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpGroupModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveCpGroup()" data-i18n="extended.saveBtn">保存</button>
-            </div>
-        </div>
-    </div>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TwitchManagerDock</title>
-    <script>
-        const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
-        if (twitchManagerAudioSourceMode) document.documentElement.classList.add('audio-source-mode');
-        else document.write('<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"><\/script>');
-    </script>
-    <style>
-        html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
-        html.audio-source-mode body { visibility: hidden; }
-    </style>
-
-    <link rel="stylesheet" href="twitch_manager.css">
-</head>
-
-<body>
-
-    <div id="toast" role="status" aria-live="polite" aria-atomic="true" data-i18n="extended.toastDone">完了</div>
-
-    <div class="sticky-top-wrapper">
-        <div class="app-header">
-            <div class="app-header-left">
-                <div class="app-title-group">
-                    <span class="app-title" data-i18n="appTitle">OBS Twitch Manager</span>
-                    <span class="app-subtitle" data-i18n="appSubtitle">配信管理ツール</span>
-                </div>
-            </div>
-            <div class="app-header-controls">
-                <div class="language-picker">
-                    <button type="button" id="language-toggle-btn" class="language-toggle-btn" aria-haspopup="true" aria-expanded="false" data-i18n-title="languageSelectTip" title="言語切替">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                        <span id="language-current-label" class="language-current-label">日本語</span>
-                        <svg class="language-dropdown-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
-                    <div id="language-menu" class="language-menu" role="menu" aria-label="言語選択" hidden>
-                        <button type="button" class="language-menu-item active" role="menuitem" data-lang-option="ja">日本語</button>
-                        <button type="button" class="language-menu-item" role="menuitem" data-lang-option="en">English</button>
-                        <button type="button" class="language-menu-item" role="menuitem" data-lang-option="zh">中文 (简体)</button>
-                    </div>
-                </div>
-                <button id="btn-open-settings" class="btn-icon" data-i18n-title="settingsTooltip" title="設定" onclick="openSettingModal()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                </button>
-            </div>
-        </div>
-        <div class="tab-nav" id="tab-navigation"></div>
-    </div>
-
-    <div id="main-tab" class="tab-content active">
-        <details class="tab-help">
-            <summary id="ui-info-summary" class="tab-help-summary">
-                <span id="ui-info-summary-text" data-i18n="infoSummary">ヘルプ</span>
-            </summary>
-            <div class="tab-help-body">
-                <p id="ui-main-info-top" style="margin: 0 0 10px 0;"></p>
-                <p id="ui-main-info-bottom" style="margin: 0;"></p>
-            </div>
-        </details>
-
-        <!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TwitchManagerDock</title>
-    <script>
-        const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
-        if (twitchManagerAudioSourceMode) {
-            document.documentElement.classList.add('audio-source-mode');
-        } else {
-            const sortableScript = document.createElement('script');
-            sortableScript.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
-            document.head.appendChild(sortableScript);
-        }
-    </script>
-    <style>
-        html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
-        html.audio-source-mode body { visibility: hidden; }
-    </style>
-
-    <link rel="stylesheet" href="twitch_manager.css">
-</head>
-
-<body>
-
-    <div id="toast" role="status" aria-live="polite" aria-atomic="true" data-i18n="extended.toastDone">完了</div>
-
-    <div class="sticky-top-wrapper">
-        <div class="app-header">
-            <h1 class="app-title app-title-row">◆ <span id="today-date"
-                    style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-            </h1>
-            <div class="app-header-controls">
-                <!-- Birthday/Anniversary Indicator -->
-                <div id="birthday-anniversary-indicator" class="birthday-indicator" style="position: relative; display: inline-block; margin-right: 4px; vertical-align: middle;">
-                    <button id="birthday-indicator-btn" class="btn-head-purple inactive" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;" onclick="toggleBirthdayPopover(event)" data-i18n-aria="idList.birthdayTitle" aria-label="今日のお祝い">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-                            <path d="M3 20h18" />
-                        </svg>
-                    </button>
-                    <div id="birthday-popover" class="birthday-popover" style="display: none;"></div>
-                </div>
-                <button id="global-settings-btn" class="btn-head-purple" data-i18n-tooltip="extended.displaySettingsBtnTitle" data-i18n-aria="extended.displaySettingsBtnTitle"
-                    onclick="openActiveCategorySettings()" aria-label="表示設定">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
-                </button>
-                <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
-        <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
-                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
-            </div>
-            
-            <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
-                <div style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;" data-i18n="titleTagGuide">
-                    タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
-                </div>
-
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
-                <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
-
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
-                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
-                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
-                </div>
-                <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-                <datalist id="registered-categories-list"></datalist>
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
-
-
-
-                <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
-                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準タグ</summary>
-                    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : Twitch配信カテゴリ名</span>
-                        </div>
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : 本日の日付・日時</span>
-                        </div>
-                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : シリーズもの配信回数（数字のみ+）</span>
-                        </div>
-                    </div>
-                </details>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" data-i18n="cancel">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveTitleTagModalSettings()" data-i18n="extended.saveBtn">保存して反映</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpRewardModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpRewardModal')">
-        <div class="modal-content" style="max-width: 480px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
-            <input type="hidden" id="cp-reward-edit-id">
-
-            <!-- Template Loader Block (Shown when creating new reward) -->
-            <div id="cp-reward-template-wrapper" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 10px; border-radius: 6px;">
-                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color: #c084fc;" data-i18n="cpTab.loadTemplateLabel">既存ポイントから設定を読み込む:</label>
-                <select id="cp-reward-template-select" onchange="applyCpRewardTemplate(this.value)" style="display:block; width:100%; padding:5px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-item); color:var(--text-main); cursor:pointer; box-sizing:border-box;">
-                    <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
-                </select>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
-            </div>
-                        <!-- <div class="cp-resizer-shortcut-banner" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.06); border: 1px solid rgba(145, 70, 255, 0.2); padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; color: var(--text-main);"><i class="fa-solid fa-images" style="color: #9146FF; margin-right: 4px;"></i><span data-i18n="cpTab.resizerHint">カスタムアイコン画像を作成</span></span>
-                <button type="button" class="btn-secondary" onclick="openTwitchImageResizerTool()" style="font-size: 10.5px; padding: 2px 8px; height: 24px; color: #c084fc; border-color: rgba(145, 70, 255, 0.4); display: inline-flex; align-items: center; gap: 4px;">
-                    <span>Image Resizer</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px;"></i>
-                </button>
-            </div> -->
-            <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
-                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <input type="text" id="cp-reward-id-display" readonly style="font-family: monospace; font-size: 11px; padding: 4px 6px; background: var(--bg-item); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; flex: 1; box-sizing: border-box;" onclick="this.select()">
-                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>コピー</button>
-                </div>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
-                <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 12px;">
-                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
-                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
-                </label>
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalCostLabel">消費ポイント数 (コスト):</label>
-                <input type="number" id="cp-reward-cost-input" value="50" min="1" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 10px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalPromptLabel">説明文 (任意):</label>
-                <input type="text" id="cp-reward-prompt-input" placeholder="例: 配信上で効果音が再生されます" data-i18n-placeholder="cpTab.rewardModalPromptPlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
-                <div class="cp-color-picker-row">
-                    <input type="color" id="cp-reward-color-input" value="#9146FF" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
-                    <div id="cp-reward-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
-                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpColorFromHex(this.value)">
-                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
-                    <span>カラーコード / パレット選択</span>
-                </div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
-                    <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpRewardColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
-                    <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpRewardColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
-                    <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpRewardColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
-                    <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpRewardColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
-                    <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpRewardColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
-                    <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpRewardColorSwatch('#26262C')" title="#26262C (Dark)"></button>
-                </div>
-                <div style="margin-top: 6px;">
-                    <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
-                    <div id="cp-reward-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
-                </div>
-            </div>
-            <div style="margin-bottom: 14px;">
-                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
-                    <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
-                    <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
-                </label>
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveCpReward()" data-i18n="extended.saveBtn">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpBulkEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpBulkEditModal')">
-        <div class="modal-content" style="max-width: 460px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpBulkEditModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-bulk-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.bulkEditModalTitle">チャンネルポイントの一括編集</h3>
-            <input type="hidden" id="cp-bulk-mode">
-            <input type="hidden" id="cp-bulk-group-id">
-
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
-                <span style="color: var(--twitch-purple); font-weight: bold;">※</span> 選択した報酬の「背景色」および「消費ポイント数」を一括で変更できます。<br>
-                <span style="font-size: 10px;" data-i18n="cpTab.bulkExternalNotice">（※Twitchの仕様上、外部作成された報酬は変更されません）</span>
-            </div>
-
-            <!-- Color Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-color" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkColorSection(this.checked)">
-                    <span data-i18n="cpTab.enableColorChange">🎨 背景色を変更する</span>
-                </label>
-                <div id="cp-bulk-color-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <div class="cp-color-picker-row">
-                        <input type="color" id="cp-bulk-color-input" value="#9146FF" oninput="updateCpBulkColorPreview(this.value)" onchange="updateCpBulkColorPreview(this.value)">
-                        <div id="cp-bulk-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
-                        <input type="text" id="cp-bulk-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpBulkColorFromHex(this.value)">
-                        <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(true)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
-                        <span>カラーコード / パレット選択</span>
-                    </div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpBulkColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpBulkColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
-                        <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpBulkColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
-                        <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpBulkColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
-                        <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpBulkColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
-                        <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpBulkColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
-                        <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpBulkColorSwatch('#26262C')" title="#26262C (Dark)"></button>
-                    </div>
-                    <div style="margin-top: 6px;">
-                        <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
-                        <div id="cp-bulk-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pause / Resume Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-pause" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkPauseSection(this.checked)">
-                    <span data-i18n="cpTab.enablePauseChange">⏸️ 引き換え一時停止 / 再開を変更する</span>
-                </label>
-                <div id="cp-bulk-pause-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <input type="hidden" id="cp-bulk-pause-val" value="pause">
-                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
-                        <button type="button" id="cp-bulk-pause-btn-pause" class="cp-segment-btn is-pause active" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('pause')" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</button>
-                        <button type="button" id="cp-bulk-pause-btn-resume" class="cp-segment-btn is-on" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('resume')" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する (受付中)</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Input Requirement Section -->
-            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkUserInputSection(this.checked)">
-                    <span data-i18n="cpTab.bulkChangeUserInput">💬 視聴者コメント必須 (テキスト入力必須) を変更する</span>
-                </label>
-                <div id="cp-bulk-user-input-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <input type="hidden" id="cp-bulk-user-input-val" value="true">
-                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
-                        <button type="button" id="cp-bulk-user-input-btn-true" class="cp-segment-btn is-purple active" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(true)" data-i18n="cpTab.bulkUserInputTrue">💬 必須にする (ON)</button>
-                        <button type="button" id="cp-bulk-user-input-btn-false" class="cp-segment-btn is-off" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(false)" data-i18n="cpTab.bulkUserInputFalse">💬 必須にしない (OFF)</button>
-                    </div>
-                </div>
-            </div>
-
-                        <!-- Cost Section -->
-            <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
-                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
-                    <input type="checkbox" id="cp-bulk-enable-cost" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkCostSection(this.checked)">
-                    <span data-i18n="cpTab.enableCostChange">💎 報酬額 (消費ポイント数) を変更する</span>
-                </label>
-                <div id="cp-bulk-cost-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <input type="number" id="cp-bulk-cost-input" value="50" min="1" max="2000000000" class="cd-input-field" style="width: 100px; padding: 6px; font-size: 12px;">
-                        <span style="font-size: 11px; color: var(--text-main);">pt</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpBulkEditModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="applyCpBulkEdit()" data-i18n="cpTab.applyBulkEdit">一括適用</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cpGroupModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpGroupModal')">
-        <div class="modal-content" style="max-width: 480px;">
-            <button type="button" class="modal-close-top" onclick="closeModal('cpGroupModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
-            <h3 id="cp-group-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.groupModalTitle">グループ設定</h3>
-            <input type="hidden" id="cp-group-edit-id">
-            <div style="margin-bottom: 12px;">
-                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.groupModalNameLabel">グループ名:</label>
-                <input type="text" id="cp-group-name-input" placeholder="例: ホラゲー用、朝配信セット" data-i18n-placeholder="cpTab.groupModalNamePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <label style="font-size:12px; font-weight:bold;" data-i18n="cpTab.groupModalChecklistLabel">含むチャンネルポイント (複数選択可能):</label>
-                    <select id="cp-modal-sort-select" onchange="changeCpModalSortOrder(this.value)" style="padding: 2px 6px; font-size: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;">
-                        <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
-                        <option value="cost_asc" data-i18n="cpTab.sortCostAsc">コスト昇順</option>
-                        <option value="cost_desc" data-i18n="cpTab.sortCostDesc">コスト降順</option>
-                        <option value="name_asc" data-i18n="cpTab.sortNameAsc">名前昇順</option>
-                        <option value="name_desc" data-i18n="cpTab.sortNameDesc">名前降順</option>
-                    </select>
-                </div>
-                <div id="cp-group-rewards-checklist" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; background: var(--bg-card); display: flex; flex-direction: column; gap: 4px;"></div>
-            </div>
-            
-            <!-- Automation Settings -->
-            <div style="margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px;">
-                <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--command-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 6px;" data-i18n="cpTab.automationTitle">自動化設定 (オートメーション)</div>
-                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px; text-align: left;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-stream-start" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnStreamStart">配信開始時に自動ON</span>
-                    </label>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-stream-end" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOffStreamEnd">配信終了時に自動OFF</span>
-                    </label>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
-                        <input type="checkbox" id="cp-group-auto-raid" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
-                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnRaid">レイド受け取り時に自動ON</span>
-                    </label>
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;">
-                        <label style="font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOffMinutes">ONにしてから自動OFF (分):</label>
-                        <div style="display: inline-flex; align-items: center; gap: 6px;">
-                            <input type="number" id="cp-group-auto-off-min" value="0" min="0" max="1440" class="cd-input-field" style="width: 65px; padding: 4px 6px; font-size: 11.5px; text-align: center; box-sizing: border-box;">
-                            <span style="font-size: 10.5px; color: var(--text-muted);" data-i18n="cpTab.autoOffMinutesHint">※0で無効</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button type="button" class="btn-secondary" onclick="closeModal('cpGroupModal')" data-i18n="extended.cancelBtn">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="saveCpGroup()" data-i18n="extended.saveBtn">保存</button>
-            </div>
-        </div>
-    </div>
 <html lang="ja">
 
 <head>
@@ -719,9 +48,9 @@
                         data-i18n-tooltip="extended.language" data-i18n-aria="extended.language" aria-label="言語" aria-haspopup="true" aria-expanded="false"
                         style="font-size: 10px; font-weight: bold;">JP</button>
                     <div id="language-menu" class="language-menu" role="menu" aria-label="言語を選択" data-i18n-aria="extended.languageMenuLabel">
-                        <button type="button" class="language-option"  onclick="chooseLanguage('ja')" role="menuitem">日本語</button>
-                        <button type="button" class="language-option"  onclick="chooseLanguage('en')" role="menuitem">English</button>
-                        <button type="button" class="language-option"  onclick="chooseLanguage('zh')" role="menuitem">简体中文</button>
+                        <button type="button" class="language-option" data-lang-option="ja" onclick="chooseLanguage('ja')" role="menuitem">日本語</button>
+                        <button type="button" class="language-option" data-lang-option="en" onclick="chooseLanguage('en')" role="menuitem">English</button>
+                        <button type="button" class="language-option" data-lang-option="zh" onclick="chooseLanguage('zh')" role="menuitem">简体中文</button>
                     </div>
                 </div>
                 <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort" data-i18n-aria="extended.unlockSort" aria-label="並び替え解除"
@@ -738,90 +67,6 @@
     </div>
 
     <div id="main-tab" class="tab-content active">
-        <details class="tab-help">
-            <summary id="ui-info-summary" class="tab-help-summary">
-                <span id="ui-info-summary-text" data-i18n="infoSummary">ヘルプ</span>
-            </summary>
-            <div class="tab-help-body">
-                <p id="ui-main-info-top" style="margin: 0 0 10px 0;"></p>
-                <p id="ui-main-info-bottom" style="margin: 0;"></p>
-            </div>
-        </details>
-
-        <!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TwitchManagerDock</title>
-    <script>
-        const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
-        if (twitchManagerAudioSourceMode) {
-            document.documentElement.classList.add('audio-source-mode');
-        } else {
-            const sortableScript = document.createElement('script');
-            sortableScript.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
-            document.head.appendChild(sortableScript);
-        }
-    </script>
-    <style>
-        html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
-        html.audio-source-mode body { visibility: hidden; }
-    </style>
-
-    <link rel="stylesheet" href="twitch_manager.css">
-</head>
-
-<body>
-
-    <div id="toast" role="status" aria-live="polite" aria-atomic="true" data-i18n="extended.toastDone">完了</div>
-
-    <div class="sticky-top-wrapper">
-        <div class="app-header">
-            <h1 class="app-title app-title-row">◆ <span id="today-date"
-                    style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
-            </h1>
-            <div class="app-header-controls">
-                <!-- Birthday/Anniversary Indicator -->
-                <div id="birthday-anniversary-indicator" class="birthday-indicator" style="position: relative; display: inline-block; margin-right: 4px; vertical-align: middle;">
-                    <button id="birthday-indicator-btn" class="btn-head-purple inactive" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0;" onclick="toggleBirthdayPopover(event)" data-i18n-aria="idList.birthdayTitle" aria-label="今日のお祝い">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
-                            <path d="M3 20h18" />
-                        </svg>
-                    </button>
-                    <div id="birthday-popover" class="birthday-popover" style="display: none;"></div>
-                </div>
-                <button id="global-settings-btn" class="btn-head-purple" data-i18n-tooltip="extended.displaySettingsBtnTitle" data-i18n-aria="extended.displaySettingsBtnTitle"
-                    onclick="openActiveCategorySettings()" aria-label="表示設定">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
-                </button>
-                <div class="language-picker">
-                    <button id="ui-btn-language" class="btn-head-purple" onclick="toggleLanguageMenu(event)"
-                        data-i18n-tooltip="extended.language" data-i18n-aria="extended.language" aria-label="言語" aria-haspopup="true" aria-expanded="false"
-                        style="font-size: 10px; font-weight: bold;">JP</button>
-                    <div id="language-menu" class="language-menu" role="menu" aria-label="言語を選択" data-i18n-aria="extended.languageMenuLabel">
-                        <button type="button" class="language-option"  onclick="chooseLanguage('ja')" role="menuitem">日本語</button>
-                        <button type="button" class="language-option"  onclick="chooseLanguage('en')" role="menuitem">English</button>
-                        <button type="button" class="language-option"  onclick="chooseLanguage('zh')" role="menuitem">简体中文</button>
-                    </div>
-                </div>
-                <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort" data-i18n-aria="extended.unlockSort" aria-label="並び替え解除"
-                    onclick="toggleSortLock()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>
-                <button id="theme-btn" class="btn-head-purple" data-i18n-tooltip="extended.themeToggle" data-i18n-aria="extended.themeToggle" aria-label="テーマを切り替え"
-                    onclick="toggleTheme()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
-                <button class="btn-head-purple" id="ui-btn-guide" data-i18n-tooltip="extended.guide" data-i18n-aria="extended.guide" aria-label="ヘルプ"
-                    onclick="openModal('guideModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
-                <button class="btn-head-purple" id="ui-btn-settings" data-i18n-tooltip="extended.settings" data-i18n-aria="extended.settings" aria-label="設定"
-                    onclick="openModal('settingModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
-            </div>
-        </div>
-        <div class="tab-nav" id="tab-navigation"></div>
-    </div>
-
-    <div id="main-tab" class="tab-content active">
-        <!-- ヘルプ (タブ個別解説) -->
         <details class="tab-help">
             <summary id="ui-info-summary" class="tab-help-summary">
                 <span id="ui-info-summary-text" data-i18n="infoSummary">ヘルプ</span>
@@ -843,6 +88,8 @@
             </summary>
             <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
         </details>
+
+
         <div id="main-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
@@ -853,8 +100,6 @@
             <button class="btn-primary" id="ui-save-main" style="flex: 3;"
                 onclick="saveAllLocal(true)" data-i18n="extended.saveBtn">保存</button>
         </div>
-    </div>
-
     </div>
 
     <div id="twitch-tab" class="tab-content">
@@ -1708,6 +953,287 @@
         }
     </script>
 
+
+
+    <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
+        <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 id="title-tag-modal-title" style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;" data-i18n="titleTagModalTitle">配信タイトルの識別タグ・言葉セット (単語帳)</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
+                <div style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;" data-i18n="titleTagGuide">
+                    タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
+                </div>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
+                <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
+
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
+                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
+                </div>
+                <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                <datalist id="registered-categories-list"></datalist>
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
+
+
+
+                <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準タグ</summary>
+                    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : Twitch配信カテゴリ名</span>
+                        </div>
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : 本日の日付・日時</span>
+                        </div>
+                        <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : シリーズもの配信回数（数字のみ+）</span>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('titleTagModal')" data-i18n="cancel">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveTitleTagModalSettings()" data-i18n="extended.saveBtn">保存して反映</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cpRewardModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpRewardModal')">
+        <div class="modal-content" style="max-width: 480px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpRewardModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-reward-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.rewardModalTitleNew">チャンネルポイントの追加・編集</h3>
+            <input type="hidden" id="cp-reward-edit-id">
+
+            <!-- Template Loader Block (Shown when creating new reward) -->
+            <div id="cp-reward-template-wrapper" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.08); border: 1px solid rgba(145, 70, 255, 0.25); padding: 8px 10px; border-radius: 6px;">
+                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color: #c084fc;" data-i18n="cpTab.loadTemplateLabel">既存ポイントから設定を読み込む:</label>
+                <select id="cp-reward-template-select" onchange="applyCpRewardTemplate(this.value)" style="display:block; width:100%; padding:5px 8px; font-size:11px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-item); color:var(--text-main); cursor:pointer; box-sizing:border-box;">
+                    <option value="" data-i18n="cpTab.selectTemplatePlaceholder">-- 既存のチャンネルポイントを選択 --</option>
+                </select>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" data-i18n="cpTab.loadTemplateHint">※ 選択したポイントのタイトル・コスト・説明文・テーマカラーが自動入力されます。</div>
+            </div>
+                        <!-- <div class="cp-resizer-shortcut-banner" style="margin-bottom: 12px; background: rgba(145, 70, 255, 0.06); border: 1px solid rgba(145, 70, 255, 0.2); padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; color: var(--text-main);"><i class="fa-solid fa-images" style="color: #9146FF; margin-right: 4px;"></i><span data-i18n="cpTab.resizerHint">カスタムアイコン画像を作成</span></span>
+                <button type="button" class="btn-secondary" onclick="openTwitchImageResizerTool()" style="font-size: 10.5px; padding: 2px 8px; height: 24px; color: #c084fc; border-color: rgba(145, 70, 255, 0.4); display: inline-flex; align-items: center; gap: 4px;">
+                    <span>Image Resizer</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px;"></i>
+                </button>
+            </div> -->
+            <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
+                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="text" id="cp-reward-id-display" readonly style="font-family: monospace; font-size: 11px; padding: 4px 6px; background: var(--bg-item); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; flex: 1; box-sizing: border-box;" onclick="this.select()">
+                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>コピー</button>
+                </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalTitleLabel">報酬名 (タイトル):</label>
+                <input type="text" id="cp-reward-title-input" placeholder="例: 悲鳴SEを鳴らす" data-i18n-placeholder="cpTab.rewardModalTitlePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
+                    <input type="checkbox" id="cp-reward-user-input-checkbox" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="color: var(--text-main);" data-i18n="cpTab.userInputRequiredCheckbox">💬 視聴者テキスト入力を必須化する</span>
+                </label>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalCostLabel">消費ポイント数 (コスト):</label>
+                <input type="number" id="cp-reward-cost-input" value="50" min="1" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalPromptLabel">説明文 (任意):</label>
+                <input type="text" id="cp-reward-prompt-input" placeholder="例: 配信上で効果音が再生されます" data-i18n-placeholder="cpTab.rewardModalPromptPlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.rewardModalColorLabel">背景テーマカラー:</label>
+                <div class="cp-color-picker-row">
+                    <input type="color" id="cp-reward-color-input" value="#9146FF" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
+                    <div id="cp-reward-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
+                    <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpColorFromHex(this.value)">
+                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
+                    <span>カラーコード / パレット選択</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
+                    <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpRewardColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
+                    <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpRewardColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
+                    <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpRewardColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
+                    <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpRewardColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
+                    <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpRewardColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
+                    <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpRewardColorSwatch('#26262C')" title="#26262C (Dark)"></button>
+                </div>
+                <div style="margin-top: 6px;">
+                    <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
+                    <div id="cp-reward-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
+                </div>
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; cursor:pointer; margin: 0;">
+                    <input type="checkbox" id="cp-reward-paused-input" style="accent-color: var(--twitch-purple); width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                    <span style="color: var(--text-main);" data-i18n="cpTab.pauseRewardCheckbox">⏸️ 引き換えを一時停止する (一時中断)</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpRewardModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveCpReward()" data-i18n="extended.saveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cpBulkEditModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpBulkEditModal')">
+        <div class="modal-content" style="max-width: 460px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpBulkEditModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-bulk-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.bulkEditModalTitle">チャンネルポイントの一括編集</h3>
+            <input type="hidden" id="cp-bulk-mode">
+            <input type="hidden" id="cp-bulk-group-id">
+
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px;">
+                <span style="color: var(--twitch-purple); font-weight: bold;">※</span> 選択した報酬の「背景色」および「消費ポイント数」を一括で変更できます。<br>
+                <span style="font-size: 10px;" data-i18n="cpTab.bulkExternalNotice">（※Twitchの仕様上、外部作成された報酬は変更されません）</span>
+            </div>
+
+            <!-- Color Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-color" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkColorSection(this.checked)">
+                    <span data-i18n="cpTab.enableColorChange">🎨 背景色を変更する</span>
+                </label>
+                <div id="cp-bulk-color-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <div class="cp-color-picker-row">
+                        <input type="color" id="cp-bulk-color-input" value="#9146FF" oninput="updateCpBulkColorPreview(this.value)" onchange="updateCpBulkColorPreview(this.value)">
+                        <div id="cp-bulk-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
+                        <input type="text" id="cp-bulk-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpBulkColorFromHex(this.value)">
+                        <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(true)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
+                        <span>カラーコード / パレット選択</span>
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpBulkColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF69B4;" onclick="setCpBulkColorSwatch('#FF69B4')" title="#FF69B4 (Pink)"></button>
+                        <button type="button" class="cp-swatch" style="background:#00C875;" onclick="setCpBulkColorSwatch('#00C875')" title="#00C875 (Mint)"></button>
+                        <button type="button" class="cp-swatch" style="background:#3B82F6;" onclick="setCpBulkColorSwatch('#3B82F6')" title="#3B82F6 (Blue)"></button>
+                        <button type="button" class="cp-swatch" style="background:#FF9800;" onclick="setCpBulkColorSwatch('#FF9800')" title="#FF9800 (Orange)"></button>
+                        <button type="button" class="cp-swatch" style="background:#E93D3A;" onclick="setCpBulkColorSwatch('#E93D3A')" title="#E93D3A (Red)"></button>
+                        <button type="button" class="cp-swatch" style="background:#26262C;" onclick="setCpBulkColorSwatch('#26262C')" title="#26262C (Dark)"></button>
+                    </div>
+                    <div style="margin-top: 6px;">
+                        <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px;" data-i18n="cpTab.usedColorsLabel">登録済み報酬のカラー (使用中):</div>
+                        <div id="cp-bulk-used-colors-swatches" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 22px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pause / Resume Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-pause" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkPauseSection(this.checked)">
+                    <span data-i18n="cpTab.enablePauseChange">⏸️ 引き換え一時停止 / 再開を変更する</span>
+                </label>
+                <div id="cp-bulk-pause-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <input type="hidden" id="cp-bulk-pause-val" value="pause">
+                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
+                        <button type="button" id="cp-bulk-pause-btn-pause" class="cp-segment-btn is-pause active" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('pause')" data-i18n="cpTab.pauseOptionPause">⏸️ 一時停止にする (引き換え中止)</button>
+                        <button type="button" id="cp-bulk-pause-btn-resume" class="cp-segment-btn is-on" style="flex: 1; height: 26px;" onclick="setCpBulkPauseValue('resume')" data-i18n="cpTab.pauseOptionResume">▶️ 引き換え再開する (受付中)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Input Requirement Section -->
+            <div style="margin-bottom: 14px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-user-input" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkUserInputSection(this.checked)">
+                    <span data-i18n="cpTab.bulkChangeUserInput">💬 視聴者コメント必須 (テキスト入力必須) を変更する</span>
+                </label>
+                <div id="cp-bulk-user-input-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <input type="hidden" id="cp-bulk-user-input-val" value="true">
+                    <div class="cp-segmented-control" style="width: 100%; height: 32px;">
+                        <button type="button" id="cp-bulk-user-input-btn-true" class="cp-segment-btn is-purple active" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(true)" data-i18n="cpTab.bulkUserInputTrue">💬 必須にする (ON)</button>
+                        <button type="button" id="cp-bulk-user-input-btn-false" class="cp-segment-btn is-off" style="flex: 1; height: 26px;" onclick="setCpBulkUserInputVal(false)" data-i18n="cpTab.bulkUserInputFalse">💬 必須にしない (OFF)</button>
+                    </div>
+                </div>
+            </div>
+
+                        <!-- Cost Section -->
+            <div style="margin-bottom: 16px; background: var(--bg-card); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px;">
+                <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 8px;">
+                    <input type="checkbox" id="cp-bulk-enable-cost" style="accent-color: var(--twitch-purple); width: 15px; height: 15px;" onchange="toggleCpBulkCostSection(this.checked)">
+                    <span data-i18n="cpTab.enableCostChange">💎 報酬額 (消費ポイント数) を変更する</span>
+                </label>
+                <div id="cp-bulk-cost-controls" style="opacity: 0.4; pointer-events: none; transition: opacity 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <input type="number" id="cp-bulk-cost-input" value="50" min="1" max="2000000000" class="cd-input-field" style="width: 100px; padding: 6px; font-size: 12px;">
+                        <span style="font-size: 11px; color: var(--text-main);">pt</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpBulkEditModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyCpBulkEdit()" data-i18n="cpTab.applyBulkEdit">一括適用</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cpGroupModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cpGroupModal')">
+        <div class="modal-content" style="max-width: 480px;">
+            <button type="button" class="modal-close-top" onclick="closeModal('cpGroupModal')" data-i18n-aria="extended.close" aria-label="閉じる">&times;</button>
+            <h3 id="cp-group-modal-title" style="margin-top:0; color: var(--command-accent);" data-i18n="cpTab.groupModalTitle">グループ設定</h3>
+            <input type="hidden" id="cp-group-edit-id">
+            <div style="margin-bottom: 12px;">
+                <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;" data-i18n="cpTab.groupModalNameLabel">グループ名:</label>
+                <input type="text" id="cp-group-name-input" placeholder="例: ホラゲー用、朝配信セット" data-i18n-placeholder="cpTab.groupModalNamePlaceholder" class="cd-input-field" style="display:block; width:100%; padding:6px; font-size:12px; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="font-size:12px; font-weight:bold;" data-i18n="cpTab.groupModalChecklistLabel">含むチャンネルポイント (複数選択可能):</label>
+                    <select id="cp-modal-sort-select" onchange="changeCpModalSortOrder(this.value)" style="padding: 2px 6px; font-size: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-item); color: var(--text-main); cursor: pointer;">
+                        <option value="default" data-i18n="cpTab.sortDefault">ソート: 標準</option>
+                        <option value="cost_asc" data-i18n="cpTab.sortCostAsc">コスト昇順</option>
+                        <option value="cost_desc" data-i18n="cpTab.sortCostDesc">コスト降順</option>
+                        <option value="name_asc" data-i18n="cpTab.sortNameAsc">名前昇順</option>
+                        <option value="name_desc" data-i18n="cpTab.sortNameDesc">名前降順</option>
+                    </select>
+                </div>
+                <div id="cp-group-rewards-checklist" style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 11px; text-align: left; background: var(--bg-card); display: flex; flex-direction: column; gap: 4px;"></div>
+            </div>
+            
+            <!-- Automation Settings -->
+            <div style="margin-bottom: 16px; background: var(--bg-item); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px;">
+                <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--command-accent); border-bottom: 1px solid var(--border-color); padding-bottom: 6px;" data-i18n="cpTab.automationTitle">自動化設定 (オートメーション)</div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 11.5px; text-align: left;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
+                        <input type="checkbox" id="cp-group-auto-stream-start" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
+                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnStreamStart">配信開始時に自動ON</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
+                        <input type="checkbox" id="cp-group-auto-stream-end" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
+                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOffStreamEnd">配信終了時に自動OFF</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; text-align: left; justify-content: flex-start; width: fit-content; margin: 0;">
+                        <input type="checkbox" id="cp-group-auto-raid" style="margin: 0; cursor: pointer; width: 16px; height: 16px; accent-color: var(--twitch-purple); flex-shrink: 0;">
+                        <span style="color: var(--text-main); font-weight: 500; text-align: left;" data-i18n="cpTab.autoOnRaid">レイド受け取り時に自動ON</span>
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left;">
+                        <label style="font-weight: 500; color: var(--text-main); text-align: left;" data-i18n="cpTab.autoOffMinutes">ONにしてから自動OFF (分):</label>
+                        <div style="display: inline-flex; align-items: center; gap: 6px;">
+                            <input type="number" id="cp-group-auto-off-min" value="0" min="0" max="1440" class="cd-input-field" style="width: 65px; padding: 4px 6px; font-size: 11.5px; text-align: center; box-sizing: border-box;">
+                            <span style="font-size: 10.5px; color: var(--text-muted);" data-i18n="cpTab.autoOffMinutesHint">※0で無効</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal('cpGroupModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="saveCpGroup()" data-i18n="extended.saveBtn">保存</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
