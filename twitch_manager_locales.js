@@ -1,3 +1,8 @@
+/**
+ * Twitch Manager Localization Dictionary
+ * Supported Languages: ja (Japanese), en (English), zh (Simplified Chinese)
+ */
+
 const I18N_DATA = {
     "ja": {
         "ui": {
@@ -1469,8 +1474,6 @@ const I18N_DATA = {
                 "selfCategory": "My Twitch Account",
                 "selfMemo": "Authenticated account / Twitch User ID: {userId}",
                 "sortBy": "Sort By:",
-                "layoutGrid": "Allow Grid",
-                "layoutList": "Vertical Only",
                 "sortGroup": "By Group (Manual)",
                 "sortRecentSo": "Recent Shoutouts",
                 "sortSoCount": "Shoutout Count",
@@ -1769,19 +1772,6 @@ const I18N_DATA = {
                 "addTemplateTitle": "+ Add Template",
                 "saveBtn": "Save",
                 "deleteBtn": "Delete",
-                "expandAll": "Expand All",
-                "collapseAll": "Collapse All",
-                "expandAllTitlesTip": "Expand all title cards",
-                "collapseAllTitlesTip": "Collapse all title cards",
-                "expandAllFriendsTip": "Expand all ID cards",
-                "collapseAllFriendsTip": "Collapse all ID cards",
-                "titles": {
-                    "sortBy": "Sort By:",
-                    "sortGroup": "By Group (Manual)",
-                    "sortCategory": "By Category (Flat)",
-                    "sortTitle": "By Title (Flat)",
-                    "sortName": "By Name (Flat)"
-                },
                 "readBtn": "Load",
                 "saveCurrentBtn": "Save Current Input",
                 "autoExecCmds": "API Actions",
@@ -2439,6 +2429,22 @@ const I18N_DATA = {
                 "sortExternalFirst": "External First",
                 "badgeAppCreated": "This tool",
                 "badgeExternalCreated": "External"
+            },
+            "rawIdListCopyBtn": "@ID一覧",
+            "layoutGrid": "横並び可",
+            "layoutList": "縦積みのみ",
+            "expandAll": "すべて開く",
+            "collapseAll": "すべて閉じる",
+            "expandAllTitlesTip": "すべてのタイトルカードを開く",
+            "collapseAllTitlesTip": "すべてのタイトルカードを閉じる",
+            "expandAllFriendsTip": "すべてのIDカードを開く",
+            "collapseAllFriendsTip": "すべてのIDカードを閉じる",
+            "titles": {
+                "sortBy": "表示順:",
+                "sortGroup": "グループ別 (手動)",
+                "sortCategory": "カテゴリ順 (一覧)",
+                "sortTitle": "登録タイトル順 (2) (一覧)",
+                "sortName": "登録名前順 (1) (一覧)"
             }
         },
         "twitch": {
@@ -3781,6 +3787,22 @@ const I18N_DATA = {
                 "sortExternalFirst": "外部创建优先",
                 "badgeAppCreated": "本工具",
                 "badgeExternalCreated": "外部"
+            },
+            "rawIdListCopyBtn": "@ID一覧",
+            "layoutGrid": "横並び可",
+            "layoutList": "縦積みのみ",
+            "expandAll": "すべて開く",
+            "collapseAll": "すべて閉じる",
+            "expandAllTitlesTip": "すべてのタイトルカードを開く",
+            "collapseAllTitlesTip": "すべてのタイトルカードを閉じる",
+            "expandAllFriendsTip": "すべてのIDカードを開く",
+            "collapseAllFriendsTip": "すべてのIDカードを閉じる",
+            "titles": {
+                "sortBy": "表示順:",
+                "sortGroup": "グループ別 (手動)",
+                "sortCategory": "カテゴリ順 (一覧)",
+                "sortTitle": "登録タイトル順 (2) (一覧)",
+                "sortName": "登録名前順 (1) (一覧)"
             }
         },
         "twitch": {
@@ -4057,3 +4079,7 @@ const I18N_DATA = {
         }
     }
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { I18N_DATA };
+}
