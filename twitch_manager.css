@@ -3710,9 +3710,9 @@ body {
     }
 }
 
-/* ==========================================================================
+/* ====
    誕生日・記念日・カレンダー表示用のスタイル
-   ========================================================================== */
+   ==== */
 
 #birthday-indicator-btn.inactive {
     background: rgba(255, 255, 255, 0.05);
@@ -3908,9 +3908,9 @@ body.light-theme .calendar-day-cell-badge {
     border-color: var(--twitch-purple);
 }
 
-/* ========================================
+/* =====
    カレンダーポップアップ ライト/ダーク統一
-   ======================================== */
+   ===== */
 #cal-day-popup {
     background: var(--bg-card) !important;
     border: 1px solid var(--border-color) !important;
@@ -3925,9 +3925,9 @@ body.light-theme .calendar-day-cell-badge {
     border: 2px solid var(--border-color) !important;
 }
 
-/* ========================================
+/* =====
    ツールチップ画面外はみ出し防止 (左右寄せ自動調整)
-   ======================================== */
+   ===== */
 .command-grid .has-tooltip:nth-child(4n+1)::after,
 .tw-copy-grid .has-tooltip:nth-child(4n+1)::after {
     left: 0 !important;
@@ -3954,9 +3954,9 @@ body.light-theme .calendar-day-cell-badge {
     transform: none !important;
 }
 
-/* ========================================
+/* =====
    ライトモード用 テキスト・UIの視認性補正
-   ======================================== */
+   ===== */
 body.light-theme .id-meta {
     color: #53535f !important;
     background: #e8eaee !important;
@@ -5520,9 +5520,9 @@ body.light-theme .cp-segment-btn.is-purple.active {
 
 
 
-/* ==========================================================================
+/* ====
    Channel Points (CP) Table & Row Clean Styles
-   ========================================================================== */
+   ==== */
 .cp-rewards-table {
     width: 100%;
     border-collapse: collapse;
@@ -5723,4 +5723,169 @@ body.light-theme .cp-segment-btn.is-purple.active {
 .cp-segment-btn.active.is-off {
     background: #ef4444;
     color: #ffffff;
+}
+
+
+/* Memo Markdown Styles */
+.memo-markdown-preview {
+    min-height: 150px;
+    padding: 10px 12px;
+    background: var(--bg-base);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 12px;
+    line-height: 1.6;
+    word-break: break-word;
+    overflow-y: auto;
+}
+
+.memo-markdown-preview .md-h1 { font-size: 15px; font-weight: bold; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; margin: 10px 0 6px 0; color: var(--command-accent); }
+.memo-markdown-preview .md-h2 { font-size: 13.5px; font-weight: bold; margin: 8px 0 4px 0; color: var(--text-main); }
+.memo-markdown-preview .md-h3 { font-size: 12px; font-weight: bold; margin: 6px 0 4px 0; color: var(--text-muted); }
+.memo-markdown-preview .md-code-block { background: var(--bg-item); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); font-family: monospace; font-size: 11px; overflow-x: auto; margin: 6px 0; white-space: pre-wrap; }
+.memo-markdown-preview .md-inline-code { background: var(--bg-item); padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 11px; color: var(--command-accent); }
+.memo-markdown-preview .md-list { padding-left: 18px; margin: 4px 0; }
+.memo-markdown-preview .md-task-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+.memo-markdown-preview .md-task-item input[type="checkbox"] {
+    width: 15px !important;
+    height: 15px !important;
+    min-width: 15px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    accent-color: var(--twitch-purple) !important;
+    cursor: pointer !important;
+}
+
+.memo-markdown-preview .md-task-item input[type="checkbox"]:hover {
+    transform: scale(1.15);
+    transition: transform 0.1s ease;
+}
+
+.memo-markdown-preview .md-task-item span {
+    flex: 1 !important;
+    text-align: left !important;
+    word-break: break-word !important;
+}
+.memo-markdown-preview .md-done { text-decoration: line-through; opacity: 0.6; }
+.memo-markdown-preview .md-quote { border-left: 3px solid var(--twitch-purple); margin: 6px 0; padding-left: 8px; color: var(--text-muted); font-style: italic; }
+.memo-markdown-preview .md-hr { border: none; border-top: 1px solid var(--border-color); margin: 10px 0; }
+.memo-markdown-preview .md-link { color: var(--command-accent); text-decoration: underline; }
+.memo-markdown-preview .md-link:hover { text-decoration: none; }
+
+
+
+
+.memo-markdown-preview .md-list-item {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    margin: 3px 0 !important;
+    line-height: 1.5 !important;
+}
+
+.memo-markdown-preview .md-list-item > span:last-child {
+    flex: 1 !important;
+    text-align: left !important;
+    word-break: break-word !important;
+}
+
+.memo-markdown-preview .md-num {
+    font-weight: bold;
+    color: var(--twitch-purple);
+    font-size: 12px;
+    flex-shrink: 0;
+    width: 18px;
+    min-width: 18px;
+    text-align: left;
+    display: inline-block;
+}
+
+.memo-markdown-preview .md-bullet {
+    color: var(--twitch-purple);
+    font-size: 12px;
+    flex-shrink: 0;
+    width: 18px;
+    min-width: 18px;
+    text-align: left;
+    display: inline-block;
+}
+
+.memo-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-base);
+    padding: 6px 0 8px 0;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.memo-global-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.memo-toolbar-btn {
+    height: 24px;
+    min-height: 24px;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-main);
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    box-sizing: border-box;
+    line-height: 1;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.memo-toolbar-btn:hover {
+    background: var(--twitch-purple);
+    color: var(--text-on-purple, #ffffff);
+    border-color: var(--twitch-purple);
+}
+
+#ui-toggle-all-memos {
+    min-width: 96px;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.memo-mode-toggle-btn {
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    min-width: 82px !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
 }
