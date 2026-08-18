@@ -77,6 +77,37 @@
             </div>
         </details>
 
+        <!-- Title Sort & Open/Close Toolbar -->
+        <div class="titles-toolbar" style="display: flex; gap: 8px; margin-top: 10px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: nowrap; overflow-x: auto;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="titles.sortBy">表示順:</span>
+            <select id="titles-sort-select" onchange="changeTitlesSortOrder(this.value)" data-i18n-aria="titles.sortBy" aria-label="表示順" style="flex: 1; min-width: 100px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="group" data-i18n="titles.sortGroup" selected>グループ別 (手動)</option>
+                <option value="category" data-i18n="titles.sortCategory">カテゴリ順 (一覧)</option>
+                <option value="title" data-i18n="titles.sortTitle">登録タイトル順 (2) (一覧)</option>
+                <option value="name" data-i18n="titles.sortName">登録名前順 (1) (一覧)</option>
+            </select>
+            <div style="display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0;">
+                <!-- 横並び トグルボタン (デフォルトOFF) -->
+                <label class="layout-toggle-label" title="横並び表示の切り替え（ON: カードを横並び配置 / OFF: 縦積みリスト表示）" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; font-size: 11px;">
+                    <span style="font-size: 11px; color: var(--text-main); font-weight: 500;" data-i18n="extended.layoutGridLabel">横並び</span>
+                    <input type="checkbox" id="titles-layout-toggle" onchange="changeTitlesLayoutMode(this.checked ? 'grid' : 'list')" style="display:none;">
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
+
+                <!-- 開閉 一括トグルボタン (フォルダSVG切り替え) -->
+                <button type="button" id="titles-toggle-all-btn" class="btn-secondary" onclick="toggleAllTitlesExpandCollapse()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 4px;" title="すべてのフォルダ・カードを一括で開く / 閉じる">
+                    <svg id="titles-toggle-all-svg-open" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; display: none;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    <svg id="titles-toggle-all-svg-close" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="extended.toggleAllFolder">開閉</span>
+                </button>
+            </div>
+        </div>
         <div id="main-container" class="sortable-container"></div>
 
         <div class="sticky-footer-wrapper">
@@ -379,7 +410,22 @@
             <div class="category-box tw-section closed" id="tw-box-sub" style="flex:1;min-width:270px;margin-bottom:0;">
                 <div class="category-name" onclick="twToggle('tw-box-sub')"><span id="tw-l-sub" data-i18n="extended.subscribersTab">サブスクライバー</span></div>
                 <div class="tw-body">
-                    <button class="btn-secondary" style="width:100%;margin-bottom:10px;" onclick="fetchSubscribers(this)" id="tw-btn-sub" data-i18n="extended.fetchBtn">一覧を取得</button>
+                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                        <button class="btn-secondary" style="flex:1;min-width:0;padding:4px;font-size:11px;height:28px;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="fetchSubscribers(this)" id="tw-btn-sub" data-i18n="extended.fetchBtn">一覧を取得</button>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-sub-sort-select" onchange="changeSubSortMode(this.value)" aria-label="並び替え">
+                            <option value="default">標準順</option>
+                            <option value="tier_desc">Tier(高→低)</option>
+                            <option value="tier_asc">Tier(低→高)</option>
+                            <option value="gift_first">ギフト優先</option>
+                            <option value="direct_first">通常優先</option>
+                        </select>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-sub-size-select" onchange="changeSubPageSize(this.value)" aria-label="1ページあたりの表示人数">
+                            <option value="10" selected>10件/P</option>
+                            <option value="30">30件/P</option>
+                            <option value="50">50件/P</option>
+                            <option value="100">100件/P</option>
+                        </select>
+                    </div>
                     <div id="tw-sub-list" class="tw-list"><p class="tw-list-empty" data-i18n="extended.noListInfo">情報がありません</p></div>
                 </div>
             </div>
@@ -390,7 +436,15 @@
                     <div style="font-size:11px;margin-bottom:8px;opacity:0.9;display:flex;justify-content:space-between;background:var(--bg-base);border:1px solid var(--border-color);padding:4px 8px;border-radius:4px;" id="tw-vip-slot-info">
                         <span><span data-i18n="extended.vipSlotPrefix">VIP枠: </span><strong data-i18n="extended.vipSlotDesc">一覧取得後に反映</strong></span>
                     </div>
-                    <button class="btn-secondary" style="width:100%;margin-bottom:10px;" onclick="fetchVips(this)" id="tw-btn-vip-list" data-i18n="extended.fetchListBtn">一覧を取得</button>
+                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
+                        <button class="btn-secondary" style="flex:1;min-width:0;padding:4px;font-size:11px;height:28px;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" onclick="fetchVips(this)" id="tw-btn-vip-list" data-i18n="extended.fetchListBtn">一覧を取得</button>
+                        <select class="tw-page-size-select" style="flex:1;min-width:0;height:28px;" id="tw-vip-size-select" onchange="changeVipPageSize(this.value)" aria-label="1ページあたりの表示人数">
+                            <option value="10" selected>10件/P</option>
+                            <option value="30">30件/P</option>
+                            <option value="50">50件/P</option>
+                            <option value="100">100件/P</option>
+                        </select>
+                    </div>
                     <div id="tw-vip-list" class="tw-list" style="margin-bottom:10px;"><p class="tw-list-empty" data-i18n="extended.noListInfo">情報がありません</p></div>
                     <label class="field-label" id="tw-l-vip-edit" data-i18n="extended.vipEditLabel">VIP追加・削除（ログインID）</label>
                     <div style="display:flex;gap:8px;">
@@ -408,6 +462,15 @@
     </div>
 
     <div id="cmd-tab" class="tab-content">
+        <!-- Command Sort Toolbar -->
+        <div class="cmd-toolbar" style="display: flex; gap: 8px; margin-top: 6px; margin-bottom: 8px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="commands.sortBy">表示順:</span>
+            <select id="cmd-sort-select" onchange="changeCmdSortOrder(this.value)" data-i18n-aria="commands.sortBy" aria-label="表示順" style="flex: 1; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
+                <option value="group" data-i18n="commands.sortGroup" selected>グループ別 (標準)</option>
+                <option value="name" data-i18n="commands.sortName">名前順 (A-Z)</option>
+                <option value="command" data-i18n="commands.sortCommand">コマンド順</option>
+            </select>
+        </div>
         <div id="cmd-container"></div>
     </div>
 
@@ -430,15 +493,36 @@
         </details>
 
         <!-- Sort & Filter Toolbar -->
-        <div class="friends-toolbar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
-            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; font-size: 12px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; cursor: pointer; outline: none;">
+        <div class="friends-toolbar" style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: var(--bg-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: nowrap; overflow-x: auto;">
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; flex-shrink: 0;" data-i18n="idList.sortBy">表示順:</span>
+            <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; min-width: 100px; font-size: 11px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 5px; cursor: pointer; outline: none;">
                 <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
                 <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
                 <option value="recent-so" data-i18n="idList.sortRecentSo">直近の応援順</option>
                 <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
                 <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
             </select>
+            <div style="display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0;">
+                <!-- 横並び トグルボタン (デフォルトOFF) -->
+                <label class="layout-toggle-label" title="横並び表示の切り替え（ON: カードを横並び配置 / OFF: 縦積みリスト表示）" style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; font-size: 11px;">
+                    <span style="font-size: 11px; color: var(--text-main); font-weight: 500;" data-i18n="extended.layoutGridLabel">横並び</span>
+                    <input type="checkbox" id="friends-layout-toggle" onchange="changeFriendsLayoutMode(this.checked ? 'grid' : 'list')" style="display:none;">
+                    <span class="toggle-switch-track"><span class="toggle-switch-thumb"></span></span>
+                </label>
+
+                <!-- 開閉 一括トグルボタン (フォルダSVG切り替え) -->
+                <button type="button" id="friends-toggle-all-btn" class="btn-secondary" onclick="toggleAllFriendsExpandCollapse()" style="font-size: 11px; padding: 4px 8px; height: 26px; display: inline-flex; align-items: center; gap: 4px;" title="すべてのフォルダ・カードを一括で開く / 閉じる">
+                    <svg id="friends-toggle-all-svg-open" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; display: none;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        <line x1="12" y1="11" x2="12" y2="17"></line>
+                        <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    <svg id="friends-toggle-all-svg-close" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="extended.toggleAllFolder">開閉</span>
+                </button>
+            </div>
         </div>
 
         <!-- タグで絞り込むアコーディオン -->
@@ -645,7 +729,10 @@
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
                 <div style="font-weight: bold; color: var(--command-accent); margin-bottom: 12px; font-size: 12px;" data-i18n="settingsUi.adjustScreenTitle">画面表示の微調整</div>
                 
-                <span class="field-label" id="ui-settings-font-size-label" data-i18n="settingsUi.fontSizeLabel">文字サイズ調整</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="field-label" id="ui-settings-font-size-label" data-i18n="settingsUi.fontSizeLabel" style="margin-bottom: 0;">文字サイズ調整</span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;"><span id="settings_font_size_val">0</span>px</span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
                     <div class="custom-slider-wrapper" id="slider-font-size-wrapper" style="flex: 1;">
                         <div class="custom-slider-track"></div>
@@ -653,7 +740,10 @@
                     </div>
                 </div>
 
-                <span class="field-label" id="ui-settings-line-height-label" data-i18n="settingsUi.lineHeightLabel">行間の隙間調整</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="field-label" id="ui-settings-line-height-label" data-i18n="settingsUi.lineHeightLabel" style="margin-bottom: 0;">行間の隙間調整</span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold;"><span id="settings_line_height_val">1.5</span></span>
+                </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                     <div class="custom-slider-wrapper" id="slider-line-height-wrapper" style="flex: 1;">
                         <div class="custom-slider-track"></div>
@@ -897,7 +987,8 @@
                 'js/ui.js',
                 'js/main.js'
             ];
-            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+            const cacheBuster = Date.now();
+            document.write(appScripts.map(source => `<script src="${source}?v=${cacheBuster}"><\/script>`).join(''));
         }
     </script>
 

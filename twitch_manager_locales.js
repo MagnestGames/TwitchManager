@@ -1,6 +1,9 @@
 const I18N_DATA = {
     "ja": {
         "ui": {
+            "rawIdListCopyBtn": "@ID一覧",
+            "layoutGrid": "横並び可",
+            "layoutList": "縦積みのみ",
             "tabs": [
                 "タイトル",
                 "通知と紹介",
@@ -69,6 +72,25 @@ const I18N_DATA = {
             "save": "保存",
             "addTemplate": "＋ 追加",
             "addMemo": "＋ メモを追加",
+            "expandAll": "すべて開く",
+            "collapseAll": "すべて閉じる",
+            "expandAllTitlesTip": "すべてのタイトルカードを開く",
+            "collapseAllTitlesTip": "すべてのタイトルカードを閉じる",
+            "expandAllFriendsTip": "すべてのIDカードを開く",
+            "collapseAllFriendsTip": "すべてのIDカードを閉じる",
+            "titles": {
+                "sortBy": "表示順:",
+                "sortGroup": "グループ別 (手動)",
+                "sortCategory": "カテゴリ順 (一覧)",
+                "sortTitle": "登録タイトル順 (2) (一覧)",
+                "sortName": "登録名前順 (1) (一覧)"
+            },
+            "commands": {
+                "sortBy": "表示順:",
+                "sortGroup": "グループ別 (標準)",
+                "sortName": "名前順 (A-Z)",
+                "sortCommand": "コマンド順"
+            },
             "footerActions": {
                 "selectFile": "ファイル選択",
                 "noFileSelected": "未選択",
@@ -506,6 +528,8 @@ const I18N_DATA = {
                 "unitMinute": "分",
                 "unitSecond": "秒",
                 "cancelBtn": "キャンセル",
+                "layoutGridLabel": "横並び",
+                "toggleAllFolder": "開閉",
                 "endBtn": "終了",
                 "subscribersTab": "サブスクライバー",
                 "fetchBtn": "一覧を取得",
@@ -1432,6 +1456,12 @@ const I18N_DATA = {
                 "xUrl": "X ID or URL",
                 "youtubeUrl": "YouTube Link"
             },
+            "commands": {
+                "sortBy": "Sort By:",
+                "sortGroup": "Group (Default)",
+                "sortName": "Name (A-Z)",
+                "sortCommand": "Command"
+            },
             "idList": {
                 "autoCategory": "Shoutout History",
                 "shoutoutMeta": "Shoutouts: {count} / Last: {date}",
@@ -1439,6 +1469,8 @@ const I18N_DATA = {
                 "selfCategory": "My Twitch Account",
                 "selfMemo": "Authenticated account / Twitch User ID: {userId}",
                 "sortBy": "Sort By:",
+                "layoutGrid": "Allow Grid",
+                "layoutList": "Vertical Only",
                 "sortGroup": "By Group (Manual)",
                 "sortRecentSo": "Recent Shoutouts",
                 "sortSoCount": "Shoutout Count",
@@ -1737,6 +1769,19 @@ const I18N_DATA = {
                 "addTemplateTitle": "+ Add Template",
                 "saveBtn": "Save",
                 "deleteBtn": "Delete",
+                "expandAll": "Expand All",
+                "collapseAll": "Collapse All",
+                "expandAllTitlesTip": "Expand all title cards",
+                "collapseAllTitlesTip": "Collapse all title cards",
+                "expandAllFriendsTip": "Expand all ID cards",
+                "collapseAllFriendsTip": "Collapse all ID cards",
+                "titles": {
+                    "sortBy": "Sort By:",
+                    "sortGroup": "By Group (Manual)",
+                    "sortCategory": "By Category (Flat)",
+                    "sortTitle": "By Title (Flat)",
+                    "sortName": "By Name (Flat)"
+                },
                 "readBtn": "Load",
                 "saveCurrentBtn": "Save Current Input",
                 "autoExecCmds": "API Actions",
@@ -1840,6 +1885,8 @@ const I18N_DATA = {
                 "unitMinute": "min",
                 "unitSecond": "sec",
                 "cancelBtn": "Cancel",
+                "layoutGridLabel": "Grid",
+                "toggleAllFolder": "Toggle All",
                 "endBtn": "End",
                 "subscribersTab": "Subscribers",
                 "fetchBtn": "Fetch List",
@@ -2766,6 +2813,12 @@ const I18N_DATA = {
                 "xUrl": "X ID 或 URL",
                 "youtubeUrl": "YouTube 链接"
             },
+            "commands": {
+                "sortBy": "排序:",
+                "sortGroup": "按分组 (默认)",
+                "sortName": "按名称 (A-Z)",
+                "sortCommand": "按指令"
+            },
             "idList": {
                 "autoCategory": "介绍记录",
                 "shoutoutMeta": "介绍 {count} 次 / 最后: {date}",
@@ -3173,6 +3226,8 @@ const I18N_DATA = {
                 "unitMinute": "分",
                 "unitSecond": "秒",
                 "cancelBtn": "取消",
+                "layoutGridLabel": "横排",
+                "toggleAllFolder": "展开/折叠",
                 "endBtn": "结束",
                 "subscribersTab": "订阅者",
                 "fetchBtn": "获取列表",

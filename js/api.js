@@ -140,8 +140,6 @@
         }
 
 
-        // ソート状態管理
-        let friendsSortOrder = 'name';
         // --- 各種ボタンの動作（追加ロジック） ---
         async function refreshFriendUserData(ci, fi, btnEl) {
             const friend = friendsConfig[ci]?.friends[fi];
@@ -281,31 +279,46 @@
             const bId = settings.userId;
             if (!bId) return customAlert(langMap[currentLang].alerts.requireBroadcaster);
             setBtnLoading(btn, true);
-            const data = await apiRequest(`/subscriptions?broadcaster_id=${bId}&first=100`);
+
+            let allData = [];
+            let cursor = '';
+            let totalCount = 0;
+
+            try {
+                do {
+                    const url = `/subscriptions?broadcaster_id=${bId}&first=100` + (cursor ? `&after=${cursor}` : '');
+                    const data = await apiRequest(url);
+                    if (!data?.data) break;
+                    allData.push(...data.data);
+                    if (data.total !== undefined) totalCount = Number(data.total);
+                    cursor = data.pagination?.cursor;
+                } while (cursor);
+            } catch (e) {
+                console.error('Fetch subscribers error:', e);
+            }
+
             setBtnLoading(btn, false);
-            if (!data?.data) {
+            if (!allData.length) {
                 c.innerHTML = twitchListEmptyHtml(uiText('runtime.fetchFailed'));
                 return;
             }
+
             const broadcasterId = String(bId || '');
             const broadcasterLogin = String(settings.userLogin || '').trim().toLowerCase();
-            const subscribers = data.data.filter(subscriber => {
+            const subscribers = allData.filter(subscriber => {
                 const isSameId = broadcasterId && String(subscriber.user_id || '') === broadcasterId;
                 const isSameLogin = broadcasterLogin && String(subscriber.user_login || '').trim().toLowerCase() === broadcasterLogin;
                 return !isSameId && !isSameLogin;
             });
-            const removedSelfCount = data.data.length - subscribers.length;
-            const total = Math.max(0, (Number(data.total) || data.data.length) - removedSelfCount);
+
+            const removedSelfCount = allData.length - subscribers.length;
+            const total = Math.max(0, (totalCount || allData.length) - removedSelfCount);
             if (!subscribers.length) {
                 c.innerHTML = twitchListEmptyHtml();
                 return;
             }
-            c.innerHTML = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${total}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>` +
-                subscribers.map(s => {
-                    const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
-                    const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
-                    return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
-                }).join('');
+
+            renderSubscriberList(subscribers, total, 1);
         }
 
         // === VIP ===
@@ -354,19 +367,34 @@
             const bId = settings.userId;
             if (!bId) return customAlert(langMap[currentLang].alerts.requireBroadcaster);
             setBtnLoading(btn, true);
-            const data = await apiRequest(`/channels/vips?broadcaster_id=${bId}&first=100`);
+
+            let allVips = [];
+            let cursor = '';
+
+            try {
+                do {
+                    const url = `/channels/vips?broadcaster_id=${bId}&first=100` + (cursor ? `&after=${cursor}` : '');
+                    const data = await apiRequest(url);
+                    if (!data?.data) break;
+                    allVips.push(...data.data);
+                    cursor = data.pagination?.cursor;
+                } while (cursor);
+            } catch (e) {
+                console.error('Fetch VIPs error:', e);
+            }
+
             setBtnLoading(btn, false);
             const c = document.getElementById('tw-vip-list');
-            if (!data?.data) {
+            if (!allVips.length) {
                 c.innerHTML = twitchListEmptyHtml(uiText('runtime.fetchFailed'));
                 return;
             }
             
-            const slotInfo = await updateVipSlotsInfo(data.data.length);
-            renderVipList(data.data);
+            const slotInfo = await updateVipSlotsInfo(allVips.length);
+            renderVipList(allVips, 1);
             safeSetLocal(TWITCH_VIP_CACHE_KEY, JSON.stringify({
                 broadcasterId: bId,
-                vips: data.data,
+                vips: allVips,
                 maxVip: slotInfo?.maxVip || 0,
                 updatedAt: Date.now()
             }));

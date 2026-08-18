@@ -209,7 +209,7 @@
             if (guideEl) guideEl.innerHTML = L.guideHtml;
             try { if (typeof updateCreatorsDOM === 'function') updateCreatorsDOM(); } catch(e) {}
             const cmdEl = document.getElementById('cmd-container');
-            if (cmdEl) cmdEl.innerHTML = L.cmdHtml;
+            if (cmdEl) renderCommands();
             refreshTwitchChoicePlaceholders();
             renderShoutoutSuggestions();
             renderRaidShoutOutPanel();
@@ -864,8 +864,207 @@
             return `<div class="empty-state">${raidSoEscape(text || '')}</div>`;
         }
 
+        function getRecordDisplayLabel(r, defaultLabel) {
+            if (r.isCustomLabel && r.label && r.label.trim()) {
+                return r.label.trim();
+            }
+            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
+                return r.label.trim();
+            }
+            if (r.title && r.title.trim()) {
+                return r.title.trim();
+            }
+            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
+        }
+        let titlesSortOrder = localStorage.getItem('stream_titles_sort_order_v16') || 'group';
+        let titlesLayoutMode = localStorage.getItem('stream_titles_layout_mode_v16') || 'list';
+
+        function changeTitlesSortOrder(val) {
+            titlesSortOrder = val;
+            localStorage.setItem('stream_titles_sort_order_v16', val);
+            const sel = document.getElementById('titles-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            render();
+        }
+        window.changeTitlesSortOrder = changeTitlesSortOrder;
+
+        function changeTitlesLayoutMode(val) {
+            titlesLayoutMode = val;
+            localStorage.setItem('stream_titles_layout_mode_v16', val);
+            const toggle = document.getElementById('titles-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
+            render();
+        }
+        window.changeTitlesLayoutMode = changeTitlesLayoutMode;
+
+        function toggleTitlePin(ci, ri) {
+            if (!config[ci] || !config[ci].records[ri]) return;
+            const record = config[ci].records[ri];
+            record.isPinned = !record.isPinned;
+            saveAllLocal(false);
+            render();
+            const msg = record.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
+            showToast(msg, 'info');
+        }
+        window.toggleTitlePin = toggleTitlePin;
+
+        let isTitlesAllExpanded = false;
+        function expandAllTitles() {
+            (config || []).forEach(cat => {
+                cat.isClosed = false;
+                (cat.records || []).forEach(r => { r.isOpen = true; });
+            });
+            isTitlesAllExpanded = true;
+            updateTitlesToggleAllBtn();
+            saveAllLocal(false);
+            render();
+            showToast('すべてのタイトルカードを開きました', 'info');
+        }
+        window.expandAllTitles = expandAllTitles;
+
+        function collapseAllTitles() {
+            (config || []).forEach(cat => {
+                cat.isClosed = true;
+                (cat.records || []).forEach(r => { r.isOpen = false; });
+            });
+            isTitlesAllExpanded = false;
+            updateTitlesToggleAllBtn();
+            saveAllLocal(false);
+            render();
+            showToast('すべてのタイトルカードを閉じました', 'info');
+        }
+        window.collapseAllTitles = collapseAllTitles;
+
+        function toggleAllTitlesExpandCollapse() {
+            if (isTitlesAllExpanded) {
+                collapseAllTitles();
+            } else {
+                expandAllTitles();
+            }
+        }
+        window.toggleAllTitlesExpandCollapse = toggleAllTitlesExpandCollapse;
+
+        function updateTitlesToggleAllBtn() {
+            const svgOpen = document.getElementById('titles-toggle-all-svg-open');
+            const svgClose = document.getElementById('titles-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isTitlesAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isTitlesAllExpanded ? 'none' : 'inline-block';
+            }
+        }
+
+        let isFriendsAllExpanded = false;
+        function expandAllFriends() {
+            (friendsConfig || []).forEach(cat => {
+                cat.isClosed = false;
+                (cat.friends || []).forEach(f => { f.isOpen = true; });
+            });
+            isFriendsAllExpanded = true;
+            updateFriendsToggleAllBtn();
+            saveFriendsLocal(false);
+            renderFriends();
+            showToast('すべてのIDカードを開きました', 'info');
+        }
+        window.expandAllFriends = expandAllFriends;
+
+        function collapseAllFriends() {
+            (friendsConfig || []).forEach(cat => {
+                cat.isClosed = true;
+                (cat.friends || []).forEach(f => { f.isOpen = false; });
+            });
+            isFriendsAllExpanded = false;
+            updateFriendsToggleAllBtn();
+            saveFriendsLocal(false);
+            renderFriends();
+            showToast('すべてのIDカードを閉じました', 'info');
+        }
+        window.collapseAllFriends = collapseAllFriends;
+
+        function toggleAllFriendsExpandCollapse() {
+            if (isFriendsAllExpanded) {
+                collapseAllFriends();
+            } else {
+                expandAllFriends();
+            }
+        }
+        window.toggleAllFriendsExpandCollapse = toggleAllFriendsExpandCollapse;
+
+        function updateFriendsToggleAllBtn() {
+            const svgOpen = document.getElementById('friends-toggle-all-svg-open');
+            const svgClose = document.getElementById('friends-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isFriendsAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isFriendsAllExpanded ? 'none' : 'inline-block';
+            }
+        }
+
+        function _buildTitleCard(r, ci, ri, T, L, A) {
+            const isPinned = Boolean(r.isPinned);
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
+            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
+            const pinStyle = isPinned
+                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
+                : '';
+
+            const pinBtnHtml = `
+                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleTitlePin(${ci}, ${ri})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 17v5"></path>
+                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
+                        <line x1="9" y1="4" x2="15" y2="4"></line>
+                    </svg>
+                </button>
+            `;
+
+            const card = document.createElement('div');
+            card.className = "record-card" + (r.isOpen ? " open" : "") + (isPinned ? " is-pinned-card" : "");
+            card.setAttribute('data-idx', ri);
+
+            card.innerHTML = `
+            <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})" style="position:relative; padding-right:36px;">
+                <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
+                    <span id="record-label-${ci}-${ri}">● ${pinBadge}${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
+                    <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                </div>
+                ${pinBtnHtml}
+                <div class="record-actions" style="margin-right: 32px;">
+                    <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                        <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
+                    </button>
+                    <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
+                    </button>
+                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">${raidSoEscape(T.delete)}</button>
+                </div>
+            </div>
+            <div class="record-body">
+                <span class="field-label">${L.game}</span>
+                <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                
+                <span class="field-label">${L.title}</span>
+                <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
+
+                <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
+
+                <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+
+                <span class="field-label">${L.memo}</span>
+                <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
+            </div>`;
+            return card;
+        }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', titlesSortOrder !== 'group');
+            c.classList.toggle('layout-grid', titlesLayoutMode === 'grid');
+            c.classList.toggle('layout-list', titlesLayoutMode === 'list');
             const T = langMap[currentLang];
             const L = T.labels;
             const A = T.titleActions || langMap.ja.titleActions;
@@ -874,57 +1073,92 @@
                 initSortable();
                 return;
             }
-            config.forEach((cat, ci) => {
-                const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
-                const records = cat.records || [];
-                if (!records.length) {
-                    d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
-                }
-                records.forEach((r, ri) => {
-                    const card = document.createElement('div'); card.className = "record-card" + (r.isOpen ? " open" : ""); card.setAttribute('data-idx', ri);
 
-                    card.innerHTML = `
-                <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
-                        <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
+            const sel = document.getElementById('titles-sort-select');
+            if (sel && sel.value !== titlesSortOrder) sel.value = titlesSortOrder;
+            const titlesToggle = document.getElementById('titles-layout-toggle');
+            const titlesToggleText = document.getElementById('titles-layout-toggle-text');
+            const isTitlesGrid = titlesLayoutMode === 'grid';
+            if (titlesToggle && titlesToggle.checked !== isTitlesGrid) titlesToggle.checked = isTitlesGrid;
+            if (titlesToggleText) {
+                titlesToggleText.textContent = isTitlesGrid ? (T.layoutGrid || '横並び可') : (T.layoutList || '縦積みのみ');
+            }
+
+            // ----- グループ別表示（デフォ・手動ソート・ドラッグ可能） -----
+            if (titlesSortOrder === 'group') {
+                config.forEach((cat, ci) => {
+                    const records = cat.records || [];
+                    const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
+                    d.innerHTML = `
+                    <div class="category-name" onclick="toggleCategory(this, ${ci})">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>${raidSoEscape(cat.name)}</span>
+                            <span class="category-count-badge" style="font-size:12px; font-weight:normal; color:var(--text-muted); padding:1px 7px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid var(--border-color);">${records.length}件</span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button>
+                            <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
+                        </div>
                     </div>
-                    <div class="record-actions">
-                        <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-                            <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
-                        </button>
-                        <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
-                        </button>
-                        <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">✕</button>
-                    </div>
-                </div>
-                <div class="record-body">
-                    <span class="field-label">${L.game}</span>
-                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
-                    
-                    <span class="field-label">${L.title}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
+                    <div class="category-records sortable-items ${titlesLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
+                    if (!records.length) {
+                        d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
+                    }
 
-                    <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                    <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+                    // カテゴリ内でもピン留め対象を最上位へ整列
+                    const sortedCatRecords = [...records].sort((a, b) => {
+                        const pa = a.isPinned ? 1 : 0;
+                        const pb = b.isPinned ? 1 : 0;
+                        return pb - pa;
+                    });
 
-                    <span class="field-label">${L.memo}</span>
-                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
-                </div>`;
-                    d.querySelector('.category-records').appendChild(card);
+                    sortedCatRecords.forEach((r) => {
+                        const ri = records.indexOf(r);
+                        d.querySelector('.category-records').appendChild(_buildTitleCard(r, ci, ri, T, L, A));
+                    });
+                    c.appendChild(d);
                 });
-                c.appendChild(d);
-            });
-            initSortable();
+                initSortable();
+
+            // ----- フラット表示（ソート順表示：カテゴリ順・登録タイトル順・登録名前順など） -----
+            } else {
+                const allRecords = [];
+                config.forEach((cat, ci) => {
+                    (cat.records || []).forEach((r, ri) => {
+                        allRecords.push({ r, ci, ri, catName: cat.name });
+                    });
+                });
+
+                allRecords.sort((a, b) => {
+                    const ra = a.r, rb = b.r;
+                    const pa = ra.isPinned ? 1 : 0;
+                    const pb = rb.isPinned ? 1 : 0;
+                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
+
+                    if (titlesSortOrder === 'name') {
+                        const na = getRecordDisplayLabel(ra, A.newLabel).toLowerCase();
+                        const nb = getRecordDisplayLabel(rb, A.newLabel).toLowerCase();
+                        return na.localeCompare(nb, 'ja');
+                    }
+                    if (titlesSortOrder === 'title') {
+                        const ta = (ra.title || '').toLowerCase();
+                        const tb = (rb.title || '').toLowerCase();
+                        return ta.localeCompare(tb, 'ja');
+                    }
+                    if (titlesSortOrder === 'category') {
+                        const ca = (ra.game || a.catName || '').toLowerCase();
+                        const cb = (rb.game || b.catName || '').toLowerCase();
+                        return ca.localeCompare(cb, 'ja');
+                    }
+                    return 0;
+                });
+
+                allRecords.forEach(({ r, ci, ri }) => {
+                    c.appendChild(_buildTitleCard(r, ci, ri, T, L, A));
+                });
+            }
+
         }
 
         // --- 追加機能：リネーム ---
@@ -940,13 +1174,7 @@
             }
         }
 
-        function changeFriendsSortOrder(val) {
-            friendsSortOrder = val;
-            const sel = document.getElementById('friends-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            renderFriends();
-        }
-        window.changeFriendsSortOrder = changeFriendsSortOrder;
+
 
         // カード生成ヘルパー
         // 遅延保存用のタイマー
@@ -996,7 +1224,7 @@
         function saveFriendsLocalDebounced() {
             if (saveFriendsTimeout) clearTimeout(saveFriendsTimeout);
             saveFriendsTimeout = setTimeout(() => {
-                saveFriendsLocal(false);
+                        saveFriendsLocal(false);
             }, 300);
         }
 
@@ -1032,6 +1260,12 @@
             }
 
             const isSelf = friendsConfig?.[ci]?.kind === 'authenticated-user';
+            const isPinned = Boolean(f.isPinned);
+            if (isPinned) {
+                card.classList.add('is-pinned-card');
+            }
+            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
+
             const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
             const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
@@ -1051,11 +1285,26 @@
                 ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">${raidSoEscape(sortMeta)}</span>`
                 : '';
 
+            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
+            const pinStyle = isPinned
+                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
+                : '';
+
+            const pinBtnHtml = `
+                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 17v5"></path>
+                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
+                        <line x1="9" y1="4" x2="15" y2="4"></line>
+                    </svg>
+                </button>
+            `;
+
             card.innerHTML = `
-            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
+            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})" style="position:relative; padding-right:36px;">
                 <div style="display:flex; flex-direction:column; min-width:0;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${raidSoEscape(displayName)}</span>
+                        <span>● ${pinBadge}${raidSoEscape(displayName)}</span>
                         ${sortMetaHtml}
                         <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1063,7 +1312,8 @@
                     </div>
                     ${groupTagsHtml}
                 </div>
-                <div style="display:flex; gap:5px; flex-shrink:0;">
+                ${pinBtnHtml}
+                <div style="display:flex; gap:5px; flex-shrink:0; margin-right:32px;">
                     <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
@@ -1122,12 +1372,325 @@
             return card;
         }
 
+        function toggleFriendPin(ci, fi) {
+            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
+            const friend = friendsConfig[ci].friends[fi];
+            friend.isPinned = !friend.isPinned;
+            saveFriendsLocal(false);
+            renderFriends();
+            const msg = friend.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
+            showToast(msg, 'info');
+        }
+        window.toggleFriendPin = toggleFriendPin;
+
+        let friendsSortOrder = localStorage.getItem('stream_friends_sort_order_v16') || 'name';
+        let friendsLayoutMode = localStorage.getItem('stream_friends_layout_mode_v16') || 'list';
+
+        function changeFriendsSortOrder(val) {
+            friendsSortOrder = val;
+            localStorage.setItem('stream_friends_sort_order_v16', val);
+            const sel = document.getElementById('friends-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderFriends();
+        }
+        window.changeFriendsSortOrder = changeFriendsSortOrder;
+
+        function changeFriendsLayoutMode(val) {
+            friendsLayoutMode = val;
+            localStorage.setItem('stream_friends_layout_mode_v16', val);
+            const toggle = document.getElementById('friends-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
+            renderFriends();
+        }
+        window.changeFriendsLayoutMode = changeFriendsLayoutMode;
+
+        /* ==========================================================================
+         *  コマンドタブ (cmd-tab) のソート・PIN・レイアウト処理
+         * ========================================================================== */
+        let cmdSortOrder = localStorage.getItem('stream_cmd_sort_order_v16') || 'group';
+        let cmdLayoutMode = localStorage.getItem('stream_cmd_layout_mode_v16') || 'list';
+        let pinnedCmds = JSON.parse(localStorage.getItem('stream_cmd_pins_v16') || '[]');
+
+        function changeCmdSortOrder(val) {
+            cmdSortOrder = val;
+            localStorage.setItem('stream_cmd_sort_order_v16', val);
+            const sel = document.getElementById('cmd-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderCommands();
+        }
+        window.changeCmdSortOrder = changeCmdSortOrder;
+
+        function changeCmdLayoutMode(val) {
+            cmdLayoutMode = val;
+            localStorage.setItem('stream_cmd_layout_mode_v16', val);
+            const toggle = document.getElementById('cmd-layout-toggle');
+            const isGrid = val === 'grid';
+            if (toggle) toggle.checked = isGrid;
+            renderCommands();
+        }
+        window.changeCmdLayoutMode = changeCmdLayoutMode;
+
+        function toggleCmdPin(cmdId) {
+            const idx = pinnedCmds.indexOf(cmdId);
+            if (idx >= 0) {
+                pinnedCmds.splice(idx, 1);
+                showToast('ピン留めを解除しました', 'info');
+            } else {
+                pinnedCmds.push(cmdId);
+                showToast('最上部にピン留めしました', 'info');
+            }
+            localStorage.setItem('stream_cmd_pins_v16', JSON.stringify(pinnedCmds));
+            renderCommands();
+        }
+        window.toggleCmdPin = toggleCmdPin;
+
+        let isCmdAllExpanded = false;
+        function toggleAllCmdExpandCollapse() {
+            isCmdAllExpanded = !isCmdAllExpanded;
+            const catBoxes = document.querySelectorAll('#cmd-container .category-box');
+            catBoxes.forEach(box => {
+                if (isCmdAllExpanded) {
+                    box.classList.remove('closed');
+                } else {
+                    box.classList.add('closed');
+                }
+            });
+            updateCmdToggleAllBtn();
+        }
+        window.toggleAllCmdExpandCollapse = toggleAllCmdExpandCollapse;
+
+        function updateCmdToggleAllBtn() {
+            const svgOpen = document.getElementById('cmd-toggle-all-svg-open');
+            const svgClose = document.getElementById('cmd-toggle-all-svg-close');
+            if (svgOpen && svgClose) {
+                svgOpen.style.display = isCmdAllExpanded ? 'inline-block' : 'none';
+                svgClose.style.display = isCmdAllExpanded ? 'none' : 'inline-block';
+            }
+        }
+
+        function renderCommands() {
+            const cmdEl = document.getElementById('cmd-container');
+            if (!cmdEl) return;
+
+            const sel = document.getElementById('cmd-sort-select');
+            if (sel && sel.value !== cmdSortOrder) sel.value = cmdSortOrder;
+            const toggle = document.getElementById('cmd-layout-toggle');
+            if (toggle && toggle.checked !== (cmdLayoutMode === 'grid')) toggle.checked = (cmdLayoutMode === 'grid');
+
+            const s = cmdSets[currentLang] || cmdSets.ja;
+            const b = s.buttons;
+            const c = s.categories;
+            const units = I18N_DATA[currentLang]?.ui?.extended || I18N_DATA.ja.ui.extended;
+
+            const categoriesData = [
+                {
+                    key: 'stream',
+                    name: c.stream,
+                    boxId: 'cmd-box-stream',
+                    items: [
+                        { id: 'title', type: 'btn', data: b.title },
+                        { id: 'game', type: 'btn', data: b.game },
+                        { id: 'marker', type: 'btn', data: b.marker },
+                        { id: 'raid', type: 'btn', data: b.raid },
+                        { id: 'unraid', type: 'btn', data: b.unraid },
+                        { id: 'ads30', type: 'btn', data: b.ads30 },
+                        { id: 'ads60', type: 'btn', data: b.ads60 },
+                        { id: 'ads180', type: 'btn', data: b.ads180 }
+                    ]
+                },
+                {
+                    key: 'chat',
+                    name: c.chat,
+                    boxId: 'cmd-box-chat',
+                    items: [
+                        { id: 'announce', type: 'btn', data: b.announce },
+                        { id: 'clear', type: 'btn', data: b.clear },
+                        { id: 'color', type: 'btn', data: b.color },
+                        { id: 'me', type: 'btn', data: b.me },
+                        { id: 'disconnect', type: 'btn', data: b.disconnect },
+                        { id: 'emoteOnly', type: 'chatToggle', label: b.emoteOnly[0], onCmdInfo: b.emoteOnly, offCmdInfo: b.emoteOff },
+                        { id: 'sub', type: 'chatToggle', label: b.sub[0], onCmdInfo: b.sub, offCmdInfo: b.subOff },
+                        { id: 'unique', type: 'chatToggle', label: b.unique[0], onCmdInfo: b.unique, offCmdInfo: b.uniqueOff },
+                        { id: 'followerOnly', type: 'chatToggle', label: b.followerOnly[0], onCmdInfo: b.followerOnly, offCmdInfo: b.followerOff, inputConfig: { id: 'follower-time', type: 'number', value: 0, min: 0, max: 129600, step: 1, unit: units.unitMinute, width: '40px' } },
+                        { id: 'slow', type: 'chatToggle', label: b.slow[0], onCmdInfo: b.slow, offCmdInfo: b.slowOff, inputConfig: { id: 'slow-time', type: 'number', value: 30, min: 3, max: 120, step: 1, unit: units.unitSecond, width: '40px' } }
+                    ]
+                },
+                {
+                    key: 'user',
+                    name: c.user,
+                    boxId: 'cmd-box-user',
+                    items: [
+                        { id: 'ban', type: 'btn', data: b.ban },
+                        { id: 'unban', type: 'btn', data: b.unban },
+                        { id: 'timeout', type: 'btn', data: b.timeout },
+                        { id: 'mod', type: 'btn', data: b.mod },
+                        { id: 'unmod', type: 'btn', data: b.unmod },
+                        { id: 'vip', type: 'btn', data: b.vip },
+                        { id: 'unvip', type: 'btn', data: b.unvip },
+                        { id: 'mods', type: 'btn', data: b.mods },
+                        { id: 'vips', type: 'btn', data: b.vips },
+                        { id: 'user', type: 'btn', data: b.user },
+                        { id: 'monitor', type: 'btn', data: b.monitor },
+                        { id: 'unmonitor', type: 'btn', data: b.unmonitor },
+                        { id: 'restrict', type: 'btn', data: b.restrict },
+                        { id: 'unrestrict', type: 'btn', data: b.unrestrict },
+                        { id: 'block', type: 'btn', data: b.block },
+                        { id: 'unblock', type: 'btn', data: b.unblock },
+                        { id: 'w', type: 'btn', data: b.w }
+                    ]
+                },
+                {
+                    key: 'interact',
+                    name: c.interact,
+                    boxId: 'cmd-box-interact',
+                    items: [
+                        { id: 'poll', type: 'btn', data: b.poll },
+                        { id: 'predict', type: 'btn', data: b.predict },
+                        { id: 'pin', type: 'btn', data: b.pin },
+                        { id: 'unpin', type: 'btn', data: b.unpin },
+                        { id: 'shoutout', type: 'btn', data: b.shoutout }
+                    ]
+                }
+            ];
+
+            const renderCard = (item) => {
+                const isPinned = pinnedCmds.includes(item.id);
+                const pinStyle = isPinned ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.6); background: rgba(255, 170, 0, 0.12);' : '';
+                const pinBtn = `
+                    <button class="icon-btn id-action-btn ${isPinned ? 'is-pinned' : ''}" title="${isPinned ? 'ピン留め解除' : '最上部にピン留め'}" onclick="event.stopPropagation(); toggleCmdPin('${item.id}')" style="position:absolute; top:4px; right:4px; z-index:3; width:18px; height:18px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid ${isPinned ? 'var(--warning-text, #ffaa00)' : 'var(--border-color)'}; cursor:pointer; ${pinStyle}">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="${isPinned ? 'var(--warning-text, #ffaa00)' : 'currentColor'}" stroke-width="2">
+                            <path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line>
+                        </svg>
+                    </button>
+                `;
+
+                if (item.type === 'btn') {
+                    const [label, command, tip] = item.data;
+                    const isAutoExec = !command.endsWith(' ');
+                    const autoExecIcon = isAutoExec ? `<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span>` : '';
+                    const displayCmd = command.trim();
+                    const actionTip = isAutoExec ? (s.directTip || s.copyTip) : s.copyTip;
+                    const tipText = tip && tip !== label ? (tip + ' / ' + actionTip) : actionTip;
+
+                    return `
+                    <div style="position: relative; height: 100%;">
+                        ${pinBtn}
+                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" style="padding: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: var(--transition-fast); ${pinStyle}"
+                            data-tooltip="${label}: ${command}&#10;${tipText}" 
+                            onclick="handleCommandClick('${command}', '${label}', ${isAutoExec})">
+                            <span class="cmd-label" style="margin-bottom: 2px; display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}${autoExecIcon}</span>
+                            <span class="cmd-code">${displayCmd}</span>
+                        </button>
+                    </div>`;
+                } else {
+                    const label = item.label;
+                    const onCmdBase = item.onCmdInfo[1].trim();
+                    const offCmd = item.offCmdInfo[1].trim();
+                    const toggleBtnId = 'chat-toggle-btn-' + offCmd.replace(/[^a-zA-Z]/g, '');
+
+                    let inputHtml = '';
+                    if (item.inputConfig) {
+                        const ic = item.inputConfig;
+                        inputHtml = `
+                        <div class="cmd-time-control" onclick="event.stopPropagation()">
+                            <input type="${ic.type}" id="${ic.id}" value="${ic.value}"${ic.min !== undefined ? ` min="${ic.min}"` : ''}${ic.max !== undefined ? ` max="${ic.max}"` : ''}${ic.step !== undefined ? ` step="${ic.step}"` : ''}${ic.min !== undefined && ic.max !== undefined ? ` onchange="this.value=clampInt(this.value,${ic.min},${ic.max},${ic.value})"` : ''}>
+                            <span>${ic.unit}</span>
+                        </div>`;
+                    }
+
+                    return `
+                    <div style="position: relative; display: flex; flex-direction: column; height: 100%;">
+                        ${pinBtn}
+                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" id="${toggleBtnId}" style="flex: 1; padding: 8px 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: all 0.2s ease; ${pinStyle}"
+                            data-tooltip="${label}: ${onCmdBase} / ${offCmd}&#10;${s.directTip || s.copyTip}" 
+                            onclick="handleChatToggleButton(this, '${onCmdBase}', '${offCmd}', '${item.inputConfig ? item.inputConfig.id : ''}')">
+                            <span class="cmd-label" style="display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span></span>
+                        </button>
+                        ${inputHtml}
+                    </div>`;
+                }
+            };
+
+            const gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 6px;';
+
+            let html = `
+            <div class="command-stack" style="display: flex; flex-direction: column; gap: 8px;">
+                <div class="tab-lead-note" style="margin-top: 2px; margin-bottom: 2px;">
+                    <span><span style="color: var(--command-accent);">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
+                </div>`;
+
+            if (cmdSortOrder === 'group') {
+                categoriesData.forEach(cat => {
+                    const sortedItems = [...cat.items].sort((a, b) => {
+                        const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
+                        const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
+                        return pinB - pinA;
+                    });
+
+                    html += `
+                    <div class="category-box tw-section" id="${cat.boxId}" style="margin-bottom: 0;">
+                        <div class="category-name" onclick="twToggle('${cat.boxId}')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                            <span>${cat.name}</span>
+                            <span class="category-arrow" style="font-size: 10px; opacity: 0.6;">▼</span>
+                        </div>
+                        <div class="tw-body" style="${gridStyle}">${sortedItems.map(renderCard).join('')}</div>
+                    </div>`;
+                });
+            } else {
+                let allItems = [];
+                categoriesData.forEach(cat => {
+                    cat.items.forEach(item => {
+                        allItems.push(item);
+                    });
+                });
+
+                allItems.sort((a, b) => {
+                    const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
+                    const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
+                    if (pinA !== pinB) return pinB - pinA;
+
+                    const getLabel = (item) => item.type === 'btn' ? item.data[0] : item.label;
+                    const getCmd = (item) => item.type === 'btn' ? item.data[1].trim() : item.onCmdInfo[1].trim();
+
+                    if (cmdSortOrder === 'name') {
+                        return getLabel(a).localeCompare(getLabel(b), currentLang === 'ja' ? 'ja' : 'en');
+                    } else {
+                        return getCmd(a).localeCompare(getCmd(b));
+                    }
+                });
+
+                html += `
+                <div class="category-box tw-section" style="margin-bottom: 0;">
+                    <div class="tw-body" style="${gridStyle}">${allItems.map(renderCard).join('')}</div>
+                </div>`;
+            }
+
+            html += `</div>`;
+            cmdEl.innerHTML = html;
+            restoreCategoryVisibility('cmd-tab');
+        }
+        window.renderCommands = renderCommands;
+
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
             const L = langMap[currentLang];
             const I = L.idList || langMap.ja.idList;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
+            c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
+            c.classList.toggle('layout-grid', friendsLayoutMode === 'grid');
+            c.classList.toggle('layout-list', friendsLayoutMode === 'list');
+
+            const sortSel = document.getElementById('friends-sort-select');
+            if (sortSel && sortSel.value !== friendsSortOrder) sortSel.value = friendsSortOrder;
+            const friendsToggle = document.getElementById('friends-layout-toggle');
+            const friendsToggleText = document.getElementById('friends-layout-toggle-text');
+            const isFriendsGrid = friendsLayoutMode === 'grid';
+            if (friendsToggle && friendsToggle.checked !== isFriendsGrid) friendsToggle.checked = isFriendsGrid;
+            if (friendsToggleText) {
+                friendsToggleText.textContent = isFriendsGrid ? (L.layoutGrid || '横並び可') : (L.layoutList || '縦積みのみ');
+            }
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -1196,13 +1759,22 @@
                             <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
                         </div>
                     </div>
-                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                    <div class="category-records sortable-items ${friendsLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
 
                     const friends = cat.friends || [];
                     if (!friends.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
                     }
-                    friends.forEach((f, fi) => {
+
+                    // カテゴリ内でもピン留め対象を最上位へ整列
+                    const sortedCatFriends = [...friends].sort((a, b) => {
+                        const pa = a.isPinned ? 1 : 0;
+                        const pb = b.isPinned ? 1 : 0;
+                        return pb - pa;
+                    });
+
+                    sortedCatFriends.forEach((f) => {
+                        const fi = friends.indexOf(f);
                         d.querySelector('.category-records').appendChild(_buildFriendCard(f, ci, fi, L, I, null));
                     });
                     c.appendChild(d);
@@ -1234,6 +1806,10 @@
 
                 allFriends.sort((a, b) => {
                     const fa = a.f, fb = b.f;
+                    const pa = fa.isPinned ? 1 : 0;
+                    const pb = fb.isPinned ? 1 : 0;
+                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
+
                     if (friendsSortOrder === 'name') {
                         const na = (fa.name || fa.twitch || '').toLowerCase();
                         const nb = (fb.name || fb.twitch || '').toLowerCase();
@@ -2297,7 +2873,7 @@
             <div style="background:var(--bg-card);border:2px solid var(--border-color);border-radius:12px;padding:16px;width:300px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <strong style="color:var(--twitch-purple);font-size:13px;">${raidSoEscape(uiText('idList.datePickerTitle', { type: typeLabel }))}</strong>
-                    <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
+                    <button onclick="document.getElementById('mini-date-picker-overlay')?.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&lt;</button>
@@ -5120,11 +5696,10 @@ function safeSetLocal(key, value) {
         function renderVipSlotInfo(currentVipCount, maxVip) {
             const infoEl = document.getElementById('tw-vip-slot-info');
             if (!infoEl) return;
-            const remaining = Math.max(0, maxVip - currentVipCount);
-            if (maxVip === 0) {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong> (${raidSoEscape(uiText('runtime.standardAccount'))})</span>`;
+            if (!maxVip || maxVip === 0) {
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span>`;
             } else {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount} / ${maxVip}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span>${raidSoEscape(uiText('runtime.remaining'))}: <strong>${remaining}${raidSoEscape(uiText('runtime.slotSuffix'))}</strong></span>`;
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span style="font-size:10px;opacity:0.8;">(推定枠上限: <strong>${maxVip}人</strong>)</span>`;
             }
         }
 
@@ -5138,18 +5713,192 @@ function safeSetLocal(key, value) {
             }
         }
 
-        function renderVipList(vips) {
+        let _subState = {
+            subscribers: [],
+            rawSubscribers: [],
+            total: 0,
+            currentPage: 1,
+            pageSize: Number(localStorage.getItem('tw_sub_page_size') || 10),
+            sortMode: localStorage.getItem('tw_sub_sort_mode') || 'default'
+        };
+        let _vipState = {
+            vips: [],
+            currentPage: 1,
+            pageSize: Number(localStorage.getItem('tw_vip_page_size') || 10)
+        };
+
+        function sortSubscribersArray(subscribers, sortMode) {
+            if (!Array.isArray(subscribers) || subscribers.length === 0) return subscribers || [];
+            const sorted = [...subscribers];
+            if (sortMode === 'tier_desc') {
+                sorted.sort((a, b) => (Number(b.tier) || 1000) - (Number(a.tier) || 1000));
+            } else if (sortMode === 'tier_asc') {
+                sorted.sort((a, b) => (Number(a.tier) || 1000) - (Number(b.tier) || 1000));
+            } else if (sortMode === 'gift_first') {
+                sorted.sort((a, b) => (b.is_gift ? 1 : 0) - (a.is_gift ? 1 : 0));
+            } else if (sortMode === 'direct_first') {
+                sorted.sort((a, b) => (a.is_gift ? 1 : 0) - (b.is_gift ? 1 : 0));
+            }
+            return sorted;
+        }
+
+        function renderSubscriberList(subscribers, total, page = 1, pageSize = null) {
+            const c = document.getElementById('tw-sub-list');
+            if (!c) return;
+            if (!subscribers || subscribers.length === 0) {
+                _subState.subscribers = [];
+                _subState.rawSubscribers = [];
+                _subState.total = 0;
+                _subState.currentPage = 1;
+                c.innerHTML = twitchListEmptyHtml();
+                return;
+            }
+
+            _subState.rawSubscribers = subscribers;
+            _subState.total = total !== undefined ? total : subscribers.length;
+            if (pageSize) _subState.pageSize = Number(pageSize) || 10;
+
+            const effectivePageSize = _subState.pageSize || 10;
+            const totalCount = _subState.total;
+
+            const sortedSubscribers = sortSubscribersArray(subscribers, _subState.sortMode);
+            _subState.subscribers = sortedSubscribers;
+
+            const totalPages = Math.ceil(sortedSubscribers.length / effectivePageSize) || 1;
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            _subState.currentPage = page;
+
+            // Sync top header selects if present
+            const subSizeSel = document.getElementById('tw-sub-size-select');
+            if (subSizeSel && String(subSizeSel.value) !== String(effectivePageSize)) {
+                subSizeSel.value = String(effectivePageSize);
+            }
+            const subSortSel = document.getElementById('tw-sub-sort-select');
+            if (subSortSel && String(subSortSel.value) !== String(_subState.sortMode)) {
+                subSortSel.value = String(_subState.sortMode || 'default');
+            }
+
+            let displayItems = sortedSubscribers;
+            if (sortedSubscribers.length > 10) {
+                const start = (page - 1) * effectivePageSize;
+                const end = start + effectivePageSize;
+                displayItems = sortedSubscribers.slice(start, end);
+            }
+
+            let html = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${totalCount}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>`;
+
+            html += displayItems.map(s => {
+                const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
+                const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
+                return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
+            }).join('');
+
+            if (sortedSubscribers.length > 10) {
+                html += `
+                <div class="tw-pagination-bar">
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
+                    <span class="tw-page-num">${page} / ${totalPages}</span>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
+                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
+                </div>`;
+            }
+
+            c.innerHTML = html;
+        }
+        window.renderSubscriberList = renderSubscriberList;
+
+        function changeSubPage(newPage) {
+            if (!_subState.subscribers || _subState.subscribers.length === 0) return;
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, newPage);
+        }
+        window.changeSubPage = changeSubPage;
+
+        function changeSubPageSize(newSize) {
+            const size = Number(newSize) || 10;
+            _subState.pageSize = size;
+            safeSetLocal('tw_sub_page_size', String(size));
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1, size);
+        }
+        window.changeSubPageSize = changeSubPageSize;
+
+        function changeSubSortMode(newSortMode) {
+            _subState.sortMode = newSortMode || 'default';
+            safeSetLocal('tw_sub_sort_mode', _subState.sortMode);
+            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1);
+        }
+        window.changeSubSortMode = changeSubSortMode;
+
+        function renderVipList(vips, page = 1, pageSize = null) {
             const list = document.getElementById('tw-vip-list');
             if (!list) return;
-            list.innerHTML = vips.length === 0
-                ? twitchListEmptyHtml()
-                : vips.map(v => {
-                    const name = raidSoEscape(v.user_name || v.user_login || '');
-                    const login = raidSoEscape(v.user_login || '');
-                    const tip = raidSoEscape(twExt('copyVipIdTip'));
-                    return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
-                }).join('');
+            if (!vips || vips.length === 0) {
+                _vipState.vips = [];
+                _vipState.currentPage = 1;
+                list.innerHTML = twitchListEmptyHtml();
+                return;
+            }
+
+            _vipState.vips = vips;
+            if (pageSize) _vipState.pageSize = Number(pageSize) || 10;
+
+            const effectivePageSize = _vipState.pageSize || 10;
+            const totalPages = Math.ceil(vips.length / effectivePageSize) || 1;
+
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            _vipState.currentPage = page;
+
+            // Sync top header select if present
+            const vipSizeSel = document.getElementById('tw-vip-size-select');
+            if (vipSizeSel && String(vipSizeSel.value) !== String(effectivePageSize)) {
+                vipSizeSel.value = String(effectivePageSize);
+            }
+
+            let displayItems = vips;
+            if (vips.length > 10) {
+                const start = (page - 1) * effectivePageSize;
+                const end = start + effectivePageSize;
+                displayItems = vips.slice(start, end);
+            }
+
+            let html = displayItems.map(v => {
+                const name = raidSoEscape(v.user_name || v.user_login || '');
+                const login = raidSoEscape(v.user_login || '');
+                const tip = raidSoEscape(twExt('copyVipIdTip'));
+                return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
+            }).join('');
+
+            if (vips.length > 10) {
+                html += `
+                <div class="tw-pagination-bar">
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
+                    <span class="tw-page-num">${page} / ${totalPages}</span>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
+                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
+                </div>`;
+            }
+
+            list.innerHTML = html;
         }
+        window.renderVipList = renderVipList;
+
+        function changeVipPage(newPage) {
+            if (!_vipState.vips || _vipState.vips.length === 0) return;
+            renderVipList(_vipState.vips, newPage);
+        }
+        window.changeVipPage = changeVipPage;
+
+        function changeVipPageSize(newSize) {
+            const size = Number(newSize) || 10;
+            _vipState.pageSize = size;
+            safeSetLocal('tw_vip_page_size', String(size));
+            renderVipList(_vipState.vips, 1, size);
+        }
+        window.changeVipPageSize = changeVipPageSize;
 
         function copyVipLoginFromButton(button) {
             const login = String(button?.dataset?.login || '').trim();
