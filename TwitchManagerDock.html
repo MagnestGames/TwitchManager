@@ -932,29 +932,7 @@
         </div>
     </div>
 
-    <script>
-        if (twitchManagerAudioSourceMode) {
-            document.body.innerHTML = '<div id="status-text" role="status"></div>';
-            const audioSourceScript = document.createElement('script');
-            audioSourceScript.src = 'js/audio-source.js';
-            document.body.appendChild(audioSourceScript);
-        } else {
-            const appScripts = [
-                'twitch_manager_version.js',
-                'twitch_manager_locales.js',
-                'js/update-check.js',
-                'js/storage.js',
-                'js/api.js',
-                'js/eventsub.js',
-                'js/ui.js',
-                'js/main.js'
-            ];
-            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
-        }
-    </script>
-
-
-
+    
     <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
         <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
@@ -1234,6 +1212,28 @@
             </div>
         </div>
     </div>
+
+    <script>
+        if (twitchManagerAudioSourceMode) {
+            document.body.innerHTML = '<div id="status-text" role="status"></div>';
+            const audioSourceScript = document.createElement('script');
+            audioSourceScript.src = 'js/audio-source.js';
+            document.body.appendChild(audioSourceScript);
+        } else {
+            const appScripts = [
+                'twitch_manager_version.js',
+                'twitch_manager_locales.js',
+                'js/update-check.js',
+                'js/storage.js',
+                'js/api.js',
+                'js/eventsub.js',
+                'js/ui.js',
+                'js/main.js'
+            ];
+            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+        }
+    </script>
+
 </body>
 
 </html>
