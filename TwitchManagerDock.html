@@ -529,15 +529,22 @@
                 <div style="font-weight: bold; font-size: 12px; margin-bottom: 6px; color: var(--command-accent);" data-i18n="cpTab.rewardListTitle">登録チャンネルポイント一覧</div>
                 <div id="cp-rewards-table-wrapper" style="overflow-x: auto;">
                     <table class="cp-rewards-table">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                                <th class="cp-th-reward" data-i18n="cpTab.thRewardCost">報酬名 / コスト</th>
-                                <th class="cp-th-group" data-i18n="cpTab.thGroup">グループ</th>
-                                <th class="cp-th-status" data-i18n="cpTab.thStatus">状態</th>
-                                <th class="cp-th-toggle" data-i18n="cpTab.thToggle">ON/OFF</th>
-                                <th class="cp-th-actions" data-i18n="cpTab.thActions">操作</th>
-                            </tr>
-                        </thead>
+                <colgroup>
+                    <col style="width: 26px;">
+                    <col style="width: auto;">
+                    <col style="width: 80px;">
+                    <col style="width: 140px;">
+                    <col style="width: 64px;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th style="width: 26px; text-align: center; padding: 4px 2px;"><input type="checkbox" id="cp-select-all-checkbox" onchange="toggleSelectAllCpRewards(this.checked)" style="accent-color:var(--twitch-purple); width:14px; height:14px; cursor:pointer;" aria-label="全選択"></th>
+                        <th style="text-align: left; padding-left: 4px;" data-i18n="cpTab.thRewardCost">報酬</th>
+                        <th style="width: 80px; text-align: left;" data-i18n="cpTab.thGroup">グループ</th>
+                        <th style="width: 140px; text-align: center;" data-i18n="cpTab.thStateControl">状態切替</th>
+                        <th style="width: 64px; text-align: right; padding-right: 4px;" data-i18n="cpTab.thActions">操作</th>
+                    </tr>
+                </thead>
                         <tbody id="cp-rewards-tbody"></tbody>
                     </table>
                 </div>

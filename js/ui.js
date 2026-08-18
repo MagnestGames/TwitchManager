@@ -7403,7 +7403,7 @@ function renderCpTable() {
 
         html += `
         <tr class="cp-reward-row">
-            <td style="width: 28px; text-align: center; vertical-align: middle; padding-left: 2px; padding-right: 2px;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
+            <td style="width: 26px; text-align: center; vertical-align: middle; padding: 4px 2px;"><input type="checkbox" class="cp-reward-checkbox" data-id="${r.id}" onchange="updateCpBulkActionBar()" style="accent-color:var(--twitch-purple); width:15px; height:15px; cursor:pointer;"></td>
             <td class="cp-reward-main">
                 <div class="cp-reward-identity">
                     ${getCpRewardIconUrl(r) 

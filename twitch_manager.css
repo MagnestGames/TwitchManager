@@ -4408,8 +4408,7 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    font-size: 11px;
-    text-align: left;
+    margin: 0;
 }
 
 .cp-rewards-table th { padding: 6px; white-space: nowrap; }
