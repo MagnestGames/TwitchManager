@@ -138,11 +138,14 @@
                 const el = document.getElementById(id);
                 if (el && text) el.innerText = text;
             });
-            document.getElementById('ui-backup-title').innerText = L.backupTitle;
-            document.getElementById('ui-backup-copy').innerText = L.backupCopy;
+            const backupTitleSpan = document.querySelector('#ui-backup-title [data-i18n="backupTitle"]') || document.getElementById('ui-backup-title');
+            if (backupTitleSpan) backupTitleSpan.innerText = L.backupTitle;
+            const backupCopySpan = document.querySelector('#ui-backup-copy [data-i18n="backupCopy"]') || document.getElementById('ui-backup-copy');
+            if (backupCopySpan) backupCopySpan.innerText = L.backupCopy;
             const restoreTitleText = document.querySelector('#ui-restore-title [data-i18n="restoreTitle"]');
             if (restoreTitleText) restoreTitleText.innerText = L.restoreTitle;
-            document.getElementById('ui-restore-btn').innerText = L.restoreBtn;
+            const restoreBtnSpan = document.querySelector('#ui-restore-btn [data-i18n="restoreBtn"]') || document.getElementById('ui-restore-btn');
+            if (restoreBtnSpan) restoreBtnSpan.innerText = L.restoreBtn;
             const backupLogTitle = document.getElementById('ui-backup-log-title');
             const cmdText = commandText();
             const raidText = L.raidSo || langMap.ja.raidSo;
@@ -4536,13 +4539,13 @@
                     const hasSettings = isBackupRecord(d.settings) || (Array.isArray(d.memoList) && d.memoList.length > 0) || isBackupRecord(d.ytSettings);
 
                     const detectedItems = [];
-                    if (hasTitle) detectedItems.push('・タイトル一覧（カテゴリ・テンプレート・識別タグ）');
-                    if (hasId) detectedItems.push('・ID一覧（配信者カード情報）');
-                    if (hasRaidSo) detectedItems.push('・Twitch / 通知と紹介（レイド・チャネポ設定・テンプレート）');
-                    if (hasSettings) detectedItems.push('・ツール設定（環境設定・メモ帳）');
+                    if (hasTitle) detectedItems.push(uiText('runtime.restoreItemTitle'));
+                    if (hasId) detectedItems.push(uiText('runtime.restoreItemId'));
+                    if (hasRaidSo) detectedItems.push(uiText('runtime.restoreItemRaidSo'));
+                    if (hasSettings) detectedItems.push(uiText('runtime.restoreItemSettings'));
 
                     if (detectedItems.length === 0) {
-                        showToast('復元可能なデータが含まれていないバックアップファイルです。', 'warn');
+                        showToast(uiText('runtime.restoreNoData'), 'warn');
                         return;
                     }
 
@@ -4550,27 +4553,25 @@
                     if (hasTitle && !hasId && !hasRaidSo && !hasSettings) {
                         fileSummaryText = `
                             <div style="background: rgba(145, 71, 255, 0.1); border: 1px solid var(--twitch-purple); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
-                                <strong style="color: var(--twitch-purple); font-size: 13px;">📄 【タイトル一覧】専用バックアップ</strong>
+                                <strong style="color: var(--twitch-purple); font-size: 13px;">${raidSoEscape(uiText('runtime.restoreTitleOnlyBadge'))}</strong>
                                 <div style="font-size: 11.5px; margin-top: 4px; color: var(--text-main); line-height: 1.5;">
-                                    このファイルには<strong>「タイトル一覧」</strong>のデータのみが含まれています。<br>
-                                    <span style="color: var(--command-accent); font-weight: bold;">※ ID一覧や通知設定など他のデータには一切影響を与えません（削除・変更されません）。</span>
+                                    ${uiText('runtime.restoreTitleOnlyNote')}
                                 </div>
                             </div>
                         `;
                     } else if (hasId && !hasTitle && !hasRaidSo && !hasSettings) {
                         fileSummaryText = `
                             <div style="background: rgba(145, 71, 255, 0.1); border: 1px solid var(--twitch-purple); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
-                                <strong style="color: var(--twitch-purple); font-size: 13px;">📄 【ID一覧】専用バックアップ</strong>
+                                <strong style="color: var(--twitch-purple); font-size: 13px;">${raidSoEscape(uiText('runtime.restoreIdOnlyBadge'))}</strong>
                                 <div style="font-size: 11.5px; margin-top: 4px; color: var(--text-main); line-height: 1.5;">
-                                    このファイルには<strong>「ID一覧」</strong>のデータのみが含まれています。<br>
-                                    <span style="color: var(--command-accent); font-weight: bold;">※ タイトル一覧や通知設定など他のデータには一切影響を与えません（削除・変更されません）。</span>
+                                    ${uiText('runtime.restoreIdOnlyNote')}
                                 </div>
                             </div>
                         `;
                     } else {
                         fileSummaryText = `
                             <div style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 14px;">
-                                <strong style="font-size: 12.5px; color: var(--text-main);">📦 バックアップに含まれるデータ:</strong>
+                                <strong style="font-size: 12.5px; color: var(--text-main);">${raidSoEscape(uiText('runtime.restoreIncludedData'))}</strong>
                                 <div style="font-size: 11.5px; margin-top: 6px; line-height: 1.6; color: var(--text-muted);">
                                     ${detectedItems.join('<br>')}
                                 </div>
@@ -4579,21 +4580,21 @@
                     }
 
                     const choice = await showCustomDialog({
-                        title: 'バックアップの復元方法を選択',
+                        title: uiText('runtime.restoreModeTitle'),
                         type: 'alert',
                         messageHtml: `
                             <div style="font-size:12.5px; line-height:1.6; margin-bottom:14px; color: var(--text-main);">
                                 ${fileSummaryText}
-                                復元方法を選択してください:
+                                ${raidSoEscape(uiText('runtime.restoreModeQuestion'))}
                             </div>
                             <div style="display:flex; flex-direction:column; gap:10px;">
                                 <button class="btn-primary" id="restore-opt-merge" style="padding:10px; font-weight:bold; width:100%; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px;">
-                                    <span>✨ 統合追加（現在のデータに追加・結合）</span>
-                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">既存のデータを消さずに、バックアップ内のデータを結合します</span>
+                                    <span>${raidSoEscape(uiText('runtime.restoreMerge'))}</span>
+                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">${raidSoEscape(uiText('runtime.restoreMergeDescription'))}</span>
                                 </button>
                                 <button class="btn-danger-soft" id="restore-opt-overwrite" style="padding:10px; font-weight:bold; width:100%; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px;">
-                                    <span>⚠️ 該当項目のみ上書き（対象項目を置き換え）</span>
-                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">ファイルに含まれる対象項目のみを置き換えます（他の項目は維持されます）</span>
+                                    <span>${raidSoEscape(uiText('runtime.restoreOverwrite'))}</span>
+                                    <span style="font-weight:normal; font-size:10.5px; opacity:0.9;">${raidSoEscape(uiText('runtime.restoreOverwriteDescription'))}</span>
                                 </button>
                                 <button class="btn-secondary" id="restore-opt-cancel" style="padding:8px; font-weight:bold; width:100%; font-size:12px;">${raidSoEscape(langMap[currentLang].cancel)}</button>
                             </div>
@@ -4628,13 +4629,13 @@
                         if (isBackupRecord(d.ytSettings)) localStorage.setItem('yt_manager_dock_settings', JSON.stringify(d.ytSettings));
 
                         raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
-                        showToast('該当項目を上書き復元しました', 'success');
+                        showToast(uiText('runtime.restoreOverwriteDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else if (choice === 'merge') {
                         // ファイル内に含まれる項目のみを安全にマージ統合
                         mergeBackupData(d);
                         raidSoLog(uiText('runtime.operationLog.backupMergeRestored'));
-                        showToast('該当項目を統合追加しました', 'success');
+                        showToast(uiText('runtime.restoreMergeDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         showToast(uiText('runtime.restoreCanceled'), 'info');
@@ -4780,7 +4781,8 @@
                 localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
             }
 
-            // 9. rewards created by TwitchManager\n            if (Array.isArray(d.cpAppRewardIds)) {
+            // 9. rewards created by TwitchManager
+            if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
                 localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
             }
@@ -4836,9 +4838,9 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast('バックアップファイルを保存しました', 'success');
+                showToast(uiText('runtime.backupFileSaved'), 'success');
             } catch (e) {
-                showToast('バックアップ保存に失敗しました: ' + (e.message || ''), 'error');
+                showToast(uiText('runtime.backupFileSaveFailed', { error: e.message || '' }), 'error');
             }
         }
 
@@ -4954,7 +4956,20 @@
             applyInitialViewFromLocation();
             updateTodayDateDisplay();
             setInterval(updateTodayDateDisplay, 1000);
+            hideAppLoadingScreen();
         };
+
+        function hideAppLoadingScreen() {
+            const el = document.getElementById('app-loading-screen');
+            if (el) {
+                el.classList.add('hidden');
+                setTimeout(() => {
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                }, 400);
+            }
+        }
+        window.hideAppLoadingScreen = hideAppLoadingScreen;
+        setTimeout(hideAppLoadingScreen, 3000);
 
 
 
