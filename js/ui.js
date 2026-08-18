@@ -1,3 +1,492 @@
+
+function updateRecordTitleValue(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    config[ci].records[ri].title = val;
+    saveAllLocal(false);
+    
+    // Update card header label if auto
+    if (!config[ci].records[ri].isCustomLabel) {
+        const lbl = document.getElementById(`record-label-${ci}-${ri}`);
+        if (lbl) {
+            const newLabel = langMap[currentLang]?.titleActions?.newLabel || langMap.ja.titleActions.newLabel;
+            lbl.textContent = '● ' + (val.trim() || newLabel);
+        }
+    }
+    // Update inline header tag badges
+    const headerTagsEl = document.getElementById(`record-header-tags-${ci}-${ri}`);
+    if (headerTagsEl) {
+        headerTagsEl.innerHTML = getTagBadgesHtmlForTitle(val);
+    }
+    // Update live preview box
+    const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+    if (previewEl) {
+        const game = config[ci].records[ri].game || '';
+        const count = config[ci].records[ri].count;
+        const resolved = resolveStreamTitleTemplate(val, { game, count });
+        previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+    }
+}
+
+function updateRecordCount(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const num = Math.max(1, parseInt(val, 10) || 1);
+    config[ci].records[ri].count = num;
+    saveAllLocal(false);
+
+    const input = document.getElementById(`record-count-input-${ci}-${ri}`);
+    if (input && parseInt(input.value, 10) !== num) {
+        input.value = num;
+    }
+
+    const r = config[ci].records[ri];
+    updateRecordTitleValue(ci, ri, r.title || '');
+}
+
+function stepRecordCount(ci, ri, delta) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const current = (config[ci].records[ri].count !== undefined) ? parseInt(config[ci].records[ri].count, 10) : 1;
+    updateRecordCount(ci, ri, current + delta);
+}
+
+function insertTagToRecordTitle(ci, ri, tagText) {
+    const textarea = document.getElementById(`record-title-input-${ci}-${ri}`);
+    if (!textarea) return;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const val = textarea.value || '';
+    const newVal = val.substring(0, start) + tagText + val.substring(end);
+    textarea.value = newVal;
+    textarea.selectionStart = textarea.selectionEnd = start + tagText.length;
+    textarea.focus();
+    updateRecordTitleValue(ci, ri, newVal);
+}
+
+window.updateRecordTitleValue = updateRecordTitleValue;
+window.updateRecordCount = updateRecordCount;
+window.stepRecordCount = stepRecordCount;
+window.insertTagToRecordTitle = insertTagToRecordTitle;
+
+
+let titleTagConfig = {
+    customTags: [
+        { id: 'tag_1', name: '識別', value: '内容' },
+        { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
+        { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
+    ],
+    categoryMap: [
+        { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' },
+        { id: 'cat_map_2', from: 'Phoenix Wright: Ace Attorney Trilogy', to: '逆転裁判' }
+    ],
+    collabCategoryName: '', // IDリストのどのカテゴリをコラボ対象にするか
+    categoryTagName: 'カテゴリ' // {カテゴリ} placeholder (fixed keyword, not configurable in UI)
+};
+
+function loadTitleTagConfig() {
+    try {
+        const saved = localStorage.getItem('title_tag_config_v1');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed) {
+                if (Array.isArray(parsed.customTags)) titleTagConfig.customTags = parsed.customTags;
+                if (Array.isArray(parsed.categoryMap)) titleTagConfig.categoryMap = parsed.categoryMap;
+                if (parsed.collabCategoryName !== undefined) titleTagConfig.collabCategoryName = parsed.collabCategoryName;
+            }
+        }
+    } catch (e) {
+        console.error('loadTitleTagConfig error:', e);
+    }
+}
+
+function saveTitleTagConfig() {
+    try {
+        localStorage.setItem('title_tag_config_v1', JSON.stringify(titleTagConfig));
+    } catch (e) {
+        console.error('saveTitleTagConfig error:', e);
+    }
+}
+
+function getSelectedCollabNames() {
+    try {
+        const collabCat = titleTagConfig.collabCategoryName || '';
+        const activeTagEls = typeof document !== 'undefined' ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
+        const activeTags = Array.from(activeTagEls).map(el => el.value);
+
+        const selectedIds = [];
+        (friendsConfig || []).forEach(cat => {
+            if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            if (collabCat && cat.name !== collabCat) return;
+
+            const isCatChecked = activeTags.length === 0 || activeTags.includes(cat.name);
+
+            (cat.friends || []).forEach(f => {
+                if (f.isSelected || isCatChecked) {
+                    const rawVal = f.twitch || f.name || f.id || '';
+                    const twitchId = extractTwitchId(rawVal);
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
+                    }
+                }
+            });
+        });
+
+        if (selectedIds.length === 0) return '';
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedIds.map(id => ' @' + id).join('');
+    } catch (e) {
+        return '';
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab} or custom collabTagName)
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend})
+    (friendsConfig || []).forEach(cat => {
+        if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+            const catName = cat.name.trim();
+            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
+                const catSelected = [];
+                (cat.friends || []).forEach(f => {
+                    if (f.isSelected) {
+                        const n = f.name || f.twitch || '';
+                        if (n && !catSelected.includes(n)) catSelected.push(n);
+                    }
+                });
+                catSelected.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+                const catVal = catSelected.length > 0 ? catSelected.map(n => ' @' + n.replace(/^@/, '')).join('') : '';
+                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
+                result = result.replace(reg, catVal);
+            }
+        }
+    });
+
+    // 3. Category Tag ({カテゴリ} or {category} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    const gameVal = context.game !== undefined ? context.game : '';
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|カテゴリ|category|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    return result;
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^$${}()|[\]\\]/g, '\\$&');
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="識別タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+
+function extractTwitchId(str) {
+    if (!str) return '';
+    let val = String(str).trim();
+    val = val.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '');
+    val = val.replace(/^twitch\.tv\//i, '');
+    val = val.split('/')[0].split('?')[0].split('#')[0];
+    val = val.replace(/^@/, '').trim();
+    return val;
+}
+window.extractTwitchId = extractTwitchId;
+
+function getCategoryCollabNames(catName) {
+    try {
+        const selectedIds = [];
+        (friendsConfig || []).forEach(cat => {
+            if (cat.name === catName && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+                (cat.friends || []).forEach(f => {
+                    const rawVal = f.twitch || f.name || f.id || '';
+                    const twitchId = extractTwitchId(rawVal);
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
+                    }
+                });
+            }
+        });
+
+        if (selectedIds.length === 0) return '';
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedIds.map(id => ' @' + id).join('');
+    } catch (e) {
+        return '';
+    }
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    loadTitleTagConfig();
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
+    (friendsConfig || []).forEach(cat => {
+        if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+            const catName = cat.name.trim();
+            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
+                const catVal = getCategoryCollabNames(catName);
+                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
+                result = result.replace(reg, catVal);
+            }
+        }
+    });
+
+    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    let gameVal = context.game !== undefined ? context.game : '';
+
+    // 手動カテゴリ変換マッピングの優先適用
+    if (gameVal && titleTagConfig && Array.isArray(titleTagConfig.categoryMap)) {
+        const trimmedGame = String(gameVal).trim();
+        const matched = titleTagConfig.categoryMap.find(item =>
+            item && item.from && String(item.from).trim().toLowerCase() === trimmedGame.toLowerCase()
+        );
+        if (matched && matched.to !== undefined && matched.to !== null && String(matched.to).trim() !== '') {
+            gameVal = String(matched.to);
+        }
+    }
+
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    // 5. Count Tag ({count} or {回数} or {カウント}) -> replaces with numeric count value only
+    const countVal = context.count !== undefined ? String(context.count) : (context.recordCount !== undefined ? String(context.recordCount) : '1');
+    result = result.replace(/{(count|回数|カウント)}/g, countVal);
+
+    return result;
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+window.escapeRegExp = escapeRegExp;
+
+function showCollabHoverHint(tagNameOrCat) {
+    try {
+        let msg = '';
+        if (tagNameOrCat === '{コラボ}') {
+            const selectedNames = getSelectedCollabNames();
+            const collabCat = titleTagConfig.collabCategoryName || '';
+            msg = selectedNames 
+                ? `選択中コラボ (${collabCat || '全体'}):${selectedNames}` 
+                : `コラボメンバー未選択 (IDリストでチェックを入れてください)`;
+        } else {
+            // Specific ID list category name
+            const catSelected = [];
+            (friendsConfig || []).forEach(cat => {
+                if (cat.name === tagNameOrCat) {
+                    (cat.friends || []).forEach(f => {
+                        if (f.isSelected) {
+                            const n = f.name || f.twitch || '';
+                            if (n && !catSelected.includes(n)) catSelected.push(n);
+                        }
+                    });
+                }
+            });
+            const membersStr = catSelected.length > 0 ? catSelected.map(n => '@' + n.replace(/^@/, '')).join(' ') : '(未選択)';
+            msg = `IDリスト【${tagNameOrCat}】選択中: ${membersStr}`;
+        }
+        showToast(msg, 'info');
+    } catch (e) {}
+}
+
+function copyCommonTag(tagText) {
+    let toastMsg = 'コピー: ' + tagText;
+    if (tagText === '{コラボ}') {
+        const names = getSelectedCollabNames();
+        if (names) {
+            toastMsg += ' (展開:' + names.trim() + ')';
+        }
+    }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(tagText).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(tagText, toastMsg);
+            });
+        } else {
+            fallbackCopyText(tagText, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(tagText, toastMsg);
+    }
+}
+
+function fallbackCopyText(tagText, customMsg) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = tagText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(customMsg || ('コピー: ' + tagText), 'success');
+    } catch (e) {
+        showToast('コピーできませんでした', 'warn');
+    }
+}
+
+let isCollabTagGroupExpanded = true;
+try {
+    const savedExp = localStorage.getItem('common_collab_tags_expanded');
+    if (savedExp !== null) isCollabTagGroupExpanded = savedExp === 'true';
+} catch (e) {}
+
+function toggleCollabTagGroup() {
+    isCollabTagGroupExpanded = !isCollabTagGroupExpanded;
+    try {
+        localStorage.setItem('common_collab_tags_expanded', String(isCollabTagGroupExpanded));
+    } catch (e) {}
+    renderCommonTagBar();
+}
+window.toggleCollabTagGroup = toggleCollabTagGroup;
+
+function copyCategoryRawIds(catName) {
+    const rawIds = getCategoryCollabNames(catName);
+    if (!rawIds) {
+        showToast(`IDリスト【${catName}】に選択中のメンバーがいません`, 'warn');
+        return;
+    }
+    const copyString = rawIds;
+    const toastMsg = `IDリスト【${catName}】の@ID一覧をコピー:${copyString.trim()}`;
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copyString).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(copyString, toastMsg);
+            });
+        } else {
+            fallbackCopyText(copyString, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(copyString, toastMsg);
+    }
+}
+window.copyCategoryRawIds = copyCategoryRawIds;
+
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+
+    let mainHtml = '';
+    // 1. カスタム共通タグ (言葉セット)
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 12) + (tag.value.length > 12 ? '…' : '')) : '';
+        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
+    });
+
+    // 2. 標準システムタグ ({Category}, {date}, {count})
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">{Category}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付・日時">{date}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{count}')" title="シリーズもの配信回数 (数字のみ+)">{count}</button>`;
+
+    // 3. コラボ・IDリスト用タグ（タグ名コピーと @ID コピーの横並びセグメントボタン）
+    let collabHtml = '';
+    const catNames = (friendsConfig || [])
+        .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+        .map(cat => cat.name.trim())
+        .filter(name => name && name !== '未分類' && name !== 'Uncategorized');
+    const uniqueCats = [...new Set(catNames)];
+
+    uniqueCats.forEach(catName => {
+        const formattedCatNames = getCategoryCollabNames(catName);
+        const catTagText = '{' + catName + '}';
+        collabHtml += `
+            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
+                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
+                    ${raidSoEscape(catTagText)}
+                </button>
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未選択')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                    @ID
+                </button>
+            </div>
+        `;
+    });
+
+    let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">${mainHtml}</div>`;
+    if (collabHtml) {
+        fullHtml += `<div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:3px;">${collabHtml}</div>`;
+    }
+
+    bar.innerHTML = fullHtml;
+}
+
+window.renderCommonTagBar = renderCommonTagBar;
+window.showCollabHoverHint = showCollabHoverHint;
+window.copyCommonTag = copyCommonTag;
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
             let value = resolve(langMap[currentLang]);
@@ -209,7 +698,7 @@
             if (guideEl) guideEl.innerHTML = L.guideHtml;
             try { if (typeof updateCreatorsDOM === 'function') updateCreatorsDOM(); } catch(e) {}
             const cmdEl = document.getElementById('cmd-container');
-            if (cmdEl) renderCommands();
+            if (cmdEl) cmdEl.innerHTML = L.cmdHtml;
             refreshTwitchChoicePlaceholders();
             renderShoutoutSuggestions();
             renderRaidShoutOutPanel();
@@ -596,6 +1085,11 @@
         function closeModal(id) {
             const el = document.getElementById(id);
             if (!el) return;
+            if (id === 'titleTagModal' && typeof saveTitleTagModalSettings === 'function') {
+                try {
+                    saveTitleTagModalSettings(true);
+                } catch (e) {}
+            }
             el.style.display = 'none';
             el.classList.remove('modal-open');
         }
@@ -864,207 +1358,8 @@
             return `<div class="empty-state">${raidSoEscape(text || '')}</div>`;
         }
 
-        function getRecordDisplayLabel(r, defaultLabel) {
-            if (r.isCustomLabel && r.label && r.label.trim()) {
-                return r.label.trim();
-            }
-            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
-                return r.label.trim();
-            }
-            if (r.title && r.title.trim()) {
-                return r.title.trim();
-            }
-            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
-        }
-        let titlesSortOrder = localStorage.getItem('stream_titles_sort_order_v16') || 'group';
-        let titlesLayoutMode = localStorage.getItem('stream_titles_layout_mode_v16') || 'list';
-
-        function changeTitlesSortOrder(val) {
-            titlesSortOrder = val;
-            localStorage.setItem('stream_titles_sort_order_v16', val);
-            const sel = document.getElementById('titles-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            render();
-        }
-        window.changeTitlesSortOrder = changeTitlesSortOrder;
-
-        function changeTitlesLayoutMode(val) {
-            titlesLayoutMode = val;
-            localStorage.setItem('stream_titles_layout_mode_v16', val);
-            const toggle = document.getElementById('titles-layout-toggle');
-            const isGrid = val === 'grid';
-            if (toggle) toggle.checked = isGrid;
-            render();
-        }
-        window.changeTitlesLayoutMode = changeTitlesLayoutMode;
-
-        function toggleTitlePin(ci, ri) {
-            if (!config[ci] || !config[ci].records[ri]) return;
-            const record = config[ci].records[ri];
-            record.isPinned = !record.isPinned;
-            saveAllLocal(false);
-            render();
-            const msg = record.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
-            showToast(msg, 'info');
-        }
-        window.toggleTitlePin = toggleTitlePin;
-
-        let isTitlesAllExpanded = false;
-        function expandAllTitles() {
-            (config || []).forEach(cat => {
-                cat.isClosed = false;
-                (cat.records || []).forEach(r => { r.isOpen = true; });
-            });
-            isTitlesAllExpanded = true;
-            updateTitlesToggleAllBtn();
-            saveAllLocal(false);
-            render();
-            showToast('すべてのタイトルカードを開きました', 'info');
-        }
-        window.expandAllTitles = expandAllTitles;
-
-        function collapseAllTitles() {
-            (config || []).forEach(cat => {
-                cat.isClosed = true;
-                (cat.records || []).forEach(r => { r.isOpen = false; });
-            });
-            isTitlesAllExpanded = false;
-            updateTitlesToggleAllBtn();
-            saveAllLocal(false);
-            render();
-            showToast('すべてのタイトルカードを閉じました', 'info');
-        }
-        window.collapseAllTitles = collapseAllTitles;
-
-        function toggleAllTitlesExpandCollapse() {
-            if (isTitlesAllExpanded) {
-                collapseAllTitles();
-            } else {
-                expandAllTitles();
-            }
-        }
-        window.toggleAllTitlesExpandCollapse = toggleAllTitlesExpandCollapse;
-
-        function updateTitlesToggleAllBtn() {
-            const svgOpen = document.getElementById('titles-toggle-all-svg-open');
-            const svgClose = document.getElementById('titles-toggle-all-svg-close');
-            if (svgOpen && svgClose) {
-                svgOpen.style.display = isTitlesAllExpanded ? 'inline-block' : 'none';
-                svgClose.style.display = isTitlesAllExpanded ? 'none' : 'inline-block';
-            }
-        }
-
-        let isFriendsAllExpanded = false;
-        function expandAllFriends() {
-            (friendsConfig || []).forEach(cat => {
-                cat.isClosed = false;
-                (cat.friends || []).forEach(f => { f.isOpen = true; });
-            });
-            isFriendsAllExpanded = true;
-            updateFriendsToggleAllBtn();
-            saveFriendsLocal(false);
-            renderFriends();
-            showToast('すべてのIDカードを開きました', 'info');
-        }
-        window.expandAllFriends = expandAllFriends;
-
-        function collapseAllFriends() {
-            (friendsConfig || []).forEach(cat => {
-                cat.isClosed = true;
-                (cat.friends || []).forEach(f => { f.isOpen = false; });
-            });
-            isFriendsAllExpanded = false;
-            updateFriendsToggleAllBtn();
-            saveFriendsLocal(false);
-            renderFriends();
-            showToast('すべてのIDカードを閉じました', 'info');
-        }
-        window.collapseAllFriends = collapseAllFriends;
-
-        function toggleAllFriendsExpandCollapse() {
-            if (isFriendsAllExpanded) {
-                collapseAllFriends();
-            } else {
-                expandAllFriends();
-            }
-        }
-        window.toggleAllFriendsExpandCollapse = toggleAllFriendsExpandCollapse;
-
-        function updateFriendsToggleAllBtn() {
-            const svgOpen = document.getElementById('friends-toggle-all-svg-open');
-            const svgClose = document.getElementById('friends-toggle-all-svg-close');
-            if (svgOpen && svgClose) {
-                svgOpen.style.display = isFriendsAllExpanded ? 'inline-block' : 'none';
-                svgClose.style.display = isFriendsAllExpanded ? 'none' : 'inline-block';
-            }
-        }
-
-        function _buildTitleCard(r, ci, ri, T, L, A) {
-            const isPinned = Boolean(r.isPinned);
-            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
-            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
-            const pinStyle = isPinned
-                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
-                : '';
-
-            const pinBtnHtml = `
-                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleTitlePin(${ci}, ${ri})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 17v5"></path>
-                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
-                        <line x1="9" y1="4" x2="15" y2="4"></line>
-                    </svg>
-                </button>
-            `;
-
-            const card = document.createElement('div');
-            card.className = "record-card" + (r.isOpen ? " open" : "") + (isPinned ? " is-pinned-card" : "");
-            card.setAttribute('data-idx', ri);
-
-            card.innerHTML = `
-            <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})" style="position:relative; padding-right:36px;">
-                <div style="display:flex; align-items:center; gap:8px; min-width:0; overflow:hidden;">
-                    <span id="record-label-${ci}-${ri}">● ${pinBadge}${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
-                    <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                </div>
-                ${pinBtnHtml}
-                <div class="record-actions" style="margin-right: 32px;">
-                    <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
-                        <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
-                    </button>
-                    <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
-                    </button>
-                    <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">${raidSoEscape(T.delete)}</button>
-                </div>
-            </div>
-            <div class="record-body">
-                <span class="field-label">${L.game}</span>
-                <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
-                
-                <span class="field-label">${L.title}</span>
-                <textarea onchange="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false)">${raidSoEscape(r.title || '')}</textarea>
-
-                <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
-
-                <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
-                <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
-
-                <span class="field-label">${L.memo}</span>
-                <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
-            </div>`;
-            return card;
-        }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
-            c.classList.toggle('flat-mode', titlesSortOrder !== 'group');
-            c.classList.toggle('layout-grid', titlesLayoutMode === 'grid');
-            c.classList.toggle('layout-list', titlesLayoutMode === 'list');
             const T = langMap[currentLang];
             const L = T.labels;
             const A = T.titleActions || langMap.ja.titleActions;
@@ -1073,92 +1368,69 @@
                 initSortable();
                 return;
             }
+            config.forEach((cat, ci) => {
+                const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
+                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                const records = cat.records || [];
+                if (!records.length) {
+                    d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
+                }
+                records.forEach((r, ri) => {
+                    const card = document.createElement('div'); card.className = "record-card" + (r.isOpen ? " open" : ""); card.setAttribute('data-idx', ri);
 
-            const sel = document.getElementById('titles-sort-select');
-            if (sel && sel.value !== titlesSortOrder) sel.value = titlesSortOrder;
-            const titlesToggle = document.getElementById('titles-layout-toggle');
-            const titlesToggleText = document.getElementById('titles-layout-toggle-text');
-            const isTitlesGrid = titlesLayoutMode === 'grid';
-            if (titlesToggle && titlesToggle.checked !== isTitlesGrid) titlesToggle.checked = isTitlesGrid;
-            if (titlesToggleText) {
-                titlesToggleText.textContent = isTitlesGrid ? (T.layoutGrid || '横並び可') : (T.layoutList || '縦積みのみ');
-            }
-
-            // ----- グループ別表示（デフォ・手動ソート・ドラッグ可能） -----
-            if (titlesSortOrder === 'group') {
-                config.forEach((cat, ci) => {
-                    const records = cat.records || [];
-                    const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                    d.innerHTML = `
-                    <div class="category-name" onclick="toggleCategory(this, ${ci})">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span>${raidSoEscape(cat.name)}</span>
-                            <span class="category-count-badge" style="font-size:12px; font-weight:normal; color:var(--text-muted); padding:1px 7px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid var(--border-color);">${records.length}件</span>
-                        </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button>
-                            <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
-                        </div>
+                    card.innerHTML = `
+                <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>● ${raidSoEscape(r.label || A.newLabel)}</span>
+                        <button class="icon-btn" style="padding:4px; display:flex; align-items:center; justify-content:center;" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
                     </div>
-                    <div class="category-records sortable-items ${titlesLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
+                    <div class="record-actions">
+                        <div style="display:inline-flex; align-items:center; gap:3px; margin-right:6px; height:34px; box-sizing:border-box; padding:2px 4px; background:rgba(255,255,255,0.05); border-radius:6px; border:1px solid var(--border-color); align-self:center;" onclick="event.stopPropagation();" title="配信回数 {count} の現在値">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:40px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:3px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を+1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
+                        <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                            <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
+                        </button>
+                        <button class="icon-btn twitch-action-btn push-action-btn" title="${A.pushTip}" onclick="event.stopPropagation(); pushToTwitch(${ci}, ${ri}, this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            <span class="action-text"><span class="action-main">${A.pushMain}</span><span class="action-sub">${A.pushSub}</span></span>
+                        </button>
+                        <button class="btn-delete-item" onclick="event.stopPropagation(); deleteRecord(${ci}, ${ri})">✕</button>
+                    </div>
+                </div>
+                <div class="record-body">
+                    <span class="field-label">${L.game}</span>
+                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                    
+                    <span class="field-label">${L.title}</span>
 
-                    if (!records.length) {
-                        d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
-                    }
+                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
+                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
-                    // カテゴリ内でもピン留め対象を最上位へ整列
-                    const sortedCatRecords = [...records].sort((a, b) => {
-                        const pa = a.isPinned ? 1 : 0;
-                        const pb = b.isPinned ? 1 : 0;
-                        return pb - pa;
-                    });
+                    <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                    <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
 
-                    sortedCatRecords.forEach((r) => {
-                        const ri = records.indexOf(r);
-                        d.querySelector('.category-records').appendChild(_buildTitleCard(r, ci, ri, T, L, A));
-                    });
-                    c.appendChild(d);
+                    <span class="field-label" style="display:flex; align-items:center;">${L.tags}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
+                    <input type="text" value="${raidSoEscape(r.tags || '')}" oninput="config[${ci}].records[${ri}].tags=this.value; saveAllLocal(false)">
+
+                    <span class="field-label">${L.memo}</span>
+                    <textarea onchange="config[${ci}].records[${ri}].memo=this.value; saveAllLocal(false)">${raidSoEscape(r.memo || '')}</textarea>
+                </div>`;
+                    d.querySelector('.category-records').appendChild(card);
                 });
-                initSortable();
-
-            // ----- フラット表示（ソート順表示：カテゴリ順・登録タイトル順・登録名前順など） -----
-            } else {
-                const allRecords = [];
-                config.forEach((cat, ci) => {
-                    (cat.records || []).forEach((r, ri) => {
-                        allRecords.push({ r, ci, ri, catName: cat.name });
-                    });
-                });
-
-                allRecords.sort((a, b) => {
-                    const ra = a.r, rb = b.r;
-                    const pa = ra.isPinned ? 1 : 0;
-                    const pb = rb.isPinned ? 1 : 0;
-                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
-
-                    if (titlesSortOrder === 'name') {
-                        const na = getRecordDisplayLabel(ra, A.newLabel).toLowerCase();
-                        const nb = getRecordDisplayLabel(rb, A.newLabel).toLowerCase();
-                        return na.localeCompare(nb, 'ja');
-                    }
-                    if (titlesSortOrder === 'title') {
-                        const ta = (ra.title || '').toLowerCase();
-                        const tb = (rb.title || '').toLowerCase();
-                        return ta.localeCompare(tb, 'ja');
-                    }
-                    if (titlesSortOrder === 'category') {
-                        const ca = (ra.game || a.catName || '').toLowerCase();
-                        const cb = (rb.game || b.catName || '').toLowerCase();
-                        return ca.localeCompare(cb, 'ja');
-                    }
-                    return 0;
-                });
-
-                allRecords.forEach(({ r, ci, ri }) => {
-                    c.appendChild(_buildTitleCard(r, ci, ri, T, L, A));
-                });
-            }
-
+                c.appendChild(d);
+            });
+            initSortable();
+            renderCommonTagBar();
         }
 
         // --- 追加機能：リネーム ---
@@ -1174,7 +1446,13 @@
             }
         }
 
-
+        function changeFriendsSortOrder(val) {
+            friendsSortOrder = val;
+            const sel = document.getElementById('friends-sort-select');
+            if (sel && sel.value !== val) sel.value = val;
+            renderFriends();
+        }
+        window.changeFriendsSortOrder = changeFriendsSortOrder;
 
         // カード生成ヘルパー
         // 遅延保存用のタイマー
@@ -1224,7 +1502,7 @@
         function saveFriendsLocalDebounced() {
             if (saveFriendsTimeout) clearTimeout(saveFriendsTimeout);
             saveFriendsTimeout = setTimeout(() => {
-                        saveFriendsLocal(false);
+                saveFriendsLocal(false);
             }, 300);
         }
 
@@ -1260,12 +1538,6 @@
             }
 
             const isSelf = friendsConfig?.[ci]?.kind === 'authenticated-user';
-            const isPinned = Boolean(f.isPinned);
-            if (isPinned) {
-                card.classList.add('is-pinned-card');
-            }
-            const pinBadge = isPinned ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning-text, #ffaa00); vertical-align:middle; margin-right:3px;" title="ピン留め中"><path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line></svg>` : '';
-
             const shoutoutCount = isSelf ? 0 : Number(f.shoutoutCount || 0);
             const lastDate = isSelf ? '' : (f.lastShoutoutAt ? new Date(f.lastShoutoutAt).toLocaleString() : '');
             const meta = shoutoutCount ? (I.shoutoutMeta || '').replace('{count}', shoutoutCount).replace('{date}', lastDate || '-') : '';
@@ -1285,26 +1557,11 @@
                 ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px;">${raidSoEscape(sortMeta)}</span>`
                 : '';
 
-            const pinTip = isPinned ? 'ピン留めを解除' : '最上部にピン留め';
-            const pinStyle = isPinned
-                ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.5); background: rgba(255, 170, 0, 0.15);'
-                : '';
-
-            const pinBtnHtml = `
-                <button class="icon-btn id-action-btn id-pin-action ${isPinned ? 'is-pinned' : ''}" title="${raidSoEscape(pinTip)}" onclick="event.stopPropagation(); toggleFriendPin(${ci}, ${fi})" style="position:absolute; top:6px; right:6px; z-index:2; ${pinStyle}">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 17v5"></path>
-                        <path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path>
-                        <line x1="9" y1="4" x2="15" y2="4"></line>
-                    </svg>
-                </button>
-            `;
-
             card.innerHTML = `
-            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})" style="position:relative; padding-right:36px;">
+            <div class="record-header" onclick="toggleFriendRecordOpen(${ci}, ${fi})">
                 <div style="display:flex; flex-direction:column; min-width:0;">
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span>● ${pinBadge}${raidSoEscape(displayName)}</span>
+                        <span>● ${raidSoEscape(displayName)}</span>
                         ${sortMetaHtml}
                         <button class="icon-btn id-action-btn id-edit-action" title="${raidSoEscape(L.alerts.renameId)}" onclick="event.stopPropagation(); renameFriendRecord(${ci}, ${fi})">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1312,8 +1569,7 @@
                     </div>
                     ${groupTagsHtml}
                 </div>
-                ${pinBtnHtml}
-                <div style="display:flex; gap:5px; flex-shrink:0; margin-right:32px;">
+                <div style="display:flex; gap:5px; flex-shrink:0;">
                     <button class="icon-btn id-action-btn id-refresh-action" title="${raidSoEscape(I.refreshInfo)}" onclick="event.stopPropagation(); refreshFriendUserData(${ci}, ${fi}, this)" style="color:var(--twitch-purple); border-color:rgba(145, 70, 255, 0.4); background:rgba(145, 70, 255, 0.08);">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     </button>
@@ -1372,325 +1628,12 @@
             return card;
         }
 
-        function toggleFriendPin(ci, fi) {
-            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
-            const friend = friendsConfig[ci].friends[fi];
-            friend.isPinned = !friend.isPinned;
-            saveFriendsLocal(false);
-            renderFriends();
-            const msg = friend.isPinned ? '最上部にピン留めしました' : 'ピン留めを解除しました';
-            showToast(msg, 'info');
-        }
-        window.toggleFriendPin = toggleFriendPin;
-
-        let friendsSortOrder = localStorage.getItem('stream_friends_sort_order_v16') || 'name';
-        let friendsLayoutMode = localStorage.getItem('stream_friends_layout_mode_v16') || 'list';
-
-        function changeFriendsSortOrder(val) {
-            friendsSortOrder = val;
-            localStorage.setItem('stream_friends_sort_order_v16', val);
-            const sel = document.getElementById('friends-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            renderFriends();
-        }
-        window.changeFriendsSortOrder = changeFriendsSortOrder;
-
-        function changeFriendsLayoutMode(val) {
-            friendsLayoutMode = val;
-            localStorage.setItem('stream_friends_layout_mode_v16', val);
-            const toggle = document.getElementById('friends-layout-toggle');
-            const isGrid = val === 'grid';
-            if (toggle) toggle.checked = isGrid;
-            renderFriends();
-        }
-        window.changeFriendsLayoutMode = changeFriendsLayoutMode;
-
-        /* ==========================================================================
-         *  コマンドタブ (cmd-tab) のソート・PIN・レイアウト処理
-         * ========================================================================== */
-        let cmdSortOrder = localStorage.getItem('stream_cmd_sort_order_v16') || 'group';
-        let cmdLayoutMode = localStorage.getItem('stream_cmd_layout_mode_v16') || 'list';
-        let pinnedCmds = JSON.parse(localStorage.getItem('stream_cmd_pins_v16') || '[]');
-
-        function changeCmdSortOrder(val) {
-            cmdSortOrder = val;
-            localStorage.setItem('stream_cmd_sort_order_v16', val);
-            const sel = document.getElementById('cmd-sort-select');
-            if (sel && sel.value !== val) sel.value = val;
-            renderCommands();
-        }
-        window.changeCmdSortOrder = changeCmdSortOrder;
-
-        function changeCmdLayoutMode(val) {
-            cmdLayoutMode = val;
-            localStorage.setItem('stream_cmd_layout_mode_v16', val);
-            const toggle = document.getElementById('cmd-layout-toggle');
-            const isGrid = val === 'grid';
-            if (toggle) toggle.checked = isGrid;
-            renderCommands();
-        }
-        window.changeCmdLayoutMode = changeCmdLayoutMode;
-
-        function toggleCmdPin(cmdId) {
-            const idx = pinnedCmds.indexOf(cmdId);
-            if (idx >= 0) {
-                pinnedCmds.splice(idx, 1);
-                showToast('ピン留めを解除しました', 'info');
-            } else {
-                pinnedCmds.push(cmdId);
-                showToast('最上部にピン留めしました', 'info');
-            }
-            localStorage.setItem('stream_cmd_pins_v16', JSON.stringify(pinnedCmds));
-            renderCommands();
-        }
-        window.toggleCmdPin = toggleCmdPin;
-
-        let isCmdAllExpanded = false;
-        function toggleAllCmdExpandCollapse() {
-            isCmdAllExpanded = !isCmdAllExpanded;
-            const catBoxes = document.querySelectorAll('#cmd-container .category-box');
-            catBoxes.forEach(box => {
-                if (isCmdAllExpanded) {
-                    box.classList.remove('closed');
-                } else {
-                    box.classList.add('closed');
-                }
-            });
-            updateCmdToggleAllBtn();
-        }
-        window.toggleAllCmdExpandCollapse = toggleAllCmdExpandCollapse;
-
-        function updateCmdToggleAllBtn() {
-            const svgOpen = document.getElementById('cmd-toggle-all-svg-open');
-            const svgClose = document.getElementById('cmd-toggle-all-svg-close');
-            if (svgOpen && svgClose) {
-                svgOpen.style.display = isCmdAllExpanded ? 'inline-block' : 'none';
-                svgClose.style.display = isCmdAllExpanded ? 'none' : 'inline-block';
-            }
-        }
-
-        function renderCommands() {
-            const cmdEl = document.getElementById('cmd-container');
-            if (!cmdEl) return;
-
-            const sel = document.getElementById('cmd-sort-select');
-            if (sel && sel.value !== cmdSortOrder) sel.value = cmdSortOrder;
-            const toggle = document.getElementById('cmd-layout-toggle');
-            if (toggle && toggle.checked !== (cmdLayoutMode === 'grid')) toggle.checked = (cmdLayoutMode === 'grid');
-
-            const s = cmdSets[currentLang] || cmdSets.ja;
-            const b = s.buttons;
-            const c = s.categories;
-            const units = I18N_DATA[currentLang]?.ui?.extended || I18N_DATA.ja.ui.extended;
-
-            const categoriesData = [
-                {
-                    key: 'stream',
-                    name: c.stream,
-                    boxId: 'cmd-box-stream',
-                    items: [
-                        { id: 'title', type: 'btn', data: b.title },
-                        { id: 'game', type: 'btn', data: b.game },
-                        { id: 'marker', type: 'btn', data: b.marker },
-                        { id: 'raid', type: 'btn', data: b.raid },
-                        { id: 'unraid', type: 'btn', data: b.unraid },
-                        { id: 'ads30', type: 'btn', data: b.ads30 },
-                        { id: 'ads60', type: 'btn', data: b.ads60 },
-                        { id: 'ads180', type: 'btn', data: b.ads180 }
-                    ]
-                },
-                {
-                    key: 'chat',
-                    name: c.chat,
-                    boxId: 'cmd-box-chat',
-                    items: [
-                        { id: 'announce', type: 'btn', data: b.announce },
-                        { id: 'clear', type: 'btn', data: b.clear },
-                        { id: 'color', type: 'btn', data: b.color },
-                        { id: 'me', type: 'btn', data: b.me },
-                        { id: 'disconnect', type: 'btn', data: b.disconnect },
-                        { id: 'emoteOnly', type: 'chatToggle', label: b.emoteOnly[0], onCmdInfo: b.emoteOnly, offCmdInfo: b.emoteOff },
-                        { id: 'sub', type: 'chatToggle', label: b.sub[0], onCmdInfo: b.sub, offCmdInfo: b.subOff },
-                        { id: 'unique', type: 'chatToggle', label: b.unique[0], onCmdInfo: b.unique, offCmdInfo: b.uniqueOff },
-                        { id: 'followerOnly', type: 'chatToggle', label: b.followerOnly[0], onCmdInfo: b.followerOnly, offCmdInfo: b.followerOff, inputConfig: { id: 'follower-time', type: 'number', value: 0, min: 0, max: 129600, step: 1, unit: units.unitMinute, width: '40px' } },
-                        { id: 'slow', type: 'chatToggle', label: b.slow[0], onCmdInfo: b.slow, offCmdInfo: b.slowOff, inputConfig: { id: 'slow-time', type: 'number', value: 30, min: 3, max: 120, step: 1, unit: units.unitSecond, width: '40px' } }
-                    ]
-                },
-                {
-                    key: 'user',
-                    name: c.user,
-                    boxId: 'cmd-box-user',
-                    items: [
-                        { id: 'ban', type: 'btn', data: b.ban },
-                        { id: 'unban', type: 'btn', data: b.unban },
-                        { id: 'timeout', type: 'btn', data: b.timeout },
-                        { id: 'mod', type: 'btn', data: b.mod },
-                        { id: 'unmod', type: 'btn', data: b.unmod },
-                        { id: 'vip', type: 'btn', data: b.vip },
-                        { id: 'unvip', type: 'btn', data: b.unvip },
-                        { id: 'mods', type: 'btn', data: b.mods },
-                        { id: 'vips', type: 'btn', data: b.vips },
-                        { id: 'user', type: 'btn', data: b.user },
-                        { id: 'monitor', type: 'btn', data: b.monitor },
-                        { id: 'unmonitor', type: 'btn', data: b.unmonitor },
-                        { id: 'restrict', type: 'btn', data: b.restrict },
-                        { id: 'unrestrict', type: 'btn', data: b.unrestrict },
-                        { id: 'block', type: 'btn', data: b.block },
-                        { id: 'unblock', type: 'btn', data: b.unblock },
-                        { id: 'w', type: 'btn', data: b.w }
-                    ]
-                },
-                {
-                    key: 'interact',
-                    name: c.interact,
-                    boxId: 'cmd-box-interact',
-                    items: [
-                        { id: 'poll', type: 'btn', data: b.poll },
-                        { id: 'predict', type: 'btn', data: b.predict },
-                        { id: 'pin', type: 'btn', data: b.pin },
-                        { id: 'unpin', type: 'btn', data: b.unpin },
-                        { id: 'shoutout', type: 'btn', data: b.shoutout }
-                    ]
-                }
-            ];
-
-            const renderCard = (item) => {
-                const isPinned = pinnedCmds.includes(item.id);
-                const pinStyle = isPinned ? 'color: var(--warning-text, #ffaa00); border-color: rgba(255, 170, 0, 0.6); background: rgba(255, 170, 0, 0.12);' : '';
-                const pinBtn = `
-                    <button class="icon-btn id-action-btn ${isPinned ? 'is-pinned' : ''}" title="${isPinned ? 'ピン留め解除' : '最上部にピン留め'}" onclick="event.stopPropagation(); toggleCmdPin('${item.id}')" style="position:absolute; top:4px; right:4px; z-index:3; width:18px; height:18px; padding:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border-radius:4px; border:1px solid ${isPinned ? 'var(--warning-text, #ffaa00)' : 'var(--border-color)'}; cursor:pointer; ${pinStyle}">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="${isPinned ? 'currentColor' : 'none'}" stroke="${isPinned ? 'var(--warning-text, #ffaa00)' : 'currentColor'}" stroke-width="2">
-                            <path d="M12 17v5"></path><path d="M9 4v5.5L7 12v2h10v-2l-2-2.5V4z"></path><line x1="9" y1="4" x2="15" y2="4"></line>
-                        </svg>
-                    </button>
-                `;
-
-                if (item.type === 'btn') {
-                    const [label, command, tip] = item.data;
-                    const isAutoExec = !command.endsWith(' ');
-                    const autoExecIcon = isAutoExec ? `<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span>` : '';
-                    const displayCmd = command.trim();
-                    const actionTip = isAutoExec ? (s.directTip || s.copyTip) : s.copyTip;
-                    const tipText = tip && tip !== label ? (tip + ' / ' + actionTip) : actionTip;
-
-                    return `
-                    <div style="position: relative; height: 100%;">
-                        ${pinBtn}
-                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" style="padding: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: var(--transition-fast); ${pinStyle}"
-                            data-tooltip="${label}: ${command}&#10;${tipText}" 
-                            onclick="handleCommandClick('${command}', '${label}', ${isAutoExec})">
-                            <span class="cmd-label" style="margin-bottom: 2px; display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}${autoExecIcon}</span>
-                            <span class="cmd-code">${displayCmd}</span>
-                        </button>
-                    </div>`;
-                } else {
-                    const label = item.label;
-                    const onCmdBase = item.onCmdInfo[1].trim();
-                    const offCmd = item.offCmdInfo[1].trim();
-                    const toggleBtnId = 'chat-toggle-btn-' + offCmd.replace(/[^a-zA-Z]/g, '');
-
-                    let inputHtml = '';
-                    if (item.inputConfig) {
-                        const ic = item.inputConfig;
-                        inputHtml = `
-                        <div class="cmd-time-control" onclick="event.stopPropagation()">
-                            <input type="${ic.type}" id="${ic.id}" value="${ic.value}"${ic.min !== undefined ? ` min="${ic.min}"` : ''}${ic.max !== undefined ? ` max="${ic.max}"` : ''}${ic.step !== undefined ? ` step="${ic.step}"` : ''}${ic.min !== undefined && ic.max !== undefined ? ` onchange="this.value=clampInt(this.value,${ic.min},${ic.max},${ic.value})"` : ''}>
-                            <span>${ic.unit}</span>
-                        </div>`;
-                    }
-
-                    return `
-                    <div style="position: relative; display: flex; flex-direction: column; height: 100%;">
-                        ${pinBtn}
-                        <button class="btn-outline cmd-copy-btn has-tooltip ${isPinned ? 'is-pinned-card' : ''}" id="${toggleBtnId}" style="flex: 1; padding: 8px 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: var(--bg-card); border-radius: var(--radius-sm); color: var(--text-main); cursor: pointer; transition: all 0.2s ease; ${pinStyle}"
-                            data-tooltip="${label}: ${onCmdBase} / ${offCmd}&#10;${s.directTip || s.copyTip}" 
-                            onclick="handleChatToggleButton(this, '${onCmdBase}', '${offCmd}', '${item.inputConfig ? item.inputConfig.id : ''}')">
-                            <span class="cmd-label" style="display: flex; align-items: center; text-align: center; line-height: 1.2; padding-right: 14px;">${label}<span class="command-exec-icon" title="${s.directExecTitle || cmdSets.ja.directExecTitle}">✦</span></span>
-                        </button>
-                        ${inputHtml}
-                    </div>`;
-                }
-            };
-
-            const gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; padding: 6px;';
-
-            let html = `
-            <div class="command-stack" style="display: flex; flex-direction: column; gap: 8px;">
-                <div class="tab-lead-note" style="margin-top: 2px; margin-bottom: 2px;">
-                    <span><span style="color: var(--command-accent);">✦</span> ${s.directExecHint || cmdSets.ja.directExecHint}</span>
-                </div>`;
-
-            if (cmdSortOrder === 'group') {
-                categoriesData.forEach(cat => {
-                    const sortedItems = [...cat.items].sort((a, b) => {
-                        const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
-                        const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
-                        return pinB - pinA;
-                    });
-
-                    html += `
-                    <div class="category-box tw-section" id="${cat.boxId}" style="margin-bottom: 0;">
-                        <div class="category-name" onclick="twToggle('${cat.boxId}')" style="padding: 6px 10px; background: var(--bg-header); border-bottom: 1px solid var(--border-color); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
-                            <span>${cat.name}</span>
-                            <span class="category-arrow" style="font-size: 10px; opacity: 0.6;">▼</span>
-                        </div>
-                        <div class="tw-body" style="${gridStyle}">${sortedItems.map(renderCard).join('')}</div>
-                    </div>`;
-                });
-            } else {
-                let allItems = [];
-                categoriesData.forEach(cat => {
-                    cat.items.forEach(item => {
-                        allItems.push(item);
-                    });
-                });
-
-                allItems.sort((a, b) => {
-                    const pinA = pinnedCmds.includes(a.id) ? 1 : 0;
-                    const pinB = pinnedCmds.includes(b.id) ? 1 : 0;
-                    if (pinA !== pinB) return pinB - pinA;
-
-                    const getLabel = (item) => item.type === 'btn' ? item.data[0] : item.label;
-                    const getCmd = (item) => item.type === 'btn' ? item.data[1].trim() : item.onCmdInfo[1].trim();
-
-                    if (cmdSortOrder === 'name') {
-                        return getLabel(a).localeCompare(getLabel(b), currentLang === 'ja' ? 'ja' : 'en');
-                    } else {
-                        return getCmd(a).localeCompare(getCmd(b));
-                    }
-                });
-
-                html += `
-                <div class="category-box tw-section" style="margin-bottom: 0;">
-                    <div class="tw-body" style="${gridStyle}">${allItems.map(renderCard).join('')}</div>
-                </div>`;
-            }
-
-            html += `</div>`;
-            cmdEl.innerHTML = html;
-            restoreCategoryVisibility('cmd-tab');
-        }
-        window.renderCommands = renderCommands;
-
         // ★ 更新版：IDリストのUIと機能を画像に合わせて復元
         function renderFriends() {
             const L = langMap[currentLang];
             const I = L.idList || langMap.ja.idList;
             const E = L.extended || langMap.ja.extended || {};
             const c = document.getElementById('friends-container'); if (!c) return; c.innerHTML = "";
-            c.classList.toggle('flat-mode', friendsSortOrder !== 'group');
-            c.classList.toggle('layout-grid', friendsLayoutMode === 'grid');
-            c.classList.toggle('layout-list', friendsLayoutMode === 'list');
-
-            const sortSel = document.getElementById('friends-sort-select');
-            if (sortSel && sortSel.value !== friendsSortOrder) sortSel.value = friendsSortOrder;
-            const friendsToggle = document.getElementById('friends-layout-toggle');
-            const friendsToggleText = document.getElementById('friends-layout-toggle-text');
-            const isFriendsGrid = friendsLayoutMode === 'grid';
-            if (friendsToggle && friendsToggle.checked !== isFriendsGrid) friendsToggle.checked = isFriendsGrid;
-            if (friendsToggleText) {
-                friendsToggleText.textContent = isFriendsGrid ? (L.layoutGrid || '横並び可') : (L.layoutList || '縦積みのみ');
-            }
 
             // 現在の選択状態（チェック状態）を退避
             const activeTags = Array.from(document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked')).map(cb => cb.value);
@@ -1714,6 +1657,9 @@
                 <button type="button" onclick="addNewGroupFromFilter()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(145, 70, 255, 0.08); border: 1px dashed var(--twitch-purple); border-radius: 12px; cursor: pointer; color: var(--twitch-purple); font-size: 11px; font-weight: bold; height: 26px; transition: background var(--transition-fast); outline: none;">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     ${raidSoEscape(I.addTag)}
+                </button>
+                <button type="button" onclick="checkAndConsolidateDuplicateIds()" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 4px 10px; background: rgba(255, 170, 0, 0.12); border: 1px solid var(--warning-border, #ffaa00); border-radius: 12px; cursor: pointer; color: var(--warning-text, #ffaa00); font-size: 11px; font-weight: bold; height: 26px; margin-left: 4px; outline: none;" title="登録されているIDリスト内の重複IDを検索し統合・整理します">
+                    🔄 重複IDを統合・整理
                 </button>`;
             }
 
@@ -1759,22 +1705,13 @@
                             <button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addFriendRecord(${ci})">＋</button>
                         </div>
                     </div>
-                    <div class="category-records sortable-items ${friendsLayoutMode === 'grid' ? 'layout-grid' : 'layout-list'}" data-cat-idx="${ci}"></div>`;
+                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
 
                     const friends = cat.friends || [];
                     if (!friends.length) {
                         d.querySelector('.category-records').innerHTML = emptyStateHtml(L.empty?.idRecords || '');
                     }
-
-                    // カテゴリ内でもピン留め対象を最上位へ整列
-                    const sortedCatFriends = [...friends].sort((a, b) => {
-                        const pa = a.isPinned ? 1 : 0;
-                        const pb = b.isPinned ? 1 : 0;
-                        return pb - pa;
-                    });
-
-                    sortedCatFriends.forEach((f) => {
-                        const fi = friends.indexOf(f);
+                    friends.forEach((f, fi) => {
                         d.querySelector('.category-records').appendChild(_buildFriendCard(f, ci, fi, L, I, null));
                     });
                     c.appendChild(d);
@@ -1806,10 +1743,6 @@
 
                 allFriends.sort((a, b) => {
                     const fa = a.f, fb = b.f;
-                    const pa = fa.isPinned ? 1 : 0;
-                    const pb = fb.isPinned ? 1 : 0;
-                    if (pa !== pb) return pb - pa; // ピン留め対象をソート指定にかかわらず常に最上位に
-
                     if (friendsSortOrder === 'name') {
                         const na = (fa.name || fa.twitch || '').toLowerCase();
                         const nb = (fb.name || fb.twitch || '').toLowerCase();
@@ -1877,6 +1810,7 @@
             if (countEl) {
                 countEl.innerText = activeTags.length > 0 ? `(${activeTags.length})` : '';
             }
+            renderCommonTagBar();
 
             const isGroupMode = friendsSortOrder === 'group';
 
@@ -2873,7 +2807,7 @@
             <div style="background:var(--bg-card);border:2px solid var(--border-color);border-radius:12px;padding:16px;width:300px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                     <strong style="color:var(--twitch-purple);font-size:13px;">${raidSoEscape(uiText('idList.datePickerTitle', { type: typeLabel }))}</strong>
-                    <button onclick="document.getElementById('mini-date-picker-overlay')?.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
+                    <button onclick="document.getElementById('mini-date-picker-overlay').remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 6px;">×</button>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                     <button onclick="miniPickerMonth--;if(miniPickerMonth<1){miniPickerMonth=12;}renderMiniDatePicker(document.getElementById('mini-date-picker-overlay'))" style="background:var(--bg-item);border:1px solid var(--border-color);color:var(--text-main);border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:bold;font-size:13px;">&lt;</button>
@@ -5288,10 +5222,20 @@
                 localStorage.setItem('cp_groups_v1', JSON.stringify([...groupsById.values()]));
             }
 
+            // 10. titleTagConfig
+            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
+                titleTagConfig = d.titleTagConfig;
+                saveTitleTagConfig();
+            }
+
             // 9. rewards created by TwitchManager
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
-                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set([...localIds, ...d.cpAppRewardIds].map(String))]));
+                const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
+                localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify(merged));
+                if (typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = merged;
+                }
             }
         }
         async function copyBackupToClipboard() {
@@ -5311,8 +5255,63 @@
             await copyTextToClipboard(JSON.stringify(d, null, 2));
         }
 
+function getDefaultTitleConfig() {
+    return [
+        {
+            name: "ゲーム配信",
+            isClosed: false,
+            records: [
+                {
+                    label: "【参加型】ゲーム配信",
+                    isCustomLabel: true,
+                    game: "Just Chatting",
+                    title: "{識別}【参加型】のんびりゲーム配信中！ {Category} {コラボ} {date}",
+                    notif: "のんびり配信スタートしました！",
+                    tags: "参加型, Vtuber",
+                    memo: "",
+                    isOpen: true
+                }
+            ]
+        },
+        {
+            name: "雑談配信",
+            isClosed: false,
+            records: [
+                {
+                    label: "雑談配信",
+                    isCustomLabel: true,
+                    game: "Just Chatting",
+                    title: "{識別} のんびり雑談タイム！ {コラボ} {date}",
+                    notif: "雑談配信はじまりました！",
+                    tags: "雑談, 初見歓迎",
+                    memo: "",
+                    isOpen: false
+                }
+            ]
+        }
+    ];
+}
+
+function restoreDefaultTitleConfig() {
+    config = getDefaultTitleConfig();
+    saveAllLocal(true);
+    render();
+}
+window.restoreDefaultTitleConfig = restoreDefaultTitleConfig;
+
         window.onload = () => {
-            config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
+            let loadedConfig = null;
+            try {
+                loadedConfig = JSON.parse(localStorage.getItem('stream_config_v16') || 'null');
+            } catch (e) {
+                loadedConfig = null;
+            }
+            if (!loadedConfig || !Array.isArray(loadedConfig) || loadedConfig.length === 0) {
+                config = getDefaultTitleConfig();
+                saveAllLocal(false);
+            } else {
+                config = loadedConfig;
+            }
             friendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
             memoConfig = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
             customRaidSoTemplates = loadRaidSoCustomTemplates();
@@ -5696,10 +5695,11 @@ function safeSetLocal(key, value) {
         function renderVipSlotInfo(currentVipCount, maxVip) {
             const infoEl = document.getElementById('tw-vip-slot-info');
             if (!infoEl) return;
-            if (!maxVip || maxVip === 0) {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span>`;
+            const remaining = Math.max(0, maxVip - currentVipCount);
+            if (maxVip === 0) {
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong> (${raidSoEscape(uiText('runtime.standardAccount'))})</span>`;
             } else {
-                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span style="font-size:10px;opacity:0.8;">(推定枠上限: <strong>${maxVip}人</strong>)</span>`;
+                infoEl.innerHTML = `<span>${raidSoEscape(uiText('runtime.currentVips'))}: <strong>${currentVipCount} / ${maxVip}${raidSoEscape(uiText('runtime.personSuffix'))}</strong></span><span>${raidSoEscape(uiText('runtime.remaining'))}: <strong>${remaining}${raidSoEscape(uiText('runtime.slotSuffix'))}</strong></span>`;
             }
         }
 
@@ -5713,192 +5713,18 @@ function safeSetLocal(key, value) {
             }
         }
 
-        let _subState = {
-            subscribers: [],
-            rawSubscribers: [],
-            total: 0,
-            currentPage: 1,
-            pageSize: Number(localStorage.getItem('tw_sub_page_size') || 10),
-            sortMode: localStorage.getItem('tw_sub_sort_mode') || 'default'
-        };
-        let _vipState = {
-            vips: [],
-            currentPage: 1,
-            pageSize: Number(localStorage.getItem('tw_vip_page_size') || 10)
-        };
-
-        function sortSubscribersArray(subscribers, sortMode) {
-            if (!Array.isArray(subscribers) || subscribers.length === 0) return subscribers || [];
-            const sorted = [...subscribers];
-            if (sortMode === 'tier_desc') {
-                sorted.sort((a, b) => (Number(b.tier) || 1000) - (Number(a.tier) || 1000));
-            } else if (sortMode === 'tier_asc') {
-                sorted.sort((a, b) => (Number(a.tier) || 1000) - (Number(b.tier) || 1000));
-            } else if (sortMode === 'gift_first') {
-                sorted.sort((a, b) => (b.is_gift ? 1 : 0) - (a.is_gift ? 1 : 0));
-            } else if (sortMode === 'direct_first') {
-                sorted.sort((a, b) => (a.is_gift ? 1 : 0) - (b.is_gift ? 1 : 0));
-            }
-            return sorted;
-        }
-
-        function renderSubscriberList(subscribers, total, page = 1, pageSize = null) {
-            const c = document.getElementById('tw-sub-list');
-            if (!c) return;
-            if (!subscribers || subscribers.length === 0) {
-                _subState.subscribers = [];
-                _subState.rawSubscribers = [];
-                _subState.total = 0;
-                _subState.currentPage = 1;
-                c.innerHTML = twitchListEmptyHtml();
-                return;
-            }
-
-            _subState.rawSubscribers = subscribers;
-            _subState.total = total !== undefined ? total : subscribers.length;
-            if (pageSize) _subState.pageSize = Number(pageSize) || 10;
-
-            const effectivePageSize = _subState.pageSize || 10;
-            const totalCount = _subState.total;
-
-            const sortedSubscribers = sortSubscribersArray(subscribers, _subState.sortMode);
-            _subState.subscribers = sortedSubscribers;
-
-            const totalPages = Math.ceil(sortedSubscribers.length / effectivePageSize) || 1;
-
-            if (page < 1) page = 1;
-            if (page > totalPages) page = totalPages;
-            _subState.currentPage = page;
-
-            // Sync top header selects if present
-            const subSizeSel = document.getElementById('tw-sub-size-select');
-            if (subSizeSel && String(subSizeSel.value) !== String(effectivePageSize)) {
-                subSizeSel.value = String(effectivePageSize);
-            }
-            const subSortSel = document.getElementById('tw-sub-sort-select');
-            if (subSortSel && String(subSortSel.value) !== String(_subState.sortMode)) {
-                subSortSel.value = String(_subState.sortMode || 'default');
-            }
-
-            let displayItems = sortedSubscribers;
-            if (sortedSubscribers.length > 10) {
-                const start = (page - 1) * effectivePageSize;
-                const end = start + effectivePageSize;
-                displayItems = sortedSubscribers.slice(start, end);
-            }
-
-            let html = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${totalCount}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>`;
-
-            html += displayItems.map(s => {
-                const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
-                const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
-                return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
-            }).join('');
-
-            if (sortedSubscribers.length > 10) {
-                html += `
-                <div class="tw-pagination-bar">
-                    <button type="button" class="tw-page-btn" onclick="changeSubPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
-                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
-                    <span class="tw-page-num">${page} / ${totalPages}</span>
-                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
-                    <button type="button" class="tw-page-btn" onclick="changeSubPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
-                </div>`;
-            }
-
-            c.innerHTML = html;
-        }
-        window.renderSubscriberList = renderSubscriberList;
-
-        function changeSubPage(newPage) {
-            if (!_subState.subscribers || _subState.subscribers.length === 0) return;
-            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, newPage);
-        }
-        window.changeSubPage = changeSubPage;
-
-        function changeSubPageSize(newSize) {
-            const size = Number(newSize) || 10;
-            _subState.pageSize = size;
-            safeSetLocal('tw_sub_page_size', String(size));
-            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1, size);
-        }
-        window.changeSubPageSize = changeSubPageSize;
-
-        function changeSubSortMode(newSortMode) {
-            _subState.sortMode = newSortMode || 'default';
-            safeSetLocal('tw_sub_sort_mode', _subState.sortMode);
-            renderSubscriberList(_subState.rawSubscribers || _subState.subscribers, _subState.total, 1);
-        }
-        window.changeSubSortMode = changeSubSortMode;
-
-        function renderVipList(vips, page = 1, pageSize = null) {
+        function renderVipList(vips) {
             const list = document.getElementById('tw-vip-list');
             if (!list) return;
-            if (!vips || vips.length === 0) {
-                _vipState.vips = [];
-                _vipState.currentPage = 1;
-                list.innerHTML = twitchListEmptyHtml();
-                return;
-            }
-
-            _vipState.vips = vips;
-            if (pageSize) _vipState.pageSize = Number(pageSize) || 10;
-
-            const effectivePageSize = _vipState.pageSize || 10;
-            const totalPages = Math.ceil(vips.length / effectivePageSize) || 1;
-
-            if (page < 1) page = 1;
-            if (page > totalPages) page = totalPages;
-            _vipState.currentPage = page;
-
-            // Sync top header select if present
-            const vipSizeSel = document.getElementById('tw-vip-size-select');
-            if (vipSizeSel && String(vipSizeSel.value) !== String(effectivePageSize)) {
-                vipSizeSel.value = String(effectivePageSize);
-            }
-
-            let displayItems = vips;
-            if (vips.length > 10) {
-                const start = (page - 1) * effectivePageSize;
-                const end = start + effectivePageSize;
-                displayItems = vips.slice(start, end);
-            }
-
-            let html = displayItems.map(v => {
-                const name = raidSoEscape(v.user_name || v.user_login || '');
-                const login = raidSoEscape(v.user_login || '');
-                const tip = raidSoEscape(twExt('copyVipIdTip'));
-                return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
-            }).join('');
-
-            if (vips.length > 10) {
-                html += `
-                <div class="tw-pagination-bar">
-                    <button type="button" class="tw-page-btn" onclick="changeVipPage(1)" ${page <= 1 ? 'disabled' : ''} title="最初のページへ">◁</button>
-                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} title="一つ前のページへ">＜</button>
-                    <span class="tw-page-num">${page} / ${totalPages}</span>
-                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} title="一つ後のページへ">＞</button>
-                    <button type="button" class="tw-page-btn" onclick="changeVipPage(${totalPages})" ${page >= totalPages ? 'disabled' : ''} title="最後のページへ">▷</button>
-                </div>`;
-            }
-
-            list.innerHTML = html;
+            list.innerHTML = vips.length === 0
+                ? twitchListEmptyHtml()
+                : vips.map(v => {
+                    const name = raidSoEscape(v.user_name || v.user_login || '');
+                    const login = raidSoEscape(v.user_login || '');
+                    const tip = raidSoEscape(twExt('copyVipIdTip'));
+                    return `<div class="tw-list-item"><button type="button" class="tw-list-name has-tooltip" data-login="${login}" data-tooltip="${tip}" aria-label="${tip}: ${login}" onclick="copyVipLoginFromButton(this)">👑 ${name}</button><span class="tw-list-meta">${login}</span></div>`;
+                }).join('');
         }
-        window.renderVipList = renderVipList;
-
-        function changeVipPage(newPage) {
-            if (!_vipState.vips || _vipState.vips.length === 0) return;
-            renderVipList(_vipState.vips, newPage);
-        }
-        window.changeVipPage = changeVipPage;
-
-        function changeVipPageSize(newSize) {
-            const size = Number(newSize) || 10;
-            _vipState.pageSize = size;
-            safeSetLocal('tw_vip_page_size', String(size));
-            renderVipList(_vipState.vips, 1, size);
-        }
-        window.changeVipPageSize = changeVipPageSize;
 
         function copyVipLoginFromButton(button) {
             const login = String(button?.dataset?.login || '').trim();
@@ -6703,7 +6529,7 @@ function getSortedCpRewards(rewards, sortBy) {
 function changeCpSortOrder(val) {
     cpState.sortBy = val;
     try { localStorage.setItem('cp_sort_by_v1', val); } catch (e) {}
-    renderCpTable();
+    if (typeof renderCpTable === 'function') renderCpTable();
 }
 
 function changeCpModalSortOrder(val) {
@@ -7223,6 +7049,10 @@ function openCpRewardModal(rewardId = null) {
         if (tplWrapper) tplWrapper.style.display = 'none';
     } else {
         if (modalTitle) modalTitle.textContent = cpCopy('rewardModalTitleNew');
+        const idWrapper = document.getElementById('cp-reward-id-wrapper');
+        const idDisplay = document.getElementById('cp-reward-id-display');
+        if (idWrapper) idWrapper.style.display = 'none';
+        if (idDisplay) idDisplay.value = '';
         editIdInput.value = '';
         titleInput.value = '';
         costInput.value = 50;
@@ -7245,7 +7075,7 @@ function openCpRewardModal(rewardId = null) {
 
 function renderCpTab() {
     renderCpGroups();
-    renderCpTable();
+    if (typeof renderCpTable === 'function') renderCpTable();
 }
 
 function renderCpGroups() {
@@ -7304,72 +7134,449 @@ function renderCpGroups() {
     container.innerHTML = html;
 }
 
-function renderCpTable() {
-    const tbody = document.getElementById('cp-rewards-tbody');
-    const totalEl = document.getElementById('cp-total-count');
-    const mainSortSelect = document.getElementById('cp-sort-select');
-    if (mainSortSelect) mainSortSelect.value = cpState.sortBy;
-    if (!tbody) return;
+function openTitleTagModal() {
+    loadTitleTagConfig();
+    renderTitleTagModalRows();
+    renderCategoryMapModalRows();
 
-    if (totalEl) totalEl.textContent = cpCopy('count', { count: cpState.rewards.length });
+    // Populate collab datalist from IDリスト category names
+    const datalist = document.getElementById('collab-tag-name-datalist');
+    const hint = document.getElementById('collab-tag-name-hint');
+    if (datalist) {
+        // Get unique category names from friendsConfig (exclude shoutout-history and authenticated-user)
+        const catNames = (friendsConfig || [])
+            .filter(cat => cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+            .map(cat => cat.name.trim())
+            .filter(name => name && name.length <= 10);
+        const uniqueNames = [...new Set(catNames)];
+        datalist.innerHTML = uniqueNames.map(n => `<option value="${raidSoEscape(n)}">`).join('');
 
-    if (cpState.rewards.length === 0) {
-        const noRewardText = cpCopy('noRewards');
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:var(--text-muted);">${raidSoEscape(noRewardText)}</td></tr>`;
+        if (hint) {
+            if (uniqueNames.length > 0) {
+                hint.textContent = 'IDリストのカテゴリ: ' + uniqueNames.join(' / ');
+            } else {
+                hint.textContent = '';
+            }
+        }
+    }
+    openModal('titleTagModal');
+}
+
+function sanitizeTitleTagName(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/[\{\}\[\]\s]/g, '')
+        .replace(/\p{Extended_Pictographic}|\p{Emoji}/gu, '')
+        .replace(/[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u1F700-\u1F77F\u1F780-\u1F7FF\u1F800-\u1F8FF\u1F900-\u1F9FF\u1FA00-\u1FA6F\u1FA70-\u1FAFF\u2600-\u26FF\u2700-\u27BF]/g, '');
+}
+
+function sanitizeTitleTagNameInput(inputEl) {
+    if (!inputEl) return;
+    const cleaned = sanitizeTitleTagName(inputEl.value);
+    if (inputEl.value !== cleaned) {
+        inputEl.value = cleaned;
+    }
+}
+window.sanitizeTitleTagName = sanitizeTitleTagName;
+window.sanitizeTitleTagNameInput = sanitizeTitleTagNameInput;
+
+function renderTitleTagModalRows() {
+    const container = document.getElementById('title-tag-list-container');
+    if (!container) return;
+    if (!titleTagConfig.customTags || titleTagConfig.customTags.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">(登録されているカスタム識別タグはありません)</div>';
+        return;
+    }
+    let html = '';
+    titleTagConfig.customTags.forEach((tag, idx) => {
+        html += `
+        <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1;">
+                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <div style="flex:2;">
+                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function getRegisteredCategoryList() {
+    const games = [];
+    if (Array.isArray(config)) {
+        config.forEach(c => {
+            if (c && Array.isArray(c.records)) {
+                c.records.forEach(r => {
+                    if (r && r.game && r.game.trim()) {
+                        const trimmed = r.game.trim();
+                        const lower = trimmed.toLowerCase();
+                        if (!games.some(g => g.toLowerCase() === lower)) {
+                            games.push(trimmed);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    games.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    return games;
+}
+
+function handleCatMapFromSelectChange(idx, val) {
+    if (!titleTagConfig.categoryMap || !titleTagConfig.categoryMap[idx]) return;
+    if (val === '__custom__') {
+        titleTagConfig.categoryMap[idx].isCustomFrom = true;
+    } else {
+        titleTagConfig.categoryMap[idx].isCustomFrom = false;
+        titleTagConfig.categoryMap[idx].from = val;
+    }
+    renderCategoryMapModalRows();
+}
+window.handleCatMapFromSelectChange = handleCatMapFromSelectChange;
+
+function renderCategoryMapModalRows() {
+    const container = document.getElementById('title-tag-category-map-container');
+    if (!container) return;
+
+    if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
         return;
     }
 
-    let html = '';
-    const sortedRewards = getSortedCpRewards(cpState.rewards, cpState.sortBy);
-    const enabledText = cpCopy('statusEnabled');
-    const disabledText = cpCopy('statusDisabled');
-    const editText = cpCopy('edit');
-    const deleteAria = langMap[currentLang]?.delete || langMap.ja.delete;
-    const appBadgeText = cpCopy('badgeAppCreated');
-    const extBadgeText = cpCopy('badgeExternalCreated');
+    const registeredGames = getRegisteredCategoryList();
 
-    sortedRewards.forEach(r => {
-        const isEnabled = r.is_enabled;
-        const color = r.background_color || '#9146FF';
-        const assignedGroups = cpState.groups.filter(g => g.rewardIds && g.rewardIds.includes(r.id));
-        let groupTagsHtml = '';
-        assignedGroups.forEach(g => {
-            const isShared = assignedGroups.length > 1;
-            groupTagsHtml += `<span class="cp-group-tag${isShared ? ' is-shared' : ''}">${raidSoEscape(cpGroupName(g))}</span>`;
+    let html = '';
+    titleTagConfig.categoryMap.forEach((item, idx) => {
+        const currentFrom = (item.from || '').trim();
+        const optionsList = [...registeredGames];
+        if (currentFrom && !optionsList.some(g => g.toLowerCase() === currentFrom.toLowerCase())) {
+            optionsList.unshift(currentFrom);
+        }
+
+        let selectOptionsHtml = '<option value="">登録カテゴリを選択...</option>';
+        optionsList.forEach(g => {
+            const sel = (g.toLowerCase() === currentFrom.toLowerCase() && !item.isCustomFrom) ? 'selected' : '';
+            selectOptionsHtml += `<option value="${raidSoEscape(g)}" ${sel}>${raidSoEscape(g)}</option>`;
         });
-        const isAppOwned = isAppCreatedReward(r);
-        const actionTitle = isAppOwned ? editText : cpCopy('cantModifyExternalReward');
-        const disabledAttribute = isAppOwned ? '' : ' disabled aria-disabled="true"';
-        const sourceBadgeHtml = isAppOwned
-            ? `<span class="cp-source-badge is-app">${raidSoEscape(appBadgeText)}</span>`
-            : `<span class="cp-source-badge is-external">${raidSoEscape(extBadgeText)}</span>`;
+        const customSel = item.isCustomFrom ? 'selected' : '';
+        selectOptionsHtml += `<option value="__custom__" ${customSel}>✏️ 直接入力 (その他)...</option>`;
+
+        const isCustom = item.isCustomFrom;
 
         html += `
-        <tr class="cp-reward-row">
-            <td class="cp-reward-main">
-                <div class="cp-reward-identity">
-                    <div class="cp-reward-color" style="background:${color};"></div>
-                    <div class="cp-reward-copy">
-                        <div class="cp-reward-title">${raidSoEscape(r.title)}</div>
-                        <div class="cp-reward-meta"><span>${r.cost} pt</span>${sourceBadgeHtml}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="cp-reward-groups">${groupTagsHtml || '<span class="cp-reward-unassigned">-</span>'}</td>
-            <td class="cp-reward-status">
-                <span class="${isEnabled ? 'is-enabled' : 'is-disabled'}">${raidSoEscape(isEnabled ? enabledText : disabledText)}</span>
-            </td>
-            <td class="cp-reward-switch">
-                <label class="cp-reward-toggle${isAppOwned ? '' : ' is-disabled'}" title="${raidSoEscape(isAppOwned ? (isEnabled ? enabledText : disabledText) : actionTitle)}">
-                    <input type="checkbox" ${isEnabled ? 'checked' : ''}${disabledAttribute}${isAppOwned ? ` onchange="toggleCustomRewardEnabled('${r.id}', this.checked)"` : ''}>
-                    <span class="cp-reward-toggle-track"></span>
-                </label>
-            </td>
-            <td class="cp-reward-actions">
-                <button type="button" class="btn-secondary cp-reward-icon-button"${disabledAttribute}${isAppOwned ? ` onclick="openCpRewardModal('${r.id}')"` : ''} aria-label="${raidSoEscape(actionTitle)}" title="${raidSoEscape(actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                <button type="button" class="btn-secondary cp-reward-icon-button is-delete"${disabledAttribute}${isAppOwned ? ` onclick="deleteCpReward('${r.id}')"` : ''} aria-label="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}" title="${raidSoEscape(isAppOwned ? deleteAria : actionTitle)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </td>
-        </tr>`;
+        <div style="display:flex; gap:6px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1.2; display:flex; flex-direction:column; gap:4px;">
+                <select class="cd-input-field cat-map-row-from-select" data-idx="${idx}" onchange="handleCatMapFromSelectChange(${idx}, this.value)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;">
+                    ${selectOptionsHtml}
+                </select>
+                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名を入力" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:bold; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; transform:translateY(0);">➔</div>
+            <div style="flex:1.2;">
+                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
+        </div>`;
     });
-    tbody.innerHTML = html;
+    container.innerHTML = html;
 }
+
+function addCustomCategoryMappingRow(fromVal = '', toVal = '') {
+    if (!titleTagConfig.categoryMap) titleTagConfig.categoryMap = [];
+    const newId = 'cat_map_' + Date.now();
+    titleTagConfig.categoryMap.push({ id: newId, from: fromVal, to: toVal });
+    renderCategoryMapModalRows();
+}
+
+function deleteCustomCategoryMappingRow(idx) {
+    if (!titleTagConfig.categoryMap) return;
+    titleTagConfig.categoryMap.splice(idx, 1);
+    renderCategoryMapModalRows();
+}
+
+function addCustomTitleTagRow() {
+    if (!titleTagConfig.customTags) titleTagConfig.customTags = [];
+    const newId = 'tag_' + Date.now();
+    titleTagConfig.customTags.push({ id: newId, name: '識別' + (titleTagConfig.customTags.length + 1), value: '' });
+    renderTitleTagModalRows();
+}
+
+function deleteCustomTitleTagRow(idx) {
+    if (!titleTagConfig.customTags) return;
+    titleTagConfig.customTags.splice(idx, 1);
+    renderTitleTagModalRows();
+}
+
+function updateAllTitlePreviews() {
+    loadTitleTagConfig();
+    if (!Array.isArray(config)) return;
+    config.forEach((c, ci) => {
+        if (!c || !Array.isArray(c.records)) return;
+        c.records.forEach((r, ri) => {
+            const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+            if (previewEl) {
+                const game = r.game || '';
+                const resolved = resolveStreamTitleTemplate(r.title || '', { game });
+                previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+            }
+        });
+    });
+}
+window.updateAllTitlePreviews = updateAllTitlePreviews;
+
+function saveTitleTagModalSettings(silent = false) {
+    const nameInputs = document.querySelectorAll('.tag-row-name');
+    const valInputs = document.querySelectorAll('.tag-row-val');
+    if (nameInputs && nameInputs.length > 0) {
+        const newTags = [];
+        nameInputs.forEach((nInput, idx) => {
+            const name = sanitizeTitleTagName((nInput.value || '').trim());
+            const value = (valInputs[idx]?.value || '');
+            if (name) {
+                newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
+            }
+        });
+        titleTagConfig.customTags = newTags;
+    }
+
+    const catFromSelects = document.querySelectorAll('.cat-map-row-from-select');
+    const catToInputs = document.querySelectorAll('.cat-map-row-to');
+    if (catFromSelects && catFromSelects.length > 0) {
+        const newMaps = [];
+        catFromSelects.forEach((sInput, idx) => {
+            let from = (sInput.value || '').trim();
+            if (from === '__custom__') {
+                const customEl = document.querySelector(`.cat-map-row-from-custom[data-idx="${idx}"]`);
+                from = customEl ? (customEl.value || '').trim() : '';
+            }
+            const to = (catToInputs[idx]?.value || '').trim();
+            if (from) {
+                newMaps.push({ id: 'cat_map_' + idx, from, to });
+            }
+        });
+        titleTagConfig.categoryMap = newMaps;
+    } else {
+        titleTagConfig.categoryMap = [];
+    }
+
+    const collabSelect = document.getElementById('title-tag-collab-category-select');
+    if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
+
+    saveTitleTagConfig();
+    if (!silent) {
+        closeModal('titleTagModal');
+        showToast('識別タグおよびカテゴリ変換の設定を保存しました', 'success');
+    }
+    renderCommonTagBar();
+    updateAllTitlePreviews();
+}
+
+window.openTitleTagModal = openTitleTagModal;
+window.renderTitleTagModalRows = renderTitleTagModalRows;
+window.renderCategoryMapModalRows = renderCategoryMapModalRows;
+window.addCustomTitleTagRow = addCustomTitleTagRow;
+window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
+window.addCustomCategoryMappingRow = addCustomCategoryMappingRow;
+window.deleteCustomCategoryMappingRow = deleteCustomCategoryMappingRow;
+window.saveTitleTagModalSettings = saveTitleTagModalSettings;
+
+let pendingDedupConflicts = [];
+
+function checkAndConsolidateDuplicateIds() {
+    if (!Array.isArray(friendsConfig)) return;
+
+    const map = new Map();
+
+    friendsConfig.forEach((cat, ci) => {
+        if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+        (cat.friends || []).forEach((f, fi) => {
+            const raw = f.twitch || f.name || f.id || '';
+            const twitchId = extractTwitchId(raw);
+            if (!twitchId) return;
+            const key = twitchId.toLowerCase();
+
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({ ci, fi, friend: f, catName: cat.name || '未分類', twitchId });
+        });
+    });
+
+    let autoMergedCount = 0;
+    const conflicts = [];
+
+    map.forEach((items) => {
+        if (items.length <= 1) return;
+
+        const first = items[0].friend;
+        const isIdentical = items.every(item => {
+            const f = item.friend;
+            return (f.name || '') === (first.name || '') &&
+                   (f.x || '') === (first.x || '') &&
+                   (f.youtube || '') === (first.youtube || '') &&
+                   (f.birthday || '') === (first.birthday || '') &&
+                   (f.anniversary || '') === (first.anniversary || '') &&
+                   (f.memo || '') === (first.memo || '');
+        });
+
+        if (isIdentical) {
+            autoMergedCount += (items.length - 1);
+        } else {
+            conflicts.push({ twitchId: items[0].twitchId, items });
+        }
+    });
+
+    if (autoMergedCount === 0 && conflicts.length === 0) {
+        showToast('重複するIDは見つかりませんでした。データは正常です。', 'info');
+        return;
+    }
+
+    if (conflicts.length === 0) {
+        performAutoDeduplicate(map);
+        showToast(`${autoMergedCount}件の完全重複IDを自動統合しました`, 'success');
+        renderFriends();
+        saveFriendsLocalDebounced();
+        return;
+    }
+
+    pendingDedupConflicts = conflicts;
+    renderDeduplicateModalRows(conflicts);
+    openModal('idDeduplicateModal');
+}
+
+function performAutoDeduplicate(map) {
+    map.forEach((items) => {
+        if (items.length <= 1) return;
+        for (let i = items.length - 1; i >= 1; i--) {
+            const removeItem = items[i];
+            if (friendsConfig[removeItem.ci] && friendsConfig[removeItem.ci].friends) {
+                friendsConfig[removeItem.ci].friends.splice(removeItem.fi, 1);
+            }
+        }
+    });
+}
+
+function renderDeduplicateModalRows(conflicts) {
+    const container = document.getElementById('id-dedup-list-container');
+    if (!container) return;
+
+    let html = '';
+    conflicts.forEach((group, gIdx) => {
+        const idName = '@' + group.twitchId;
+        html += `
+        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
+            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:8px; display:flex; justify-content:space-between;">
+                <span>ID: ${raidSoEscape(idName)}</span>
+                <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(重複検出: ${group.items.length}件)</span>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+        group.items.forEach((item, iIdx) => {
+            const f = item.friend;
+            const details = [];
+            if (f.name && f.name !== item.twitchId) details.push(`表示名: ${f.name}`);
+            if (f.x) details.push(`X: ${f.x}`);
+            if (f.youtube) details.push(`YT: ${f.youtube}`);
+            if (f.birthday) details.push(`誕生日: ${f.birthday}`);
+            if (f.memo) details.push(`メモ: ${f.memo}`);
+
+            const checked = iIdx === 0 ? ' checked' : '';
+            html += `
+                <label style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px; cursor:pointer;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="margin-top:2px; accent-color:var(--twitch-purple);">
+                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
+                        <div style="font-weight:bold; color:var(--text-main);">
+                            [${raidSoEscape(item.catName)}] ${raidSoEscape(f.name || idName)}
+                        </div>
+                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
+                            ${raidSoEscape(details.join(' | ') || '(追加情報なし)')}
+                        </div>
+                    </div>
+                </label>`;
+        });
+
+        html += `
+                <label style="display:flex; gap:8px; align-items:flex-start; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px; cursor:pointer;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="margin-top:2px; accent-color:var(--twitch-purple);">
+                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
+                        <div style="font-weight:bold; color:var(--twitch-purple);">
+                            ✨ 両方の情報（メモ・SNS等）を結合して残す
+                        </div>
+                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
+                            表示名やメモなどの情報を並列でまとめて1つの項目に統合します
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function applyIdDeduplication() {
+    if (!pendingDedupConflicts || pendingDedupConflicts.length === 0) {
+        closeModal('idDeduplicateModal');
+        return;
+    }
+
+    let resolvedCount = 0;
+    const itemsToRemove = [];
+
+    pendingDedupConflicts.forEach((group, gIdx) => {
+        const selectedEl = document.querySelector(`input[name="dedup-choice-${gIdx}"]:checked`);
+        if (!selectedEl) return;
+        const val = selectedEl.value;
+
+        if (val === 'merge') {
+            const keep = group.items[0];
+            const mergedMemos = group.items.map(it => it.friend.memo).filter(Boolean);
+            if (mergedMemos.length > 0) {
+                keep.friend.memo = [...new Set(mergedMemos)].join(' / ');
+            }
+            const mergedX = group.items.map(it => it.friend.x).filter(Boolean);
+            if (mergedX.length > 0) keep.friend.x = mergedX[0];
+
+            for (let i = 1; i < group.items.length; i++) {
+                itemsToRemove.push(group.items[i]);
+            }
+        } else {
+            const keepIdx = parseInt(val, 10);
+            group.items.forEach((item, iIdx) => {
+                if (iIdx !== keepIdx) {
+                    itemsToRemove.push(item);
+                }
+            });
+        }
+        resolvedCount++;
+    });
+
+    itemsToRemove.sort((a, b) => {
+        if (a.ci !== b.ci) return b.ci - a.ci;
+        return b.fi - a.fi;
+    });
+
+    itemsToRemove.forEach(item => {
+        if (friendsConfig[item.ci] && friendsConfig[item.ci].friends) {
+            friendsConfig[item.ci].friends.splice(item.fi, 1);
+        }
+    });
+
+    closeModal('idDeduplicateModal');
+    showToast(`${resolvedCount}件の重複IDを統合・整理しました`, 'success');
+    renderFriends();
+    saveFriendsLocalDebounced();
+}
+
+window.checkAndConsolidateDuplicateIds = checkAndConsolidateDuplicateIds;
+window.renderDeduplicateModalRows = renderDeduplicateModalRows;
+window.applyIdDeduplication = applyIdDeduplication;
+
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        loadTitleTagConfig();
+        renderCommonTagBar();
+    } catch (e) {}
+});
+

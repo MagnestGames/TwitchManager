@@ -509,7 +509,7 @@
             transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
-        .tab-help {
+        .tab-help, .tab-help-box {
             margin-bottom: 10px;
             padding: 0 5px;
         }
@@ -657,50 +657,6 @@
 
         .category-records .empty-state {
             margin-top: 8px;
-        }
-
-        /* ----- レイアウト切替トグルスイッチ ----- */
-        .layout-toggle-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            user-select: none;
-            flex-shrink: 0;
-            padding: 2px 4px;
-        }
-
-        .toggle-switch-track {
-            position: relative;
-            display: inline-block;
-            width: 32px;
-            height: 18px;
-            background: var(--bg-base, #18181b);
-            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
-            border-radius: 999px;
-            transition: background 0.2s, border-color 0.2s;
-            vertical-align: middle;
-        }
-
-        .toggle-switch-thumb {
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            width: 14px;
-            height: 14px;
-            background: var(--text-muted, #adadb8);
-            border-radius: 50%;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-        .layout-toggle-label input:checked + .toggle-switch-track {
-            background: var(--twitch-purple, #9146ff);
-            border-color: var(--twitch-purple, #9146ff);
-        }
-
-        .layout-toggle-label input:checked + .toggle-switch-track .toggle-switch-thumb {
-            transform: translateX(14px);
-            background: #ffffff;
         }
 
         .settings-help {
@@ -1189,96 +1145,6 @@
             border-radius: var(--radius-sm);
             font-size: 11px;
             line-height: 1.4;
-            text-align: center;
-        }
-
-        .tw-pagination-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-            padding: 6px 0;
-            user-select: none;
-        }
-
-        .tw-page-size-wrap {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .tw-page-size-select {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: var(--text-main, #efeff1);
-            border-radius: var(--radius-sm, 4px);
-            padding: 2px 4px;
-            font-size: 10.5px;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-            height: 26px;
-        }
-
-        .tw-page-size-select option {
-            background: #1f1f23;
-            color: #efeff1;
-        }
-
-        body.light-mode .tw-page-size-select option,
-        body.light-theme .tw-page-size-select option {
-            background: #ffffff;
-            color: #111111;
-        }
-
-        .tw-page-size-select:hover {
-            border-color: var(--command-accent, #9146FF);
-        }
-
-        .tw-page-nav-btns {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            margin-left: auto;
-        }
-
-        .tw-page-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 26px;
-            height: 26px;
-            padding: 0 5px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: var(--radius-sm, 4px);
-            color: var(--text-main, #efeff1);
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .tw-page-btn:hover:not(:disabled) {
-            background: var(--command-accent, #9146FF);
-            border-color: var(--command-accent, #9146FF);
-            color: #ffffff;
-        }
-
-        .tw-page-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .tw-page-num {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-main, #efeff1);
-            padding: 0 4px;
-            letter-spacing: 0.5px;
-            min-width: 38px;
             text-align: center;
         }
 
@@ -4875,52 +4741,58 @@ body.light-theme .tw-command-copy-btn code {
     content: none !important;
 }
 
-.icon-btn.id-pin-action {
-    color: var(--text-muted);
-}
-.icon-btn.id-pin-action:hover {
-    color: var(--warning-text, #ffaa00);
-    border-color: rgba(255, 170, 0, 0.4);
-    background: rgba(255, 170, 0, 0.08);
-}
-.icon-btn.id-pin-action.is-pinned {
-    color: var(--warning-text, #ffaa00);
-    border-color: rgba(255, 170, 0, 0.5);
-    background: rgba(255, 170, 0, 0.15);
-}
-.record-card.is-pinned-card {
-    border-color: rgba(255, 170, 0, 0.35) !important;
-    background: linear-gradient(180deg, rgba(255, 170, 0, 0.04) 0%, var(--bg-card) 100%) !important;
+/* Title preview box */
+.title-preview-box {
+    font-size: 11px;
+    color: var(--text-main);
+    background: var(--bg-item);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--command-accent, #9146ff);
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 2px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+    word-break: break-all;
 }
 
-/* Layout Mode: Grid (横並び可) vs List (縦積みのみ) */
-.category-records.layout-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-    gap: 10px !important;
-}
-.category-records.layout-grid > .record-card {
-    margin-bottom: 0 !important;
+/* 共通タグチップバーと統一チップスタイル */
+.tag-chip-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
 }
 
-.category-records.layout-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
+.tag-chip {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card, #26262c);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.2;
 }
 
-.sortable-container.flat-mode.layout-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
-    gap: 10px !important;
-}
-.sortable-container.flat-mode.layout-grid > .record-card {
-    margin-bottom: 0 !important;
+.tag-chip:hover {
+    background: var(--bg-hover, #323239);
+    border-color: var(--twitch-purple, #9146ff);
+    color: #ffffff;
 }
 
-.sortable-container.flat-mode.layout-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
+/* システムタグチップ ({Category}, {date}, {コラボ} 等) のデザイン一貫化 */
+.tag-chip.is-system {
+    background: rgba(145, 70, 255, 0.12);
+    border-color: rgba(145, 70, 255, 0.35);
+    color: var(--text-main);
 }
 
+.tag-chip.is-system:hover {
+    background: rgba(145, 70, 255, 0.25);
+    border-color: var(--twitch-purple, #9146ff);
+    color: #ffffff;
+}

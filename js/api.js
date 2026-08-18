@@ -89,7 +89,9 @@
             }
 
             let finalTitle = record.title || "";
-            if (finalTitle.includes('{date}')) {
+            if (typeof resolveStreamTitleTemplate === 'function') {
+                finalTitle = resolveStreamTitleTemplate(finalTitle, { game: record.game || '', count: record.count });
+            } else if (finalTitle.includes('{date}')) {
                 finalTitle = finalTitle.replace(/{date}/g, formatDateToken(new Date(), settings.dateFormat || "MM/DD"));
             }
 
@@ -97,8 +99,15 @@
             if (gameId) body.game_id = gameId;
 
             const result = await apiRequest(`/channels?broadcaster_id=${broadcasterId}`, 'PATCH', body);
-            if (result) showToast(langMap[currentLang].alerts.pushSuccess, "success");
-            else await customAlert(langMap[currentLang].alerts.pushFail);
+            if (result) {
+                showToast(langMap[currentLang].alerts.pushSuccess, "success");
+                // PUSH成功時に配信回数カウントを自動的に +1 加算して次回に備える
+                record.count = (parseInt(record.count, 10) || 1) + 1;
+                saveAllLocal(false);
+                if (typeof render === 'function') render();
+            } else {
+                await customAlert(langMap[currentLang].alerts.pushFail);
+            }
 
             btnEl.innerHTML = originalContent;
             btnEl.disabled = false;
@@ -140,6 +149,8 @@
         }
 
 
+        // ソート状態管理
+        let friendsSortOrder = 'name';
         // --- 各種ボタンの動作（追加ロジック） ---
         async function refreshFriendUserData(ci, fi, btnEl) {
             const friend = friendsConfig[ci]?.friends[fi];
@@ -279,46 +290,31 @@
             const bId = settings.userId;
             if (!bId) return customAlert(langMap[currentLang].alerts.requireBroadcaster);
             setBtnLoading(btn, true);
-
-            let allData = [];
-            let cursor = '';
-            let totalCount = 0;
-
-            try {
-                do {
-                    const url = `/subscriptions?broadcaster_id=${bId}&first=100` + (cursor ? `&after=${cursor}` : '');
-                    const data = await apiRequest(url);
-                    if (!data?.data) break;
-                    allData.push(...data.data);
-                    if (data.total !== undefined) totalCount = Number(data.total);
-                    cursor = data.pagination?.cursor;
-                } while (cursor);
-            } catch (e) {
-                console.error('Fetch subscribers error:', e);
-            }
-
+            const data = await apiRequest(`/subscriptions?broadcaster_id=${bId}&first=100`);
             setBtnLoading(btn, false);
-            if (!allData.length) {
+            if (!data?.data) {
                 c.innerHTML = twitchListEmptyHtml(uiText('runtime.fetchFailed'));
                 return;
             }
-
             const broadcasterId = String(bId || '');
             const broadcasterLogin = String(settings.userLogin || '').trim().toLowerCase();
-            const subscribers = allData.filter(subscriber => {
+            const subscribers = data.data.filter(subscriber => {
                 const isSameId = broadcasterId && String(subscriber.user_id || '') === broadcasterId;
                 const isSameLogin = broadcasterLogin && String(subscriber.user_login || '').trim().toLowerCase() === broadcasterLogin;
                 return !isSameId && !isSameLogin;
             });
-
-            const removedSelfCount = allData.length - subscribers.length;
-            const total = Math.max(0, (totalCount || allData.length) - removedSelfCount);
+            const removedSelfCount = data.data.length - subscribers.length;
+            const total = Math.max(0, (Number(data.total) || data.data.length) - removedSelfCount);
             if (!subscribers.length) {
                 c.innerHTML = twitchListEmptyHtml();
                 return;
             }
-
-            renderSubscriberList(subscribers, total, 1);
+            c.innerHTML = `<p class="tw-list-summary">${raidSoEscape(uiText('runtime.total'))}: <strong>${total}</strong>${raidSoEscape(uiText('runtime.personSuffix'))}</p>` +
+                subscribers.map(s => {
+                    const tier = s.tier === '3000' ? 'T3' : s.tier === '2000' ? 'T2' : 'T1';
+                    const col = s.tier === '3000' ? 'var(--warning-text)' : s.tier === '2000' ? 'var(--command-accent)' : 'var(--text-muted)';
+                    return `<div class="tw-list-item"><span class="tw-list-name">${raidSoEscape(s.user_name || s.user_login || '')}</span><span class="tw-list-meta" style="color:${col};">${tier}${s.is_gift ? ' 🎁' : ''}</span></div>`;
+                }).join('');
         }
 
         // === VIP ===
@@ -367,34 +363,19 @@
             const bId = settings.userId;
             if (!bId) return customAlert(langMap[currentLang].alerts.requireBroadcaster);
             setBtnLoading(btn, true);
-
-            let allVips = [];
-            let cursor = '';
-
-            try {
-                do {
-                    const url = `/channels/vips?broadcaster_id=${bId}&first=100` + (cursor ? `&after=${cursor}` : '');
-                    const data = await apiRequest(url);
-                    if (!data?.data) break;
-                    allVips.push(...data.data);
-                    cursor = data.pagination?.cursor;
-                } while (cursor);
-            } catch (e) {
-                console.error('Fetch VIPs error:', e);
-            }
-
+            const data = await apiRequest(`/channels/vips?broadcaster_id=${bId}&first=100`);
             setBtnLoading(btn, false);
             const c = document.getElementById('tw-vip-list');
-            if (!allVips.length) {
+            if (!data?.data) {
                 c.innerHTML = twitchListEmptyHtml(uiText('runtime.fetchFailed'));
                 return;
             }
             
-            const slotInfo = await updateVipSlotsInfo(allVips.length);
-            renderVipList(allVips, 1);
+            const slotInfo = await updateVipSlotsInfo(data.data.length);
+            renderVipList(data.data);
             safeSetLocal(TWITCH_VIP_CACHE_KEY, JSON.stringify({
                 broadcasterId: bId,
-                vips: allVips,
+                vips: data.data,
                 maxVip: slotInfo?.maxVip || 0,
                 updatedAt: Date.now()
             }));
