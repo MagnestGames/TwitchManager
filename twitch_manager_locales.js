@@ -666,7 +666,13 @@ const I18N_DATA = {
                 "memoLink": "リンク",
                 "memoCode": "コード",
                 "memoEmptyHint": "(空のメモです。「編集」ボタンから書き込みできます)",
-                "addMemo": "+ メモ追加"
+                "addMemo": "+ メモ追加",
+                "memoBoldShort": "太字",
+                "memoListShort": "リスト",
+                "memoOlShort": "連番",
+                "memoTaskShort": "タスク",
+                "memoLinkShort": "リンク",
+                "memoCodeShort": "コード"
             },
             "logs": {
                 "errNotSet": "アクセストークンが未設定です。設定(⚙)で保存すると使えるようになります。",
@@ -2164,7 +2170,13 @@ const I18N_DATA = {
                 "memoLink": "Link",
                 "memoCode": "Code",
                 "memoEmptyHint": "(Empty memo. Click \"Edit\" to start writing)",
-                "addMemo": "+ Add Memo"
+                "addMemo": "+ Add Memo",
+                "memoBoldShort": "Bold",
+                "memoListShort": "List",
+                "memoOlShort": "1. 2.",
+                "memoTaskShort": "Task",
+                "memoLinkShort": "Link",
+                "memoCodeShort": "Code"
             },
             "logs": {
                 "errNotSet": "Access token is not set. Save it in settings (⚙) to use this feature.",
@@ -3662,7 +3674,13 @@ const I18N_DATA = {
                 "memoLink": "插入链接",
                 "memoCode": "行内代码",
                 "memoEmptyHint": "(暂无备忘内容，点击“编辑”开始输入)",
-                "addMemo": "+ 添加备忘"
+                "addMemo": "+ 添加备忘",
+                "memoBoldShort": "加粗",
+                "memoListShort": "列表",
+                "memoOlShort": "序号",
+                "memoTaskShort": "任务",
+                "memoLinkShort": "链接",
+                "memoCodeShort": "代码"
             },
             "logs": {
                 "errNotSet": "未设置访问令牌。请在设置 (⚙) 中保存后使用。",
