@@ -13,7 +13,6 @@
         html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
         html.audio-source-mode body { visibility: hidden; }
     </style>
-
     <link rel="stylesheet" href="twitch_manager.css">
 </head>
 
@@ -653,50 +652,60 @@
         </details>
         
         <!-- Backup & Restore side by side -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: stretch;">
-            <div class="category-box" style="margin-bottom: 0; padding: 10px 12px; border-left: 4px solid var(--twitch-purple); display: flex; flex-direction: column; justify-content: space-between;">
-                <div class="category-name" id="ui-backup-title" style="margin-bottom: 6px; font-size: 12px; color: var(--command-accent);">
-                    <span data-i18n="backupTitle">💾 バックアップ作成・保存</span>
+        <div class="misc-backup-grid">
+            <div class="misc-card-box">
+                <div class="misc-card-title" id="ui-backup-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span data-i18n="backupTitle">バックアップ作成・保存</span>
                 </div>
-                <div style="margin-bottom: 8px;">
-                    <select id="bk-export-select" style="width: 100%; padding: 5px 6px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-base); color: var(--text-main); font-weight: bold; cursor: pointer; outline: none; box-sizing: border-box;">
-                        <option value="all" selected>すべての項目 (フルバックアップ)</option>
-                        <option value="title">タイトル一覧 のみ</option>
-                        <option value="id">ID一覧 のみ</option>
-                        <option value="raidso">Twitch / 通知と紹介 のみ</option>
-                        <option value="settings">ツール設定 のみ</option>
+                <div>
+                    <select id="bk-export-select" class="misc-select-input">
+                        <option value="all" data-i18n="extended.backupExportAll" selected>すべての項目 (フルバックアップ)</option>
+                        <option value="title" data-i18n="extended.backupExportTitle">タイトル一覧 のみ</option>
+                        <option value="id" data-i18n="extended.backupExportId">ID一覧 のみ</option>
+                        <option value="raidso" data-i18n="extended.backupExportRaidSo">Twitch / 通知と紹介 のみ</option>
+                        <option value="settings" data-i18n="extended.backupExportSettings">ツール設定 のみ</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 4px;">
-                    <button id="ui-backup-download" class="btn-primary" style="flex: 1; padding: 6px 4px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; white-space: nowrap;" onclick="downloadBackupFile()">
-                        📥 保存 (.json)
+                    <button id="ui-backup-download" class="btn-primary misc-btn-compact" style="flex: 1;" onclick="downloadBackupFile()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span data-i18n="extended.backupDownloadBtn">保存 (.json)</span>
                     </button>
-                    <button id="ui-backup-copy" class="btn-secondary" style="flex: 1; padding: 6px 4px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 2px; white-space: nowrap;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">
-                        📋 コピー
+                    <button id="ui-backup-copy" class="btn-secondary misc-btn-compact" style="flex: 1;" onclick="copyBackupToClipboard()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span data-i18n="backupCopy">コピー</span>
                     </button>
                 </div>
             </div>
 
-            <div class="category-box" id="misc-restore-section" style="margin-bottom: 0; padding: 10px 12px; border-left: 4px solid var(--twitch-purple); display: flex; flex-direction: column; justify-content: space-between;">
-                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 6px; font-size: 12px; cursor: pointer; user-select: none;">
-                    <span data-i18n="restoreTitle">📂 復元・個別読み込み</span>
+            <div class="misc-card-box">
+                <div class="misc-card-title" id="ui-restore-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span data-i18n="restoreTitle">復元・個別読み込み</span>
                 </div>
-                <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
-                    JSONを選択し、統合・上書き復元:
+                <div class="misc-restore-hint" data-i18n="extended.backupSelectPrompt">
+                    JSON / テキストファイルを選択し、統合・上書き復元:
                 </div>
                 <div class="tw-body misc-restore-row" style="display: flex; gap: 4px; align-items: center;">
                     <div class="restore-file-picker" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px;">
-                        <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,application/json" onchange="updateRestoreFileName(this)">
+                        <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,.txt,text/plain,application/json" onchange="updateRestoreFileName(this)">
                         <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" style="padding: 6px 6px; font-size: 10.5px; white-space: nowrap; flex-shrink: 0;" data-i18n="footerActions.selectFile">ファイル選択</label>
                         <span id="ui-restore-file-name" class="restore-file-name" style="font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;" data-i18n="footerActions.noFileSelected">未選択</span>
                     </div>
-                    <button id="ui-restore-btn" class="btn-primary" style="padding: 6px 8px; font-size: 11px; white-space: nowrap; flex-shrink: 0;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
+                    <button id="ui-restore-btn" class="btn-primary misc-btn-compact" style="padding: 6px 8px; flex-shrink: 0;" onclick="restoreFromLocalFile()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span data-i18n="restoreBtn">読み込む</span>
+                    </button>
+                </div>
+            </div>
+        </div>
                 </div>
             </div>
         </div>
 
         <!-- Logs closed by default using details/summary -->
-        <details class="category-box" open style="margin-bottom: 0; padding: 10px 15px;">
+        <details class="category-box" open style="margin-bottom: 12px; padding: 10px 15px;">
             <summary class="category-name" id="ui-backup-log-title" style="cursor: pointer; user-select: none; margin-bottom: 0; font-size: 13px;" data-i18n="jsMsgs.eventLogTitle">イベントログ（クリックで開閉）</summary>
             <div style="margin-top: 10px;">
                 
@@ -710,6 +719,11 @@
 
             </div>
         </details>
+
+        <div class="sticky-footer-wrapper" style="z-index: 1000;">
+            <button id="del-mode-misc" class="btn-secondary" style="flex: 2;" onclick="toggleDeleteMode('misc-tab')" data-i18n="extended.deleteBtn">削除</button>
+            <button id="btn-clear-all-cache" class="btn-secondary" style="flex: 3; display: none;" onclick="promptClearAllCache()" data-i18n="extended.clearAllCacheBtn">キャッシュを削除</button>
+        </div>
 
       </div>
     </div>
@@ -1062,6 +1076,7 @@
             const audioSourceScript = document.createElement('script');
             audioSourceScript.src = 'js/audio-source.js';
             document.body.appendChild(audioSourceScript);
+<<<<<<< HEAD
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -1233,6 +1248,22 @@
         </div>
     </div>
 
+=======
+        } else {
+            const appScripts = [
+                'twitch_manager_version.js?v=20260810_singletag',
+                'twitch_manager_locales.js?v=20260810_singletag',
+                'js/update-check.js?v=20260810_singletag',
+                'js/storage.js?v=20260810_singletag',
+                'js/api.js?v=20260810_singletag',
+                'js/eventsub.js?v=20260810_singletag',
+                'js/ui.js?v=20260810_singletag',
+                'js/main.js?v=20260810_singletag'
+            ];
+            document.write(appScripts.map(source => `<script src="${source}"><\/script>`).join(''));
+        }
+    </script>
+>>>>>>> dev_1.0.3_Issue50_BackupAndUI
 </body>
 
 </html>

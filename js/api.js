@@ -518,6 +518,7 @@
         }
 
 
+
         // --- 各種ボタンの動作（追加ロジック） ---
         async function refreshFriendUserData(ci, fi, btnEl) {
             const friend = friendsConfig[ci]?.friends[fi];

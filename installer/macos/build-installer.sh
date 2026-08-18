@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-version="${1:-1.0.2}"
+version="${1:-1.0.3}"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
 output_directory="${2:-$repository_root/dist}"
@@ -16,7 +16,7 @@ fi
 package_version="${version%%_*}"
 package_version="${package_version%%[-+]*}"
 if [[ ! "$version" =~ ^v?[0-9]+(\.[0-9]+){1,3}([_-][0-9A-Za-z.-]+)?$ ]]; then
-  echo "Version must use a form such as 1.0.2 or 1.0.2_beta: $version" >&2
+  echo "Version must use a form such as 1.0.3 or 1.0.3_beta: $version" >&2
   exit 1
 fi
 if [[ ! "$package_version" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then

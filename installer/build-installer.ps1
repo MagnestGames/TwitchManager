@@ -1,13 +1,13 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.2",
+    [string]$Version = "1.0.3",
     [string]$OutputDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 if ($Version -notmatch '^v?[0-9]+(?:\.[0-9]+){1,3}(?:[_-][0-9A-Za-z.-]+)?$') {
-    throw "Version must use a form such as 1.0.2 or 1.0.2_beta: $Version"
+    throw "Version must use a form such as 1.0.3 or 1.0.3_beta: $Version"
 }
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
