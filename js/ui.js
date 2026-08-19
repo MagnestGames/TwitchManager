@@ -9048,7 +9048,7 @@ function renderDeduplicateModalRows(conflicts) {
                 <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="accent-color:var(--twitch-purple); width:15px; height:15px; margin:0;">
                 <div style="font-size:11.5px; line-height:1.4; display:flex; align-items:center; gap:6px;">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--twitch-purple);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <span style="font-weight:bold; color:var(--twitch-purple);">両方の情報（メモ・SNS等）を結合して残す</span>
+                    <span style="font-weight:bold; color:var(--twitch-purple);">すべての情報（メモ・SNS等）を結合して残す</span>
                     <span style="color:var(--text-muted); font-size:10.5px;">（メモを並列にまとめ、1つの項目に統合します）</span>
                 </div>
             </label>
