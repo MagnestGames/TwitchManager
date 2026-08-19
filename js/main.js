@@ -577,6 +577,11 @@
 
         creators.forEach(c => {
             const name = escapeHtml(c.name || '');
+            let readingText = c.reading || '';
+            if (!readingText) {
+                if (c.name && c.name.includes('初狐')) readingText = 'uikouka';
+                else if (c.name && c.name.includes('古隅')) readingText = 'frusumi';
+            }
             const color = safeCreatorColor(c.color);
             const links = Array.isArray(c.links) ? c.links : [];
             const avatarUrl = String(c.avatar || '');
@@ -588,7 +593,7 @@
                 const icon = getCreatorIconSvg(l.type);
                 const title = escapeHtml(l.title || l.type || 'Link');
                 linksHtml += `
-                <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
+                <a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; transition: 0.2s;" title="${title}" onmouseover="this.style.color='var(--twitch-purple)';this.style.background='var(--bg-item)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='transparent'">
                     ${icon}
                 </a>`;
             });
@@ -602,16 +607,22 @@
 
             const safeAvatarUrl = safeCreatorUrl(finalAvatarUrl);
             const avatarHtml = safeAvatarUrl
-                ? `<img src="${escapeHtml(safeAvatarUrl)}" onerror="this.style.display='none'" style="width:45px;height:45px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:8px;margin-top:-9px;" />`
+                ? `<img src="${escapeHtml(safeAvatarUrl)}" onerror="this.style.display='none'" style="width:38px;height:38px;clip-path:url(#beast-ears);object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:6px;margin-top:-6px;" />`
                 : '';
 
+            const nameBlockHtml = `
+                <div style="display: flex; flex-direction: column; line-height: 1.15;">
+                    <strong style="color: ${color}; font-size: 11px; white-space: nowrap;">${name}</strong>
+                    ${readingText ? `<span style="font-size: 9.5px; font-weight: normal; color: var(--text-muted); opacity: 0.85; white-space: nowrap; margin-top: 1px;">${escapeHtml(readingText)}</span>` : ''}
+                </div>`;
+
             html += `
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                 <div style="display: flex; align-items: center;">
                     ${avatarHtml}
-                    <strong style="color: ${color}; min-width: 60px;">${name}</strong>
+                    ${nameBlockHtml}
                 </div>
-                <div style="display: flex; gap: 4px; align-items: center;">
+                <div style="display: flex; gap: 2px; align-items: center;">
                     ${linksHtml}
                 </div>
             </div>`;
@@ -741,13 +752,14 @@
                     display: flex;
                     flex-direction: row;
                     flex-wrap: wrap;
-                    gap: 16px;
+                    gap: 8px 14px;
                     align-items: center;
                     justify-content: center;
                 }
                 @media (max-width: 320px) {
                     .creators-row {
-                        justify-content: flex-start !important;
+                        gap: 6px 10px;
+                        justify-content: center;
                     }
                 }
             `;

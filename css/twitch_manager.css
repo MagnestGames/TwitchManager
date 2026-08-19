@@ -633,14 +633,24 @@
             display: none !important;
         }
 
-        .category-name span::before {
+        .category-name > span:first-child::before,
+        .category-name > div:first-child > span:first-child::before {
             content: "▼ ";
             display: inline-block;
             transition: transform 0.2s;
         }
 
-        .category-box.closed .category-name span::before {
+        .category-box.closed .category-name > span:first-child::before,
+        .category-box.closed .category-name > div:first-child > span:first-child::before {
             transform: rotate(-90deg);
+        }
+
+        .category-name button span::before,
+        .category-name .memo-mode-toggle-btn span::before,
+        .category-name .mode-btn-text::before,
+        .memo-mode-toggle-btn *::before {
+            content: none !important;
+            display: none !important;
         }
 
         .empty-state {
