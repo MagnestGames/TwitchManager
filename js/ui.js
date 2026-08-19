@@ -327,9 +327,9 @@ function fallbackCopyText(tagText, customMsg) {
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        showToast(customMsg || ('コピー: ' + tagText), 'success');
+        showToast(customMsg || ((uiText('extended.toastCopiedPrefix') || 'コピー: ') + tagText), 'success');
     } catch (e) {
-        showToast('コピーできませんでした', 'warn');
+        showToast(uiText('extended.toastCopyFailed') || 'コピーできませんでした', 'warn');
     }
 }
 
@@ -351,7 +351,7 @@ window.toggleCollabTagGroup = toggleCollabTagGroup;
 function copyCategoryRawIds(catName) {
     const rawIds = catName ? getCategoryCollabNames(catName) : getSelectedCollabNames();
     if (!rawIds || !rawIds.trim()) {
-        showToast(catName ? `IDリスト【${catName}】に登録されているIDがありません` : 'IDリストに選択中/登録済みのIDがありません', 'warn');
+        showToast(catName ? uiText('extended.tagNoIdFound', { name: catName }) : uiText('extended.tagNoIdSelected'), 'warn');
         return;
     }
     const copyString = rawIds.trim();
@@ -1354,12 +1354,12 @@ window.copyCommonTag = copyCommonTag;
                         </button>
                     </div>
                     <div class="record-actions">
-                        <div style="display:inline-flex; align-items:center; gap:3px; margin-right:6px; height:34px; box-sizing:border-box; padding:2px 4px; background:rgba(255,255,255,0.05); border-radius:6px; border:1px solid var(--border-color); align-self:center;" onclick="event.stopPropagation();" title="配信回数 ${r.count || 1} の現在値">
-                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を-1">
+                        <div class="record-count-control" style="display:inline-flex; align-items:center; gap:2px; margin-right:6px; height:30px; box-sizing:border-box; align-self:center;" onclick="event.stopPropagation();" title="配信回数 ${r.count || 1} の現在値">
+                            <button type="button" class="icon-btn count-step-btn" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:20px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" title="配信回数を-1">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                             </button>
-                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:40px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:3px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
-                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を+1">
+                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:38px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
+                            <button type="button" class="icon-btn count-step-btn" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:20px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" title="配信回数を+1">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
                         </div>
@@ -1434,43 +1434,14 @@ window.copyCommonTag = copyCommonTag;
 
         // 同一 Twitch ID を持つ他グループのカードへリアルタイム同期する共通関数
         function updateFriendField(ci, fi, field, value) {
-            if (!friendsConfig[ci] || !friendsConfig[ci].friends[fi]) return;
-            
-            const targetFriend = friendsConfig[ci].friends[fi];
-            const targetTwitch = (normalizeFriendTwitch(targetFriend.twitch || targetFriend.name || '') || '').toLowerCase();
-            
-            // フィールド値を更新
-            targetFriend[field] = value;
+    if (!friendsConfig || !friendsConfig[ci] || !friendsConfig[ci].friends || !friendsConfig[ci].friends[fi]) return;
+    
+    // 他のカードを勝手に書き換えず、指定されたカード単体のみを更新する
+    friendsConfig[ci].friends[fi][field] = value;
 
-            // 同一 Twitch ID を持つ他カテゴリの配信者カードを走査し同期
-            if (targetTwitch) {
-                (friendsConfig || []).forEach((cat, cIdx) => {
-                    (cat.friends || []).forEach((f, fIdx) => {
-                        if (cIdx === ci && fIdx === fi) return; // 自分自身はスキップ
-                        const key = (normalizeFriendTwitch(f.twitch || f.name || '') || '').toLowerCase();
-                        if (key === targetTwitch) {
-                            f[field] = value;
-                            
-                            // 画面上の開いている入力欄があれば同期
-                            let inputId = '';
-                            if (field === 'twitch') inputId = `f-twitch-${cIdx}-${fIdx}`;
-                            else if (field === 'x') inputId = `f-x-${cIdx}-${fIdx}`;
-                            else if (field === 'youtube') inputId = `f-yt-${cIdx}-${fIdx}`;
-                            else if (field === 'birthday') inputId = `f-bday-${cIdx}-${fIdx}`;
-                            else if (field === 'anniversary') inputId = `f-anniv-${cIdx}-${fIdx}`;
-                            
-                            const el = document.getElementById(inputId);
-                            if (el && el.value !== value) {
-                                el.value = value;
-                            }
-                        }
-                    });
-                });
-            }
-
-            // バッチ保存をトリガー
-            saveFriendsLocalDebounced();
-        }
+    // バッチ保存をトリガー
+    saveFriendsLocalDebounced();
+}
         window.updateFriendField = updateFriendField;
 
         function saveFriendsLocalDebounced() {
@@ -2886,7 +2857,7 @@ window.copyCommonTag = copyCommonTag;
 
 
         
-        const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
         const MEMO_SVG_TRASH = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -8638,7 +8609,7 @@ function restoreDefaultTitleConfig() {
     renderTitleTagModalRows();
     renderCategoryMapModalRows();
     renderCommonTagBar();
-    showToast('単語セット・タグ設定を初期化しました', 'success');
+    showToast(uiText('extended.tagToastReset') || '単語セット・タグ設定を初期化しました', 'success');
 }
 window.restoreDefaultTitleConfig = restoreDefaultTitleConfig;
 
@@ -8689,10 +8660,10 @@ function renderTitleTagModalRows() {
         html += `
         <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
             <div style="flex:1;">
-                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="${raidSoEscape(uiText('extended.tagNamePlaceholder') || '識別名 (例: 識別A)')}" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
             <div style="flex:2;">
-                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="${raidSoEscape(uiText('extended.tagValPlaceholder') || '置換内容 (例: 【初見歓迎】)')}" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
             <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
         </div>`;
@@ -8768,11 +8739,11 @@ function renderCategoryMapModalRows() {
                 <select class="cd-input-field cat-map-row-from-select" data-idx="${idx}" onchange="handleCatMapFromSelectChange(${idx}, this.value)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;">
                     ${selectOptionsHtml}
                 </select>
-                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名を入力" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
+                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="${raidSoEscape(uiText('extended.tagFromPlaceholder') || '元のカテゴリ名を入力')}" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
             </div>
             <div style="font-size:12px; color:var(--text-muted); font-weight:bold; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; transform:translateY(0);">➔</div>
             <div style="flex:1.2;">
-                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="${raidSoEscape(uiText('extended.tagToPlaceholder') || '手動変換後 (例: 雑談)')}" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
             <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
         </div>`;
@@ -8865,7 +8836,7 @@ function saveTitleTagModalSettings(silent = false) {
     saveTitleTagConfig();
     if (!silent) {
         closeModal('titleTagModal');
-        showToast('単語セット・タグ設定を保存しました', 'success');
+        showToast(uiText('extended.tagToastSaved') || '単語セット・タグ設定を保存しました', 'success');
     }
     renderCommonTagBar();
     updateAllTitlePreviews();
@@ -8882,73 +8853,125 @@ window.saveTitleTagModalSettings = saveTitleTagModalSettings;
 
 let pendingDedupConflicts = [];
 
-function checkAndConsolidateDuplicateIds() {
-    if (!Array.isArray(friendsConfig)) return;
+function getDuplicateMatchKey(f) {
+    if (!f || typeof f !== 'object') return '';
 
-    const map = new Map();
+    const candidates = [];
 
-    friendsConfig.forEach((cat, ci) => {
-        if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
-        (cat.friends || []).forEach((f, fi) => {
-            const raw = f.twitch || f.name || f.id || '';
-            const twitchId = extractTwitchId(raw);
-            if (!twitchId) return;
-            const key = twitchId.toLowerCase();
-
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push({ ci, fi, friend: f, catName: cat.name || '未分類', twitchId });
-        });
-    });
-
-    let autoMergedCount = 0;
-    const conflicts = [];
-
-    map.forEach((items) => {
-        if (items.length <= 1) return;
-
-        const first = items[0].friend;
-        const isIdentical = items.every(item => {
-            const f = item.friend;
-            return (f.name || '') === (first.name || '') &&
-                   (f.x || '') === (first.x || '') &&
-                   (f.youtube || '') === (first.youtube || '') &&
-                   (f.birthday || '') === (first.birthday || '') &&
-                   (f.anniversary || '') === (first.anniversary || '') &&
-                   (f.memo || '') === (first.memo || '');
-        });
-
-        if (isIdentical) {
-            autoMergedCount += (items.length - 1);
-        } else {
-            conflicts.push({ twitchId: items[0].twitchId, items });
+    // 1. Twitch ID フィールド群
+    [f.twitch, f.username, f.url].forEach(val => {
+        if (!val) return;
+        const str = String(val).trim();
+        const urlMatch = str.match(/twitch\.tv\/([a-zA-Z0-9_]{2,30})/i);
+        if (urlMatch) candidates.push(urlMatch[1].toLowerCase());
+        const atMatch = str.match(/@([a-zA-Z0-9_]{2,30})/);
+        if (atMatch) candidates.push(atMatch[1].toLowerCase());
+        const clean = str.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+        if (clean.length >= 2 && clean.length <= 30 && !/^\d+$/.test(clean)) {
+            candidates.push(clean);
         }
     });
 
-    if (autoMergedCount === 0 && conflicts.length === 0) {
-        showToast('重複するIDは見つかりませんでした。データは正常です。', 'info');
+    // 2. 表示名 / 名前 フィールド群
+    [f.name, f.displayName].forEach(val => {
+        if (!val) return;
+        const str = String(val).trim();
+        const parenMatch = str.match(/\(([a-zA-Z0-9_]{2,30})\)/i);
+        if (parenMatch) candidates.push(parenMatch[1].toLowerCase());
+        const atMatch = str.match(/@([a-zA-Z0-9_]{2,30})/);
+        if (atMatch) candidates.push(atMatch[1].toLowerCase());
+
+        const stripped = str.replace(/[\s　]*(さん|ちゃん|くん|様|殿|san|chan|kun)$/i, '').trim();
+        const half = stripped.replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+        const cleanAlpha = half.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+        if (cleanAlpha.length >= 2 && cleanAlpha.length <= 30 && !/^\d+$/.test(cleanAlpha)) {
+            candidates.push(cleanAlpha);
+        }
+        if (stripped.length >= 1) {
+            candidates.push(stripped.toLowerCase());
+        }
+    });
+
+    return candidates.find(c => Boolean(c)) || '';
+}
+window.getDuplicateMatchKey = getDuplicateMatchKey;
+
+function checkAndConsolidateDuplicateIds() {
+    let rawConfig = (typeof friendsConfig !== 'undefined' && Array.isArray(friendsConfig) && friendsConfig.length > 0)
+        ? friendsConfig
+        : (typeof window !== 'undefined' && Array.isArray(window.friendsConfig) && window.friendsConfig.length > 0)
+            ? window.friendsConfig
+            : null;
+
+    if (!rawConfig) {
+        try {
+            rawConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
+        } catch (e) {
+            rawConfig = [];
+        }
+    }
+
+    if (!Array.isArray(rawConfig) || rawConfig.length === 0) {
+        showToast(uiText('extended.idDeduplicateNone') || '重複するIDは見つかりませんでした。データは正常です。', 'info');
         return;
     }
 
-    if (conflicts.length === 0) {
-        performAutoDeduplicate(map);
-        showToast(`${autoMergedCount}件の完全重複IDを自動統合しました`, 'success');
-        renderFriends();
-        saveFriendsLocalDebounced();
+    console.log('[Deduplication Audit] Scanning categories count:', rawConfig.length);
+
+    const map = new Map();
+
+    // 紹介履歴（shoutout-history）や自分自身アカウントも含め、全カテゴリを対象に完全スキャン
+    rawConfig.forEach((cat, ci) => {
+        if (!cat) return;
+        const isSelfCat = cat.kind === 'authenticated-user';
+        const isHistoryCat = cat.kind === 'shoutout-history';
+        
+        (cat.friends || []).forEach((f, fi) => {
+            if (!f) return;
+            const key = getDuplicateMatchKey(f);
+            console.log(`[Deduplication Audit] Cat: "${cat.name || (isSelfCat ? '自分のアカウント' : '未分類')}", Friend [${ci},${fi}]: name="${f.name}", twitch="${f.twitch}" => Key: "${key}"`);
+            if (!key) return;
+
+            const displayTwitch = (f.twitch && extractTwitchId(f.twitch)) || (f.name && extractTwitchId(f.name)) || key;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({ 
+                ci, 
+                fi, 
+                friend: f, 
+                catName: isSelfCat ? (uiText('idList.selfAccount') || '自分のアカウント') : (cat.name || '未分類'), 
+                isSelf: isSelfCat,
+                twitchId: displayTwitch 
+            });
+        });
+    });
+
+    const duplicates = [];
+    map.forEach((items, key) => {
+        if (items.length > 1) {
+            console.log(`[Deduplication Audit] Duplicate group confirmed for key "${key}": ${items.length} items`);
+            duplicates.push({ twitchId: items[0].twitchId || key, items });
+        }
+    });
+
+    if (duplicates.length === 0) {
+        showToast(uiText('extended.idDeduplicateNone') || '重複するIDは見つかりませんでした。データは正常です。', 'info');
         return;
     }
 
-    pendingDedupConflicts = conflicts;
-    renderDeduplicateModalRows(conflicts);
+    // 重複が1組でもあれば必ずモーダルを開いてユーザーに明示
+    pendingDedupConflicts = duplicates;
+    renderDeduplicateModalRows(duplicates);
     openModal('idDeduplicateModal');
 }
 
-function performAutoDeduplicate(map) {
+function performAutoDeduplicate(map, configRef) {
+    const target = configRef || friendsConfig;
     map.forEach((items) => {
         if (items.length <= 1) return;
         for (let i = items.length - 1; i >= 1; i--) {
             const removeItem = items[i];
-            if (friendsConfig[removeItem.ci] && friendsConfig[removeItem.ci].friends) {
-                friendsConfig[removeItem.ci].friends.splice(removeItem.fi, 1);
+            if (target[removeItem.ci] && target[removeItem.ci].friends) {
+                target[removeItem.ci].friends.splice(removeItem.fi, 1);
             }
         }
     });
@@ -8962,51 +8985,73 @@ function renderDeduplicateModalRows(conflicts) {
     conflicts.forEach((group, gIdx) => {
         const idName = '@' + group.twitchId;
         html += `
-        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
-            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:8px; display:flex; justify-content:space-between;">
-                <span>ID: ${raidSoEscape(idName)}</span>
+        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:12px; margin-bottom:12px; width:100%; box-sizing:border-box;">
+            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="display:flex; align-items:center; gap:5px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    ID: ${raidSoEscape(idName)}
+                </span>
                 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(重複検出: ${group.items.length}件)</span>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:8px;">`;
+            <!-- 横並び比較グリッド (A, B, ...) -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px; margin-bottom:10px; width:100%; box-sizing:border-box;">`;
 
         group.items.forEach((item, iIdx) => {
             const f = item.friend;
-            const details = [];
-            if (f.name && f.name !== item.twitchId) details.push(`表示名: ${f.name}`);
-            if (f.x) details.push(`X: ${f.x}`);
-            if (f.youtube) details.push(`YT: ${f.youtube}`);
-            if (f.birthday) details.push(`誕生日: ${f.birthday}`);
-            if (f.memo) details.push(`メモ: ${f.memo}`);
-
             const checked = iIdx === 0 ? ' checked' : '';
+            const cardLetter = String.fromCharCode(65 + iIdx); // A, B, C...
+
             html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--text-main);">
-                            [${raidSoEscape(item.catName)}] ${raidSoEscape(f.name || idName)}
-                        </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
-                            ${raidSoEscape(details.join(' | ') || '(追加情報なし)')}
+                <label style="display:flex; flex-direction:column; background:var(--bg-base); border:2px solid var(--border-color); border-radius:8px; padding:10px; cursor:pointer; box-sizing:border-box; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--twitch-purple)'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='var(--border-color)'">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; border-bottom:1px solid var(--border-color); padding-bottom:6px;">
+                        <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="accent-color:var(--twitch-purple); width:16px; height:16px; margin:0;">
+                        <div style="font-weight:bold; font-size:12.5px; color:var(--text-main); flex:1;">
+                            [${cardLetter}] ${raidSoEscape(item.catName)}
                         </div>
                     </div>
+                    
+                    <table style="width:100%; border-collapse:collapse; font-size:11.5px; line-height:1.5;">
+                        <tr>
+                            <td style="color:var(--text-muted); width:65px; padding:2px 0; vertical-align:top;">名前:</td>
+                            <td style="font-weight:500; color:var(--text-main); word-break:break-word;">${raidSoEscape(f.name || idName)}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--text-muted); padding:2px 0; vertical-align:top;">Twitch:</td>
+                            <td style="color:var(--twitch-purple); word-break:break-all;">${raidSoEscape(f.twitch || item.twitchId || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--text-muted); padding:2px 0; vertical-align:top;">X:</td>
+                            <td style="color:var(--text-main); word-break:break-all;">${raidSoEscape(f.x || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--text-muted); padding:2px 0; vertical-align:top;">YouTube:</td>
+                            <td style="color:var(--text-main); word-break:break-all;">${raidSoEscape(f.youtube || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--text-muted); padding:2px 0; vertical-align:top;">誕生日:</td>
+                            <td style="color:var(--text-main);">${raidSoEscape(f.birthday || '-')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:var(--text-muted); padding:2px 0; vertical-align:top;">メモ:</td>
+                            <td style="color:var(--text-main); word-break:break-word; max-height:40px; overflow-y:auto; background:var(--bg-item); padding:2px 4px; border-radius:4px;">${raidSoEscape(f.memo || '-')}</td>
+                        </tr>
+                    </table>
                 </label>`;
         });
 
         html += `
-                <label style="display:flex; gap:8px; align-items:flex-start; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px; cursor:pointer;">
-                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="margin-top:2px; accent-color:var(--twitch-purple);">
-                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
-                        <div style="font-weight:bold; color:var(--twitch-purple);">
-                            ✨ 両方の情報（メモ・SNS等）を結合して残す
-                        </div>
-                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
-                            表示名やメモなどの情報を並列でまとめて1つの項目に統合します
-                        </div>
-                    </div>
-                </label>
             </div>
+
+            <!-- 全情報統合オプション -->
+            <label style="display:flex; gap:8px; align-items:center; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px 10px; cursor:pointer; width:100%; box-sizing:border-box;">
+                <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="accent-color:var(--twitch-purple); width:15px; height:15px; margin:0;">
+                <div style="font-size:11.5px; line-height:1.4; display:flex; align-items:center; gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--twitch-purple);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span style="font-weight:bold; color:var(--twitch-purple);">両方の情報（メモ・SNS等）を結合して残す</span>
+                    <span style="color:var(--text-muted); font-size:10.5px;">（メモを並列にまとめ、1つの項目に統合します）</span>
+                </div>
+            </label>
         </div>`;
     });
 
@@ -9056,13 +9101,14 @@ function applyIdDeduplication() {
     });
 
     itemsToRemove.forEach(item => {
+        if (item.isSelf) return; // 自分自身のアカウント本体は保護して削除しない
         if (friendsConfig[item.ci] && friendsConfig[item.ci].friends) {
             friendsConfig[item.ci].friends.splice(item.fi, 1);
         }
     });
 
     closeModal('idDeduplicateModal');
-    showToast(`${resolvedCount}件の重複IDを統合・整理しました`, 'success');
+    showToast(uiText('extended.idDeduplicateResolved', { count: resolvedCount }), 'success');
     renderFriends();
     saveFriendsLocalDebounced();
 }

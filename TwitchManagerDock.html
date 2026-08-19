@@ -5,32 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TwitchManagerDock</title>
-    <!-- 重複ID統合・競合解決モーダル -->
-    <div id="idDeduplicateModal" class="modal-overlay" onclick="if(event.target===this)closeModal('idDeduplicateModal')">
-        <div class="modal-content" style="max-width: 580px; display: flex; flex-direction: column; max-height: 90vh;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🔄 重複IDの統合・競合解決</h3>
-                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
-            </div>
-            
-            <div style="font-size: 11.5px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;">
-                同じ Twitch ID が複数の項目に登録されています。各重複IDについて、残すデータを選択してください（両方のメモやSNS情報を結合して残すこともできます）。
-            </div>
-
-            <div id="id-dedup-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;"></div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')">キャンセル</button>
-                <button type="button" class="btn-primary" onclick="applyIdDeduplication()">選択した内容で統合を実行</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
         if (twitchManagerAudioSourceMode) document.documentElement.classList.add('audio-source-mode');
-        else document.write('<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"><\/script>');
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         html.audio-source-mode, html.audio-source-mode body { margin: 0; min-height: 100%; background: transparent !important; }
         html.audio-source-mode body { visibility: hidden; }
@@ -488,6 +468,10 @@
                 <option value="so-count" data-i18n="idList.sortSoCount">応援回数順</option>
                 <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
             </select>
+            <button type="button" class="btn-secondary" onclick="checkAndConsolidateDuplicateIds()" style="height: 30px; padding: 0 9px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" data-i18n-title="extended.idDeduplicateBtnTip" title="登録されているIDリスト内の重複IDを検索し統合・整理します">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span data-i18n="extended.idDeduplicateBtn">重複IDを統合・整理</span>
+            </button>
         </div>
 
         <!-- タグで絞り込むアコーディオン -->
@@ -591,7 +575,7 @@
                 </colgroup>
                 <thead>
                     <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                        <th style="width: 26px; text-align: center; vertical-align: middle; padding: 4px 2px;"><input type="checkbox" id="cp-select-all-checkbox" onchange="toggleSelectAllCpRewards(this.checked)" style="accent-color: var(--twitch-purple); width: 14px; height: 14px; cursor: pointer;" title="全選択/全解除"></th>
+                        <th style="width: 26px; text-align: center; vertical-align: middle; padding: 4px 2px;"><input type="checkbox" id="cp-select-all-checkbox" onchange="toggleSelectAllCpRewards(this.checked)" style="accent-color: var(--twitch-purple); width: 14px; height: 14px; cursor: pointer;" data-i18n-title="extended.cpSelectAll" title="全選択/全解除"></th>
                         <th class="cp-th-reward" data-i18n="cpTab.thRewardCost">報酬名 / コスト</th>
                         <th class="cp-th-group" data-i18n="cpTab.thGroup">グループ</th>
                         <th class="cp-th-state" data-i18n="cpTab.thStateControl">状態切替</th>
@@ -618,7 +602,7 @@
                 <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(null, '`', '`')" data-i18n-title="extended.memoCode" title="インラインコード">&lt;&gt; <span data-i18n="extended.memoCodeShort">コード</span></button>
             </div>
             <div class="memo-header-actions" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;">
-                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="mode-btn-text" data-i18n="extended.memoAllPreview">全プレビュー</span></button>
+                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="mode-btn-text" data-i18n="extended.memoAllPreview">全プレビュー</span></button>
                 <button type="button" class="btn-secondary btn-add-item" id="ui-add-memo" style="padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; flex-shrink: 0;" onclick="addMemo()" data-i18n-aria="extended.addMemoAria" aria-label="追加"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span data-i18n="addMemo">追加</span></button>
             </div>
         </div>
@@ -967,6 +951,30 @@
     </div>
 
     
+        <!-- 重複ID統合・競合解決モーダル -->
+    <div id="idDeduplicateModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this)closeModal('idDeduplicateModal')">
+        <div class="modal-content" style="max-width: 720px; width: 95%; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 15px; display: flex; align-items: center; gap: 6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span data-i18n="extended.idDeduplicateTitle">重複IDの統合・競合解決</span>
+                </h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="font-size: 11.5px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;">
+                <span data-i18n="extended.idDeduplicateDesc">同じ Twitch ID が複数の項目に登録されています。各重複IDについて、残すデータを選択してください（両方のメモやSNS情報を結合して残すこともできます）。</span>
+            </div>
+
+            <div id="id-dedup-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" data-i18n="extended.cancelBtn">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyIdDeduplication()" data-i18n="extended.idDeduplicateApply">選択した内容で統合を実行</button>
+            </div>
+        </div>
+    </div>
+
     <div id="titleTagModal" class="modal-overlay" onclick="if(event.target===this)closeModal('titleTagModal')">
         <div class="modal-content" style="max-width: 540px; display: flex; flex-direction: column; max-height: 90vh;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
@@ -979,32 +987,32 @@
                     タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。
                 </div>
 
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;">カスタム識別タグ一覧</div>
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 8px;" data-i18n="extended.tagCustomListTitle">カスタム識別タグ一覧</div>
                 <div id="title-tag-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
                 
                 <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomTitleTagRow()" data-i18n="titleTagAddBtn">＋ 新しい識別タグを追加</button>
 
-                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
+                <div style="font-weight: bold; font-size: 12px; color: var(--command-accent); margin-bottom: 6px; margin-top: 14px;" data-i18n="extended.tagCategoryMapTitle">カテゴリ表示名のカスタム変換 (例: Just Chatting ➔ 雑談)</div>
                 <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 8px;">
-                    ※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {カテゴリ} タグに適用します。
+                    <span data-i18n="extended.tagCategoryMapHint">※ Twitchから取得した元のカテゴリ名を手動で指定した表記（日本語等）に最優先で変換して {Category} タグに適用します。</span>
                 </div>
                 <div id="title-tag-category-map-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
                 <datalist id="registered-categories-list"></datalist>
-                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()">＋ カテゴリ変換ルールを追加</button>
+                <button type="button" class="btn-secondary" style="width: 100%; padding: 6px; font-size: 11px; margin-bottom: 16px;" onclick="addCustomCategoryMappingRow()" data-i18n="extended.tagAddCategoryRule">＋ カテゴリ変換ルールを追加</button>
 
 
 
                 <details style="font-size: 11px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px;" open>
-                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;">標準タグ</summary>
+                    <summary style="font-weight: bold; color: var(--text-main); cursor: pointer; user-select: none;" data-i18n="extended.tagStandardTagsTitle">標準タグ</summary>
                     <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
                         <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : Twitch配信カテゴリ名</span>
+                            <span>・<strong style="color: var(--command-accent);">{Category}</strong> : <span data-i18n="extended.tagCategoryDesc">Twitch配信カテゴリ名</span></span>
                         </div>
                         <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : 本日の日付・日時</span>
+                            <span>・<strong style="color: var(--command-accent);">{date}</strong> : <span data-i18n="extended.tagDateDesc">本日の日付・日時</span></span>
                         </div>
                         <div style="padding: 4px 8px; background: var(--bg-base); border-radius: 4px; border: 1px solid var(--border-color);">
-                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : シリーズもの配信回数（数字のみ+）</span>
+                            <span>・<strong style="color: var(--command-accent);">{count}</strong> : <span data-i18n="extended.tagCountDesc">シリーズもの配信回数（数字のみ+）</span></span>
                         </div>
                     </div>
                 </details>
@@ -1038,10 +1046,10 @@
                 </button>
             </div> -->
             <div id="cp-reward-id-wrapper" style="margin-bottom: 10px; display: none;">
-                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;">報酬ID (ID):</label>
+                <label style="font-size:11px; font-weight:bold; color: var(--text-muted); display:block; margin-bottom:3px;" data-i18n="extended.cpRewardIdLabel">報酬ID (ID):</label>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <input type="text" id="cp-reward-id-display" readonly style="font-family: monospace; font-size: 11px; padding: 4px 6px; background: var(--bg-item); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; flex: 1; box-sizing: border-box;" onclick="this.select()">
-                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>コピー</button>
+                    <button type="button" class="btn-secondary" style="height: 26px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="copyCpRewardIdModal()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span data-i18n="extended.cpCopyRewardId">コピー</span></button>
                 </div>
             </div>
             <div style="margin-bottom: 10px;">
@@ -1068,8 +1076,8 @@
                     <input type="color" id="cp-reward-color-input" value="#9146FF" oninput="updateCpColorPreview(this.value)" onchange="updateCpColorPreview(this.value)">
                     <div id="cp-reward-color-swatch-preview" class="cp-swatch-preview" style="background: #9146FF;" title="選択中のカラープレビュー"></div>
                     <input type="text" id="cp-reward-color-hex-input" value="#9146FF" maxlength="7" oninput="syncCpColorFromHex(this.value)">
-                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
-                    <span>カラーコード / パレット選択</span>
+                    <button type="button" class="btn-secondary" style="height: 28px; padding: 0 7px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="pickCpColorWithEyedropper(false)" data-i18n-title="extended.cpEyedropperTitle" title="画面から色を取得 (スポイト)">🧪 スポイト</button>
+                    <span data-i18n="extended.cpColorPalette">カラーコード / パレット選択</span>
                 </div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button type="button" class="cp-swatch" style="background:#9146FF;" onclick="setCpRewardColorSwatch('#9146FF')" title="#9146FF (Twitch Purple)"></button>

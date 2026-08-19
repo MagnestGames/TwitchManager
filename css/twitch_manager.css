@@ -6367,3 +6367,27 @@ body.light-theme .title-preview-details {
 body.light-theme .title-preview-details summary:hover {
     background: rgba(145, 70, 255, 0.09);
 }
+/* Count step button hover style */
+.count-step-btn {
+    transition: color 0.15s ease, background 0.15s ease;
+    border-radius: 3px;
+}
+.count-step-btn:hover {
+    color: var(--text-main) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+body.light-theme .count-step-btn:hover {
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+/* Inline mini spinner matching app loading spinner */
+.inline-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(145, 70, 255, 0.25);
+    border-top-color: var(--twitch-purple, #9146ff);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    box-sizing: border-box;
+}

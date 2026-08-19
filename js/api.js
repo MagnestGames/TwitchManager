@@ -161,7 +161,7 @@
             }
 
             const originalContent = btnEl.innerHTML;
-            btnEl.innerHTML = '<span class="spinner" style="display:inline-block;animation:spin 1s linear infinite;font-size:10px;">⏳</span>';
+            btnEl.innerHTML = '<span class="inline-spinner" style="width:11px; height:11px;"></span>';
             btnEl.disabled = true;
 
             try {
@@ -1170,7 +1170,7 @@
                 thisMonth: "今月 ({month})",
                 incompleteBadge: "一部のみ/API範囲外",
                 incompleteNote: "※Twitchアーカイブ保存期間（14~60日）外の配信はAPIで取得できないためグレーアウトしています。",
-                loading: "配信時間を集計中...",
+                loading: "読み込み中...",
                 noData: "アーカイブデータなし",
                 liveNow: "（配信中を含む）",
                 archiveNote: "※公開されているアーカイブ動画の合計時間",
@@ -1240,8 +1240,9 @@
             const langStats = getStreamStatsLang();
 
             popover.innerHTML = `<div class="stream-stats-header">★ ${langStats.title}</div>
-                <div style="text-align:center; padding: 12px; color: var(--text-muted); font-size:11px;">
-                    <span class="spinner" style="display:inline-block;animation:spin 1s linear infinite;margin-right:4px;">⏳</span> ${langStats.loading}
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; padding:20px 12px; color:var(--text-muted); font-size:11px;">
+                    <div class="inline-spinner" style="width:15px; height:15px; border-width:2px; margin:0;"></div>
+                    <span>${langStats.loading}</span>
                 </div>`;
 
             if ((!settings.userId || !getEffectiveTwitchClientId()) && cleanRaidSoToken()) {
