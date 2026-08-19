@@ -539,9 +539,9 @@
         try {
             let response = null;
             try {
-                response = await fetch('creators.json');
+                response = await fetch('js/creators.json');
             } catch (localErr) {
-                console.log("Local creators.json not found, falling back to remote.");
+                console.log("Local js/creators.json not found, falling back to remote.");
             }
             if (!response || !response.ok) {
                 response = await fetch(DYNAMIC_CREATOR_INFO_URL);

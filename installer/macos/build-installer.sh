@@ -50,10 +50,10 @@ mkdir -p "$install_root"
 root_files=(
   "TwitchManagerDock.html"
   "TwitchManagerAudio.html"
-  "creators.json"
-  "twitch_manager_version.js"
-  "twitch_manager_locales.js"
-  "twitch_manager.css"
+  "js/creators.json"
+  "js/version.js"
+  "js/locales.js"
+  "css/twitch_manager.css"
 )
 for file_name in "${root_files[@]}"; do
   source_path="$repository_root/$file_name"
@@ -64,7 +64,7 @@ for file_name in "${root_files[@]}"; do
   cp "$source_path" "$install_root/"
 done
 
-printf 'globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: "%s" });\n' "$version" > "$install_root/twitch_manager_version.js"
+printf 'globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: "%s" });\n' "$version" > "$install_root/js/version.js"
 
 for directory_name in assets js sounds; do
   source_path="$repository_root/$directory_name"

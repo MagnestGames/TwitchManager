@@ -11,7 +11,7 @@ $infoPlist = Join-Path $PSScriptRoot "app\Info.plist"
 $storageScript = Join-Path $repositoryRoot "js\storage.js"
 $uiScript = Join-Path $repositoryRoot "js\ui.js"
 $updateCheckScript = Join-Path $repositoryRoot "js\update-check.js"
-$versionScript = Join-Path $repositoryRoot "twitch_manager_version.js"
+$versionScript = Join-Path $repositoryRoot "js/version.js"
 $logoFile = Join-Path $repositoryRoot "assets\branding\TwitchManager-logo.png"
 $defaultSoundFiles = @(
     "chat_1.wav",
@@ -129,14 +129,14 @@ if (Test-Path -LiteralPath $sourceTestRoot) {
 
 $preparedRoot = Join-Path $sourceTestRoot "payload\Applications\TwitchManager"
 New-Item -ItemType Directory -Path $preparedRoot -Force | Out-Null
-foreach ($fileName in @("TwitchManagerDock.html", "TwitchManagerAudio.html", "creators.json", "twitch_manager_version.js", "twitch_manager_locales.js", "twitch_manager.css")) {
+foreach ($fileName in @("TwitchManagerDock.html", "TwitchManagerAudio.html", "js/creators.json", "js/version.js", "js/locales.js", "css/twitch_manager.css")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $fileName) -Destination $preparedRoot
 }
 foreach ($directoryName in @("assets", "js", "sounds")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $directoryName) -Destination $preparedRoot -Recurse
 }
 [System.IO.File]::WriteAllText(
-    (Join-Path $preparedRoot "twitch_manager_version.js"),
+    (Join-Path $preparedRoot "js/version.js"),
     "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: `"0.2.0`" });`n",
     [System.Text.UTF8Encoding]::new($false))
 
@@ -163,10 +163,10 @@ Copy-Item -LiteralPath $launcherScript -Destination (Join-Path $preparedApp "Mac
 $preparedFiles = @(
     (Join-Path $preparedRoot "TwitchManagerDock.html"),
     (Join-Path $preparedRoot "TwitchManagerAudio.html"),
-    (Join-Path $preparedRoot "creators.json"),
-    (Join-Path $preparedRoot "twitch_manager_version.js"),
-    (Join-Path $preparedRoot "twitch_manager_locales.js"),
-    (Join-Path $preparedRoot "twitch_manager.css"),
+    (Join-Path $preparedRoot "js/creators.json"),
+    (Join-Path $preparedRoot "js/version.js"),
+    (Join-Path $preparedRoot "js/locales.js"),
+    (Join-Path $preparedRoot "css/twitch_manager.css"),
     (Join-Path $preparedRoot "assets\branding\TwitchManager-logo.png"),
     (Join-Path $preparedRoot "js\update-check.js"),
     (Join-Path $preparedRoot "js\audio-source.js"),
@@ -202,7 +202,7 @@ $preparedPlist = Get-Content -LiteralPath (Join-Path $preparedApp "Info.plist") 
 if ($preparedPlist -notmatch '<string>0\.2\.0</string>' -or $preparedPlist -match '\{\{VERSION\}\}') {
     throw "The prepared macOS helper app has an invalid version."
 }
-$preparedVersionScript = Get-Content -LiteralPath (Join-Path $preparedRoot "twitch_manager_version.js") -Raw
+$preparedVersionScript = Get-Content -LiteralPath (Join-Path $preparedRoot "js/version.js") -Raw
 if (-not $preparedVersionScript.Contains('version: "0.2.0"')) {
     throw "The prepared macOS update-check version is invalid."
 }

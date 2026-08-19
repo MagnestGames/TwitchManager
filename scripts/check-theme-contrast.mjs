@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "..");
-const css = fs.readFileSync(path.join(repositoryRoot, "twitch_manager.css"), "utf8");
+const css = fs.readFileSync(path.join(repositoryRoot, "css/twitch_manager.css"), "utf8");
 const failures = [];
 
 function readBlock(selector) {

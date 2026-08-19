@@ -33,10 +33,10 @@ New-Item -ItemType Directory -Path $payloadRoot | Out-Null
 $rootFiles = @(
     "TwitchManagerDock.html",
     "TwitchManagerAudio.html",
-    "creators.json",
-    "twitch_manager_version.js",
-    "twitch_manager_locales.js",
-    "twitch_manager.css"
+    "js/creators.json",
+    "js/version.js",
+    "js/locales.js",
+    "css/twitch_manager.css"
 )
 foreach ($file in $rootFiles) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $file) -Destination $payloadRoot
@@ -44,7 +44,7 @@ foreach ($file in $rootFiles) {
 
 $versionScriptContent = "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: `"$Version`" });`n"
 [System.IO.File]::WriteAllText(
-    (Join-Path $payloadRoot "twitch_manager_version.js"),
+    (Join-Path $payloadRoot "js/version.js"),
     $versionScriptContent,
     [System.Text.UTF8Encoding]::new($false))
 

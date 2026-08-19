@@ -5,6 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TwitchManagerDock</title>
+    <!-- 重複ID統合・競合解決モーダル -->
+    <div id="idDeduplicateModal" class="modal-overlay" onclick="if(event.target===this)closeModal('idDeduplicateModal')">
+        <div class="modal-content" style="max-width: 580px; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--command-accent); font-size: 16px; display: flex; align-items: center; gap: 6px;">🔄 重複IDの統合・競合解決</h3>
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')" style="padding: 2px 8px; font-size: 14px;">✕</button>
+            </div>
+            
+            <div style="font-size: 11.5px; color: var(--text-muted); background: var(--bg-item); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5;">
+                同じ Twitch ID が複数の項目に登録されています。各重複IDについて、残すデータを選択してください（両方のメモやSNS情報を結合して残すこともできます）。
+            </div>
+
+            <div id="id-dedup-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <button type="button" class="btn-secondary" onclick="closeModal('idDeduplicateModal')">キャンセル</button>
+                <button type="button" class="btn-primary" onclick="applyIdDeduplication()">選択した内容で統合を実行</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const twitchManagerAudioSourceMode = new URLSearchParams(location.search).get('audio-source') === '1';
         if (twitchManagerAudioSourceMode) document.documentElement.classList.add('audio-source-mode');
@@ -15,10 +36,20 @@
         html.audio-source-mode body { visibility: hidden; }
     </style>
 
-    <link rel="stylesheet" href="twitch_manager.css">
+    <link rel="stylesheet" href="css/twitch_manager.css">
 </head>
 
 <body>
+    <div id="app-loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">
+                <span class="loading-title">Twitch Manager</span>
+                <span class="loading-sub">読み込み中...</span>
+            </div>
+        </div>
+    </div>
+
 
     <div id="toast" role="status" aria-live="polite" aria-atomic="true" data-i18n="extended.toastDone">完了</div>
 
@@ -26,6 +57,12 @@
         <div class="app-header">
             <h1 class="app-title app-title-row">◆ <span id="today-date"
                     style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
+                <div id="stream-time-stats-container" style="position: relative; display: inline-flex; align-items: center;">
+                    <button type="button" id="stream-time-stats-btn" class="btn-head-purple inactive" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; margin-left: 2px; font-size: 12px; cursor: pointer; border-radius: 4px;" onclick="toggleStreamTimeStatsPopover(event)" onmouseenter="showStreamTimeStatsPopover(event)" onmouseleave="hideStreamTimeStatsPopover(event)" data-i18n-tooltip="streamStats.tooltipBtn" data-i18n-aria="streamStats.tooltipBtn" aria-label="配信時間の統計">
+                        ★
+                    </button>
+                    <div id="stream-time-stats-popover" class="stream-stats-popover" style="display: none;" onmouseenter="keepStreamTimeStatsPopover(true)" onmouseleave="hideStreamTimeStatsPopover(event)"></div>
+                </div>
                 <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
@@ -582,7 +619,7 @@
                 <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(null, '`', '`')" data-i18n-title="extended.memoCode" title="インラインコード">&lt;&gt; <span data-i18n="extended.memoCodeShort">コード</span></button>
             </div>
             <div class="memo-header-actions" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;">
-                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"></button>
+                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8 -4 8 -11 8 -11 -8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="mode-btn-text" data-i18n="extended.memoAllPreview">全プレビュー</span></button>
                 <button type="button" class="btn-secondary btn-add-item" id="ui-add-memo" style="padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; flex-shrink: 0;" onclick="addMemo()" data-i18n-aria="extended.addMemoAria" aria-label="追加"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span data-i18n="addMemo">追加</span></button>
             </div>
         </div>
@@ -598,26 +635,58 @@
 
         <details class="tab-help">
             <summary class="tab-help-summary"><span data-i18n="infoSummary">ヘルプ</span></summary>
-            <div class="tab-help-body"><p data-i18n="extended.miscHelpText">バックアップ・復元、イベントログを管理します。ブラウザの保存データに備えて、バックアップは定期的に保管してください。</p></div>
+            <div class="tab-help-body"><p data-i18n="extended.miscHelpText">データのバックアップ・復元、イベントログの確認、キャッシュの削除を行います。ブラウザの不具合等によるデータ消失に備えて、バックアップは定期的に保存してください。</p></div>
         </details>
         
         <!-- Backup & Restore side by side -->
-        <div class="misc-pair-grid">
-            <div class="category-box" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-backup-title" style="margin-bottom: 8px; font-size: 13px;"><span data-i18n="backupTitle">バックアップ</span></div>
-                <div style="display: flex; flex: 1; align-items: center;">
-                    <button id="ui-backup-copy" class="btn-primary" style="width: 100%; padding: 6px 12px; font-size: 12px;" onclick="copyBackupToClipboard()" data-i18n="backupCopy">コピー</button>
+        <div class="misc-backup-grid">
+            <div class="misc-card-box">
+                <div class="misc-card-title" id="ui-backup-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span data-i18n="backupTitle">バックアップ作成・保存</span>
+                </div>
+                <div>
+                    <select id="bk-export-select" class="misc-select-input">
+                        <option value="all" data-i18n="extended.backupExportAll" selected>すべての項目 (フルバックアップ)</option>
+                        <option value="title" data-i18n="extended.backupExportTitle">タイトル一覧</option>
+                        <option value="id" data-i18n="extended.backupExportId">ID一覧</option>
+                        <option value="memo" data-i18n="extended.backupExportMemo">メモ帳</option>
+                        <option value="raidso" data-i18n="extended.backupExportRaidSo">Twitch / 通知と紹介</option>
+                        <option value="settings" data-i18n="extended.backupExportSettings">ツール設定</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <button id="ui-backup-download" class="btn-primary misc-btn-compact" style="flex: 1;" onclick="downloadBackupFile()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        <span data-i18n="extended.backupDownloadBtn">保存 (.json)</span>
+                    </button>
+                    <button id="ui-backup-copy" class="btn-secondary misc-btn-compact" style="flex: 1;" onclick="copyBackupToClipboard()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span data-i18n="backupCopy">コピー</span>
+                    </button>
                 </div>
             </div>
-            <div class="category-box" id="misc-restore-section" style="flex: 1; min-width: 200px; margin-bottom: 0; padding: 10px 15px; display: flex; flex-direction: column;">
-                <div class="category-name" id="ui-restore-title" onclick="toggleStandaloneSection('misc-restore-section')" style="margin-bottom: 8px; font-size: 13px; cursor: pointer; user-select: none;"><span data-i18n="restoreTitle">復元</span></div>
-                <div class="tw-body misc-restore-row" style="flex: 1;">
-                    <div class="restore-file-picker">
-                        <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,application/json" onchange="updateRestoreFileName(this)">
-                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary restore-file-label" data-i18n="footerActions.selectFile">ファイル選択</label>
-                        <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
+
+            <div class="misc-card-box">
+                <div class="misc-card-title" id="ui-restore-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span data-i18n="restoreTitle">復元・個別読み込み</span>
+                </div>
+                <div class="misc-restore-hint" data-i18n="extended.backupSelectPrompt">
+                    JSON / テキストファイルを選択し、統合・上書き復元:
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <div class="restore-file-picker" style="flex: 1;">
+                        <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,.txt,application/json,text/plain" onchange="updateRestoreFileName(this)">
+                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary misc-btn-compact restore-file-label" style="width: 100%;" data-i18n="footerActions.selectFile">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
+                        </label>
                     </div>
-                    <button id="ui-restore-btn" class="btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;" onclick="restoreFromLocalFile()" data-i18n="restoreBtn">読み込む</button>
+                    <button id="ui-restore-btn" class="btn-primary misc-btn-compact" style="flex: 1;" onclick="restoreFromLocalFile()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                        <span data-i18n="restoreBtn">読み込む</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -635,6 +704,59 @@
             <div id="raidso-log" class="raidso-log-list" data-raidso-log data-empty="ログはありません。" style="height: 250px; overflow-y: auto; background: var(--bg-base); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-family: monospace; font-size: 11px;"></div>
         </div>
 
+            </div>
+        </details>
+
+        <!-- Cache Clear closed by default using details/summary -->
+        <details class="category-box" style="margin-top: 12px; margin-bottom: 0; padding: 12px 16px; border-color: rgba(233, 30, 99, 0.3);">
+            <summary class="category-name" id="ui-cache-clear-accordion-title" style="cursor: pointer; user-select: none; margin-bottom: 0; font-size: 13px; font-weight: 600; color: var(--danger, #ff5252);" data-i18n="extended.cacheClearAccordionTitle">キャッシュ削除（クリックで開閉）</summary>
+            <div style="margin-top: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                    <span style="font-size: 11.5px; color: var(--text-muted);" data-i18n="extended.cacheClearAccordionDesc">削除したい項目にチェックを入れてください。</span>
+                    <div class="cache-clear-inline-actions" style="display: flex; gap: 6px;">
+                        <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="toggleInlineCacheCheckboxes(true)" data-i18n="extended.clearCacheSelectAll">すべて選択</button>
+                        <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="toggleInlineCacheCheckboxes(false)" data-i18n="extended.clearCacheDeselectAll">すべて解除</button>
+                    </div>
+                </div>
+                
+                <div class="cache-clear-inline-grid" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                    <label class="cache-clear-inline-card">
+                        <div class="cache-clear-inline-info">
+                            <strong data-i18n="extended.clearCacheItemTitle">タイトル一覧（タイトル・カテゴリ・タグ）</strong>
+                        </div>
+                        <input type="checkbox" class="cache-clear-inline-cb" value="title" checked>
+                    </label>
+                    <label class="cache-clear-inline-card">
+                        <div class="cache-clear-inline-info">
+                            <strong data-i18n="extended.clearCacheItemId">ID一覧（フレンド・IDリスト）</strong>
+                        </div>
+                        <input type="checkbox" class="cache-clear-inline-cb" value="id" checked>
+                    </label>
+                    <label class="cache-clear-inline-card">
+                        <div class="cache-clear-inline-info">
+                            <strong data-i18n="extended.clearCacheItemRaidSo">Twitch / 通知と紹介（レイド・サポーター・CP設定など）</strong>
+                        </div>
+                        <input type="checkbox" class="cache-clear-inline-cb" value="raidso" checked>
+                    </label>
+                    <label class="cache-clear-inline-card">
+                        <div class="cache-clear-inline-info">
+                            <strong data-i18n="extended.clearCacheItemMemo">メモ帳（メモ一覧）</strong>
+                        </div>
+                        <input type="checkbox" class="cache-clear-inline-cb" value="memo" checked>
+                    </label>
+                </div>
+
+                <div style="background: rgba(233, 30, 99, 0.08); border: 1px solid rgba(233, 30, 99, 0.25); border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; font-size: 11.5px; color: var(--danger-text, #ff5252); font-weight: 500;">
+                    <span data-i18n="runtime.clearCacheWarning1">※ 選択したデータは元に戻せません。</span>
+                    <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px;" data-i18n="runtime.clearCacheTokenNote">※ Twitchアクセストークンや認証設定は保護され、削除されません。</div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="button" class="btn-primary" style="padding: 7px 16px; font-size: 12px; background: var(--danger, #e91e63); border-color: var(--danger, #e91e63); color: #fff; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" onclick="executeSelectedInlineCacheClear()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <span data-i18n="extended.clearAllCacheBtn">選択したキャッシュを削除</span>
+                    </button>
+                </div>
             </div>
         </details>
 
@@ -1221,8 +1343,8 @@
             document.body.appendChild(audioSourceScript);
         } else {
             const appScripts = [
-                'twitch_manager_version.js',
-                'twitch_manager_locales.js',
+                'js/version.js',
+                'js/locales.js',
                 'js/update-check.js',
                 'js/storage.js',
                 'js/api.js',

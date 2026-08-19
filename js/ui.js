@@ -1,3 +1,438 @@
+function updateRecordTitleValue(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    config[ci].records[ri].title = val;
+    saveAllLocal(false);
+    
+    // Update card header label if auto
+    if (!config[ci].records[ri].isCustomLabel) {
+        const lbl = document.getElementById(`record-label-${ci}-${ri}`);
+        if (lbl) {
+            const newLabel = langMap[currentLang]?.titleActions?.newLabel || langMap.ja.titleActions.newLabel;
+            lbl.textContent = '● ' + (val.trim() || newLabel);
+        }
+    }
+    // Update inline header tag badges
+    const headerTagsEl = document.getElementById(`record-header-tags-${ci}-${ri}`);
+    if (headerTagsEl) {
+        headerTagsEl.innerHTML = getTagBadgesHtmlForTitle(val);
+    }
+    // Update live preview box
+    const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+    if (previewEl) {
+        const game = config[ci].records[ri].game || '';
+        const count = config[ci].records[ri].count;
+        const resolved = resolveStreamTitleTemplate(val, { game, count });
+        previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+    }
+}
+
+function updateRecordCount(ci, ri, val) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const num = Math.max(1, parseInt(val, 10) || 1);
+    config[ci].records[ri].count = num;
+    saveAllLocal(false);
+
+    const input = document.getElementById(`record-count-input-${ci}-${ri}`);
+    if (input && parseInt(input.value, 10) !== num) {
+        input.value = num;
+    }
+
+    const r = config[ci].records[ri];
+    updateRecordTitleValue(ci, ri, r.title || '');
+}
+
+function stepRecordCount(ci, ri, delta) {
+    if (!config[ci] || !config[ci].records[ri]) return;
+    const current = (config[ci].records[ri].count !== undefined && config[ci].records[ri].count !== null && config[ci].records[ri].count !== '') ? parseInt(config[ci].records[ri].count, 10) : 1;
+    updateRecordCount(ci, ri, current + delta);
+}
+
+function insertTagToRecordTitle(ci, ri, tagText) {
+    const textarea = document.getElementById(`record-title-input-${ci}-${ri}`);
+    if (!textarea) return;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const val = textarea.value || '';
+    const newVal = val.substring(0, start) + tagText + val.substring(end);
+    textarea.value = newVal;
+    textarea.selectionStart = textarea.selectionEnd = start + tagText.length;
+    textarea.focus();
+    updateRecordTitleValue(ci, ri, newVal);
+}
+
+window.updateRecordTitleValue = updateRecordTitleValue;
+window.updateRecordCount = updateRecordCount;
+window.stepRecordCount = stepRecordCount;
+window.insertTagToRecordTitle = insertTagToRecordTitle;
+
+let titleTagConfig = {
+    customTags: [
+        { id: 'tag_1', name: '識別', value: '内容' },
+        { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
+        { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
+    ],
+    categoryMap: [
+        { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' },
+        { id: 'cat_map_2', from: 'Phoenix Wright: Ace Attorney Trilogy', to: '逆転裁判' }
+    ],
+    collabCategoryName: '',
+    categoryTagName: 'カテゴリ'
+};
+
+function loadTitleTagConfig() {
+    try {
+        const saved = localStorage.getItem('title_tag_config_v1');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed) {
+                if (Array.isArray(parsed.customTags)) titleTagConfig.customTags = parsed.customTags;
+                if (Array.isArray(parsed.categoryMap)) titleTagConfig.categoryMap = parsed.categoryMap;
+                if (parsed.collabCategoryName !== undefined) titleTagConfig.collabCategoryName = parsed.collabCategoryName;
+            }
+        }
+    } catch (e) {
+        console.error('loadTitleTagConfig error:', e);
+    }
+}
+
+function saveTitleTagConfig() {
+    try {
+        localStorage.setItem('title_tag_config_v1', JSON.stringify(titleTagConfig));
+    } catch (e) {
+        console.error('saveTitleTagConfig error:', e);
+    }
+}
+
+function extractTwitchId(str) {
+    if (!str) return '';
+    let val = String(str).trim();
+    val = val.replace(/^https?:\/\/(www\.)?twitch\.tv\//i, '');
+    val = val.replace(/^twitch\.tv\//i, '');
+    val = val.split('/')[0].split('?')[0].split('#')[0];
+    val = val.replace(/^@/, '').trim();
+    return val;
+}
+window.extractTwitchId = extractTwitchId;
+
+function getSelectedCollabNames() {
+    try {
+        let rawFriendsConfig = friendsConfig;
+        if (!Array.isArray(rawFriendsConfig) || rawFriendsConfig.length === 0) {
+            try { rawFriendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]'); } catch(e) { rawFriendsConfig = []; }
+        }
+
+        const collabCat = titleTagConfig.collabCategoryName || '';
+        const activeTagEls = typeof document !== 'undefined' && document.querySelectorAll ? document.querySelectorAll('#friends-tag-list input[type="checkbox"]:checked') : [];
+        const activeTags = Array.from(activeTagEls).map(el => el.value);
+
+        const selectedIds = [];
+        (rawFriendsConfig || []).forEach(cat => {
+            if (!cat || cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            if (collabCat && cat.name !== collabCat) return;
+
+            const isCatChecked = activeTags.length === 0 || activeTags.includes(cat.name);
+
+            (cat.friends || []).forEach(f => {
+                if (!f) return;
+                if (f.isSelected || isCatChecked) {
+                    const rawVal = f.twitch || f.name || f.id || '';
+                    const twitchId = extractTwitchId(rawVal);
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
+                    }
+                }
+            });
+        });
+
+        if (selectedIds.length === 0) return '';
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedIds.map(id => ' @' + id).join('');
+    } catch (e) {
+        return '';
+    }
+}
+
+function getCategoryCollabNames(catName) {
+    try {
+        let rawFriendsConfig = friendsConfig;
+        if (!Array.isArray(rawFriendsConfig) || rawFriendsConfig.length === 0) {
+            try { rawFriendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]'); } catch(e) { rawFriendsConfig = []; }
+        }
+
+        const selectedIds = [];
+        (rawFriendsConfig || []).forEach(cat => {
+            if (!cat || cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+            if (cat.name === catName) {
+                (cat.friends || []).forEach(f => {
+                    if (!f) return;
+                    const rawVal = f.twitch || f.name || f.id || '';
+                    const twitchId = extractTwitchId(rawVal);
+                    if (twitchId && !selectedIds.includes(twitchId)) {
+                        selectedIds.push(twitchId);
+                    }
+                });
+            }
+        });
+
+        if (selectedIds.length === 0) return '';
+        selectedIds.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+        return selectedIds.map(id => ' @' + id).join('');
+    } catch (e) {
+        return '';
+    }
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function resolveStreamTitleTemplate(templateStr, context = {}) {
+    if (!templateStr) return '';
+    loadTitleTagConfig();
+    let result = String(templateStr);
+
+    // 1. Custom Word Set Tags (e.g. {識別}, {識別A})
+    if (titleTagConfig && Array.isArray(titleTagConfig.customTags)) {
+        titleTagConfig.customTags.forEach(tag => {
+            if (tag && tag.name) {
+                const regex = new RegExp('{(' + escapeRegExp(tag.name) + ')}', 'g');
+                result = result.replace(regex, tag.value || '');
+            }
+        });
+    }
+
+    // 2. Collab Tag ({コラボ} or {collab}) -> pure Twitch ID "(space)@twitchID"
+    const collabName = titleTagConfig.collabTagName || 'コラボ';
+    const collabVal = context.collabNames !== undefined ? context.collabNames : getSelectedCollabNames();
+    const collabRegex = new RegExp('{(' + escapeRegExp(collabName) + '|コラボ|collab)}', 'g');
+    result = result.replace(collabRegex, collabVal);
+
+    // 2.5 Dynamic ID List Category Tags (e.g. {MAG}, {Frend}) -> pure Twitch ID "(space)@twitchID"
+    let rawFriendsConfig = friendsConfig;
+    if (!Array.isArray(rawFriendsConfig) || rawFriendsConfig.length === 0) {
+        try { rawFriendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]'); } catch(e) { rawFriendsConfig = []; }
+    }
+
+    (rawFriendsConfig || []).forEach(cat => {
+        if (cat && cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+            const catName = cat.name.trim();
+            if (catName && catName !== 'コラボ' && catName !== 'Category' && catName !== 'カテゴリ') {
+                const catVal = getCategoryCollabNames(catName);
+                const reg = new RegExp('{(' + escapeRegExp(catName) + ')}', 'g');
+                result = result.replace(reg, catVal);
+            }
+        }
+    });
+
+    // 3. Category Tag ({Category} or {category} or {カテゴリ} or {game})
+    const categoryName = titleTagConfig.categoryTagName || 'カテゴリ';
+    let gameVal = context.game !== undefined ? context.game : '';
+
+    // 手動カテゴリ変換マッピングの優先適用
+    if (gameVal && titleTagConfig && Array.isArray(titleTagConfig.categoryMap)) {
+        const trimmedGame = String(gameVal).trim();
+        const matched = titleTagConfig.categoryMap.find(item =>
+            item && item.from && String(item.from).trim().toLowerCase() === trimmedGame.toLowerCase()
+        );
+        if (matched && matched.to !== undefined && matched.to !== null && String(matched.to).trim() !== '') {
+            gameVal = String(matched.to);
+        }
+    }
+
+    const catRegex = new RegExp('{(' + escapeRegExp(categoryName) + '|Category|category|カテゴリ|game)}', 'g');
+    result = result.replace(catRegex, gameVal);
+
+    // 4. Built-in Date & Time Tags
+    const now = new Date();
+    const dateVal = (now.getMonth() + 1) + '/' + now.getDate();
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    const dayVal = '(' + dayNames[now.getDay()] + ')';
+    const yearVal = String(now.getFullYear());
+    const monthVal = String(now.getMonth() + 1);
+    const timeVal = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    result = result.replace(/{(日付|date)}/g, dateVal);
+    result = result.replace(/{(曜日|day)}/g, dayVal);
+    result = result.replace(/{(年|year)}/g, yearVal);
+    result = result.replace(/{(月|month)}/g, monthVal);
+    result = result.replace(/{(時間|time)}/g, timeVal);
+
+    // 5. Count Tag ({count} or {回数} or {カウント}) -> replaces with numeric count value only
+    const countVal = context.count !== undefined ? String(context.count) : (context.recordCount !== undefined ? String(context.recordCount) : '1');
+    result = result.replace(/{(count|回数|カウント)}/g, countVal);
+
+    return result;
+}
+
+function getTagBadgesHtmlForTitle(templateStr) {
+    if (!templateStr) return '';
+    const matches = templateStr.match(/{[^{}]+}/g);
+    if (!matches || matches.length === 0) return '';
+    const uniqueTags = [...new Set(matches)];
+    return uniqueTags.map(t => `<span class="tag-chip is-system" style="font-size: 9.5px; opacity: 0.75; padding: 1px 5px; font-family: monospace; user-select: none;" title="タグ: ${raidSoEscape(t)}">${raidSoEscape(t)}</span>`).join('');
+}
+
+window.loadTitleTagConfig = loadTitleTagConfig;
+window.saveTitleTagConfig = saveTitleTagConfig;
+window.resolveStreamTitleTemplate = resolveStreamTitleTemplate;
+window.getTagBadgesHtmlForTitle = getTagBadgesHtmlForTitle;
+window.escapeRegExp = escapeRegExp;
+
+function showCollabHoverHint(tagNameOrCat) {
+    try {
+        let msg = '';
+        if (tagNameOrCat === '{コラボ}') {
+            const selectedNames = getSelectedCollabNames();
+            const collabCat = titleTagConfig.collabCategoryName || '';
+            msg = selectedNames 
+                ? `選択中コラボ (${collabCat || '全体'}):${selectedNames}` 
+                : `コラボメンバー未選択 (IDリストでチェックを入れてください)`;
+        } else {
+            const catNames = getCategoryCollabNames(tagNameOrCat);
+            const membersStr = catNames ? catNames.trim() : '(メンバー未登録)';
+            msg = `IDリスト【${tagNameOrCat}】: ${membersStr}`;
+        }
+        showToast(msg, 'info');
+    } catch (e) {}
+}
+
+function copyCommonTag(tagText) {
+    let toastMsg = 'コピー: ' + tagText;
+    if (tagText === '{コラボ}') {
+        const names = getSelectedCollabNames();
+        if (names) {
+            toastMsg += ' (展開:' + names.trim() + ')';
+        }
+    }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(tagText).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(tagText, toastMsg);
+            });
+        } else {
+            fallbackCopyText(tagText, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(tagText, toastMsg);
+    }
+}
+
+function fallbackCopyText(tagText, customMsg) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = tagText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(customMsg || ('コピー: ' + tagText), 'success');
+    } catch (e) {
+        showToast('コピーできませんでした', 'warn');
+    }
+}
+
+let isCollabTagGroupExpanded = true;
+try {
+    const savedExp = localStorage.getItem('common_collab_tags_expanded');
+    if (savedExp !== null) isCollabTagGroupExpanded = savedExp === 'true';
+} catch (e) {}
+
+function toggleCollabTagGroup() {
+    isCollabTagGroupExpanded = !isCollabTagGroupExpanded;
+    try {
+        localStorage.setItem('common_collab_tags_expanded', String(isCollabTagGroupExpanded));
+    } catch (e) {}
+    renderCommonTagBar();
+}
+window.toggleCollabTagGroup = toggleCollabTagGroup;
+
+function copyCategoryRawIds(catName) {
+    const rawIds = catName ? getCategoryCollabNames(catName) : getSelectedCollabNames();
+    if (!rawIds || !rawIds.trim()) {
+        showToast(catName ? `IDリスト【${catName}】に登録されているIDがありません` : 'IDリストに選択中/登録済みのIDがありません', 'warn');
+        return;
+    }
+    const copyString = rawIds.trim();
+    const toastMsg = catName ? `IDリスト【${catName}】の@ID一覧をコピー: ${copyString}` : `IDリスト全@ID一覧をコピー: ${copyString}`;
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copyString).then(() => {
+                showToast(toastMsg, 'success');
+            }).catch(() => {
+                fallbackCopyText(copyString, toastMsg);
+            });
+        } else {
+            fallbackCopyText(copyString, toastMsg);
+        }
+    } catch (e) {
+        fallbackCopyText(copyString, toastMsg);
+    }
+}
+window.copyCategoryRawIds = copyCategoryRawIds;
+
+function renderCommonTagBar() {
+    loadTitleTagConfig();
+    const bar = document.getElementById('common-tag-chip-bar');
+    if (!bar) return;
+
+    let rawFriendsConfig = friendsConfig;
+    if (!Array.isArray(rawFriendsConfig) || rawFriendsConfig.length === 0) {
+        try { rawFriendsConfig = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]'); } catch(e) { rawFriendsConfig = []; }
+    }
+
+    let mainHtml = '';
+
+    // 1. カスタム共通タグ (言葉セット)
+    (titleTagConfig.customTags || []).forEach(tag => {
+        if (!tag || !tag.name) return;
+        const tagText = '{' + tag.name + '}';
+        const hint = tag.value ? (': ' + tag.value.substring(0, 15) + (tag.value.length > 15 ? '…' : '')) : '';
+        mainHtml += `<button type="button" class="tag-chip" onclick="copyCommonTag('${raidSoEscape(tagText)}')" title="${raidSoEscape(tag.name + hint)}">${raidSoEscape(tagText)}</button>`;
+    });
+
+    // 2. 標準システムタグ ({Category}, {date}, {count})
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{Category}')" title="Twitch配信カテゴリ名">{Category}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{date}')" title="本日の日付・日時">{date}</button>`;
+    mainHtml += `<button type="button" class="tag-chip is-system" onclick="copyCommonTag('{count}')" title="シリーズもの配信回数 (数字のみ+)">{count}</button>`;
+
+    // 3. IDリストの各グループ（カテゴリ）タグ（未分類・汎用コラボを除く、改行して2段目に配置）
+    let collabHtml = '';
+    const catNames = (rawFriendsConfig || [])
+        .filter(cat => cat && cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user')
+        .map(cat => cat.name.trim())
+        .filter(name => name && name !== '未分類' && name !== 'Uncategorized' && name !== '未分类');
+    const uniqueCats = [...new Set(catNames)];
+
+    uniqueCats.forEach(catName => {
+        const formattedCatNames = getCategoryCollabNames(catName);
+        const catTagText = '{' + catName + '}';
+        collabHtml += `
+            <div class="tag-chip-segmented" style="display:inline-flex; align-items:center; background:var(--bg-item, #222); border:1px solid var(--border-color, #444); border-radius:12px; font-size:11px; overflow:hidden; vertical-align:middle; line-height:1.2;">
+                <button type="button" onclick="copyCommonTag('${raidSoEscape(catTagText)}')" onmouseenter="showCollabHoverHint('${raidSoEscape(catName)}')" title="タグ ${raidSoEscape(catTagText)} をコピー" style="background:transparent; border:none; color:var(--text-main); padding:2px 6px; cursor:pointer; font-size:11px;">
+                    ${raidSoEscape(catTagText)}
+                </button>
+                <button type="button" onclick="copyCategoryRawIds('${raidSoEscape(catName)}')" title="【${raidSoEscape(catName)}】の @ID をコピー (${raidSoEscape(formattedCatNames ? formattedCatNames.trim() : '未登録')})" style="background:rgba(255,255,255,0.08); border:none; border-left:1px solid var(--border-color, #444); color:var(--command-accent, #a970ff); padding:2px 6px; cursor:pointer; font-size:10px; font-weight:bold;">
+                    @ID
+                </button>
+            </div>
+        `;
+    });
+
+    let fullHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${mainHtml}</div>`;
+    if (collabHtml) {
+        fullHtml += `<div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center; margin-top:5px;">${collabHtml}</div>`;
+    }
+
+    bar.innerHTML = fullHtml;
+}
+
+window.renderCommonTagBar = renderCommonTagBar;
+window.showCollabHoverHint = showCollabHoverHint;
+window.copyCommonTag = copyCommonTag;
+
         function uiText(path, vars = {}, fallback = '') {
             const resolve = source => String(path || '').split('.').reduce((value, key) => value == null ? undefined : value[key], source);
             let value = resolve(langMap[currentLang]);
@@ -190,7 +625,7 @@
             updateSettingsAuthStatus();
 
             const datalist = document.getElementById('date_format_presets');
-            if (datalist && L.dateFormatOptions) {
+            if (datalist && datalist.options && L.dateFormatOptions) {
                 Array.from(datalist.options).forEach(opt => {
                     if (L.dateFormatOptions[opt.value]) opt.innerText = L.dateFormatOptions[opt.value];
                 });
@@ -515,6 +950,12 @@
             if (tabButton) {
                 tabButton.classList.add('active');
                 tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+            if (id === 'main-tab' && typeof render === 'function') render();
+            if (id === 'id-tab' && typeof renderFriends === 'function') renderFriends();
+            if (id === 'memo-tab' && typeof renderMemo === 'function') {
+                renderMemo();
+                if (typeof updateAllMemoModesButton === 'function') updateAllMemoModesButton();
             }
             if (id === 'cp-tab' && typeof renderCpTab === 'function') {
                 renderCpTab(); updateCpBulkActionBar();
@@ -913,6 +1354,15 @@
                         </button>
                     </div>
                     <div class="record-actions">
+                        <div style="display:inline-flex; align-items:center; gap:3px; margin-right:6px; height:34px; box-sizing:border-box; padding:2px 4px; background:rgba(255,255,255,0.05); border-radius:6px; border:1px solid var(--border-color); align-self:center;" onclick="event.stopPropagation();" title="配信回数 ${r.count || 1} の現在値">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+                            <input type="number" id="record-count-input-${ci}-${ri}" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" style="height:24px; width:40px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:3px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
+                            <button type="button" class="btn-secondary" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:22px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="配信回数を+1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+                        </div>
                         <button class="icon-btn twitch-action-btn sync-action-btn" title="${A.syncTip}" onclick="event.stopPropagation(); syncWithTwitch(${ci}, ${ri}, this)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
                             <span class="action-text"><span class="action-main">${A.syncMain}</span><span class="action-sub">${A.syncSub}</span></span>
@@ -929,7 +1379,8 @@
                     <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
                     
                     <span class="field-label">${L.title}</span>
-                    <textarea oninput="config[${ci}].records[${ri}].title=this.value; saveAllLocal(false); if (!config[${ci}].records[${ri}].isCustomLabel) { const lbl = document.getElementById('record-label-${ci}-${ri}'); if (lbl) lbl.textContent = '● ' + (this.value.trim() || A.newLabel); }">${raidSoEscape(r.title || '')}</textarea>
+                    <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
+                    <div id="record-title-preview-${ci}-${ri}" class="title-preview-box"><strong>反映プレビュー:</strong> ${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
@@ -1369,8 +1820,10 @@
                     }
                 });
             }
+            if (typeof renderCommonTagBar === 'function') renderCommonTagBar();
+            if (typeof updateAllTitlePreviews === 'function') updateAllTitlePreviews();
         }
-        window.filterFriendsByTags = filterFriendsByTags;
+                window.filterFriendsByTags = filterFriendsByTags;
 
         async function addNewGroupFromFilter() {
             const L = langMap[currentLang];
@@ -2427,52 +2880,488 @@
         }
 
 
+        
+        const MEMO_SVG_EYE = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const MEMO_SVG_PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+        const MEMO_SVG_LINK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+        const MEMO_SVG_TRASH = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
+        function renderMarkdownToHtml(src, memoIndex = null) {
+            if (!src) return `<div style="color:var(--text-muted); font-size:11px; font-style:italic;">${raidSoEscape(uiText("extended.memoEmptyHint"))}</div>`;
+            let html = raidSoEscape(src);
+
+            // Code blocks and inline code protection via placeholders
+            const codePlaceholders = [];
+            html = html.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+                const idx = codePlaceholders.length;
+                codePlaceholders.push(`<pre class="md-code-block"><code>${code.trim()}</code></pre>`);
+                return `@@MD_CODE_BLOCK_${idx}@@`;
+            });
+            html = html.replace(/`([^`]+)`/g, (m, code) => {
+                const idx = codePlaceholders.length;
+                codePlaceholders.push(`<code class="md-inline-code">${code}</code>`);
+                return `@@MD_CODE_BLOCK_${idx}@@`;
+            });
+
+            // Headings
+            html = html.replace(/^### (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1 class="md-h1">$1</h1>');
+
+            // Text Styles
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+            // Interactive Task Checkboxes
+            let taskIdx = 0;
+            html = html.replace(/^- \[(x| )\] (.*$)/gim, (match, checkedChar, itemText) => {
+                const isChecked = checkedChar === 'x';
+                const currentTaskIdx = taskIdx++;
+                const onclickAttr = (memoIndex !== null && memoIndex !== undefined)
+                    ? `onclick="event.stopPropagation(); toggleMemoTaskCheckbox(${memoIndex}, ${currentTaskIdx}, this.checked)"`
+                    : 'disabled';
+                const checkedAttr = isChecked ? 'checked' : '';
+                const spanClass = isChecked ? 'class="md-done"' : '';
+                return `<div class="md-task-item"><input type="checkbox" ${checkedAttr} ${onclickAttr}><span ${spanClass}>${itemText}</span></div>`;
+            });
+
+            // Blockquotes
+            html = html.replace(/^&gt; (.*$)/gim, '<blockquote class="md-quote">$1</blockquote>');
+
+            // HR
+            html = html.replace(/^---$/gim, '<hr class="md-hr">');
+
+            // Links protection via placeholders (Prevents nested <a> tags)
+            const linkPlaceholders = [];
+            html = html.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (match, text, url) => {
+                const idx = linkPlaceholders.length;
+                let targetUrl = url;
+                if (/^https?:\/\//i.test(url)) {
+                    targetUrl = url;
+                } else if (/^www\./i.test(url)) {
+                    targetUrl = 'https://' + url;
+                } else {
+                    linkPlaceholders.push(`<span class="md-link" style="opacity: 0.8; text-decoration: underline dotted;">${text} (${url})</span>`);
+                    return `@@MD_LINK_BLOCK_${idx}@@`;
+                }
+                const safeUrlAttr = raidSoEscape(targetUrl);
+                linkPlaceholders.push(`<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="md-link" onclick="openMemoExternalLink(event, '${safeUrlAttr}')">${text} ${MEMO_SVG_LINK}</a>`);
+                return `@@MD_LINK_BLOCK_${idx}@@`;
+            });
+
+            // Auto-link bare URLs: https://... or http://...
+            html = html.replace(/(^|[\s\n>])(https?:\/\/[^\s<>"'()]+)/g, (match, prefix, url) => {
+                const idx = linkPlaceholders.length;
+                const safeUrlAttr = raidSoEscape(url);
+                linkPlaceholders.push(`<a href="${safeUrlAttr}" target="_blank" rel="noopener noreferrer" class="md-link" onclick="openMemoExternalLink(event, '${safeUrlAttr}')">${url} ${MEMO_SVG_LINK}</a>`);
+                return `${prefix}@@MD_LINK_BLOCK_${idx}@@`;
+            });
+
+            // Restore Links
+            html = html.replace(/@@MD_LINK_BLOCK_(\d+)@@/g, (m, idx) => linkPlaceholders[Number(idx)] || '');
+
+            // Restore Code Blocks and Inline Code
+            html = html.replace(/@@MD_CODE_BLOCK_(\d+)@@/g, (m, idx) => codePlaceholders[Number(idx)] || '');
+
+            // Line-by-line Smart List Processor (Auto連番 & 柔軟ネスト)
+            const lines = html.split('\n');
+            let inOl = false;
+            let olCounter = 1;
+            let currentOlIndent = 0;
+
+            const processed = lines.map(line => {
+                const rawIndentMatch = line.match(/^(\s*)/);
+                const indentStr = rawIndentMatch ? rawIndentMatch[1] : '';
+                const spacesCount = indentStr.replace(/\t/g, '  ').length;
+
+                const trimmed = line.trim();
+                if (!trimmed) {
+                    inOl = false;
+                    return '<div style="height: 4px;"></div>';
+                }
+
+                // Handle "- - テキスト" notation as nested level 1
+                const dashDashMatch = trimmed.match(/^[-*+]\s+[-*+]\s+(.*)$/);
+                if (dashDashMatch) {
+                    inOl = false;
+                    return `<div class="md-list-item" style="margin-left: 16px;"><span class="md-bullet">•</span><span>${dashDashMatch[1]}</span></div>`;
+                }
+
+                // Handle Numbered List (Auto-Increment 1., 2., 3...)
+                const olMatch = trimmed.match(/^(\d+)[\.\)]\s+(.*)$/);
+                if (olMatch) {
+                    const indentLevel = Math.min(Math.floor(spacesCount / 2), 4);
+                    if (!inOl || indentLevel !== currentOlIndent) {
+                        inOl = true;
+                        olCounter = 1;
+                        currentOlIndent = indentLevel;
+                    }
+                    const numStr = `${olCounter}.`;
+                    olCounter++;
+
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-num">${numStr}</span><span>${olMatch[2]}</span></div>`;
+                } else {
+                    inOl = false;
+                }
+
+                // Handle Bullet List (- Item or * Item)
+                const ulMatch = trimmed.match(/^[-*+]\s+(.*)$/);
+                if (ulMatch) {
+                    const indentLevel = Math.min(Math.max(Math.floor(spacesCount / 2), spacesCount >= 2 ? 1 : 0), 4);
+                    const indentStyle = indentLevel > 0 ? `style="margin-left: ${indentLevel * 16}px;"` : '';
+                    return `<div class="md-list-item" ${indentStyle}><span class="md-bullet">•</span><span>${ulMatch[1]}</span></div>`;
+                }
+
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<pre') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) {
+                    return line;
+                }
+                return line + '<br>';
+            });
+
+            return processed.join('');
+        }
+        window.renderMarkdownToHtml = renderMarkdownToHtml;
+
+        async function openMemoExternalLink(e, url) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (!url) return;
+
+            const title = uiText('extended.memoExternalLinkTitle') || '外部リンクへの移動';
+            const msg = uiText('extended.memoExternalLinkMsg') || '外部のWebサイトを開こうとしています。\n外部サイトでの動作や安全性については当ツールの保証対象外となりますが、移動しますか？';
+            const note = uiText('extended.memoExternalLinkNote') || 'リンク先: ';
+
+            const messageHtml = `<div style="display:grid; gap:10px; font-size:13px; line-height:1.6;">
+                <div>${raidSoEscape(msg).replace(/\n/g, '<br>')}</div>
+                <div style="background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; word-break:break-all; font-size:11.5px; color:var(--text-muted);">
+                    <strong>${raidSoEscape(note)}</strong><span style="color:var(--twitch-purple);">${raidSoEscape(url)}</span>
+                </div>
+            </div>`;
+
+            const ok = await customConfirm({
+                title: title,
+                messageHtml: messageHtml,
+                okText: uiText('extended.memoExternalLinkOk') || '移動する',
+                cancelText: uiText('extended.memoExternalLinkCancel') || 'キャンセル'
+            });
+
+            if (ok) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+        window.openMemoExternalLink = openMemoExternalLink;
+
+        function handleMemoKeydown(e, memoIndex) {
+            const textarea = e.target;
+            if (!textarea) return;
+
+            // Ignore IME composition Enter
+            if (e.isComposing || e.keyCode === 229) return;
+
+            // Tab key: Insert 2 spaces for indent
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = textarea.selectionStart || 0;
+                const end = textarea.selectionEnd || 0;
+                const value = textarea.value || '';
+
+                if (!e.shiftKey) {
+                    textarea.value = value.substring(0, start) + '  ' + value.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + 2;
+                } else {
+                    if (start >= 2 && value.substring(start - 2, start) === '  ') {
+                        textarea.value = value.substring(0, start - 2) + value.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = start - 2;
+                    }
+                }
+                updateMemoContent(memoIndex, textarea.value);
+                return;
+            }
+
+            // Enter key: Auto continue list
+            if (e.key === 'Enter') {
+                const start = textarea.selectionStart || 0;
+                const value = textarea.value || '';
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+
+                const taskMatch = currentLine.match(/^(\s*)- \[(?:x| )\]\s*(.*)$/);
+                const ulMatch = currentLine.match(/^(\s*)[-*+]\s*(.*)$/);
+                const olMatch = currentLine.match(/^(\s*)(\d+)[\.\)]\s*(.*)$/);
+
+                if (taskMatch) {
+                    e.preventDefault();
+                    if (!taskMatch[2].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const prefix = `\n${taskMatch[1]}- [ ] `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
+                } else if (ulMatch) {
+                    e.preventDefault();
+                    if (!ulMatch[2].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const prefix = `\n${ulMatch[1]}- `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
+                } else if (olMatch) {
+                    e.preventDefault();
+                    if (!olMatch[3].trim()) {
+                        textarea.value = value.substring(0, lineStart) + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = lineStart;
+                    } else {
+                        const nextNum = parseInt(olMatch[2], 10) + 1;
+                        const prefix = `\n${olMatch[1]}${nextNum}. `;
+                        textarea.value = value.substring(0, start) + prefix + value.substring(start);
+                        textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
+                    }
+                    updateMemoContent(memoIndex, textarea.value);
+                }
+            }
+        }
+        window.handleMemoKeydown = handleMemoKeydown;
+
+        function toggleMemoTaskCheckbox(memoIndex, taskIndex, isChecked) {
+            const memo = memoConfig[memoIndex];
+            if (!memo || !memo.content) return;
+
+            let currentTaskCount = 0;
+            const lines = memo.content.split('\n');
+            const updatedLines = lines.map(line => {
+                const match = line.match(/^(\s*-\s*\[(?:x| )\]\s*)(.*)$/);
+                if (match) {
+                    if (currentTaskCount === taskIndex) {
+                        currentTaskCount++;
+                        const prefix = line.match(/^(\s*-\s*\[)(?:x| )(\]\s*)/);
+                        if (prefix) {
+                            return `${prefix[1]}${isChecked ? 'x' : ' '}${prefix[2]}${match[2]}`;
+                        }
+                        return isChecked ? `- [x] ${match[2]}` : `- [ ] ${match[2]}`;
+                    }
+                    currentTaskCount++;
+                }
+                return line;
+            });
+
+            memo.content = updatedLines.join('\n');
+            memo.mode = 'preview';
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoTaskCheckbox = toggleMemoTaskCheckbox;
+
+        let activeMemoIndex = 0;
+        function setActiveMemoIndex(idx) {
+            activeMemoIndex = idx;
+        }
+        window.setActiveMemoIndex = setActiveMemoIndex;
+
+        function insertMarkdownSyntax(memoIndex, prefix, suffix = '') {
+            if (memoIndex === null || memoIndex === undefined || memoIndex >= memoConfig.length) {
+                memoIndex = (activeMemoIndex >= 0 && activeMemoIndex < memoConfig.length) ? activeMemoIndex : 0;
+            }
+            if (memoConfig[memoIndex] && memoConfig[memoIndex].mode === 'preview') {
+                toggleMemoMode(memoIndex, 'edit');
+            }
+            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+            if (!textarea) return;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const text = textarea.value || '';
+            const sample = uiText('extended.memoSampleText') || 'テキスト';
+            const selectedText = text.substring(start, end) || (prefix.endsWith(' ') ? '' : sample);
+            const replacement = prefix + selectedText + suffix;
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            if (suffix === '](URL)' && start !== end) {
+                textarea.selectionStart = start + prefix.length + selectedText.length + 2;
+                textarea.selectionEnd = start + prefix.length + selectedText.length + 5;
+            } else {
+                textarea.selectionStart = start + prefix.length;
+                textarea.selectionEnd = start + prefix.length + selectedText.length;
+            }
+            textarea.focus();
+            memoConfig[memoIndex].content = textarea.value;
+            saveMemoLocal();
+        }
+        window.insertMarkdownSyntax = insertMarkdownSyntax;
+
+        
+        function stripMarkdownForPreview(src) {
+            if (!src) return '';
+            let text = String(src);
+            text = text.replace(/```[\s\S]*?```/g, ' ');
+            text = text.replace(/`([^`]+)`/g, '$1');
+            text = text.replace(/^#{1,6}\s+/gm, '');
+            text = text.replace(/^\s*-\s*\[(?:x| )\]\s*/gm, '');
+            text = text.replace(/^\s*[-*+]\s+/gm, '');
+            text = text.replace(/^\s*\d+[\.\)]\s+/gm, '');
+            text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+            text = text.replace(/__(.*?)__/g, '$1');
+            text = text.replace(/\*(.*?)\*/g, '$1');
+            text = text.replace(/_(.*?)_/g, '$1');
+            text = text.replace(/~~(.*?)~~/g, '$1');
+            text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+            text = text.replace(/^>\s+/gm, '');
+            text = text.replace(/^---$/gm, '');
+            text = text.replace(/\s+/g, ' ').trim();
+            let preview = text.substring(0, 18);
+            if (text.length > 18) preview += '...';
+            return preview;
+        }
+        window.stripMarkdownForPreview = stripMarkdownForPreview;
+
+        function updateMemoContent(memoIndex, val) {
+            if (!memoConfig[memoIndex]) return;
+            memoConfig[memoIndex].content = val;
+            const catBox = document.querySelector(`.category-box[data-idx="${memoIndex}"]`);
+            if (catBox) {
+                const previewEl = catBox.querySelector('.memo-preview');
+                if (previewEl) previewEl.textContent = stripMarkdownForPreview(val);
+            }
+            saveMemoLocal(false);
+        }
+        window.updateMemoContent = updateMemoContent;
+
+        function toggleMemoMode(memoIndex, mode) {
+            if (!memoConfig[memoIndex]) return;
+            const textarea = document.getElementById(`memo-input-${memoIndex}`);
+            if (textarea) {
+                memoConfig[memoIndex].content = textarea.value;
+            }
+            memoConfig[memoIndex].mode = mode;
+            memoConfig[memoIndex].isClosed = false;
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleMemoMode = toggleMemoMode;
+
+        function updateAllMemoModesButton() {
+            const btn = document.getElementById('ui-toggle-all-memos');
+            if (!btn) return;
+            btn.style.display = 'inline-flex';
+            const allPreview = Array.isArray(memoConfig) && memoConfig.length > 0 && memoConfig.every(m => (m.mode || 'edit') === 'preview');
+            if (allPreview) {
+                btn.innerHTML = `${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoAllEdit") || "全編集")}</span>`;
+                btn.setAttribute('data-tooltip', uiText("extended.memoAllEditTip") || uiText("extended.memoAllToggleTip") || 'すべてのメモを編集モードに切り替え');
+                btn.setAttribute('aria-label', uiText("extended.memoAllEdit") || "全編集");
+            } else {
+                btn.innerHTML = `${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoAllPreview") || "全プレビュー")}</span>`;
+                btn.setAttribute('data-tooltip', uiText("extended.memoAllPreviewTip") || uiText("extended.memoAllToggleTip") || 'すべてのメモをプレビューモードに切り替え');
+                btn.setAttribute('aria-label', uiText("extended.memoAllPreview") || "全プレビュー");
+            }
+        }
+        window.updateAllMemoModesButton = updateAllMemoModesButton;
+
+        function toggleAllMemoModes() {
+            if (!Array.isArray(memoConfig) || !memoConfig.length) return;
+            memoConfig.forEach((m, idx) => {
+                const textarea = document.getElementById(`memo-input-${idx}`);
+                if (textarea) m.content = textarea.value;
+            });
+            const allPreview = memoConfig.every(m => (m.mode || 'edit') === 'preview');
+            const targetMode = allPreview ? 'edit' : 'preview';
+            memoConfig.forEach(m => {
+                m.mode = targetMode;
+                m.isClosed = false;
+            });
+            saveMemoLocal(false);
+            renderMemo();
+        }
+        window.toggleAllMemoModes = toggleAllMemoModes;
+
         function renderMemo() {
             const c = document.getElementById('memo-container'); if (!c) return; c.innerHTML = "";
             if (!memoConfig.length) {
                 c.innerHTML = emptyStateHtml(langMap[currentLang].empty?.memos || '');
+                updateAllMemoModesButton();
                 initSortable();
                 return;
             }
             memoConfig.forEach((m, i) => {
-                const d = document.createElement('div'); d.className = "category-box" + (m.isClosed ? " closed" : ""); d.setAttribute('data-idx', i);
-                let previewText = (m.content || '').replace(/\n/g, ' ').substring(0, 15);
-                if ((m.content || '').length > 15) previewText += '...';
+                const mode = m.mode || 'edit';
+                const d = document.createElement('div');
+                d.className = "category-box" + (m.isClosed ? " closed" : "");
+                d.setAttribute('data-idx', i);
+
+                const previewText = stripMarkdownForPreview(m.content || '');
+
+                const modeBtnHtml = mode === 'preview'
+                    ? `<button type="button" class="btn-secondary memo-mode-toggle-btn" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'edit')">${MEMO_SVG_PENCIL}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoEdit"))}</span></button>`
+                    : `<button type="button" class="btn-secondary memo-mode-toggle-btn" onclick="event.stopPropagation(); toggleMemoMode(${i}, 'preview')">${MEMO_SVG_EYE}<span class="mode-btn-text">${raidSoEscape(uiText("extended.memoPreview"))}</span></button>`;
+
+                const editorHtml = `
+                    <textarea id="memo-input-${i}" class="memo-textarea" style="width:100%; min-height:150px; border-radius:6px; box-sizing:border-box;" onfocus="setActiveMemoIndex(${i})" oninput="updateMemoContent(${i}, this.value)" onkeydown="handleMemoKeydown(event, ${i})">${raidSoEscape(m.content || '')}</textarea>
+                `;
+
+                const previewHtml = `
+                    <div id="memo-preview-${i}" class="memo-markdown-preview" onclick="toggleMemoMode(${i}, 'edit')">
+                        ${renderMarkdownToHtml(m.content || '', i)}
+                    </div>
+                `;
+
                 d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
                     <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
-                        <span style="white-space:nowrap;">${raidSoEscape(m.title)}</span>
+                        <span style="white-space:nowrap;">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
                         <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
-                    <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${modeBtnHtml}
+                        <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
+                    </div>
                 </div>
-            <textarea style="min-height:150px;" oninput="memoConfig[${i}].content=this.value; saveMemoLocal() ">${raidSoEscape(m.content || '')}</textarea>`;
+                <div class="tw-body memo-body" style="padding-top:8px;">
+                    ${mode === 'preview' ? previewHtml : editorHtml}
+                </div>`;
                 c.appendChild(d);
             });
+            updateAllMemoModesButton();
             initSortable();
         }
 
+        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false, mode: 'edit' }); renderMemo(); saveMemoLocal(); } }
+        async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
+
+        
         function initSortable() {
             if (typeof Sortable === 'undefined') return;
-            sortableInstances.forEach(i => i.destroy()); sortableInstances = [];
-            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };            const itemOpts = (list, save, renderFunc, groupName) => ({
+            sortableInstances.forEach(i => { try { i.destroy(); } catch(e) {} });
+            sortableInstances = [];
+            const opts = { animation: 150, handle: '.category-name', disabled: isSortLocked };
+            const itemOpts = (list, save, renderFunc, groupName) => ({
                 animation: 150, handle: '.record-header', disabled: isSortLocked, group: groupName,
                 onEnd: (evt) => {
                     const fromIdx = parseInt(evt.from.getAttribute('data-cat-idx')), toIdx = parseInt(evt.to.getAttribute('data-cat-idx'));
+                    if (!list[fromIdx] || !list[toIdx]) return;
                     const item = list[fromIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.oldIndex, 1)[0];
                     list[toIdx][groupName === 'main' ? 'records' : 'friends'].splice(evt.newIndex, 0, item);
                     save(false); renderFunc();
                 }
             });
 
-            const mc = document.getElementById('main-container'); if (mc) {
+            const mc = document.getElementById('main-container');
+            if (mc) {
                 sortableInstances.push(new Sortable(mc, { ...opts, onEnd: (e) => { const i = config.splice(e.oldIndex, 1)[0]; config.splice(e.newIndex, 0, i); saveAllLocal(false); render(); } }));
                 mc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(config, saveAllLocal, render, 'main'))));
             }
-            const fc = document.getElementById('friends-container'); if (fc) {
+            const fc = document.getElementById('friends-container');
+            if (fc) {
                 sortableInstances.push(new Sortable(fc, { ...opts, onEnd: (e) => { const i = friendsConfig.splice(e.oldIndex, 1)[0]; friendsConfig.splice(e.newIndex, 0, i); saveFriendsLocal(false); renderFriends(); } }));
                 fc.querySelectorAll('.sortable-items').forEach(el => sortableInstances.push(new Sortable(el, itemOpts(friendsConfig, saveFriendsLocal, renderFriends, 'friends'))));
             }
-            const memc = document.getElementById('memo-container'); if (memc) {
+            const memc = document.getElementById('memo-container');
+            if (memc) {
                 sortableInstances.push(new Sortable(memc, { ...opts, onEnd: (e) => { const i = memoConfig.splice(e.oldIndex, 1)[0]; memoConfig.splice(e.newIndex, 0, i); saveMemoLocal(); renderMemo(); } }));
             }
             const tn = document.getElementById('tab-navigation');
@@ -2483,28 +3372,86 @@
                 }));
             }
         }
+        window.initSortable = initSortable;
 
-        function toggleCategory(el, i) { config[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveAllLocal(false); }
-        function toggleFriendCategory(el, i) { friendsConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); saveFriendsLocal(false); }
-        function toggleMemoCategory(el, i) { 
-            memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed'); 
-            if (memoConfig[i].isClosed) {
-                let p = (memoConfig[i].content || '').replace(/\n/g, ' ').substring(0, 15);
-                if ((memoConfig[i].content || '').length > 15) p += '...';
-                const previewEl = el.querySelector('.memo-preview');
-                if (previewEl) previewEl.textContent = p;
-            }
-            saveMemoLocal(false); 
+        function toggleCategory(el, i) {
+            if (!config[i]) return;
+            config[i].isClosed = el.closest('.category-box').classList.toggle('closed');
+            saveAllLocal(false);
         }
-        function toggleRecordOpen(ci, ri) { config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen; render(); }
+        window.toggleCategory = toggleCategory;
 
-        function addRecord(i) { config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true }); render(); saveAllLocal(false); }
-        async function deleteCategory(ci) { if (await customConfirm(dialogCopy('deleteTitleCategory'))) { config.splice(ci, 1); render(); saveAllLocal(false); } }
-        async function deleteRecord(ci, ri) { if (await customConfirm(dialogCopy('deleteTitleRecord'))) { config[ci].records.splice(ri, 1); render(); saveAllLocal(false); } }
-        async function deleteFriendCategory(ci) { if (await customConfirm(dialogCopy('deleteIdCategory'))) { friendsConfig.splice(ci, 1); renderFriends(); saveFriendsLocal(false); } }
-        async function deleteFriendRecord(ci, fi) { if (await customConfirm(dialogCopy('deleteIdRecord'))) { friendsConfig[ci].friends.splice(fi, 1); renderFriends(); saveFriendsLocal(false); } }
-        async function addMemo() { const t = await customPrompt(dialogCopy('memoAdd')); if (t) { memoConfig.push({ title: t, content: "", isClosed: false }); renderMemo(); saveMemoLocal(); } }
-        async function deleteMemo(i) { if (await customConfirm(dialogCopy('deleteMemo'))) { memoConfig.splice(i, 1); renderMemo(); saveMemoLocal(); } }
+        function toggleFriendCategory(el, i) {
+            if (!friendsConfig[i]) return;
+            friendsConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed');
+            saveFriendsLocal(false);
+        }
+        window.toggleFriendCategory = toggleFriendCategory;
+
+        function toggleMemoCategory(el, i) {
+            if (!memoConfig[i]) return;
+            memoConfig[i].isClosed = el.closest('.category-box').classList.toggle('closed');
+            if (memoConfig[i].isClosed) {
+                const previewEl = el.querySelector('.memo-preview');
+                if (previewEl) previewEl.textContent = stripMarkdownForPreview(memoConfig[i].content || '');
+            }
+            saveMemoLocal(false);
+        }
+        window.toggleMemoCategory = toggleMemoCategory;
+
+        function toggleRecordOpen(ci, ri) {
+            if (!config[ci] || !config[ci].records || !config[ci].records[ri]) return;
+            config[ci].records[ri].isOpen = !config[ci].records[ri].isOpen;
+            render();
+        }
+        window.toggleRecordOpen = toggleRecordOpen;
+
+        function addRecord(i) {
+            if (!config[i] || !config[i].records) return;
+            config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true });
+            render();
+            saveAllLocal(false);
+        }
+        window.addRecord = addRecord;
+
+        async function deleteCategory(ci) {
+            if (await customConfirm(dialogCopy('deleteTitleCategory'))) {
+                config.splice(ci, 1);
+                render();
+                saveAllLocal(false);
+            }
+        }
+        window.deleteCategory = deleteCategory;
+
+        async function deleteRecord(ci, ri) {
+            if (await customConfirm(dialogCopy('deleteTitleRecord'))) {
+                config[ci].records.splice(ri, 1);
+                render();
+                saveAllLocal(false);
+            }
+        }
+        window.deleteRecord = deleteRecord;
+
+        async function deleteFriendCategory(ci) {
+            if (await customConfirm(dialogCopy('deleteIdCategory'))) {
+                friendsConfig.splice(ci, 1);
+                renderFriends();
+                saveFriendsLocal(false);
+            }
+        }
+        window.deleteFriendCategory = deleteFriendCategory;
+
+        async function deleteFriendRecord(ci, fi) {
+            if (await customConfirm(dialogCopy('deleteIdRecord'))) {
+                friendsConfig[ci].friends.splice(fi, 1);
+                renderFriends();
+                saveFriendsLocal(false);
+            }
+        }
+        window.deleteFriendRecord = deleteFriendRecord;
+
+
+
 
         function cleanupTitleTestData() {
             if (!Array.isArray(config)) return;
@@ -2814,12 +3761,18 @@
                 ${raidSoIntroActionsBoxHtml(r)}
 
                 <div class="category-box command-feature-box tw-section" id="raidso-box-open-settings">
-                    <div class="category-name" onclick="twToggle('raidso-box-open-settings')"><span>${raidSoEscape(r.openRaidSettingsTitle || 'Twitch レイド受付設定')}</span></div>
+                    <div class="category-name" onclick="twToggle('raidso-box-open-settings')"><span>${raidSoEscape(r.openRaidSettingsTitle || 'Twitchのレイド受付設定')}</span></div>
                     <div class="tw-body">
-                        <button type="button" class="btn-outline raidso-external-link" onclick="copyTwitchStreamSettingsUrl()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <span>${raidSoEscape(r.copyRaidSettingsUrl || r.openRaidSettings || 'レイド設定URLをコピー')}</span>
-                        </button>
+                        <div style="display: flex; gap: 8px; width: 100%;">
+                            <button type="button" class="btn-outline raidso-external-link" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="openTwitchStreamSettings()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                <span>${raidSoEscape(r.directLink || r.openRaidSettings || '直リンク')}</span>
+                            </button>
+                            <button type="button" class="btn-outline raidso-external-link" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="copyTwitchStreamSettingsUrl()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>${raidSoEscape(r.copyRaidSettingsUrl || 'URLをコピー')}</span>
+                            </button>
+                        </div>
                         <p class="raidso-setting-hint">${raidSoEscape(r.raidSettingsCopyHint || '')}</p>
                     </div>
                 </div>
@@ -4592,7 +5545,15 @@
                             const restoredSettings = restoreSettingsWithoutBackupToken(d.settings, currentSettings, true);
                             localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
                         }
-                        if (Array.isArray(d.memoList)) localStorage.setItem('stream_memo_v16', JSON.stringify(d.memoList));
+                        if (Array.isArray(d.memoList)) {
+                            const cleanMemos = d.memoList.map(m => ({
+                                title: m.title || '',
+                                content: m.content || '',
+                                isClosed: true,
+                                mode: 'preview'
+                            }));
+                            localStorage.setItem('stream_memo_v16', JSON.stringify(cleanMemos));
+                        }
                         if (isBackupRecord(d.raidShoutOut)) {
                             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(removeDeprecatedRaidSoObsSettings(d.raidShoutOut)));
                         }
@@ -4682,9 +5643,14 @@
                 d.memoList.forEach(bkM => {
                     let existingMemo = localMemo.find(m => m.title === bkM.title);
                     if (!existingMemo) {
-                        localMemo.push(bkM);
+                        localMemo.push({
+                            title: bkM.title || '',
+                            content: bkM.content || '',
+                            isClosed: true,
+                            mode: 'preview'
+                        });
                     } else {
-                        existingMemo.content = bkM.content;
+                        existingMemo.content = bkM.content || '';
                     }
                 });
                 localStorage.setItem('stream_memo_v16', JSON.stringify(localMemo));
@@ -4737,6 +5703,12 @@
             }
 
             // 9. rewards created by TwitchManager
+            // 10. titleTagConfig
+            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
+                titleTagConfig = d.titleTagConfig;
+                saveTitleTagConfig();
+            }
+
             if (Array.isArray(d.cpAppRewardIds)) {
                 const localIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
                 const merged = [...new Set([...localIds, ...d.cpAppRewardIds].map(String))];
@@ -4746,22 +5718,315 @@
                 }
             }
         }
-        async function copyBackupToClipboard() {
+                function createSelectedBackupObject() {
             collectRaidSoSettings();
+            const selectVal = document.getElementById('bk-export-select')?.value || 'all';
+
             const d = {
                 backupVersion: 3,
-                config,
-                friends: friendsConfig,
-                settings: backupSettingsWithoutToken(settings),
-                memoList: memoConfig,
-                raidShoutOut: removeDeprecatedRaidSoObsSettings(raidSoSettings),
-                raidShoutOutTemplates: customRaidSoTemplates,
-                supporterArchives: readSupporterArchives(),
-                cpGroups: JSON.parse(localStorage.getItem('cp_groups_v1') || '[]'),
-                cpAppRewardIds: JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]')
+                exportedAt: new Date().toISOString()
             };
-            await copyTextToClipboard(JSON.stringify(d, null, 2));
+
+            if (selectVal === 'all' || selectVal === 'title') {
+                d.config = config;
+                                try {
+                    d.titleTagConfig = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}');
+                } catch(e) {
+                    d.titleTagConfig = {};
+                }
+            }
+            if (selectVal === 'all' || selectVal === 'id') {
+                d.friends = friendsConfig;
+            }
+            if (selectVal === 'all' || selectVal === 'raidso') {
+                d.raidShoutOut = removeDeprecatedRaidSoObsSettings(raidSoSettings);
+                d.raidShoutOutTemplates = customRaidSoTemplates;
+                d.supporterArchives = readSupporterArchives();
+                d.cpGroups = JSON.parse(localStorage.getItem('cp_groups_v1') || '[]');
+                d.cpAppRewardIds = JSON.parse(localStorage.getItem('cp_app_reward_ids_v1') || '[]');
+            }
+            if (selectVal === 'all' || selectVal === 'settings') {
+                d.settings = backupSettingsWithoutToken(settings);
+            }
+            if (selectVal === 'all' || selectVal === 'memo') {
+                d.memoList = (memoConfig || []).map(m => ({
+                    title: m.title || '',
+                    content: m.content || ''
+                }));
+            }
+            return d;
         }
+
+        function downloadBackupFile() {
+            try {
+                const selectVal = document.getElementById('bk-export-select')?.value || 'all';
+                const d = createSelectedBackupObject();
+                const jsonStr = JSON.stringify(d, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const now = new Date();
+                const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+                const suffix = (selectVal && selectVal !== 'all') ? `_${selectVal}` : '';
+                a.href = url;
+                a.download = `TwitchManager_Backup_${dateStr}${suffix}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(uiText('runtime.backupFileSaved'), 'success');
+            } catch (e) {
+                showToast(uiText('runtime.backupFileSaveFailed', { error: e.message || '' }), 'error');
+            }
+        }
+
+        async function copyBackupToClipboard() {
+            try {
+                const d = createSelectedBackupObject();
+                await copyTextToClipboard(JSON.stringify(d, null, 2));
+                showToast(uiText('runtime.backupCopied'), 'success');
+            } catch (e) {
+                showToast(uiText('runtime.backupCopyFailed'), 'error');
+            }
+        }
+
+        async function promptClearAllCache() {
+            const currentSelection = {
+                title: true,
+                id: true,
+                raidso: true,
+                memo: true
+            };
+            window._cacheClearSelection = currentSelection;
+            window._toggleAllCacheCheckboxes = function(checked) {
+                document.querySelectorAll('.cache-clear-checkbox').forEach(cb => {
+                    cb.checked = checked;
+                    if (window._cacheClearSelection) window._cacheClearSelection[cb.value] = checked;
+                });
+            };
+            window._onCacheClearCheckboxChange = function(cb) {
+                if (window._cacheClearSelection) window._cacheClearSelection[cb.value] = cb.checked;
+            };
+
+            const confirm1 = await customConfirm({
+                title: uiText('runtime.clearCacheTitle1'),
+                messageHtml: `
+                    <div style="font-size:12.5px; line-height:1.6; color: var(--text-main);">
+                        <div style="margin-bottom: 8px;">${raidSoEscape(uiText('runtime.clearCacheMsg1'))}</div>
+                        <div class="cache-clear-toggle-row">
+                            <button type="button" class="cache-clear-toggle-btn" onclick="window._toggleAllCacheCheckboxes(true)">${raidSoEscape(uiText('extended.clearCacheSelectAll'))}</button>
+                            <button type="button" class="cache-clear-toggle-btn" onclick="window._toggleAllCacheCheckboxes(false)">${raidSoEscape(uiText('extended.clearCacheDeselectAll'))}</button>
+                        </div>
+                        <div class="cache-clear-selection-container">
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="title" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemTitle'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="id" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemId'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="raidso" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemRaidSo'))}</strong>
+                                </div>
+                            </label>
+                            <label class="cache-clear-item-card">
+                                <input type="checkbox" class="cache-clear-checkbox" value="memo" onchange="window._onCacheClearCheckboxChange(this)" checked>
+                                <div class="cache-clear-item-text">
+                                    <strong>${raidSoEscape(uiText('extended.clearCacheItemMemo'))}</strong>
+                                </div>
+                            </label>
+                        </div>
+                        <div style="background: rgba(233, 30, 99, 0.1); border: 1px solid var(--danger-border, #e91e63); border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-weight: bold; color: var(--danger-text, #ff5252);">
+                            ${raidSoEscape(uiText('runtime.clearCacheWarning1'))}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">
+                            ${raidSoEscape(uiText('runtime.clearCacheTokenNote'))}
+                        </div>
+                    </div>
+                `,
+                okText: uiText('runtime.clearCacheNextBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (!confirm1) {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+                return;
+            }
+
+            const selectedKeys = Object.keys(currentSelection).filter(k => currentSelection[k]);
+
+            if (selectedKeys.length === 0) {
+                showToast(uiText('runtime.clearCacheNoSelection'), 'warning');
+                return;
+            }
+
+            const itemLabelsMap = {
+                title: uiText('extended.clearCacheItemTitle'),
+                id: uiText('extended.clearCacheItemId'),
+                raidso: uiText('extended.clearCacheItemRaidSo'),
+                memo: uiText('extended.clearCacheItemMemo')
+            };
+            const selectedListHtml = selectedKeys.map(k => `<li style="margin-bottom: 3px;">${raidSoEscape(itemLabelsMap[k] || k)}</li>`).join('');
+
+            const confirm2 = await customConfirm({
+                title: uiText('runtime.clearCacheTitle2'),
+                messageHtml: `
+                    <div style="font-size:12.5px; line-height:1.6; color: var(--text-main);">
+                        <div style="margin-bottom: 8px;">${raidSoEscape(uiText('runtime.clearCacheMsg2'))}</div>
+                        <ul style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px 8px 26px; margin-bottom: 10px; color: var(--text-main); font-size: 12px;">
+                            ${selectedListHtml}
+                        </ul>
+                        <div style="background: rgba(233, 30, 99, 0.15); border: 1px solid var(--danger, #e91e63); border-radius: 6px; padding: 10px; font-weight: bold; color: var(--danger-text, #ff5252); text-align: center;">
+                            ${raidSoEscape(uiText('runtime.clearCacheWarning2'))}
+                        </div>
+                    </div>
+                `,
+                okText: uiText('runtime.clearCacheExecuteBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (!confirm2) {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+                return;
+            }
+
+            executeSelectedCacheClear(selectedKeys);
+        }
+
+        function executeSelectedCacheClear(selectedKeys) {
+            try {
+                const keysSet = new Set(selectedKeys);
+                const clearedLabels = [];
+                const itemLabelsMap = {
+                    title: uiText('extended.clearCacheItemTitle'),
+                    id: uiText('extended.clearCacheItemId'),
+                    raidso: uiText('extended.clearCacheItemRaidSo'),
+                    memo: uiText('extended.clearCacheItemMemo')
+                };
+
+                if (keysSet.has('title')) {
+                    localStorage.setItem('stream_config_v16', JSON.stringify([]));
+                    localStorage.setItem('title_tag_config_v1', JSON.stringify({}));
+                    clearedLabels.push(itemLabelsMap.title);
+                }
+
+                if (keysSet.has('id')) {
+                    localStorage.setItem('stream_friends_v16', JSON.stringify([]));
+                    clearedLabels.push(itemLabelsMap.id);
+                }
+
+                if (keysSet.has('raidso')) {
+                    localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify({}));
+                    localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify([]));
+                    localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify([]));
+                    localStorage.setItem('cp_groups_v1', JSON.stringify([]));
+                    localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([]));
+                    localStorage.removeItem('stream_fav_clips_v16');
+                    localStorage.removeItem('stream_vip_cache_v16');
+                    clearedLabels.push(itemLabelsMap.raidso);
+                }
+
+                if (keysSet.has('memo')) {
+                    localStorage.setItem('stream_memo_v16', JSON.stringify([]));
+                    clearedLabels.push(itemLabelsMap.memo);
+                }
+
+                raidSoLog(uiText('runtime.operationLog.selectedCacheCleared', { items: clearedLabels.join(', ') }));
+                showToast(uiText('runtime.clearCacheDone'), 'success');
+                setTimeout(() => location.reload(), 1000);
+            } catch (e) {
+                showToast(uiText('runtime.clearCacheFailed', { error: e.message || '' }), 'error');
+            }
+        }
+
+        window.downloadBackupFile = downloadBackupFile;
+        window.copyBackupToClipboard = copyBackupToClipboard;
+        window.promptClearAllCache = promptClearAllCache;
+
+        function toggleInlineCacheCheckboxes(checked) {
+            document.querySelectorAll('.cache-clear-inline-cb').forEach(cb => {
+                cb.checked = checked;
+            });
+        }
+        window.toggleInlineCacheCheckboxes = toggleInlineCacheCheckboxes;
+
+        async function executeSelectedInlineCacheClear() {
+            const checkboxes = Array.from(document.querySelectorAll('.cache-clear-inline-cb'));
+            const selectedKeys = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
+
+            if (selectedKeys.length === 0) {
+                showToast(uiText('runtime.clearCacheNoSelection'), 'warning');
+                return;
+            }
+
+            const itemLabelsMap = {
+                title: uiText('extended.clearCacheItemTitle'),
+                id: uiText('extended.clearCacheItemId'),
+                raidso: uiText('extended.clearCacheItemRaidSo'),
+                memo: uiText('extended.clearCacheItemMemo')
+            };
+            const selectedListHtml = selectedKeys.map(k => '<li style="margin-bottom: 3px;">' + raidSoEscape(itemLabelsMap[k] || k) + '</li>').join('');
+
+            // 第1段階: 選択項目の一覧確認
+            const confirm1 = await customConfirm({
+                title: uiText('runtime.clearCacheTitle2'),
+                messageHtml: '<div style="font-size:12.5px; line-height:1.6; color: var(--text-main);">' +
+                    '<div style="margin-bottom: 8px;">' + raidSoEscape(uiText('runtime.clearCacheMsg2')) + '</div>' +
+                    '<ul style="background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px 8px 26px; margin-bottom: 10px; color: var(--text-main); font-size: 12px;">' +
+                        selectedListHtml +
+                    '</ul>' +
+                    '<div style="background: rgba(233, 30, 99, 0.15); border: 1px solid var(--danger, #e91e63); border-radius: 6px; padding: 10px; font-weight: bold; color: var(--danger-text, #ff5252); text-align: center;">' +
+                        raidSoEscape(uiText('runtime.clearCacheWarning2')) +
+                    '</div>' +
+                '</div>',
+                okText: uiText('runtime.clearCacheNextBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (!confirm1) {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+                return;
+            }
+
+            // 第2段階: 最終警告確認（「本当に削除しますか？」）
+            const confirm2 = await customConfirm({
+                title: uiText('runtime.clearCacheFinalTitle'),
+                messageHtml: '<div style="font-size:13px; line-height:1.6; color: var(--text-main); text-align: center; padding: 8px 4px;">' +
+                    '<div style="color: var(--danger-text, #ff5252); font-weight: bold; font-size: 14px; margin-bottom: 10px;">⚠️ ' + raidSoEscape(uiText('runtime.clearCacheFinalWarning')) + '</div>' +
+                    '<div>' + raidSoEscape(uiText('runtime.clearCacheFinalMsg')) + '</div>' +
+                '</div>',
+                okText: uiText('runtime.clearCacheFinalBtn'),
+                cancelText: langMap[currentLang]?.cancel || langMap.ja.cancel
+            });
+
+            if (confirm2) {
+                executeSelectedCacheClear(selectedKeys);
+            } else {
+                showToast(uiText('runtime.clearCacheCanceled'), 'info');
+            }
+        }
+        window.executeSelectedInlineCacheClear = executeSelectedInlineCacheClear;
+
+
+        function hideAppLoadingScreen() {
+            const el = document.getElementById('app-loading-screen');
+            if (el) {
+                el.classList.add('hidden');
+                setTimeout(() => {
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                }, 400);
+            }
+        }
+        window.hideAppLoadingScreen = hideAppLoadingScreen;
+
+
 
         window.onload = () => {
             config = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
@@ -4862,6 +6127,7 @@
             applyInitialViewFromLocation();
             updateTodayDateDisplay();
             setInterval(updateTodayDateDisplay, 1000);
+            setTimeout(hideAppLoadingScreen, 300);
         };
 
 
@@ -7130,6 +8396,12 @@ function updateCpBulkActionBar() {
     }
 }
 
+function toggleSelectAllCpRewards(isChecked) {
+    const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
+    checkboxes.forEach(cb => { cb.checked = isChecked; });
+    updateCpBulkActionBar();
+}
+
 function clearCpRewardSelection() {
     const checkboxes = document.querySelectorAll('.cp-reward-checkbox');
     checkboxes.forEach(cb => { cb.checked = false; });
@@ -7320,3 +8592,484 @@ window.openCpBulkEditModal = openCpBulkEditModal;
 window.applyCpBulkEdit = applyCpBulkEdit;
 
 window.getShoutoutSuggestionItems = getShoutoutSuggestionItems;
+
+
+function getDefaultTitleConfig() {
+    return [
+        {
+            name: "ゲーム配信",
+            isClosed: false,
+            records: [
+                {
+                    label: "【通常配信】{カテゴリ}",
+                    game: "Just Chatting",
+                    title: "{識別} 【{Category}】 雑談＆作業配信 #{count} 【{コラボ}】",
+                    notif: "配信を始めました！遊びに来てね！",
+                    tags: "日本語, 初見歓迎, 雑談",
+                    memo: "通常配信用の基本セット",
+                    count: 1,
+                    isCustomLabel: false
+                }
+            ]
+        }
+    ];
+}
+
+function restoreDefaultTitleConfig() {
+    titleTagConfig = {
+        customTags: [
+            { id: 'tag_1', name: '識別', value: '内容' },
+            { id: 'tag_2', name: '識別A', value: '【初見歓迎】' },
+            { id: 'tag_3', name: '識別B', value: '参加型配信中！' }
+        ],
+        categoryMap: [
+            { id: 'cat_map_1', from: 'Just Chatting', to: '雑談' },
+            { id: 'cat_map_2', from: 'Phoenix Wright: Ace Attorney Trilogy', to: '逆転裁判' }
+        ],
+        collabCategoryName: '',
+        categoryTagName: 'カテゴリ'
+    };
+    saveTitleTagConfig();
+    renderTitleTagModalRows();
+    renderCategoryMapModalRows();
+    renderCommonTagBar();
+    showToast('単語セット・タグ設定を初期化しました', 'success');
+}
+window.restoreDefaultTitleConfig = restoreDefaultTitleConfig;
+
+function openTitleTagModal() {
+    loadTitleTagConfig();
+    renderTitleTagModalRows();
+    renderCategoryMapModalRows();
+
+    const collabSelect = document.getElementById('title-tag-collab-category-select');
+    if (collabSelect) {
+        let optionsHtml = '<option value="">全体 (チェック中の全メンバー)</option>';
+        (friendsConfig || []).forEach(cat => {
+            if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
+                const sel = cat.name === (titleTagConfig.collabCategoryName || '') ? 'selected' : '';
+                optionsHtml += `<option value="${raidSoEscape(cat.name)}" ${sel}>${raidSoEscape(cat.name)}</option>`;
+            }
+        });
+        collabSelect.innerHTML = optionsHtml;
+    }
+
+    openModal('titleTagModal');
+}
+
+function sanitizeTitleTagName(str) {
+    if (!str) return '';
+    return String(str).replace(/[{}【】\s]/g, '');
+}
+
+function sanitizeTitleTagNameInput(inputEl) {
+    if (!inputEl) return;
+    const cleaned = sanitizeTitleTagName(inputEl.value);
+    if (inputEl.value !== cleaned) {
+        inputEl.value = cleaned;
+    }
+}
+window.sanitizeTitleTagName = sanitizeTitleTagName;
+window.sanitizeTitleTagNameInput = sanitizeTitleTagNameInput;
+
+function renderTitleTagModalRows() {
+    const container = document.getElementById('title-tag-list-container');
+    if (!container) return;
+    if (!titleTagConfig.customTags || titleTagConfig.customTags.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">(登録されているカスタム識別タグはありません)</div>';
+        return;
+    }
+    let html = '';
+    titleTagConfig.customTags.forEach((tag, idx) => {
+        html += `
+        <div style="display:flex; gap:8px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1;">
+                <input type="text" class="cd-input-field tag-row-name" data-idx="${idx}" value="${raidSoEscape(tag.name || '')}" maxlength="10" placeholder="識別名 (例: 識別A)" oninput="sanitizeTitleTagNameInput(this)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <div style="flex:2;">
+                <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="置換内容 (例: 【初見歓迎】)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function getRegisteredCategoryList() {
+    const games = [];
+    if (Array.isArray(config)) {
+        config.forEach(c => {
+            if (c && Array.isArray(c.records)) {
+                c.records.forEach(r => {
+                    if (r && r.game && r.game.trim()) {
+                        const trimmed = r.game.trim();
+                        const lower = trimmed.toLowerCase();
+                        if (!games.some(g => g.toLowerCase() === lower)) {
+                            games.push(trimmed);
+                        }
+                    }
+                });
+            }
+        });
+    }
+    games.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    return games;
+}
+
+function handleCatMapFromSelectChange(idx, val) {
+    if (!titleTagConfig.categoryMap || !titleTagConfig.categoryMap[idx]) return;
+    if (val === '__custom__') {
+        titleTagConfig.categoryMap[idx].isCustomFrom = true;
+    } else {
+        titleTagConfig.categoryMap[idx].isCustomFrom = false;
+        titleTagConfig.categoryMap[idx].from = val;
+    }
+    renderCategoryMapModalRows();
+}
+window.handleCatMapFromSelectChange = handleCatMapFromSelectChange;
+
+function renderCategoryMapModalRows() {
+    const container = document.getElementById('title-tag-category-map-container');
+    if (!container) return;
+
+    if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
+        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
+        return;
+    }
+
+    const registeredGames = getRegisteredCategoryList();
+
+    let html = '';
+    titleTagConfig.categoryMap.forEach((item, idx) => {
+        const currentFrom = (item.from || '').trim();
+        const optionsList = [...registeredGames];
+        if (currentFrom && !optionsList.some(g => g.toLowerCase() === currentFrom.toLowerCase())) {
+            optionsList.unshift(currentFrom);
+        }
+
+        let selectOptionsHtml = '<option value="">登録カテゴリを選択...</option>';
+        optionsList.forEach(g => {
+            const sel = (g.toLowerCase() === currentFrom.toLowerCase() && !item.isCustomFrom) ? 'selected' : '';
+            selectOptionsHtml += `<option value="${raidSoEscape(g)}" ${sel}>${raidSoEscape(g)}</option>`;
+        });
+        const customSel = item.isCustomFrom ? 'selected' : '';
+        selectOptionsHtml += `<option value="__custom__" ${customSel}>✏️ 直接入力 (その他)...</option>`;
+
+        const isCustom = item.isCustomFrom;
+
+        html += `
+        <div style="display:flex; gap:6px; align-items:center; background:var(--bg-item); border:1px solid var(--border-color); padding:6px 8px; border-radius:6px;">
+            <div style="flex:1.2; display:flex; flex-direction:column; gap:4px;">
+                <select class="cd-input-field cat-map-row-from-select" data-idx="${idx}" onchange="handleCatMapFromSelectChange(${idx}, this.value)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;">
+                    ${selectOptionsHtml}
+                </select>
+                ${isCustom ? `<input type="text" class="cd-input-field cat-map-row-from-custom" data-idx="${idx}" value="${raidSoEscape(item.from || '')}" placeholder="元のカテゴリ名を入力" oninput="titleTagConfig.categoryMap[${idx}].from=this.value" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">` : ''}
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); font-weight:bold; display:flex; align-items:center; justify-content:center; flex-shrink:0; line-height:1; transform:translateY(0);">➔</div>
+            <div style="flex:1.2;">
+                <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="手動変換後 (例: 雑談)" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
+            </div>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function addCustomCategoryMappingRow(fromVal = '', toVal = '') {
+    if (!titleTagConfig.categoryMap) titleTagConfig.categoryMap = [];
+    const newId = 'cat_map_' + Date.now();
+    titleTagConfig.categoryMap.push({ id: newId, from: fromVal, to: toVal });
+    renderCategoryMapModalRows();
+}
+
+function deleteCustomCategoryMappingRow(idx) {
+    if (!titleTagConfig.categoryMap) return;
+    titleTagConfig.categoryMap.splice(idx, 1);
+    renderCategoryMapModalRows();
+}
+
+function addCustomTitleTagRow() {
+    if (!titleTagConfig.customTags) titleTagConfig.customTags = [];
+    const newId = 'tag_' + Date.now();
+    titleTagConfig.customTags.push({ id: newId, name: '識別' + (titleTagConfig.customTags.length + 1), value: '' });
+    renderTitleTagModalRows();
+}
+
+function deleteCustomTitleTagRow(idx) {
+    if (!titleTagConfig.customTags) return;
+    titleTagConfig.customTags.splice(idx, 1);
+    renderTitleTagModalRows();
+}
+
+function updateAllTitlePreviews() {
+    loadTitleTagConfig();
+    if (!Array.isArray(config)) return;
+    config.forEach((c, ci) => {
+        if (!c || !Array.isArray(c.records)) return;
+        c.records.forEach((r, ri) => {
+            const previewEl = document.getElementById(`record-title-preview-${ci}-${ri}`);
+            if (previewEl) {
+                const game = r.game || '';
+                const count = r.count;
+                const resolved = resolveStreamTitleTemplate(r.title || '', { game, count });
+                previewEl.innerHTML = `<strong>反映プレビュー:</strong> ${raidSoEscape(resolved) || '<span style="color:var(--text-muted);">(未入力)</span>'}`;
+            }
+        });
+    });
+}
+window.updateAllTitlePreviews = updateAllTitlePreviews;
+
+function saveTitleTagModalSettings(silent = false) {
+    const nameInputs = document.querySelectorAll('.tag-row-name');
+    const valInputs = document.querySelectorAll('.tag-row-val');
+    if (nameInputs && nameInputs.length > 0) {
+        const newTags = [];
+        nameInputs.forEach((nInput, idx) => {
+            const name = sanitizeTitleTagName((nInput.value || '').trim());
+            const value = (valInputs[idx]?.value || '');
+            if (name) {
+                newTags.push({ id: 'tag_' + idx, name: name.substring(0, 10), value });
+            }
+        });
+        titleTagConfig.customTags = newTags;
+    }
+
+    const catFromSelects = document.querySelectorAll('.cat-map-row-from-select');
+    const catToInputs = document.querySelectorAll('.cat-map-row-to');
+    if (catFromSelects && catFromSelects.length > 0) {
+        const newMaps = [];
+        catFromSelects.forEach((sInput, idx) => {
+            let from = (sInput.value || '').trim();
+            if (from === '__custom__') {
+                const customEl = document.querySelector(`.cat-map-row-from-custom[data-idx="${idx}"]`);
+                from = customEl ? (customEl.value || '').trim() : '';
+            }
+            const to = (catToInputs[idx]?.value || '').trim();
+            if (from) {
+                newMaps.push({ id: 'cat_map_' + idx, from, to });
+            }
+        });
+        titleTagConfig.categoryMap = newMaps;
+    } else if (document.getElementById('title-tag-category-map-container')) {
+        titleTagConfig.categoryMap = [];
+    }
+
+    const collabSelect = document.getElementById('title-tag-collab-category-select');
+    if (collabSelect) titleTagConfig.collabCategoryName = collabSelect.value || '';
+
+    saveTitleTagConfig();
+    if (!silent) {
+        closeModal('titleTagModal');
+        showToast('単語セット・タグ設定を保存しました', 'success');
+    }
+    renderCommonTagBar();
+    updateAllTitlePreviews();
+}
+
+window.openTitleTagModal = openTitleTagModal;
+window.renderTitleTagModalRows = renderTitleTagModalRows;
+window.renderCategoryMapModalRows = renderCategoryMapModalRows;
+window.addCustomCategoryMappingRow = addCustomCategoryMappingRow;
+window.deleteCustomCategoryMappingRow = deleteCustomCategoryMappingRow;
+window.addCustomTitleTagRow = addCustomTitleTagRow;
+window.deleteCustomTitleTagRow = deleteCustomTitleTagRow;
+window.saveTitleTagModalSettings = saveTitleTagModalSettings;
+
+let pendingDedupConflicts = [];
+
+function checkAndConsolidateDuplicateIds() {
+    if (!Array.isArray(friendsConfig)) return;
+
+    const map = new Map();
+
+    friendsConfig.forEach((cat, ci) => {
+        if (cat.kind === 'shoutout-history' || cat.kind === 'authenticated-user') return;
+        (cat.friends || []).forEach((f, fi) => {
+            const raw = f.twitch || f.name || f.id || '';
+            const twitchId = extractTwitchId(raw);
+            if (!twitchId) return;
+            const key = twitchId.toLowerCase();
+
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push({ ci, fi, friend: f, catName: cat.name || '未分類', twitchId });
+        });
+    });
+
+    let autoMergedCount = 0;
+    const conflicts = [];
+
+    map.forEach((items) => {
+        if (items.length <= 1) return;
+
+        const first = items[0].friend;
+        const isIdentical = items.every(item => {
+            const f = item.friend;
+            return (f.name || '') === (first.name || '') &&
+                   (f.x || '') === (first.x || '') &&
+                   (f.youtube || '') === (first.youtube || '') &&
+                   (f.birthday || '') === (first.birthday || '') &&
+                   (f.anniversary || '') === (first.anniversary || '') &&
+                   (f.memo || '') === (first.memo || '');
+        });
+
+        if (isIdentical) {
+            autoMergedCount += (items.length - 1);
+        } else {
+            conflicts.push({ twitchId: items[0].twitchId, items });
+        }
+    });
+
+    if (autoMergedCount === 0 && conflicts.length === 0) {
+        showToast('重複するIDは見つかりませんでした。データは正常です。', 'info');
+        return;
+    }
+
+    if (conflicts.length === 0) {
+        performAutoDeduplicate(map);
+        showToast(`${autoMergedCount}件の完全重複IDを自動統合しました`, 'success');
+        renderFriends();
+        saveFriendsLocalDebounced();
+        return;
+    }
+
+    pendingDedupConflicts = conflicts;
+    renderDeduplicateModalRows(conflicts);
+    openModal('idDeduplicateModal');
+}
+
+function performAutoDeduplicate(map) {
+    map.forEach((items) => {
+        if (items.length <= 1) return;
+        for (let i = items.length - 1; i >= 1; i--) {
+            const removeItem = items[i];
+            if (friendsConfig[removeItem.ci] && friendsConfig[removeItem.ci].friends) {
+                friendsConfig[removeItem.ci].friends.splice(removeItem.fi, 1);
+            }
+        }
+    });
+}
+
+function renderDeduplicateModalRows(conflicts) {
+    const container = document.getElementById('id-dedup-list-container');
+    if (!container) return;
+
+    let html = '';
+    conflicts.forEach((group, gIdx) => {
+        const idName = '@' + group.twitchId;
+        html += `
+        <div style="background:var(--bg-item); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
+            <div style="font-weight:bold; font-size:13px; color:var(--command-accent); margin-bottom:8px; display:flex; justify-content:space-between;">
+                <span>ID: ${raidSoEscape(idName)}</span>
+                <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">(重複検出: ${group.items.length}件)</span>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+        group.items.forEach((item, iIdx) => {
+            const f = item.friend;
+            const details = [];
+            if (f.name && f.name !== item.twitchId) details.push(`表示名: ${f.name}`);
+            if (f.x) details.push(`X: ${f.x}`);
+            if (f.youtube) details.push(`YT: ${f.youtube}`);
+            if (f.birthday) details.push(`誕生日: ${f.birthday}`);
+            if (f.memo) details.push(`メモ: ${f.memo}`);
+
+            const checked = iIdx === 0 ? ' checked' : '';
+            html += `
+                <label style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-base); border:1px solid var(--border-color); border-radius:6px; padding:8px; cursor:pointer;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="${iIdx}"${checked} style="margin-top:2px; accent-color:var(--twitch-purple);">
+                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
+                        <div style="font-weight:bold; color:var(--text-main);">
+                            [${raidSoEscape(item.catName)}] ${raidSoEscape(f.name || idName)}
+                        </div>
+                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
+                            ${raidSoEscape(details.join(' | ') || '(追加情報なし)')}
+                        </div>
+                    </div>
+                </label>`;
+        });
+
+        html += `
+                <label style="display:flex; gap:8px; align-items:flex-start; background:rgba(145, 70, 255, 0.08); border:1px dashed var(--twitch-purple); border-radius:6px; padding:8px; cursor:pointer;">
+                    <input type="radio" name="dedup-choice-${gIdx}" value="merge" style="margin-top:2px; accent-color:var(--twitch-purple);">
+                    <div style="flex:1; font-size:11.5px; line-height:1.4;">
+                        <div style="font-weight:bold; color:var(--twitch-purple);">
+                            ✨ 両方の情報（メモ・SNS等）を結合して残す
+                        </div>
+                        <div style="color:var(--text-muted); font-size:10.5px; margin-top:2px;">
+                            表示名やメモなどの情報を並列でまとめて1つの項目に統合します
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function applyIdDeduplication() {
+    if (!pendingDedupConflicts || pendingDedupConflicts.length === 0) {
+        closeModal('idDeduplicateModal');
+        return;
+    }
+
+    let resolvedCount = 0;
+    const itemsToRemove = [];
+
+    pendingDedupConflicts.forEach((group, gIdx) => {
+        const selectedEl = document.querySelector(`input[name="dedup-choice-${gIdx}"]:checked`);
+        if (!selectedEl) return;
+        const val = selectedEl.value;
+
+        if (val === 'merge') {
+            const keep = group.items[0];
+            const mergedMemos = group.items.map(it => it.friend.memo).filter(Boolean);
+            if (mergedMemos.length > 0) {
+                keep.friend.memo = [...new Set(mergedMemos)].join(' / ');
+            }
+            const mergedX = group.items.map(it => it.friend.x).filter(Boolean);
+            if (mergedX.length > 0) keep.friend.x = mergedX[0];
+
+            for (let i = 1; i < group.items.length; i++) {
+                itemsToRemove.push(group.items[i]);
+            }
+        } else {
+            const keepIdx = parseInt(val, 10);
+            group.items.forEach((item, iIdx) => {
+                if (iIdx !== keepIdx) {
+                    itemsToRemove.push(item);
+                }
+            });
+        }
+        resolvedCount++;
+    });
+
+    itemsToRemove.sort((a, b) => {
+        if (a.ci !== b.ci) return b.ci - a.ci;
+        return b.fi - a.fi;
+    });
+
+    itemsToRemove.forEach(item => {
+        if (friendsConfig[item.ci] && friendsConfig[item.ci].friends) {
+            friendsConfig[item.ci].friends.splice(item.fi, 1);
+        }
+    });
+
+    closeModal('idDeduplicateModal');
+    showToast(`${resolvedCount}件の重複IDを統合・整理しました`, 'success');
+    renderFriends();
+    saveFriendsLocalDebounced();
+}
+
+window.checkAndConsolidateDuplicateIds = checkAndConsolidateDuplicateIds;
+window.renderDeduplicateModalRows = renderDeduplicateModalRows;
+window.applyIdDeduplication = applyIdDeduplication;
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        loadTitleTagConfig();
+        renderCommonTagBar();
+    } catch (e) {}
+});

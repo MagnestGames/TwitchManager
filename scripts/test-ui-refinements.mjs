@@ -5,8 +5,8 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const [html, ui, css, locales, storage] = await Promise.all([
   read('TwitchManagerDock.html'),
   read('js/ui.js'),
-  read('twitch_manager.css'),
-  read('twitch_manager_locales.js'),
+  read('css/twitch_manager.css'),
+  read('js/locales.js'),
   read('js/storage.js')
 ]);
 
