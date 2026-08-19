@@ -63,7 +63,6 @@
                     </button>
                     <div id="stream-time-stats-popover" class="stream-stats-popover" style="display: none;" onmouseenter="keepStreamTimeStatsPopover(true)" onmouseleave="hideStreamTimeStatsPopover(event)"></div>
                 </div>
-                <button id="ui-btn-copy-date" class="btn-secondary has-tooltip" style="margin-left: 10px; padding: 4px 8px; font-size: 11px; font-weight: bold; background: rgba(145, 70, 255, 0.1); border: 1px solid var(--twitch-purple); color: var(--command-accent); border-radius: 6px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(145, 70, 255, 0.2)'" onmouseout="this.style.background='rgba(145, 70, 255, 0.1)'" onclick="copyRaw('{date}')" data-i18n-tooltip="copyDateTip">● {date}</button>
             </h1>
             <div class="app-header-controls">
                 <!-- Birthday/Anniversary Indicator -->
@@ -619,7 +618,7 @@
                 <button type="button" class="memo-toolbar-btn" onclick="insertMarkdownSyntax(null, '`', '`')" data-i18n-title="extended.memoCode" title="インラインコード">&lt;&gt; <span data-i18n="extended.memoCodeShort">コード</span></button>
             </div>
             <div class="memo-header-actions" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;">
-                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8 -4 8 -11 8 -11 -8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="mode-btn-text" data-i18n="extended.memoAllPreview">全プレビュー</span></button>
+                <button type="button" class="btn-secondary" id="ui-toggle-all-memos" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleAllMemoModes()" data-i18n-title="extended.memoAllToggleTip" title="すべてのメモのプレビュー/編集を一括切り替え"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px; vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span class="mode-btn-text" data-i18n="extended.memoAllPreview">全プレビュー</span></button>
                 <button type="button" class="btn-secondary btn-add-item" id="ui-add-memo" style="padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; flex-shrink: 0;" onclick="addMemo()" data-i18n-aria="extended.addMemoAria" aria-label="追加"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span data-i18n="addMemo">追加</span></button>
             </div>
         </div>

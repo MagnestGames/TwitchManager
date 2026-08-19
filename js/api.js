@@ -1151,6 +1151,9 @@
             }
         }
 
+                let streamStatsPopoverTimer = null;
+        let streamStatsCache = { data: null, timestamp: 0 };
+
         function getStreamStatsLang() {
             if (typeof I18N_DATA !== 'undefined' && I18N_DATA[currentLang]) {
                 if (I18N_DATA[currentLang].extended && I18N_DATA[currentLang].extended.streamStats) return I18N_DATA[currentLang].extended.streamStats;
