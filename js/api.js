@@ -1151,6 +1151,33 @@
             }
         }
 
+        function getStreamStatsLang() {
+            if (typeof I18N_DATA !== 'undefined' && I18N_DATA[currentLang]) {
+                if (I18N_DATA[currentLang].extended && I18N_DATA[currentLang].extended.streamStats) return I18N_DATA[currentLang].extended.streamStats;
+                if (I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) return I18N_DATA[currentLang].ui.streamStats;
+            }
+            if (typeof I18N_DATA !== 'undefined' && I18N_DATA['ja']) {
+                if (I18N_DATA['ja'].extended && I18N_DATA['ja'].extended.streamStats) return I18N_DATA['ja'].extended.streamStats;
+                if (I18N_DATA['ja'].ui && I18N_DATA['ja'].ui.streamStats) return I18N_DATA['ja'].ui.streamStats;
+            }
+            return {
+                title: "配信時間の統計",
+                past7Days: "過去7日間",
+                thisWeek: "今週 (月〜日)",
+                thisMonth: "今月 ({month})",
+                incompleteBadge: "一部のみ/API範囲外",
+                incompleteNote: "※Twitchアーカイブ保存期間（14~60日）外の配信はAPIで取得できないためグレーアウトしています。",
+                loading: "配信時間を集計中...",
+                noData: "アーカイブデータなし",
+                liveNow: "（配信中を含む）",
+                archiveNote: "※公開されているアーカイブ動画の合計時間",
+                startDateNote: "※日付を跨ぐ配信の長さは「配信開始日」に合算されます。",
+                dailyChartTitle: "日別配信時間グラフ",
+                selectPrompt: "※タップでグラフ切替",
+                tooltipBtn: "配信時間の統計"
+            };
+        }
+
         function showStreamTimeStatsPopover(e) {
             if (streamStatsPopoverTimer) {
                 clearTimeout(streamStatsPopoverTimer);
@@ -1207,9 +1234,7 @@
             const popover = document.getElementById('stream-time-stats-popover');
             if (!popover) return;
 
-            const langStats = (I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
-                ? I18N_DATA[currentLang].ui.streamStats 
-                : I18N_DATA['ja'].ui.streamStats;
+            const langStats = getStreamStatsLang();
 
             popover.innerHTML = `<div class="stream-stats-header">★ ${langStats.title}</div>
                 <div style="text-align:center; padding: 12px; color: var(--text-muted); font-size:11px;">
@@ -1409,9 +1434,7 @@
             const days = buildDailyChartData(parsedVideos, periodKey, now);
             const maxSec = Math.max(...days.map(d => d.sec), 1);
 
-            const langStats = (typeof I18N_DATA !== 'undefined' && I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
-                ? I18N_DATA[currentLang].ui.streamStats 
-                : {};
+            const langStats = getStreamStatsLang();
 
             const chartTitle = langStats.dailyChartTitle || '日別配信時間グラフ';
 
@@ -1440,9 +1463,7 @@
             const popover = document.getElementById('stream-time-stats-popover');
             if (!popover) return;
 
-            const langStats = (I18N_DATA[currentLang] && I18N_DATA[currentLang].ui && I18N_DATA[currentLang].ui.streamStats) 
-                ? I18N_DATA[currentLang].ui.streamStats 
-                : I18N_DATA['ja'].ui.streamStats;
+            const langStats = getStreamStatsLang();
 
             const monthNamesEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthStr = currentLang === 'en' ? (monthNamesEn[data.currentMonthNum - 1] || data.currentMonthNum) : `${data.currentMonthNum}月`;
@@ -1496,4 +1517,5 @@ window.hideStreamTimeStatsPopover = hideStreamTimeStatsPopover;
 window.keepStreamTimeStatsPopover = keepStreamTimeStatsPopover;
 window.toggleStreamTimeStatsPopover = toggleStreamTimeStatsPopover;
 window.selectStreamStatsPeriod = selectStreamStatsPeriod;
+window.loadAndRenderStreamStats = loadAndRenderStreamStats;
 
