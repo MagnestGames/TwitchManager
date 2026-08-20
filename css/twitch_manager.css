@@ -5314,7 +5314,7 @@ body.light-theme .cp-segment-btn.is-purple.active {
     min-width: 0 !important;
 }
 
-#cp-groups-container > div > div:last-child {
+#cp-groups-container .cp-group-actions {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -5334,7 +5334,7 @@ body.light-theme .cp-segment-btn.is-purple.active {
     box-sizing: border-box !important;
 }
 
-#cp-groups-container > div > div:last-child > button:not(.cp-group-toggle) {
+#cp-groups-container .cp-group-actions > button:not(.cp-group-toggle) {
     padding: 3px 5px !important;
     font-size: 10px !important;
     min-width: 24px !important;
@@ -5499,6 +5499,32 @@ body.light-theme .cp-segment-btn.is-purple.active {
     justify-content: center !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
+}
+
+#cp-groups-container .cp-group-actions {
+    display: grid !important;
+    grid-template-columns: minmax(40px, 1fr) minmax(40px, 1fr) repeat(3, 28px);
+    align-items: center !important;
+    gap: 4px !important;
+    margin-top: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+#cp-groups-container .cp-group-actions .cp-group-toggle {
+    height: 28px !important;
+    min-height: 28px !important;
+    min-width: 0 !important;
+    padding: 0 6px !important;
+}
+
+#cp-groups-container .cp-group-actions > button:not(.cp-group-toggle) {
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    justify-self: center;
 }
 
 

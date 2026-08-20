@@ -15,6 +15,8 @@ assert.match(html, /class="cp-rewards-table"/, 'The CP reward list must use the 
 assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.cp-reward-row\s*\{[\s\S]*grid-template-areas:/, 'CP rewards must switch to cards on narrow screens.');
 assert.match(css, /\.cp-reward-icon-button\s*\{[^}]*width:\s*28px;[^}]*height:\s*28px;/, 'Edit and delete buttons must have matching dimensions.');
 assert.match(css, /\.cp-toolbar\s*\{[^}]*background:\s*var\(--bg-base\);/, 'The CP toolbar must follow both dark and light theme backgrounds.');
+assert.match(ui, /class="cp-group-actions"/, 'CP group actions must use the shared aligned layout.');
+assert.match(css, /#cp-groups-container \.cp-group-actions\s*\{[^}]*grid-template-columns:[^}]*repeat\(3, 28px\)/, 'CP group text and icon actions must use consistent dimensions.');
 
 assert.match(ui, /onclick="copyTwitchStreamSettingsUrl\(\)"/, 'Raid settings must provide a URL copy button.');
 assert.match(ui, /raidSoSuggestInputHtml\('raidso-listener-id'/, 'Welcome notification IDs must use the shared Twitch history suggestions.');
@@ -44,6 +46,13 @@ assert.match(addFriendDialogSource, /onOpen: \(\{ resolveWith \}\) =>/, 'The add
 assert.doesNotMatch(addFriendDialogSource, /setTimeout\(/, 'The add-friend dialog must not rely on fixed-delay dialog binding.');
 assert.match(ui, /BACKUP_AUTH_KEYS = new Set\(\['token', 'userId', 'userLogin', 'clientId', 'redirectUri'\]\)/, 'Backups must not import account-bound Twitch authentication fields.');
 assert.match(storage, /if \(normalizedToken\)[\s\S]*stopAllTwitchConnectionsForAuthClear\(\);[\s\S]*clearLocalTwitchAuth\(\);/, 'Clearing the saved token must stop Twitch connections and clear account identity.');
+
+for (const conciseJapaneseLabel of ['重複IDを統合', 'すべての項目', 'グループ', '報酬一覧']) {
+  assert.match(locales, new RegExp(`"${conciseJapaneseLabel}"`), `${conciseJapaneseLabel} must remain in the Japanese UI.`);
+}
+for (const verboseJapaneseLabel of ['重複IDを統合・整理', 'すべての項目 (フルバックアップ)', 'グループ一括操作 (ワンタップON/OFF)']) {
+  assert.doesNotMatch(locales, new RegExp(verboseJapaneseLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${verboseJapaneseLabel} must not return to the Japanese UI.`);
+}
 
 const soundButtonStart = ui.indexOf('class="btn-outline raidso-audio-guide-button"');
 const soundButtonEnd = ui.indexOf('</button>', soundButtonStart);
