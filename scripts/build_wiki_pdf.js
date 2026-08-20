@@ -6,7 +6,7 @@ const WIKI_DIR = path.join(__dirname, '../docs/wiki-mock');
 const OUTPUT_HTML = path.join(__dirname, '../docs/wiki_combined.html');
 const OUTPUT_PDF = path.join(__dirname, '../TwitchManager_Wiki_Manual.pdf');
 const ARTIFACT_DIR = path.join(__dirname, '../output/pdf');
-const ARTIFACT_PDF = path.join(ARTIFACT_DIR, 'TwitchManager-1.0.2-Manual-ja.pdf');
+const ARTIFACT_PDF = path.join(ARTIFACT_DIR, 'TwitchManager-1.0.3-Manual-ja.pdf');
 const EDGE_PROFILE_DIR = path.join(__dirname, '../tmp/pdf-edge-profile');
 const issueDate = new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'long' }).format(new Date());
 
@@ -543,7 +543,7 @@ function generateFullHTML() {
         <div class="cover-subtitle">公式ユーザーマニュアル &amp; 統合Wikiドキュメント</div>
         <div class="cover-divider"></div>
         <div class="cover-meta">
-            Version: 1.0.2<br>
+            Version: 1.0.3<br>
             発行日: ${issueDate}<br>
             対応言語: 日本語 (Japanese)<br>
             ドキュメント形式: 統合PDFマニュアル

@@ -129,11 +129,35 @@ const langMap = {
             return 'en';
         }
 
-        let currentLang = detectInitialLanguage(), config = [], friendsConfig = [], memoConfig = [], settings = {}, isSortLocked = true, sortableInstances = [], dynamicCategorySortables = [];
+        let currentLang = detectInitialLanguage(),
+            config = (() => { try { return JSON.parse(localStorage.getItem('stream_config_v16') || '[]'); } catch(e) { return []; } })(),
+            friendsConfig = (() => { try { return JSON.parse(localStorage.getItem('stream_friends_v16') || '[]'); } catch(e) { return []; } })(),
+            memoConfig = (() => { try { return JSON.parse(localStorage.getItem('stream_memo_v16') || '[]'); } catch(e) { return []; } })(),
+            settings = (() => { try { return JSON.parse(localStorage.getItem('stream_settings_v16') || '{}'); } catch(e) { return {}; } })(),
+            isSortLocked = true,
+            sortableInstances = [],
+            dynamicCategorySortables = [];
 
         function saveAllLocal(s) { localStorage.setItem('stream_config_v16', JSON.stringify(config)); if (s) { showToast(doneText()); raidSoLog(uiText('runtime.operationLog.titlesSaved')); } }
-        function saveFriendsLocal(s) { localStorage.setItem('stream_friends_v16', JSON.stringify(friendsConfig)); renderShoutoutSuggestions(); if (s) { showToast(doneText()); raidSoLog(uiText('runtime.operationLog.idsSaved')); } }
-        function saveMemoLocal(s = false) { localStorage.setItem('stream_memo_v16', JSON.stringify(memoConfig)); if (s) { showToast(doneText()); raidSoLog(uiText('runtime.operationLog.memosSaved')); } }
+        function saveFriendsLocal(s) {
+            localStorage.setItem('stream_friends_v16', JSON.stringify(friendsConfig));
+            renderShoutoutSuggestions();
+            if (typeof renderCommonTagBar === 'function') renderCommonTagBar();
+            if (typeof updateAllTitlePreviews === 'function') updateAllTitlePreviews();
+            if (s) { showToast(doneText()); raidSoLog(uiText('runtime.operationLog.idsSaved')); }
+        }
+        function saveMemoLocal(s = false) {
+            if (Array.isArray(memoConfig)) {
+                memoConfig.forEach((m, idx) => {
+                    const textarea = document.getElementById(`memo-input-${idx}`);
+                    if (textarea) {
+                        m.content = textarea.value;
+                    }
+                });
+            }
+            localStorage.setItem('stream_memo_v16', JSON.stringify(memoConfig));
+            if (s) { showToast(doneText()); raidSoLog(uiText('runtime.operationLog.memosSaved')); }
+        }
         function saveDockState(show = true) {
             saveAllLocal(false);
             saveFriendsLocal(false);

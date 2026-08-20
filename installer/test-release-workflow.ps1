@@ -44,6 +44,8 @@ $workflowRequirements = @(
     'actions/checkout@v7',
     'actions/upload-artifact@v7',
     'actions/download-artifact@v8',
+    'RELEASE_VERSION: \$\{\{ needs\.metadata\.outputs\.version \}\}',
+    's/\{\{VERSION\}\}/\$RELEASE_VERSION/g',
     '--draft=false',
     '--prerelease=false'
 )
@@ -61,12 +63,14 @@ foreach ($assetName in @(
     }
 }
 
-foreach ($placeholder in @("{{WINDOWS_SHA256}}", "{{MACOS_SHA256}}")) {
+foreach ($placeholder in @("{{VERSION}}", "{{WINDOWS_SHA256}}", "{{MACOS_SHA256}}")) {
     if ($releaseBody -notmatch [regex]::Escape($placeholder)) {
         throw "Release description checksum placeholder is missing: $placeholder"
     }
 }
 $renderedReleaseBody = $releaseBody.Replace(
+    "{{VERSION}}",
+    "1.0.3").Replace(
     "{{WINDOWS_SHA256}}",
     ("a" * 64)).Replace(
     "{{MACOS_SHA256}}",
@@ -120,6 +124,9 @@ $wikiText = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot "docs\wiki-moc
     Out-String
 if ($wikiText -match '2026-07-25|`VERSION`') {
     throw "Wiki source contains obsolete release or signing guidance."
+}
+if ($renderedReleaseBody -notmatch '(?m)^# TwitchManager 1\.0\.3$') {
+    throw "Rendered release description does not contain the release version."
 }
 
 Write-Host "Release workflow and documentation references verified."

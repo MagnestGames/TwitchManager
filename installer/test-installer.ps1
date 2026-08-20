@@ -55,10 +55,10 @@ try {
         $requiredEntries = @(
             "TwitchManagerDock.html",
             "TwitchManagerAudio.html",
-            "creators.json",
-            "twitch_manager_version.js",
-            "twitch_manager_locales.js",
-            "twitch_manager.css",
+            "js/creators.json",
+            "js/version.js",
+            "js/locales.js",
+            "css/twitch_manager.css",
             "assets/branding/TwitchManager-logo.png",
             "js/update-check.js",
             "js/audio-source.js",
@@ -192,7 +192,7 @@ try {
             throw "Extracted payload entry not found: $entryName"
         }
     }
-    $versionScriptPath = Join-Path $extractionRoot "twitch_manager_version.js"
+    $versionScriptPath = Join-Path $extractionRoot "js/version.js"
     $versionScriptText = Get-Content -LiteralPath $versionScriptPath -Raw
     if ($versionScriptText -notmatch 'TWITCH_MANAGER_BUILD' -or $versionScriptText -notmatch 'version:\s*"[^"]+"') {
         throw "The extracted update-check version script is invalid."

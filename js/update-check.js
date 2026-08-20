@@ -77,6 +77,26 @@
         }
     }
 
+    function extractReleaseHighlights(markdown, limit = 5, maxLength = 180) {
+        const safeLimit = Math.max(0, Math.min(10, Number(limit) || 0));
+        const safeMaxLength = Math.max(40, Math.min(400, Number(maxLength) || 180));
+        if (!safeLimit) return [];
+        return String(markdown || '')
+            .replace(/\r\n?/g, '\n')
+            .split('\n')
+            .map(line => line.match(/^\s*[-*+]\s+(.+)$/)?.[1] || '')
+            .map(line => line
+                .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+                .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+                .replace(/[`*_~]/g, '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/\s+/g, ' ')
+                .trim())
+            .filter(line => line && !/^(?:SHA256|ダウンロード|Download|下载)\s*:/i.test(line))
+            .slice(0, safeLimit)
+            .map(line => line.length > safeMaxLength ? `${line.slice(0, safeMaxLength - 1)}…` : line);
+    }
+
     function normalizeRelease(data) {
         if (!data || data.draft || data.prerelease || !parseVersion(data.tag_name)) {
             throw new Error('Latest stable release response is invalid.');
@@ -86,7 +106,8 @@
         return {
             version: String(data.tag_name).trim(),
             name: String(data.name || data.tag_name).trim(),
-            url: providedUrl.startsWith(trustedPrefix) ? providedUrl : LATEST_RELEASE_PAGE
+            url: providedUrl.startsWith(trustedPrefix) ? providedUrl : LATEST_RELEASE_PAGE,
+            changes: extractReleaseHighlights(data.body)
         };
     }
 
@@ -187,6 +208,7 @@
         compareVersions,
         currentVersion,
         deferVersion,
+        extractReleaseHighlights,
         fetchLatestRelease,
         isBetaVersion,
         markNotified,

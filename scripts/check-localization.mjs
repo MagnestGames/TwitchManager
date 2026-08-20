@@ -14,11 +14,11 @@ function read(relativePath) {
 }
 
 function loadLocalizationData() {
-    const source = `${read("twitch_manager_locales.js")}\n;globalThis.__I18N_DATA__ = I18N_DATA;`;
+    const source = `${read("js/locales.js")}\n;globalThis.__I18N_DATA__ = I18N_DATA;`;
     const context = {};
     vm.createContext(context);
     vm.runInContext(source, context, {
-        filename: "twitch_manager_locales.js",
+        filename: "js/locales.js",
         timeout: 1000
     });
     return context.__I18N_DATA__;

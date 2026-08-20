@@ -1,13 +1,13 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.2",
+    [string]$Version = "1.0.3",
     [string]$OutputDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 if ($Version -notmatch '^v?[0-9]+(?:\.[0-9]+){1,3}(?:[_-][0-9A-Za-z.-]+)?$') {
-    throw "Version must use a form such as 1.0.2 or 1.0.2_beta: $Version"
+    throw "Version must use a form such as 1.0.3 or 1.0.3_beta: $Version"
 }
 
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
@@ -32,29 +32,25 @@ New-Item -ItemType Directory -Path $payloadRoot | Out-Null
 
 $rootFiles = @(
     "TwitchManagerDock.html",
-    "TwitchManagerAudio.html",
-    "creators.json",
-    "twitch_manager_version.js",
-    "twitch_manager_locales.js",
-    "twitch_manager.css"
+    "TwitchManagerAudio.html"
 )
 foreach ($file in $rootFiles) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $file) -Destination $payloadRoot
 }
 
-$versionScriptContent = "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: `"$Version`" });`n"
-[System.IO.File]::WriteAllText(
-    (Join-Path $payloadRoot "twitch_manager_version.js"),
-    $versionScriptContent,
-    [System.Text.UTF8Encoding]::new($false))
-
-$directories = @("assets", "js", "sounds")
+$directories = @("assets", "css", "js", "sounds")
 foreach ($directory in $directories) {
     $source = Join-Path $repositoryRoot $directory
     if (Test-Path -LiteralPath $source) {
         Copy-Item -LiteralPath $source -Destination $payloadRoot -Recurse
     }
 }
+
+$versionScriptContent = "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: `"$Version`" });`n"
+[System.IO.File]::WriteAllText(
+    (Join-Path $payloadRoot "js/version.js"),
+    $versionScriptContent,
+    [System.Text.UTF8Encoding]::new($false))
 
 $payloadArchive = Join-Path $buildRoot "payload.zip"
 Compress-Archive -Path (Join-Path $payloadRoot "*") -DestinationPath $payloadArchive -CompressionLevel Optimal

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-version="${1:-1.0.2}"
+version="${1:-1.0.3}"
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
 output_directory="${2:-$repository_root/dist}"
@@ -16,7 +16,7 @@ fi
 package_version="${version%%_*}"
 package_version="${package_version%%[-+]*}"
 if [[ ! "$version" =~ ^v?[0-9]+(\.[0-9]+){1,3}([_-][0-9A-Za-z.-]+)?$ ]]; then
-  echo "Version must use a form such as 1.0.2 or 1.0.2_beta: $version" >&2
+  echo "Version must use a form such as 1.0.3 or 1.0.3_beta: $version" >&2
   exit 1
 fi
 if [[ ! "$package_version" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
@@ -50,10 +50,6 @@ mkdir -p "$install_root"
 root_files=(
   "TwitchManagerDock.html"
   "TwitchManagerAudio.html"
-  "creators.json"
-  "twitch_manager_version.js"
-  "twitch_manager_locales.js"
-  "twitch_manager.css"
 )
 for file_name in "${root_files[@]}"; do
   source_path="$repository_root/$file_name"
@@ -64,14 +60,14 @@ for file_name in "${root_files[@]}"; do
   cp "$source_path" "$install_root/"
 done
 
-printf 'globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: "%s" });\n' "$version" > "$install_root/twitch_manager_version.js"
-
-for directory_name in assets js sounds; do
+for directory_name in assets css js sounds; do
   source_path="$repository_root/$directory_name"
   if [[ -d "$source_path" ]]; then
     cp -R "$source_path" "$install_root/"
   fi
 done
+
+printf 'globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: "%s" });\n' "$version" > "$install_root/js/version.js"
 
 dock_url="file:///Applications/TwitchManager/TwitchManagerDock.html"
 audio_url="${dock_url}?audio-source=1"

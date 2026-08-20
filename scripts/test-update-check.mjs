@@ -22,6 +22,7 @@ function releaseResponse(version = 'v1.0.3') {
             tag_name: version,
             name: `TwitchManager ${version}`,
             html_url: `https://github.com/MagnestGames/TwitchManager/releases/tag/${version}`,
+            body: '# Release\n\n## Changes\n\n- Added **group controls**.\n- Fixed [restore layout](https://example.com/).\n\n- SHA256: ignored',
             draft: false,
             prerelease: false
         })
@@ -51,7 +52,16 @@ const available = await update.checkForUpdate({
 });
 assert.equal(available.status, 'available');
 assert.equal(available.release.version, 'v1.0.3');
+assert.deepEqual(available.release.changes, [
+    'Added group controls.',
+    'Fixed restore layout.'
+]);
 assert.equal(fetchCount, 1);
+
+assert.deepEqual(update.extractReleaseHighlights('- <script>alert(1)</script> Safe\n- ' + 'a'.repeat(220), 2, 60), [
+    'alert(1) Safe',
+    `${'a'.repeat(59)}…`
+]);
 
 const cached = await update.checkForUpdate({
     currentVersion: '1.0.2',
