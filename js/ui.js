@@ -5610,12 +5610,60 @@ window.copyCommonTag = copyCommonTag;
             const merged = { ...local, ...imported };
             const listenerEntries = new Map();
             [...(local.listenerEntries || []), ...(imported.listenerEntries || [])].forEach(entry => {
-                if (!entry || !entry.userId) return;
-                listenerEntries.set(String(entry.userId), { ...(listenerEntries.get(String(entry.userId)) || {}), ...entry });
+                if (!entry) return;
+                const key = String(entry.userId || entry.userLogin || '').trim().toLowerCase();
+                if (!key) return;
+                listenerEntries.set(key, { ...(listenerEntries.get(key) || {}), ...entry });
             });
             merged.listenerEntries = [...listenerEntries.values()];
             merged.soundFiles = uniqueRaidSoSoundSources([...(local.soundFiles || []), ...(imported.soundFiles || [])]);
             return removeDeprecatedRaidSoObsSettings(merged);
+        }
+
+        function mergeTitleTagConfig(localConfig, importedConfig) {
+            const local = isBackupRecord(localConfig) ? localConfig : {};
+            const imported = isBackupRecord(importedConfig) ? importedConfig : {};
+            const merged = { ...local, ...imported };
+
+            // 1. customTags
+            const localTags = Array.isArray(local.customTags) ? local.customTags : [];
+            const importedTags = Array.isArray(imported.customTags) ? imported.customTags : [];
+            const mergedTags = [...localTags];
+
+            importedTags.forEach(impTag => {
+                if (!impTag) return;
+                const idx = mergedTags.findIndex(t => 
+                    (impTag.id && t.id && String(impTag.id) === String(t.id)) ||
+                    (impTag.name && t.name && String(impTag.name).trim() === String(t.name).trim())
+                );
+                if (idx > -1) {
+                    mergedTags[idx] = { ...mergedTags[idx], ...impTag };
+                } else {
+                    mergedTags.push(impTag);
+                }
+            });
+            merged.customTags = mergedTags;
+
+            // 2. categoryMap
+            const localMap = Array.isArray(local.categoryMap) ? local.categoryMap : [];
+            const importedMap = Array.isArray(imported.categoryMap) ? imported.categoryMap : [];
+            const mergedMap = [...localMap];
+
+            importedMap.forEach(impItem => {
+                if (!impItem) return;
+                const idx = mergedMap.findIndex(m => 
+                    (impItem.id && m.id && String(impItem.id) === String(m.id)) ||
+                    (impItem.from && m.from && String(impItem.from).trim().toLowerCase() === String(m.from).trim().toLowerCase())
+                );
+                if (idx > -1) {
+                    mergedMap[idx] = { ...mergedMap[idx], ...impItem };
+                } else {
+                    mergedMap.push(impItem);
+                }
+            });
+            merged.categoryMap = mergedMap;
+
+            return merged;
         }
 
         function mergeBackupData(d) {
@@ -5675,13 +5723,22 @@ window.copyCommonTag = copyCommonTag;
             if (d.friends && Array.isArray(d.friends)) {
                 let localFriends = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
                 d.friends.forEach(bkCat => {
-                    let targetCat = localFriends.find(c => c.name === bkCat.name);
+                    if (!bkCat) return;
+                    let targetCat = localFriends.find(c => 
+                        (bkCat.id && c.id && String(c.id) === String(bkCat.id)) ||
+                        (c.name && bkCat.name && String(c.name).trim() === String(bkCat.name).trim())
+                    );
                     if (!targetCat) {
                         localFriends.push(bkCat);
                     } else {
                         if (!targetCat.friends) targetCat.friends = [];
-                        bkCat.friends.forEach(bkF => {
-                            let existingFriend = targetCat.friends.find(f => f.twitch === bkF.twitch || (bkF.name && f.name === bkF.name));
+                        (bkCat.friends || []).forEach(bkF => {
+                            if (!bkF) return;
+                            let existingFriend = targetCat.friends.find(f => 
+                                (bkF.id && f.id && String(f.id) === String(bkF.id)) ||
+                                (bkF.twitch && f.twitch && String(f.twitch).trim().toLowerCase() === String(bkF.twitch).trim().toLowerCase()) ||
+                                (bkF.name && f.name && String(f.name).trim() === String(bkF.name).trim())
+                            );
                             if (!existingFriend) {
                                 targetCat.friends.push(bkF);
                             } else {
@@ -5697,9 +5754,14 @@ window.copyCommonTag = copyCommonTag;
             if (d.memoList && Array.isArray(d.memoList)) {
                 let localMemo = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
                 d.memoList.forEach(bkM => {
-                    let existingMemo = localMemo.find(m => m.title === bkM.title);
+                    if (!bkM) return;
+                    let existingMemo = localMemo.find(m => 
+                        (bkM.id && m.id && String(m.id) === String(bkM.id)) ||
+                        (m.title && bkM.title && String(m.title).trim() === String(bkM.title).trim())
+                    );
                     if (!existingMemo) {
                         localMemo.push({
+                            id: bkM.id || ('memo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)),
                             title: bkM.title || '',
                             content: bkM.content || '',
                             isClosed: true,
@@ -5723,8 +5785,12 @@ window.copyCommonTag = copyCommonTag;
             if (d.raidShoutOutTemplates && Array.isArray(d.raidShoutOutTemplates)) {
                 let localRSOTemplates = JSON.parse(localStorage.getItem(RAIDSO_CUSTOM_TEMPLATES_KEY) || '[]');
                 d.raidShoutOutTemplates.forEach(bkT => {
-                    let idx = localRSOTemplates.findIndex(t => t.name === bkT.name);
-                    if (idx > -1) localRSOTemplates[idx] = bkT;
+                    if (!bkT) return;
+                    let idx = localRSOTemplates.findIndex(t => 
+                        (bkT.id && t.id && String(t.id) === String(bkT.id)) ||
+                        (t.name && bkT.name && String(t.name).trim() === String(bkT.name).trim())
+                    );
+                    if (idx > -1) localRSOTemplates[idx] = { ...localRSOTemplates[idx], ...bkT };
                     else localRSOTemplates.push(bkT);
                 });
                 localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(localRSOTemplates));
@@ -5734,7 +5800,8 @@ window.copyCommonTag = copyCommonTag;
             if (Array.isArray(d.supporterArchives)) {
                 let localArchives = JSON.parse(localStorage.getItem(SUPPORTER_ARCHIVE_STORAGE_KEY) || '[]');
                 d.supporterArchives.forEach(bkA => {
-                    if (!localArchives.some(a => a.id === bkA.id)) {
+                    if (!bkA) return;
+                    if (!localArchives.some(a => (bkA.id && a.id && String(a.id) === String(bkA.id)) || (bkA.date && a.date && a.date === bkA.date))) {
                         localArchives.push(bkA);
                     }
                 });
@@ -5759,9 +5826,12 @@ window.copyCommonTag = copyCommonTag;
             }
 
             // 9. rewards created by TwitchManager
-            // 10. titleTagConfig
-            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
-                titleTagConfig = d.titleTagConfig;
+            // 10. titleTagConfig (単語セット・タグ設定のマージ)
+            if (d.titleTagConfig && isBackupRecord(d.titleTagConfig)) {
+                let localTitleTag = {};
+                try { localTitleTag = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}'); } catch(e) {}
+                const mergedTitleTag = mergeTitleTagConfig(localTitleTag, d.titleTagConfig);
+                titleTagConfig = mergedTitleTag;
                 saveTitleTagConfig();
             }
 
