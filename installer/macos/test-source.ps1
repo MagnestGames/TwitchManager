@@ -129,10 +129,10 @@ if (Test-Path -LiteralPath $sourceTestRoot) {
 
 $preparedRoot = Join-Path $sourceTestRoot "payload\Applications\TwitchManager"
 New-Item -ItemType Directory -Path $preparedRoot -Force | Out-Null
-foreach ($fileName in @("TwitchManagerDock.html", "TwitchManagerAudio.html", "js/creators.json", "js/version.js", "js/locales.js", "css/twitch_manager.css")) {
+foreach ($fileName in @("TwitchManagerDock.html", "TwitchManagerAudio.html")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $fileName) -Destination $preparedRoot
 }
-foreach ($directoryName in @("assets", "js", "sounds")) {
+foreach ($directoryName in @("assets", "css", "js", "sounds")) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $directoryName) -Destination $preparedRoot -Recurse
 }
 [System.IO.File]::WriteAllText(
