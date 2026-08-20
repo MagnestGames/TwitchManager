@@ -3384,7 +3384,7 @@ window.copyCommonTag = copyCommonTag;
 
         function addRecord(i) {
             if (!config[i] || !config[i].records) return;
-            config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true });
+            config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", count: 1, isOpen: true });
             render();
             saveAllLocal(false);
         }
@@ -5514,7 +5514,19 @@ window.copyCommonTag = copyCommonTag;
 
                     if (choice === 'overwrite') {
                         // 完全上書き
-                        if (Array.isArray(d.config)) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (Array.isArray(d.config)) {
+                            const cleanConfig = d.config.map(cat => ({
+                                ...cat,
+                                records: (cat.records || []).map(r => ({
+                                    ...r,
+                                    count: (parseInt(r.count, 10) || 1)
+                                }))
+                            }));
+                            localStorage.setItem('stream_config_v16', JSON.stringify(cleanConfig));
+                        }
+                        if (d.titleTagConfig && isBackupRecord(d.titleTagConfig)) {
+                            localStorage.setItem('title_tag_config_v1', JSON.stringify(d.titleTagConfig));
+                        }
                         if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
                         if (isBackupRecord(d.settings)) {
                             const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
@@ -5578,8 +5590,13 @@ window.copyCommonTag = copyCommonTag;
                 let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
                 d.config.forEach(cfg => {
                     const idx = localConfig.findIndex(c => c.id === cfg.id);
-                    if (idx > -1) localConfig[idx] = cfg;
-                    else localConfig.push(cfg);
+                    const cleanRecords = (cfg.records || []).map(r => ({
+                        ...r,
+                        count: (parseInt(r.count, 10) || 1)
+                    }));
+                    const cleanCfg = { ...cfg, records: cleanRecords };
+                    if (idx > -1) localConfig[idx] = cleanCfg;
+                    else localConfig.push(cleanCfg);
                 });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
@@ -5704,8 +5721,14 @@ window.copyCommonTag = copyCommonTag;
             };
 
             if (selectVal === 'all' || selectVal === 'title') {
-                d.config = config;
-                                try {
+                d.config = (config || []).map(cat => ({
+                    ...cat,
+                    records: (cat.records || []).map(r => ({
+                        ...r,
+                        count: (parseInt(r.count, 10) || 1)
+                    }))
+                }));
+                try {
                     d.titleTagConfig = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}');
                 } catch(e) {
                     d.titleTagConfig = {};
