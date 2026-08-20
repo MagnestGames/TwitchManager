@@ -862,12 +862,20 @@ window.copyCommonTag = copyCommonTag;
 
             const copy = langMap[currentLang]?.updateNotification || langMap.ja.updateNotification;
             const currentVersion = updater.currentVersion();
+            const changes = Array.isArray(result.release.changes) ? result.release.changes : [];
+            const changesHtml = changes.length ? `<div style="display:grid; gap:6px;">
+                <strong>${raidSoEscape(copy.changes)}</strong>
+                <ul style="margin:0; padding-left:20px; display:grid; gap:4px; max-height:180px; overflow-y:auto;">
+                    ${changes.map(change => `<li>${raidSoEscape(change)}</li>`).join('')}
+                </ul>
+            </div>` : '';
             const messageHtml = `<div style="display:grid; gap:12px;">
                 <p style="margin:0;">${raidSoEscape(copy.message)}</p>
                 <div style="display:grid; grid-template-columns:auto 1fr; gap:6px 12px; background:var(--bg-base); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
                     <strong>${raidSoEscape(copy.currentVersion)}</strong><span>${raidSoEscape(currentVersion)}</span>
                     <strong>${raidSoEscape(copy.latestVersion)}</strong><span>${raidSoEscape(result.release.version)}</span>
                 </div>
+                ${changesHtml}
                 <p style="margin:0; color:var(--text-muted); font-size:12px;">${raidSoEscape(copy.skipNote)}</p>
             </div>`;
             const choice = await customChoice({

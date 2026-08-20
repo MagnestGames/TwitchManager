@@ -21,6 +21,8 @@ assert.match(html, /class="misc-action-row"[\s\S]*id="ui-backup-select-file"[\s\
 assert.doesNotMatch(html, /id="ui-backup-select-file"[^>]*data-i18n=/, 'Localization must not replace the restore button and remove its icon or filename element.');
 assert.match(css, /\.misc-action-row\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/, 'Backup and restore action buttons must use equal columns.');
 assert.doesNotMatch(ui, /getElementById\('ui-(?:backup-title|backup-copy|restore-btn)'\)\.innerText/, 'Localization must not remove icons from backup and restore controls.');
+assert.match(ui, /const changes = Array\.isArray\(result\.release\.changes\)/, 'Update notifications must include release highlights when available.');
+assert.match(ui, /changes\.map\(change => `<li>\$\{raidSoEscape\(change\)\}<\/li>`\)/, 'Release highlights must be escaped before display.');
 
 assert.match(ui, /onclick="copyTwitchStreamSettingsUrl\(\)"/, 'Raid settings must provide a URL copy button.');
 assert.match(ui, /raidSoSuggestInputHtml\('raidso-listener-id'/, 'Welcome notification IDs must use the shared Twitch history suggestions.');
@@ -68,7 +70,7 @@ const introBoxPosition = ui.indexOf('${raidSoIntroActionsBoxHtml(r)}');
 const raidSettingsPosition = ui.indexOf('id="raidso-box-open-settings"');
 assert.ok(introBoxPosition >= 0 && raidSettingsPosition > introBoxPosition, 'Raid settings must appear second in Notification & Shoutout.');
 
-for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle']) {
+for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle', 'changes']) {
   assert.equal((locales.match(new RegExp(`"${key}"`, 'g')) || []).length, 3, `${key} must be translated in all three languages.`);
 }
 for (const formatLabel of ['対応形式: JSON / TXT', 'Formats: JSON / TXT', '支持格式：JSON / TXT']) {
