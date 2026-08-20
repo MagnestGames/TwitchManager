@@ -3388,7 +3388,8 @@ window.copyCommonTag = copyCommonTag;
 
         function addRecord(i) {
             if (!config[i] || !config[i].records) return;
-            config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", count: 1, isOpen: true });
+            const newRecId = 'title_rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            config[i].records.push({ id: newRecId, label: "NEW", isCustomLabel: false, game: "", title: "", count: 1, isOpen: true });
             render();
             saveAllLocal(false);
         }
@@ -5287,7 +5288,8 @@ window.copyCommonTag = copyCommonTag;
             const n = await customPrompt(dialogCopy(isTitleTab ? 'titleCategoryAdd' : 'idCategoryAdd'));
             if (!n) return;
             if (isTitleTab) {
-                config.push({ name: n, records: [], isClosed: false });
+                const newCatId = 'title_cat_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                config.push({ id: newCatId, name: n, records: [], isClosed: false });
                 render();
                 saveAllLocal(false);
             } else {
@@ -5617,18 +5619,47 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function mergeBackupData(d) {
-            // 1. config
+            // 1. config (タイトルカテゴリ・カードのマージ)
             if (d.config && Array.isArray(d.config)) {
                 let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
                 d.config.forEach(cfg => {
-                    const idx = localConfig.findIndex(c => c.id === cfg.id);
                     const cleanRecords = (cfg.records || []).map(r => ({
                         ...r,
                         count: (parseInt(r.count, 10) || 1)
                     }));
-                    const cleanCfg = { ...cfg, records: cleanRecords };
-                    if (idx > -1) localConfig[idx] = cleanCfg;
-                    else localConfig.push(cleanCfg);
+                    
+                    const idx = localConfig.findIndex(c => {
+                        if (cfg.id && c.id && String(cfg.id) === String(c.id)) return true;
+                        if (cfg.name && c.name && String(cfg.name).trim() === String(c.name).trim()) return true;
+                        return false;
+                    });
+
+                    if (idx > -1) {
+                        const existingCat = localConfig[idx];
+                        const existingRecords = existingCat.records || [];
+                        cleanRecords.forEach(newRec => {
+                            const recIdx = existingRecords.findIndex(r => 
+                                (newRec.id && r.id && String(newRec.id) === String(r.id)) ||
+                                (newRec.label && r.label && String(newRec.label).trim() === String(r.label).trim()) ||
+                                (newRec.title && r.title && String(newRec.title).trim() === String(r.title).trim())
+                            );
+                            if (recIdx > -1) {
+                                existingRecords[recIdx] = { ...existingRecords[recIdx], ...newRec };
+                            } else {
+                                existingRecords.push(newRec);
+                            }
+                        });
+                        localConfig[idx] = {
+                            ...existingCat,
+                            ...cfg,
+                            records: existingRecords
+                        };
+                    } else {
+                        localConfig.push({
+                            ...cfg,
+                            records: cleanRecords
+                        });
+                    }
                 });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
