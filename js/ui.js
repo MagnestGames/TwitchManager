@@ -3388,7 +3388,8 @@ window.copyCommonTag = copyCommonTag;
 
         function addRecord(i) {
             if (!config[i] || !config[i].records) return;
-            config[i].records.push({ label: "NEW", isCustomLabel: false, game: "", title: "", isOpen: true });
+            const newRecId = 'title_rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            config[i].records.push({ id: newRecId, label: "NEW", isCustomLabel: false, game: "", title: "", count: 1, isOpen: true });
             render();
             saveAllLocal(false);
         }
@@ -5287,7 +5288,8 @@ window.copyCommonTag = copyCommonTag;
             const n = await customPrompt(dialogCopy(isTitleTab ? 'titleCategoryAdd' : 'idCategoryAdd'));
             if (!n) return;
             if (isTitleTab) {
-                config.push({ name: n, records: [], isClosed: false });
+                const newCatId = 'title_cat_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+                config.push({ id: newCatId, name: n, records: [], isClosed: false });
                 render();
                 saveAllLocal(false);
             } else {
@@ -5463,25 +5465,108 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function parseBackupJson(text) {
-            const parsed = JSON.parse(text, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
-            if (!isBackupRecord(parsed)) throw new Error('Invalid backup root');
-            const expectedTypes = {
-                config: Array.isArray,
-                friends: Array.isArray,
-                settings: isBackupRecord,
-                memoList: Array.isArray,
-                raidShoutOut: isBackupRecord,
-                raidShoutOutTemplates: Array.isArray,
-                supporterArchives: Array.isArray,
-                cpGroups: Array.isArray,
-                cpAppRewardIds: Array.isArray
-            };
-            Object.entries(expectedTypes).forEach(([key, validator]) => {
-                if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
-                    throw new Error(`Invalid backup field: ${key}`);
+            if (!text || typeof text !== 'string') throw new Error('Invalid file content');
+            const cleanText = text.replace(/^\uFEFF/, '').trim();
+
+            // 1. JSON形式（.json / .txt に保存されたJSONテキスト）のパース試行
+            try {
+                const parsed = JSON.parse(cleanText, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
+                if (isBackupRecord(parsed)) {
+                    const expectedTypes = {
+                        config: Array.isArray,
+                        friends: Array.isArray,
+                        settings: isBackupRecord,
+                        memoList: Array.isArray,
+                        raidShoutOut: isBackupRecord,
+                        raidShoutOutTemplates: Array.isArray,
+                        supporterArchives: Array.isArray,
+                        cpGroups: Array.isArray,
+                        cpAppRewardIds: Array.isArray
+                    };
+                    Object.entries(expectedTypes).forEach(([key, validator]) => {
+                        if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
+                            throw new Error(`Invalid backup field: ${key}`);
+                        }
+                    });
+                    return parsed;
                 }
+            } catch (e) {
+                // 不正なJSONまたはプレーンテキストの場合は下のテキストパースへ
+            }
+
+            // 2. プレーンテキスト（.txt）ファイルのパース試行（タイトルリスト・IDリスト等の行区切りテキスト）
+            const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length === 0) throw new Error('File is empty');
+
+            const titleRecords = [];
+            const idRecords = [];
+
+            lines.forEach((line, idx) => {
+                if (line.startsWith('@') || /^[a-zA-Z0-9_]{3,25}$/.test(line)) {
+                    const cleanTwitchId = line.replace(/^@/, '').trim();
+                    if (cleanTwitchId) {
+                        idRecords.push({
+                            id: 'txt_friend_' + idx + '_' + Date.now(),
+                            name: cleanTwitchId,
+                            twitch: cleanTwitchId,
+                            soCount: 0
+                        });
+                    }
+                    return;
+                }
+
+                let game = '';
+                let title = line;
+
+                if (line.includes('|')) {
+                    const parts = line.split('|');
+                    game = parts[0].trim();
+                    title = parts.slice(1).join('|').trim();
+                } else if (line.includes(' / ')) {
+                    const parts = line.split(' / ');
+                    game = parts[0].trim();
+                    title = parts.slice(1).join(' / ').trim();
+                }
+
+                titleRecords.push({
+                    id: 'txt_rec_' + idx + '_' + Date.now(),
+                    label: 'TXT ' + (idx + 1),
+                    game: game,
+                    title: title || line,
+                    count: 1,
+                    isOpen: true
+                });
             });
-            return parsed;
+
+            const result = {
+                backupVersion: 3,
+                exportedAt: new Date().toISOString()
+            };
+
+            const nowStr = new Date().toLocaleDateString();
+            if (titleRecords.length > 0) {
+                result.config = [{
+                    id: 'txt_cat_' + Date.now(),
+                    name: 'TXTインポート (' + nowStr + ')',
+                    records: titleRecords,
+                    isClosed: false
+                }];
+            }
+
+            if (idRecords.length > 0) {
+                result.friends = [{
+                    id: 'txt_friends_' + Date.now(),
+                    name: 'TXTインポート (' + nowStr + ')',
+                    friends: idRecords,
+                    isClosed: false
+                }];
+            }
+
+            if (!result.config && !result.friends) {
+                throw new Error('Could not parse text file content');
+            }
+
+            return result;
         }
 
         function backupSettingsWithoutToken(source) {
@@ -5546,7 +5631,19 @@ window.copyCommonTag = copyCommonTag;
 
                     if (choice === 'overwrite') {
                         // 完全上書き
-                        if (Array.isArray(d.config)) localStorage.setItem('stream_config_v16', JSON.stringify(d.config));
+                        if (Array.isArray(d.config)) {
+                            const cleanConfig = d.config.map(cat => ({
+                                ...cat,
+                                records: (cat.records || []).map(r => ({
+                                    ...r,
+                                    count: (parseInt(r.count, 10) || 1)
+                                }))
+                            }));
+                            localStorage.setItem('stream_config_v16', JSON.stringify(cleanConfig));
+                        }
+                        if (d.titleTagConfig && isBackupRecord(d.titleTagConfig)) {
+                            localStorage.setItem('title_tag_config_v1', JSON.stringify(d.titleTagConfig));
+                        }
                         if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
                         if (isBackupRecord(d.settings)) {
                             const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
@@ -5596,22 +5693,104 @@ window.copyCommonTag = copyCommonTag;
             const merged = { ...local, ...imported };
             const listenerEntries = new Map();
             [...(local.listenerEntries || []), ...(imported.listenerEntries || [])].forEach(entry => {
-                if (!entry || !entry.userId) return;
-                listenerEntries.set(String(entry.userId), { ...(listenerEntries.get(String(entry.userId)) || {}), ...entry });
+                if (!entry) return;
+                const key = String(entry.userId || entry.userLogin || '').trim().toLowerCase();
+                if (!key) return;
+                listenerEntries.set(key, { ...(listenerEntries.get(key) || {}), ...entry });
             });
             merged.listenerEntries = [...listenerEntries.values()];
             merged.soundFiles = uniqueRaidSoSoundSources([...(local.soundFiles || []), ...(imported.soundFiles || [])]);
             return removeDeprecatedRaidSoObsSettings(merged);
         }
 
+        function mergeTitleTagConfig(localConfig, importedConfig) {
+            const local = isBackupRecord(localConfig) ? localConfig : {};
+            const imported = isBackupRecord(importedConfig) ? importedConfig : {};
+            const merged = { ...local, ...imported };
+
+            // 1. customTags
+            const localTags = Array.isArray(local.customTags) ? local.customTags : [];
+            const importedTags = Array.isArray(imported.customTags) ? imported.customTags : [];
+            const mergedTags = [...localTags];
+
+            importedTags.forEach(impTag => {
+                if (!impTag) return;
+                const idx = mergedTags.findIndex(t => 
+                    (impTag.id && t.id && String(impTag.id) === String(t.id)) ||
+                    (impTag.name && t.name && String(impTag.name).trim() === String(t.name).trim())
+                );
+                if (idx > -1) {
+                    mergedTags[idx] = { ...mergedTags[idx], ...impTag };
+                } else {
+                    mergedTags.push(impTag);
+                }
+            });
+            merged.customTags = mergedTags;
+
+            // 2. categoryMap
+            const localMap = Array.isArray(local.categoryMap) ? local.categoryMap : [];
+            const importedMap = Array.isArray(imported.categoryMap) ? imported.categoryMap : [];
+            const mergedMap = [...localMap];
+
+            importedMap.forEach(impItem => {
+                if (!impItem) return;
+                const idx = mergedMap.findIndex(m => 
+                    (impItem.id && m.id && String(impItem.id) === String(m.id)) ||
+                    (impItem.from && m.from && String(impItem.from).trim().toLowerCase() === String(m.from).trim().toLowerCase())
+                );
+                if (idx > -1) {
+                    mergedMap[idx] = { ...mergedMap[idx], ...impItem };
+                } else {
+                    mergedMap.push(impItem);
+                }
+            });
+            merged.categoryMap = mergedMap;
+
+            return merged;
+        }
+
         function mergeBackupData(d) {
-            // 1. config
+            // 1. config (タイトルカテゴリ・カードのマージ)
             if (d.config && Array.isArray(d.config)) {
                 let localConfig = JSON.parse(localStorage.getItem('stream_config_v16') || '[]');
                 d.config.forEach(cfg => {
-                    const idx = localConfig.findIndex(c => c.id === cfg.id);
-                    if (idx > -1) localConfig[idx] = cfg;
-                    else localConfig.push(cfg);
+                    const cleanRecords = (cfg.records || []).map(r => ({
+                        ...r,
+                        count: (parseInt(r.count, 10) || 1)
+                    }));
+                    
+                    const idx = localConfig.findIndex(c => {
+                        if (cfg.id && c.id && String(cfg.id) === String(c.id)) return true;
+                        if (cfg.name && c.name && String(cfg.name).trim() === String(c.name).trim()) return true;
+                        return false;
+                    });
+
+                    if (idx > -1) {
+                        const existingCat = localConfig[idx];
+                        const existingRecords = existingCat.records || [];
+                        cleanRecords.forEach(newRec => {
+                            const recIdx = existingRecords.findIndex(r => 
+                                (newRec.id && r.id && String(newRec.id) === String(r.id)) ||
+                                (newRec.label && r.label && String(newRec.label).trim() === String(r.label).trim()) ||
+                                (newRec.title && r.title && String(newRec.title).trim() === String(r.title).trim())
+                            );
+                            if (recIdx > -1) {
+                                existingRecords[recIdx] = { ...existingRecords[recIdx], ...newRec };
+                            } else {
+                                existingRecords.push(newRec);
+                            }
+                        });
+                        localConfig[idx] = {
+                            ...existingCat,
+                            ...cfg,
+                            records: existingRecords
+                        };
+                    } else {
+                        localConfig.push({
+                            ...cfg,
+                            records: cleanRecords
+                        });
+                    }
                 });
                 localStorage.setItem('stream_config_v16', JSON.stringify(localConfig));
             }
@@ -5627,13 +5806,22 @@ window.copyCommonTag = copyCommonTag;
             if (d.friends && Array.isArray(d.friends)) {
                 let localFriends = JSON.parse(localStorage.getItem('stream_friends_v16') || '[]');
                 d.friends.forEach(bkCat => {
-                    let targetCat = localFriends.find(c => c.name === bkCat.name);
+                    if (!bkCat) return;
+                    let targetCat = localFriends.find(c => 
+                        (bkCat.id && c.id && String(c.id) === String(bkCat.id)) ||
+                        (c.name && bkCat.name && String(c.name).trim() === String(bkCat.name).trim())
+                    );
                     if (!targetCat) {
                         localFriends.push(bkCat);
                     } else {
                         if (!targetCat.friends) targetCat.friends = [];
-                        bkCat.friends.forEach(bkF => {
-                            let existingFriend = targetCat.friends.find(f => f.twitch === bkF.twitch || (bkF.name && f.name === bkF.name));
+                        (bkCat.friends || []).forEach(bkF => {
+                            if (!bkF) return;
+                            let existingFriend = targetCat.friends.find(f => 
+                                (bkF.id && f.id && String(f.id) === String(bkF.id)) ||
+                                (bkF.twitch && f.twitch && String(f.twitch).trim().toLowerCase() === String(bkF.twitch).trim().toLowerCase()) ||
+                                (bkF.name && f.name && String(f.name).trim() === String(bkF.name).trim())
+                            );
                             if (!existingFriend) {
                                 targetCat.friends.push(bkF);
                             } else {
@@ -5649,9 +5837,14 @@ window.copyCommonTag = copyCommonTag;
             if (d.memoList && Array.isArray(d.memoList)) {
                 let localMemo = JSON.parse(localStorage.getItem('stream_memo_v16') || '[]');
                 d.memoList.forEach(bkM => {
-                    let existingMemo = localMemo.find(m => m.title === bkM.title);
+                    if (!bkM) return;
+                    let existingMemo = localMemo.find(m => 
+                        (bkM.id && m.id && String(m.id) === String(bkM.id)) ||
+                        (m.title && bkM.title && String(m.title).trim() === String(bkM.title).trim())
+                    );
                     if (!existingMemo) {
                         localMemo.push({
+                            id: bkM.id || ('memo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)),
                             title: bkM.title || '',
                             content: bkM.content || '',
                             isClosed: true,
@@ -5675,8 +5868,12 @@ window.copyCommonTag = copyCommonTag;
             if (d.raidShoutOutTemplates && Array.isArray(d.raidShoutOutTemplates)) {
                 let localRSOTemplates = JSON.parse(localStorage.getItem(RAIDSO_CUSTOM_TEMPLATES_KEY) || '[]');
                 d.raidShoutOutTemplates.forEach(bkT => {
-                    let idx = localRSOTemplates.findIndex(t => t.name === bkT.name);
-                    if (idx > -1) localRSOTemplates[idx] = bkT;
+                    if (!bkT) return;
+                    let idx = localRSOTemplates.findIndex(t => 
+                        (bkT.id && t.id && String(t.id) === String(bkT.id)) ||
+                        (t.name && bkT.name && String(t.name).trim() === String(bkT.name).trim())
+                    );
+                    if (idx > -1) localRSOTemplates[idx] = { ...localRSOTemplates[idx], ...bkT };
                     else localRSOTemplates.push(bkT);
                 });
                 localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(localRSOTemplates));
@@ -5686,7 +5883,8 @@ window.copyCommonTag = copyCommonTag;
             if (Array.isArray(d.supporterArchives)) {
                 let localArchives = JSON.parse(localStorage.getItem(SUPPORTER_ARCHIVE_STORAGE_KEY) || '[]');
                 d.supporterArchives.forEach(bkA => {
-                    if (!localArchives.some(a => a.id === bkA.id)) {
+                    if (!bkA) return;
+                    if (!localArchives.some(a => (bkA.id && a.id && String(a.id) === String(bkA.id)) || (bkA.date && a.date && a.date === bkA.date))) {
                         localArchives.push(bkA);
                     }
                 });
@@ -5711,9 +5909,12 @@ window.copyCommonTag = copyCommonTag;
             }
 
             // 9. rewards created by TwitchManager
-            // 10. titleTagConfig
-            if (d.titleTagConfig && Array.isArray(d.titleTagConfig.customTags)) {
-                titleTagConfig = d.titleTagConfig;
+            // 10. titleTagConfig (単語セット・タグ設定のマージ)
+            if (d.titleTagConfig && isBackupRecord(d.titleTagConfig)) {
+                let localTitleTag = {};
+                try { localTitleTag = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}'); } catch(e) {}
+                const mergedTitleTag = mergeTitleTagConfig(localTitleTag, d.titleTagConfig);
+                titleTagConfig = mergedTitleTag;
                 saveTitleTagConfig();
             }
 
@@ -5736,8 +5937,14 @@ window.copyCommonTag = copyCommonTag;
             };
 
             if (selectVal === 'all' || selectVal === 'title') {
-                d.config = config;
-                                try {
+                d.config = (config || []).map(cat => ({
+                    ...cat,
+                    records: (cat.records || []).map(r => ({
+                        ...r,
+                        count: (parseInt(r.count, 10) || 1)
+                    }))
+                }));
+                try {
                     d.titleTagConfig = JSON.parse(localStorage.getItem('title_tag_config_v1') || '{}');
                 } catch(e) {
                     d.titleTagConfig = {};
