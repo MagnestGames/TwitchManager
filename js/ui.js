@@ -5465,25 +5465,108 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function parseBackupJson(text) {
-            const parsed = JSON.parse(text, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
-            if (!isBackupRecord(parsed)) throw new Error('Invalid backup root');
-            const expectedTypes = {
-                config: Array.isArray,
-                friends: Array.isArray,
-                settings: isBackupRecord,
-                memoList: Array.isArray,
-                raidShoutOut: isBackupRecord,
-                raidShoutOutTemplates: Array.isArray,
-                supporterArchives: Array.isArray,
-                cpGroups: Array.isArray,
-                cpAppRewardIds: Array.isArray
-            };
-            Object.entries(expectedTypes).forEach(([key, validator]) => {
-                if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
-                    throw new Error(`Invalid backup field: ${key}`);
+            if (!text || typeof text !== 'string') throw new Error('Invalid file content');
+            const cleanText = text.replace(/^\uFEFF/, '').trim();
+
+            // 1. JSON形式（.json / .txt に保存されたJSONテキスト）のパース試行
+            try {
+                const parsed = JSON.parse(cleanText, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
+                if (isBackupRecord(parsed)) {
+                    const expectedTypes = {
+                        config: Array.isArray,
+                        friends: Array.isArray,
+                        settings: isBackupRecord,
+                        memoList: Array.isArray,
+                        raidShoutOut: isBackupRecord,
+                        raidShoutOutTemplates: Array.isArray,
+                        supporterArchives: Array.isArray,
+                        cpGroups: Array.isArray,
+                        cpAppRewardIds: Array.isArray
+                    };
+                    Object.entries(expectedTypes).forEach(([key, validator]) => {
+                        if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
+                            throw new Error(`Invalid backup field: ${key}`);
+                        }
+                    });
+                    return parsed;
                 }
+            } catch (e) {
+                // 不正なJSONまたはプレーンテキストの場合は下のテキストパースへ
+            }
+
+            // 2. プレーンテキスト（.txt）ファイルのパース試行（タイトルリスト・IDリスト等の行区切りテキスト）
+            const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length === 0) throw new Error('File is empty');
+
+            const titleRecords = [];
+            const idRecords = [];
+
+            lines.forEach((line, idx) => {
+                if (line.startsWith('@') || /^[a-zA-Z0-9_]{3,25}$/.test(line)) {
+                    const cleanTwitchId = line.replace(/^@/, '').trim();
+                    if (cleanTwitchId) {
+                        idRecords.push({
+                            id: 'txt_friend_' + idx + '_' + Date.now(),
+                            name: cleanTwitchId,
+                            twitch: cleanTwitchId,
+                            soCount: 0
+                        });
+                    }
+                    return;
+                }
+
+                let game = '';
+                let title = line;
+
+                if (line.includes('|')) {
+                    const parts = line.split('|');
+                    game = parts[0].trim();
+                    title = parts.slice(1).join('|').trim();
+                } else if (line.includes(' / ')) {
+                    const parts = line.split(' / ');
+                    game = parts[0].trim();
+                    title = parts.slice(1).join(' / ').trim();
+                }
+
+                titleRecords.push({
+                    id: 'txt_rec_' + idx + '_' + Date.now(),
+                    label: 'TXT ' + (idx + 1),
+                    game: game,
+                    title: title || line,
+                    count: 1,
+                    isOpen: true
+                });
             });
-            return parsed;
+
+            const result = {
+                backupVersion: 3,
+                exportedAt: new Date().toISOString()
+            };
+
+            const nowStr = new Date().toLocaleDateString();
+            if (titleRecords.length > 0) {
+                result.config = [{
+                    id: 'txt_cat_' + Date.now(),
+                    name: 'TXTインポート (' + nowStr + ')',
+                    records: titleRecords,
+                    isClosed: false
+                }];
+            }
+
+            if (idRecords.length > 0) {
+                result.friends = [{
+                    id: 'txt_friends_' + Date.now(),
+                    name: 'TXTインポート (' + nowStr + ')',
+                    friends: idRecords,
+                    isClosed: false
+                }];
+            }
+
+            if (!result.config && !result.friends) {
+                throw new Error('Could not parse text file content');
+            }
+
+            return result;
         }
 
         function backupSettingsWithoutToken(source) {
