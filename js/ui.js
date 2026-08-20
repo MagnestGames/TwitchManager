@@ -556,11 +556,10 @@ window.copyCommonTag = copyCommonTag;
             const footerActions = L.footerActions || langMap.ja.footerActions;
             const restoreFileInput = document.getElementById('ui-restore-file');
             const restoreFileName = document.getElementById('ui-restore-file-name');
-            if (restoreFileName && !restoreFileInput?.files?.length) restoreFileName.innerText = footerActions.noFileSelected;
+            if (restoreFileName && !restoreFileInput?.files?.length) restoreFileName.innerText = footerActions.selectFile;
             const footerLabelMap = {
                 'ui-save-cmd': L.save,
                 'ui-raid-save': L.save,
-                'ui-backup-select-file': footerActions.selectFile,
                 'ui-backup-copy-footer': footerActions.copyBackup,
                 'ui-backup-restore-footer': footerActions.loadBackup,
                 'ui-backup-copy-log-footer': footerActions.copyLogs,
@@ -570,11 +569,8 @@ window.copyCommonTag = copyCommonTag;
                 const el = document.getElementById(id);
                 if (el && text) el.innerText = text;
             });
-            document.getElementById('ui-backup-title').innerText = L.backupTitle;
-            document.getElementById('ui-backup-copy').innerText = L.backupCopy;
             const restoreTitleText = document.querySelector('#ui-restore-title [data-i18n="restoreTitle"]');
             if (restoreTitleText) restoreTitleText.innerText = L.restoreTitle;
-            document.getElementById('ui-restore-btn').innerText = L.restoreBtn;
             const backupLogTitle = document.getElementById('ui-backup-log-title');
             const cmdText = commandText();
             const raidText = L.raidSo || langMap.ja.raidSo;
@@ -5448,7 +5444,7 @@ window.copyCommonTag = copyCommonTag;
 
         function updateRestoreFileName(input) {
             const name = document.getElementById('ui-restore-file-name');
-            if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.noFileSelected || langMap.ja.footerActions.noFileSelected);
+            if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.selectFile || langMap.ja.footerActions.selectFile);
         }
 
         const BACKUP_BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);

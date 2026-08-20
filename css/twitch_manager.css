@@ -6109,6 +6109,34 @@ body.light-theme .cp-segment-btn.is-purple.active {
     justify-content: center;
     gap: 4px;
 }
+.misc-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+}
+.misc-action-row > *,
+.misc-action-row .restore-file-picker {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.misc-action-row .misc-btn-compact {
+    width: 100%;
+    height: 32px;
+    min-height: 32px;
+    padding: 6px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.misc-action-row .restore-file-label {
+    flex: 1 1 auto;
+}
+.misc-action-row .restore-file-name {
+    color: inherit;
+    text-align: center;
+}
 .misc-restore-hint {
     font-size: 11px;
     color: var(--text-muted, #adadb8);

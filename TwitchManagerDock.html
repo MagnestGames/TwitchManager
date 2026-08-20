@@ -638,10 +638,10 @@
                         <option value="settings" data-i18n="extended.backupExportSettings">ツール設定</option>
                     </select>
                 </div>
-                <div style="display: flex; gap: 4px;">
+                <div class="misc-action-row">
                     <button id="ui-backup-download" class="btn-primary misc-btn-compact" style="flex: 1;" onclick="downloadBackupFile()">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        <span data-i18n="extended.backupDownloadBtn">JSONで保存</span>
+                        <span data-i18n="extended.backupDownloadBtn">保存</span>
                     </button>
                     <button id="ui-backup-copy" class="btn-secondary misc-btn-compact" style="flex: 1;" onclick="copyBackupToClipboard()">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -656,14 +656,14 @@
                     <span data-i18n="restoreTitle">復元・個別読み込み</span>
                 </div>
                 <div class="misc-restore-hint" data-i18n="extended.backupSelectPrompt">
-                    JSON / テキストファイル
+                    対応形式: JSON / TXT
                 </div>
-                <div style="display: flex; gap: 4px;">
+                <div class="misc-action-row">
                     <div class="restore-file-picker" style="flex: 1;">
                         <input type="file" id="ui-restore-file" class="restore-file-input" accept=".json,.txt,application/json,text/plain" onchange="updateRestoreFileName(this)">
-                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary misc-btn-compact restore-file-label" style="width: 100%;" data-i18n="footerActions.selectFile">
+                        <label id="ui-backup-select-file" for="ui-restore-file" class="btn-secondary misc-btn-compact restore-file-label">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.noFileSelected">未選択</span>
+                            <span id="ui-restore-file-name" class="restore-file-name" data-i18n="footerActions.selectFile">選択</span>
                         </label>
                     </div>
                     <button id="ui-restore-btn" class="btn-primary misc-btn-compact" style="flex: 1;" onclick="restoreFromLocalFile()">

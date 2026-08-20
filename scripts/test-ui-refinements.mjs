@@ -17,6 +17,10 @@ assert.match(css, /\.cp-reward-icon-button\s*\{[^}]*width:\s*28px;[^}]*height:\s
 assert.match(css, /\.cp-toolbar\s*\{[^}]*background:\s*var\(--bg-base\);/, 'The CP toolbar must follow both dark and light theme backgrounds.');
 assert.match(ui, /class="cp-group-actions"/, 'CP group actions must use the shared aligned layout.');
 assert.match(css, /#cp-groups-container \.cp-group-actions\s*\{[^}]*grid-template-columns:[^}]*repeat\(3, 28px\)/, 'CP group text and icon actions must use consistent dimensions.');
+assert.match(html, /class="misc-action-row"[\s\S]*id="ui-backup-select-file"[\s\S]*id="ui-restore-file-name"[^>]*data-i18n="footerActions\.selectFile"/, 'Restore actions must keep the localized label inside the file button.');
+assert.doesNotMatch(html, /id="ui-backup-select-file"[^>]*data-i18n=/, 'Localization must not replace the restore button and remove its icon or filename element.');
+assert.match(css, /\.misc-action-row\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/, 'Backup and restore action buttons must use equal columns.');
+assert.doesNotMatch(ui, /getElementById\('ui-(?:backup-title|backup-copy|restore-btn)'\)\.innerText/, 'Localization must not remove icons from backup and restore controls.');
 
 assert.match(ui, /onclick="copyTwitchStreamSettingsUrl\(\)"/, 'Raid settings must provide a URL copy button.');
 assert.match(ui, /raidSoSuggestInputHtml\('raidso-listener-id'/, 'Welcome notification IDs must use the shared Twitch history suggestions.');
@@ -66,6 +70,9 @@ assert.ok(introBoxPosition >= 0 && raidSettingsPosition > introBoxPosition, 'Rai
 
 for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle']) {
   assert.equal((locales.match(new RegExp(`"${key}"`, 'g')) || []).length, 3, `${key} must be translated in all three languages.`);
+}
+for (const formatLabel of ['対応形式: JSON / TXT', 'Formats: JSON / TXT', '支持格式：JSON / TXT']) {
+  assert.match(locales, new RegExp(formatLabel), `${formatLabel} must be localized.`);
 }
 
 console.log('UI refinement checks passed.');
