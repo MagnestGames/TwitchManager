@@ -32,14 +32,18 @@ New-Item -ItemType Directory -Path $payloadRoot | Out-Null
 
 $rootFiles = @(
     "TwitchManagerDock.html",
-    "TwitchManagerAudio.html",
-    "js/creators.json",
-    "js/version.js",
-    "js/locales.js",
-    "css/twitch_manager.css"
+    "TwitchManagerAudio.html"
 )
 foreach ($file in $rootFiles) {
     Copy-Item -LiteralPath (Join-Path $repositoryRoot $file) -Destination $payloadRoot
+}
+
+$directories = @("assets", "css", "js", "sounds")
+foreach ($directory in $directories) {
+    $source = Join-Path $repositoryRoot $directory
+    if (Test-Path -LiteralPath $source) {
+        Copy-Item -LiteralPath $source -Destination $payloadRoot -Recurse
+    }
 }
 
 $versionScriptContent = "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ version: `"$Version`" });`n"
@@ -47,14 +51,6 @@ $versionScriptContent = "globalThis.TWITCH_MANAGER_BUILD = Object.freeze({ versi
     (Join-Path $payloadRoot "js/version.js"),
     $versionScriptContent,
     [System.Text.UTF8Encoding]::new($false))
-
-$directories = @("assets", "js", "sounds")
-foreach ($directory in $directories) {
-    $source = Join-Path $repositoryRoot $directory
-    if (Test-Path -LiteralPath $source) {
-        Copy-Item -LiteralPath $source -Destination $payloadRoot -Recurse
-    }
-}
 
 $payloadArchive = Join-Path $buildRoot "payload.zip"
 Compress-Archive -Path (Join-Path $payloadRoot "*") -DestinationPath $payloadArchive -CompressionLevel Optimal

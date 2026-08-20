@@ -556,11 +556,10 @@ window.copyCommonTag = copyCommonTag;
             const footerActions = L.footerActions || langMap.ja.footerActions;
             const restoreFileInput = document.getElementById('ui-restore-file');
             const restoreFileName = document.getElementById('ui-restore-file-name');
-            if (restoreFileName && !restoreFileInput?.files?.length) restoreFileName.innerText = footerActions.noFileSelected;
+            if (restoreFileName && !restoreFileInput?.files?.length) restoreFileName.innerText = footerActions.selectFile;
             const footerLabelMap = {
                 'ui-save-cmd': L.save,
                 'ui-raid-save': L.save,
-                'ui-backup-select-file': footerActions.selectFile,
                 'ui-backup-copy-footer': footerActions.copyBackup,
                 'ui-backup-restore-footer': footerActions.loadBackup,
                 'ui-backup-copy-log-footer': footerActions.copyLogs,
@@ -570,11 +569,8 @@ window.copyCommonTag = copyCommonTag;
                 const el = document.getElementById(id);
                 if (el && text) el.innerText = text;
             });
-            document.getElementById('ui-backup-title').innerText = L.backupTitle;
-            document.getElementById('ui-backup-copy').innerText = L.backupCopy;
             const restoreTitleText = document.querySelector('#ui-restore-title [data-i18n="restoreTitle"]');
             if (restoreTitleText) restoreTitleText.innerText = L.restoreTitle;
-            document.getElementById('ui-restore-btn').innerText = L.restoreBtn;
             const backupLogTitle = document.getElementById('ui-backup-log-title');
             const cmdText = commandText();
             const raidText = L.raidSo || langMap.ja.raidSo;
@@ -866,12 +862,20 @@ window.copyCommonTag = copyCommonTag;
 
             const copy = langMap[currentLang]?.updateNotification || langMap.ja.updateNotification;
             const currentVersion = updater.currentVersion();
+            const changes = Array.isArray(result.release.changes) ? result.release.changes : [];
+            const changesHtml = changes.length ? `<div style="display:grid; gap:6px;">
+                <strong>${raidSoEscape(copy.changes)}</strong>
+                <ul style="margin:0; padding-left:20px; display:grid; gap:4px; max-height:180px; overflow-y:auto;">
+                    ${changes.map(change => `<li>${raidSoEscape(change)}</li>`).join('')}
+                </ul>
+            </div>` : '';
             const messageHtml = `<div style="display:grid; gap:12px;">
                 <p style="margin:0;">${raidSoEscape(copy.message)}</p>
                 <div style="display:grid; grid-template-columns:auto 1fr; gap:6px 12px; background:var(--bg-base); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
                     <strong>${raidSoEscape(copy.currentVersion)}</strong><span>${raidSoEscape(currentVersion)}</span>
                     <strong>${raidSoEscape(copy.latestVersion)}</strong><span>${raidSoEscape(result.release.version)}</span>
                 </div>
+                ${changesHtml}
                 <p style="margin:0; color:var(--text-muted); font-size:12px;">${raidSoEscape(copy.skipNote)}</p>
             </div>`;
             const choice = await customChoice({
@@ -3886,15 +3890,26 @@ window.copyCommonTag = copyCommonTag;
                 <p>${raidSoEscape(r.listenerDelayNote)}</p>
                 <div class="raidso-listener-add">
                     <label><span class="field-label">${raidSoEscape(r.listenerIdLabel)}</span>${raidSoSuggestInputHtml('raidso-listener-id', r.listenerIdPlaceholder)}</label>
-                    <label><span class="field-label">${raidSoEscape(r.listenerSoundLabel)}</span><select id="raidso-listener-sound">${options(sounds[0] || '')}</select></label>
                     <button type="button" class="btn-primary raidso-listener-add-button" onclick="addRaidSoListener()">${raidSoEscape(r.listenerAdd)}</button>
                 </div>
                 <div class="raidso-listener-list">
-                    ${entries.length ? entries.map(entry => `<div class="raidso-listener-row">
+                    ${entries.length ? entries.map(entry => {
+                        const listenerVolume = clampRaidSoVolume(entry.volume, 80);
+                        const previewLabel = r.playSound.replace('{title}', entry.displayName || entry.login || entry.userId);
+                        return `<div class="raidso-listener-row">
                         <div class="raidso-listener-person"><strong>${raidSoEscape(entry.displayName || entry.login || entry.userId)}</strong><small>${raidSoEscape(entry.login || entry.userId)}</small></div>
-                        <select aria-label="${raidSoEscape(r.listenerSoundLabel)}" onchange="updateRaidSoListenerSound('${raidSoEscape(entry.userId)}', this.value)">${options(entry.soundFile)}</select>
+                        <div class="raidso-listener-controls">
+                            <select aria-label="${raidSoEscape(r.listenerSoundLabel)}" onchange="updateRaidSoListenerSound('${raidSoEscape(entry.userId)}', this.value)">${options(entry.soundFile)}</select>
+                            <div class="raidso-listener-volume">
+                                <span>${raidSoEscape(r.volume)}</span>
+                                <input type="range" min="0" max="100" step="1" value="${listenerVolume}" aria-label="${raidSoEscape(r.volume)}" oninput="updateRaidSoListenerVolume('${raidSoEscape(entry.userId)}', this.value, false); this.nextElementSibling.textContent = this.value + '%'" onchange="updateRaidSoListenerVolume('${raidSoEscape(entry.userId)}', this.value, true)">
+                                <output>${listenerVolume}%</output>
+                            </div>
+                            <button type="button" class="btn-secondary raidso-listener-preview" aria-label="${raidSoEscape(previewLabel)}" title="${raidSoEscape(previewLabel)}" onclick="testRaidSoListenerSound('${raidSoEscape(entry.userId)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+                        </div>
                         <button type="button" class="btn-secondary raidso-listener-remove" aria-label="${raidSoEscape(r.listenerRemove)}" onclick="removeRaidSoListener('${raidSoEscape(entry.userId)}')">×</button>
-                    </div>`).join('') : `<div class="raidso-listener-empty">${raidSoEscape(r.listenerEmpty)}</div>`}
+                    </div>`;
+                    }).join('') : `<div class="raidso-listener-empty">${raidSoEscape(r.listenerEmpty)}</div>`}
                 </div>
             </section>`;
         }
@@ -3952,7 +3967,7 @@ window.copyCommonTag = copyCommonTag;
         async function addRaidSoListener() {
             const r = raidSoText();
             const raw = document.getElementById('raidso-listener-id')?.value.trim() || '';
-            const soundFile = document.getElementById('raidso-listener-sound')?.value || getRaidSoSoundFiles()[0] || '';
+            const soundFile = getRaidSoSoundFiles()[0] || '';
             if (!raw) return showToast(r.listenerResolveFailed, 'error');
             try {
                 ensureRaidSoBaseSettings();
@@ -3963,7 +3978,7 @@ window.copyCommonTag = copyCommonTag;
                 if (!user) throw new Error(r.listenerResolveFailed);
                 const entries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
                 if (entries.some(entry => entry.userId === String(user.id))) return showToast(r.listenerDuplicate, 'error');
-                raidSoSettings.listenerEntries = [...entries, { userId: String(user.id), login: user.login, displayName: user.display_name, soundFile }];
+                raidSoSettings.listenerEntries = [...entries, { userId: String(user.id), login: user.login, displayName: user.display_name, soundFile, volume: 80 }];
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
                 renderRaidShoutOutPanel();
                 showToast(r.listenerAdded);
@@ -3976,6 +3991,23 @@ window.copyCommonTag = copyCommonTag;
             raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => entry.userId === String(userId) ? { ...entry, soundFile } : entry);
             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
             showToast(doneText());
+        }
+
+        function updateRaidSoListenerVolume(userId, volume, notify = true) {
+            const normalizedVolume = clampRaidSoVolume(volume, 80);
+            raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => entry.userId === String(userId) ? { ...entry, volume: normalizedVolume } : entry);
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            if (notify) showToast(doneText());
+        }
+
+        function testRaidSoListenerSound(userId) {
+            const entry = (raidSoSettings.listenerEntries || []).find(item => item.userId === String(userId));
+            if (!entry) return;
+            playRaidSoAudioConfig({
+                src: entry.soundFile,
+                volume: clampRaidSoVolume(entry.volume, 80),
+                label: entry.displayName || entry.login || entry.userId
+            }, { overlap: true });
         }
 
         function removeRaidSoListener(userId) {
@@ -5132,7 +5164,7 @@ window.copyCommonTag = copyCommonTag;
                 currentEntries.forEach(entry => {
                     const userId = String(entry.userId || '');
                     if (!userId || !currentIds.has(userId) || raidSoState.listenerPreviousIds.has(userId) || played[userId] === normalizedStreamId) return;
-                    playRaidSoAudioConfig({ src: entry.soundFile, volume: 80, label: entry.displayName || entry.login || userId }, { overlap: true });
+                    playRaidSoAudioConfig({ src: entry.soundFile, volume: clampRaidSoVolume(entry.volume, 80), label: entry.displayName || entry.login || userId }, { overlap: true });
                     played[userId] = normalizedStreamId;
                     raidSoLog(raidSoText().listenerTriggered.replace('{name}', entry.displayName || entry.login || userId));
                 });
@@ -5420,7 +5452,7 @@ window.copyCommonTag = copyCommonTag;
 
         function updateRestoreFileName(input) {
             const name = document.getElementById('ui-restore-file-name');
-            if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.noFileSelected || langMap.ja.footerActions.noFileSelected);
+            if (name) name.innerText = input?.files?.[0]?.name || (langMap[currentLang]?.footerActions?.selectFile || langMap.ja.footerActions.selectFile);
         }
 
         const BACKUP_BLOCKED_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
@@ -8214,10 +8246,10 @@ function renderCpGroups() {
                 ${autoBadgesHtml ? `<div style="margin-bottom:4px;">${autoBadgesHtml}</div>` : ''}
                 <div style="margin-bottom:8px;">${rewardTagsHtml || `<span style="font-size:10px; color:var(--text-muted);">${raidSoEscape(unassignedText)}</span>`}</div>
             </div>
-            <div style="display:flex; gap:4px;">
+            <div class="cp-group-actions">
                 <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
                 <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
-                <button type="button" class="btn-secondary" onclick="openCpBulkEditModal('group', '${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                <button type="button" class="btn-secondary cp-group-icon-btn" onclick="openCpBulkEditModal('group', '${g.id}')" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>

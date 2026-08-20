@@ -33,6 +33,10 @@ assert.match(ui, /listenerBaselineReady/, 'The initial chatter list must be trea
 assert.match(ui, /played\[userId\] === normalizedStreamId/, 'Listener sounds must be limited to once per stream.');
 assert.match(ui, /listenerStreamId !== normalizedStreamId[\s\S]*listenerBaselineReady = false/, 'Changing streams must reset the listener baseline.');
 assert.match(ui, /await fetchRaidSoChatters\(\)[\s\S]*!raidSoSettings\.listenerArrivalEnabled[\s\S]*currentEntries/, 'Listener settings must be rechecked after the asynchronous chatter request.');
+assert.doesNotMatch(ui, /id="raidso-listener-sound"/, 'Adding a listener must only require an ID; sound selection belongs to each saved entry.');
+assert.match(ui, /function updateRaidSoListenerVolume\(userId, volume, notify = true\)[\s\S]*volume: normalizedVolume/, 'Each listener entry must persist its own volume.');
+assert.match(ui, /function testRaidSoListenerSound\(userId\)[\s\S]*playRaidSoAudioConfig/, 'Each listener entry must support preview through the production playback route.');
+assert.match(ui, /src: entry\.soundFile, volume: clampRaidSoVolume\(entry\.volume, 80\)/, 'Listener arrival playback must use the saved per-entry volume.');
 assert.match(eventsub, /pollRaidSoListenerArrivals\(currentStreamId\)/, 'Stream polling must trigger listener detection.');
 assert.match(eventsub, /message_id/, 'EventSub notifications must be deduplicated by message ID.');
 assert.match(ui, /raidSoState\.eventMessageIds\.has\(messageId\)/, 'The notification-and-shoutout EventSub connection must also deduplicate message IDs.');
