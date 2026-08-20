@@ -3886,15 +3886,26 @@ window.copyCommonTag = copyCommonTag;
                 <p>${raidSoEscape(r.listenerDelayNote)}</p>
                 <div class="raidso-listener-add">
                     <label><span class="field-label">${raidSoEscape(r.listenerIdLabel)}</span>${raidSoSuggestInputHtml('raidso-listener-id', r.listenerIdPlaceholder)}</label>
-                    <label><span class="field-label">${raidSoEscape(r.listenerSoundLabel)}</span><select id="raidso-listener-sound">${options(sounds[0] || '')}</select></label>
                     <button type="button" class="btn-primary raidso-listener-add-button" onclick="addRaidSoListener()">${raidSoEscape(r.listenerAdd)}</button>
                 </div>
                 <div class="raidso-listener-list">
-                    ${entries.length ? entries.map(entry => `<div class="raidso-listener-row">
+                    ${entries.length ? entries.map(entry => {
+                        const listenerVolume = clampRaidSoVolume(entry.volume, 80);
+                        const previewLabel = r.playSound.replace('{title}', entry.displayName || entry.login || entry.userId);
+                        return `<div class="raidso-listener-row">
                         <div class="raidso-listener-person"><strong>${raidSoEscape(entry.displayName || entry.login || entry.userId)}</strong><small>${raidSoEscape(entry.login || entry.userId)}</small></div>
-                        <select aria-label="${raidSoEscape(r.listenerSoundLabel)}" onchange="updateRaidSoListenerSound('${raidSoEscape(entry.userId)}', this.value)">${options(entry.soundFile)}</select>
+                        <div class="raidso-listener-controls">
+                            <select aria-label="${raidSoEscape(r.listenerSoundLabel)}" onchange="updateRaidSoListenerSound('${raidSoEscape(entry.userId)}', this.value)">${options(entry.soundFile)}</select>
+                            <div class="raidso-listener-volume">
+                                <span>${raidSoEscape(r.volume)}</span>
+                                <input type="range" min="0" max="100" step="1" value="${listenerVolume}" aria-label="${raidSoEscape(r.volume)}" oninput="updateRaidSoListenerVolume('${raidSoEscape(entry.userId)}', this.value, false); this.nextElementSibling.textContent = this.value + '%'" onchange="updateRaidSoListenerVolume('${raidSoEscape(entry.userId)}', this.value, true)">
+                                <output>${listenerVolume}%</output>
+                            </div>
+                            <button type="button" class="btn-secondary raidso-listener-preview" aria-label="${raidSoEscape(previewLabel)}" title="${raidSoEscape(previewLabel)}" onclick="testRaidSoListenerSound('${raidSoEscape(entry.userId)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></button>
+                        </div>
                         <button type="button" class="btn-secondary raidso-listener-remove" aria-label="${raidSoEscape(r.listenerRemove)}" onclick="removeRaidSoListener('${raidSoEscape(entry.userId)}')">×</button>
-                    </div>`).join('') : `<div class="raidso-listener-empty">${raidSoEscape(r.listenerEmpty)}</div>`}
+                    </div>`;
+                    }).join('') : `<div class="raidso-listener-empty">${raidSoEscape(r.listenerEmpty)}</div>`}
                 </div>
             </section>`;
         }
@@ -3952,7 +3963,7 @@ window.copyCommonTag = copyCommonTag;
         async function addRaidSoListener() {
             const r = raidSoText();
             const raw = document.getElementById('raidso-listener-id')?.value.trim() || '';
-            const soundFile = document.getElementById('raidso-listener-sound')?.value || getRaidSoSoundFiles()[0] || '';
+            const soundFile = getRaidSoSoundFiles()[0] || '';
             if (!raw) return showToast(r.listenerResolveFailed, 'error');
             try {
                 ensureRaidSoBaseSettings();
@@ -3963,7 +3974,7 @@ window.copyCommonTag = copyCommonTag;
                 if (!user) throw new Error(r.listenerResolveFailed);
                 const entries = Array.isArray(raidSoSettings.listenerEntries) ? raidSoSettings.listenerEntries : [];
                 if (entries.some(entry => entry.userId === String(user.id))) return showToast(r.listenerDuplicate, 'error');
-                raidSoSettings.listenerEntries = [...entries, { userId: String(user.id), login: user.login, displayName: user.display_name, soundFile }];
+                raidSoSettings.listenerEntries = [...entries, { userId: String(user.id), login: user.login, displayName: user.display_name, soundFile, volume: 80 }];
                 localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
                 renderRaidShoutOutPanel();
                 showToast(r.listenerAdded);
@@ -3976,6 +3987,23 @@ window.copyCommonTag = copyCommonTag;
             raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => entry.userId === String(userId) ? { ...entry, soundFile } : entry);
             localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
             showToast(doneText());
+        }
+
+        function updateRaidSoListenerVolume(userId, volume, notify = true) {
+            const normalizedVolume = clampRaidSoVolume(volume, 80);
+            raidSoSettings.listenerEntries = (raidSoSettings.listenerEntries || []).map(entry => entry.userId === String(userId) ? { ...entry, volume: normalizedVolume } : entry);
+            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(raidSoSettings));
+            if (notify) showToast(doneText());
+        }
+
+        function testRaidSoListenerSound(userId) {
+            const entry = (raidSoSettings.listenerEntries || []).find(item => item.userId === String(userId));
+            if (!entry) return;
+            playRaidSoAudioConfig({
+                src: entry.soundFile,
+                volume: clampRaidSoVolume(entry.volume, 80),
+                label: entry.displayName || entry.login || entry.userId
+            }, { overlap: true });
         }
 
         function removeRaidSoListener(userId) {
@@ -5132,7 +5160,7 @@ window.copyCommonTag = copyCommonTag;
                 currentEntries.forEach(entry => {
                     const userId = String(entry.userId || '');
                     if (!userId || !currentIds.has(userId) || raidSoState.listenerPreviousIds.has(userId) || played[userId] === normalizedStreamId) return;
-                    playRaidSoAudioConfig({ src: entry.soundFile, volume: 80, label: entry.displayName || entry.login || userId }, { overlap: true });
+                    playRaidSoAudioConfig({ src: entry.soundFile, volume: clampRaidSoVolume(entry.volume, 80), label: entry.displayName || entry.login || userId }, { overlap: true });
                     played[userId] = normalizedStreamId;
                     raidSoLog(raidSoText().listenerTriggered.replace('{name}', entry.displayName || entry.login || userId));
                 });
