@@ -47,6 +47,50 @@ assert.equal(restoredSettings.clientId, 'current-client');
 assert.equal(restoredSettings.redirectUri, 'http://localhost');
 assert.equal(restoredSettings.dateFormat, 'M/D');
 
+const validBackup = vm.runInContext(`parseBackupJson('{"config":[]}')`, backupContext);
+assert.equal(Array.isArray(validBackup.config), true, 'Valid JSON backups must remain supported.');
+const plainTextBackup = vm.runInContext(`parseBackupJson('Just Chatting | Test stream')`, backupContext);
+assert.equal(Array.isArray(plainTextBackup.config), true, 'Plain-text title backups must remain supported.');
+assert.throws(
+  () => vm.runInContext(`parseBackupJson('{"config":"invalid"}')`, backupContext),
+  /Invalid backup field: config/,
+  'Invalid JSON field types must not fall back to plain text.'
+);
+assert.throws(
+  () => vm.runInContext(`parseBackupJson('{"config":')`, backupContext),
+  /Invalid JSON backup/,
+  'Malformed JSON-like input must be rejected.'
+);
+assert.throws(
+  () => vm.runInContext(`parseBackupJson('[]')`, backupContext),
+  /Invalid backup object/,
+  'JSON arrays must not be converted into title records.'
+);
+
+const rollbackResult = vm.runInContext(`(() => {
+  const values = new Map([['first', 'old-a'], ['second', 'old-b']]);
+  let failNextSecondWrite = true;
+  const storage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => {
+      if (key === 'second' && failNextSecondWrite) {
+        failNextSecondWrite = false;
+        throw new Error('simulated storage failure');
+      }
+      values.set(key, String(value));
+    },
+    removeItem: key => values.delete(key)
+  };
+  try {
+    runBackupStorageTransaction(['first', 'second'], () => {
+      storage.setItem('first', 'new-a');
+      storage.setItem('second', 'new-b');
+    }, storage);
+  } catch (error) {}
+  return values.get('first') + ',' + values.get('second');
+})()`, backupContext);
+assert.equal(rollbackResult, 'old-a,old-b', 'Failed restores must roll back every touched storage key.');
+
 assert.match(ui, /function triggerNotification\(type\)\s*\{[\s\S]*notify-flash[\s\S]*\}/, 'Supporter EventSub notifications must remain visual-only.');
 assert.match(eventsub, /triggerCpAutoOn\('raid'\)/, 'Inbound raid CP automation must be owned by the supporter EventSub path.');
 assert.equal((ui.match(/triggerCpAutoOn\('raid'\)/g) || []).length, 0, 'Raid/SO EventSub must not duplicate inbound raid CP automation.');

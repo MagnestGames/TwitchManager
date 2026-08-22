@@ -5464,35 +5464,76 @@ window.copyCommonTag = copyCommonTag;
             return value !== null && typeof value === 'object' && !Array.isArray(value);
         }
 
+        function validateBackupObjectArray(value, field, nestedValidator) {
+            if (value === undefined || value === null) return;
+            if (!Array.isArray(value)) throw new Error(`Invalid backup field: ${field}`);
+            value.forEach((entry, index) => {
+                if (!isBackupRecord(entry)) throw new Error(`Invalid backup field: ${field}[${index}]`);
+                if (nestedValidator) nestedValidator(entry, index);
+            });
+        }
+
+        function validateBackupData(parsed) {
+            if (!isBackupRecord(parsed)) throw new Error('Invalid backup object');
+
+            const expectedTypes = {
+                config: Array.isArray,
+                friends: Array.isArray,
+                settings: isBackupRecord,
+                memoList: Array.isArray,
+                raidShoutOut: isBackupRecord,
+                raidShoutOutTemplates: Array.isArray,
+                supporterArchives: Array.isArray,
+                cpGroups: Array.isArray,
+                cpAppRewardIds: Array.isArray,
+                titleTagConfig: isBackupRecord
+            };
+            Object.entries(expectedTypes).forEach(([key, validator]) => {
+                if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
+                    throw new Error(`Invalid backup field: ${key}`);
+                }
+            });
+
+            validateBackupObjectArray(parsed.config, 'config', (category, categoryIndex) => {
+                validateBackupObjectArray(category.records, `config[${categoryIndex}].records`);
+            });
+            validateBackupObjectArray(parsed.friends, 'friends', (category, categoryIndex) => {
+                validateBackupObjectArray(category.friends, `friends[${categoryIndex}].friends`);
+            });
+            validateBackupObjectArray(parsed.memoList, 'memoList');
+            validateBackupObjectArray(parsed.raidShoutOutTemplates, 'raidShoutOutTemplates');
+            validateBackupObjectArray(parsed.supporterArchives, 'supporterArchives');
+            validateBackupObjectArray(parsed.cpGroups, 'cpGroups', (group, groupIndex) => {
+                if (group.rewardIds !== undefined && group.rewardIds !== null && !Array.isArray(group.rewardIds)) {
+                    throw new Error(`Invalid backup field: cpGroups[${groupIndex}].rewardIds`);
+                }
+            });
+
+            if (isBackupRecord(parsed.raidShoutOut)) {
+                validateBackupObjectArray(parsed.raidShoutOut.listenerEntries, 'raidShoutOut.listenerEntries');
+                if (parsed.raidShoutOut.soundFiles !== undefined && parsed.raidShoutOut.soundFiles !== null && !Array.isArray(parsed.raidShoutOut.soundFiles)) {
+                    throw new Error('Invalid backup field: raidShoutOut.soundFiles');
+                }
+            }
+            if (isBackupRecord(parsed.titleTagConfig)) {
+                validateBackupObjectArray(parsed.titleTagConfig.customTags, 'titleTagConfig.customTags');
+                validateBackupObjectArray(parsed.titleTagConfig.categoryMap, 'titleTagConfig.categoryMap');
+            }
+            return parsed;
+        }
+
         function parseBackupJson(text) {
             if (!text || typeof text !== 'string') throw new Error('Invalid file content');
             const cleanText = text.replace(/^\uFEFF/, '').trim();
 
             // 1. JSON形式（.json / .txt に保存されたJSONテキスト）のパース試行
+            let parsedJson;
             try {
-                const parsed = JSON.parse(cleanText, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
-                if (isBackupRecord(parsed)) {
-                    const expectedTypes = {
-                        config: Array.isArray,
-                        friends: Array.isArray,
-                        settings: isBackupRecord,
-                        memoList: Array.isArray,
-                        raidShoutOut: isBackupRecord,
-                        raidShoutOutTemplates: Array.isArray,
-                        supporterArchives: Array.isArray,
-                        cpGroups: Array.isArray,
-                        cpAppRewardIds: Array.isArray
-                    };
-                    Object.entries(expectedTypes).forEach(([key, validator]) => {
-                        if (parsed[key] !== undefined && parsed[key] !== null && !validator(parsed[key])) {
-                            throw new Error(`Invalid backup field: ${key}`);
-                        }
-                    });
-                    return parsed;
-                }
+                parsedJson = JSON.parse(cleanText, (key, value) => BACKUP_BLOCKED_KEYS.has(key) ? undefined : value);
             } catch (e) {
-                // 不正なJSONまたはプレーンテキストの場合は下のテキストパースへ
+                if (/^[\[{]/.test(cleanText)) throw new Error('Invalid JSON backup');
             }
+            if (parsedJson !== undefined) return validateBackupData(parsedJson);
 
             // 2. プレーンテキスト（.txt）ファイルのパース試行（タイトルリスト・IDリスト等の行区切りテキスト）
             const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -5569,6 +5610,40 @@ window.copyCommonTag = copyCommonTag;
             return result;
         }
 
+        function backupStorageKeys(d) {
+            const keys = [];
+            if (Array.isArray(d.config)) keys.push('stream_config_v16');
+            if (isBackupRecord(d.titleTagConfig)) keys.push('title_tag_config_v1');
+            if (Array.isArray(d.friends)) keys.push('stream_friends_v16');
+            if (isBackupRecord(d.settings)) keys.push('stream_settings_v16');
+            if (Array.isArray(d.memoList)) keys.push('stream_memo_v16');
+            if (isBackupRecord(d.raidShoutOut)) keys.push(RAIDSO_STORAGE_KEY);
+            if (Array.isArray(d.raidShoutOutTemplates)) keys.push(RAIDSO_CUSTOM_TEMPLATES_KEY);
+            if (Array.isArray(d.supporterArchives)) keys.push(SUPPORTER_ARCHIVE_STORAGE_KEY);
+            if (Array.isArray(d.cpGroups)) keys.push('cp_groups_v1');
+            if (Array.isArray(d.cpAppRewardIds)) keys.push('cp_app_reward_ids_v1');
+            return [...new Set(keys)];
+        }
+
+        function runBackupStorageTransaction(keys, operation, storage = localStorage) {
+            const snapshot = new Map();
+            keys.forEach(key => snapshot.set(key, storage.getItem(key)));
+            try {
+                return operation();
+            } catch (error) {
+                keys.forEach(key => {
+                    try {
+                        const previous = snapshot.get(key);
+                        if (previous === null) storage.removeItem(key);
+                        else storage.setItem(key, previous);
+                    } catch (rollbackError) {
+                        console.error(`Backup rollback failed for ${key}:`, rollbackError);
+                    }
+                });
+                throw error;
+            }
+        }
+
         function backupSettingsWithoutToken(source) {
             if (!isBackupRecord(source)) return {};
             const result = {};
@@ -5589,6 +5664,64 @@ window.copyCommonTag = copyCommonTag;
             });
             if (restored.token) restored.token = extractTwitchAccessToken(restored.token);
             return restored;
+        }
+
+        function applyBackupOverwrite(d) {
+            if (Array.isArray(d.config)) {
+                const cleanConfig = d.config.map(cat => ({
+                    ...cat,
+                    records: (cat.records || []).map(r => ({
+                        ...r,
+                        count: (parseInt(r.count, 10) || 1)
+                    }))
+                }));
+                localStorage.setItem('stream_config_v16', JSON.stringify(cleanConfig));
+            }
+            if (isBackupRecord(d.titleTagConfig)) {
+                localStorage.setItem('title_tag_config_v1', JSON.stringify(d.titleTagConfig));
+            }
+            if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
+            if (isBackupRecord(d.settings)) {
+                const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
+                const restoredSettings = restoreSettingsWithoutBackupToken(d.settings, currentSettings, true);
+                localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
+            }
+            if (Array.isArray(d.memoList)) {
+                const cleanMemos = d.memoList.map(m => ({
+                    title: m.title || '',
+                    content: m.content || '',
+                    isClosed: true,
+                    mode: 'preview'
+                }));
+                localStorage.setItem('stream_memo_v16', JSON.stringify(cleanMemos));
+            }
+            if (isBackupRecord(d.raidShoutOut)) {
+                localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(removeDeprecatedRaidSoObsSettings(d.raidShoutOut)));
+            }
+            if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
+            if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
+            if (Array.isArray(d.cpGroups)) localStorage.setItem('cp_groups_v1', JSON.stringify(d.cpGroups));
+            if (Array.isArray(d.cpAppRewardIds)) localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set(d.cpAppRewardIds.map(String))]));
+        }
+
+        function applyBackupChoice(d, choice) {
+            validateBackupData(d);
+            const previousTitleTagConfig = JSON.stringify(titleTagConfig || {});
+            const previousCpAppRewardIds = typeof cpState !== 'undefined' && Array.isArray(cpState.appRewardIds)
+                ? [...cpState.appRewardIds]
+                : null;
+            try {
+                runBackupStorageTransaction(backupStorageKeys(d), () => {
+                    if (choice === 'overwrite') applyBackupOverwrite(d);
+                    else if (choice === 'merge') mergeBackupData(d);
+                });
+            } catch (error) {
+                titleTagConfig = JSON.parse(previousTitleTagConfig);
+                if (previousCpAppRewardIds && typeof cpState !== 'undefined') {
+                    cpState.appRewardIds = previousCpAppRewardIds;
+                }
+                throw error;
+            }
         }
 
         async function restoreFromLocalFile() {
@@ -5630,50 +5763,12 @@ window.copyCommonTag = copyCommonTag;
                     });
 
                     if (choice === 'overwrite') {
-                        // 完全上書き
-                        if (Array.isArray(d.config)) {
-                            const cleanConfig = d.config.map(cat => ({
-                                ...cat,
-                                records: (cat.records || []).map(r => ({
-                                    ...r,
-                                    count: (parseInt(r.count, 10) || 1)
-                                }))
-                            }));
-                            localStorage.setItem('stream_config_v16', JSON.stringify(cleanConfig));
-                        }
-                        if (d.titleTagConfig && isBackupRecord(d.titleTagConfig)) {
-                            localStorage.setItem('title_tag_config_v1', JSON.stringify(d.titleTagConfig));
-                        }
-                        if (Array.isArray(d.friends)) localStorage.setItem('stream_friends_v16', JSON.stringify(d.friends));
-                        if (isBackupRecord(d.settings)) {
-                            const currentSettings = JSON.parse(localStorage.getItem('stream_settings_v16') || '{}');
-                            const restoredSettings = restoreSettingsWithoutBackupToken(d.settings, currentSettings, true);
-                            localStorage.setItem('stream_settings_v16', JSON.stringify(restoredSettings));
-                        }
-                        if (Array.isArray(d.memoList)) {
-                            const cleanMemos = d.memoList.map(m => ({
-                                title: m.title || '',
-                                content: m.content || '',
-                                isClosed: true,
-                                mode: 'preview'
-                            }));
-                            localStorage.setItem('stream_memo_v16', JSON.stringify(cleanMemos));
-                        }
-                        if (isBackupRecord(d.raidShoutOut)) {
-                            localStorage.setItem(RAIDSO_STORAGE_KEY, JSON.stringify(removeDeprecatedRaidSoObsSettings(d.raidShoutOut)));
-                        }
-                        if (Array.isArray(d.raidShoutOutTemplates)) localStorage.setItem(RAIDSO_CUSTOM_TEMPLATES_KEY, JSON.stringify(d.raidShoutOutTemplates));
-                        if (Array.isArray(d.supporterArchives)) localStorage.setItem(SUPPORTER_ARCHIVE_STORAGE_KEY, JSON.stringify(d.supporterArchives.slice(0, SUPPORTER_ARCHIVE_LIMIT)));
-                        if (Array.isArray(d.cpGroups)) localStorage.setItem('cp_groups_v1', JSON.stringify(d.cpGroups));
-                        if (Array.isArray(d.cpAppRewardIds)) localStorage.setItem('cp_app_reward_ids_v1', JSON.stringify([...new Set(d.cpAppRewardIds.map(String))]));
-
+                        applyBackupChoice(d, choice);
                         raidSoLog(uiText('runtime.operationLog.backupOverwriteRestored'));
                         showToast(uiText('runtime.restoreOverwriteDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
                     } else if (choice === 'merge') {
-                        // 差分統合マージ処理
-                        mergeBackupData(d);
-
+                        applyBackupChoice(d, choice);
                         raidSoLog(uiText('runtime.operationLog.backupMergeRestored'));
                         showToast(uiText('runtime.restoreMergeDone'), 'success');
                         setTimeout(() => location.reload(), 1000);
@@ -8433,7 +8528,7 @@ function renderCpGroups() {
             <div class="cp-group-actions">
                 <button type="button" class="btn-secondary cp-group-toggle is-enable" onclick="batchToggleCpGroup('${g.id}', true)">${raidSoEscape(bOnText)}</button>
                 <button type="button" class="btn-secondary cp-group-toggle is-disable" onclick="batchToggleCpGroup('${g.id}', false)">${raidSoEscape(bOffText)}</button>
-                <button type="button" class="btn-secondary cp-group-icon-btn" onclick="openCpBulkEditModal('group', '${g.id}')" data-i18n-title="cpTab.bulkEditTitle" title="一括編集" aria-label="一括編集"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                <button type="button" class="btn-secondary cp-group-icon-btn" onclick="openCpBulkEditModal('group', '${g.id}')" title="${raidSoEscape(cpCopy('bulkEditTitle'))}" aria-label="${raidSoEscape(cpCopy('bulkEditTitle'))}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="openCpGroupModal('${g.id}')" style="padding:3px 6px; font-size:10px; display:inline-flex; align-items:center;" aria-label="${raidSoEscape(settingAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
                 <button type="button" class="btn-secondary" onclick="deleteCpGroup('${g.id}')" style="padding:3px 6px; font-size:10px; color:var(--accent-red); display:inline-flex; align-items:center;" aria-label="${raidSoEscape(deleteAria)}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
@@ -8859,7 +8954,7 @@ function openTitleTagModal() {
 
     const collabSelect = document.getElementById('title-tag-collab-category-select');
     if (collabSelect) {
-        let optionsHtml = '<option value="">全体 (チェック中の全メンバー)</option>';
+        let optionsHtml = `<option value="">${raidSoEscape(uiText('extended.tagCollabAllMembers'))}</option>`;
         (friendsConfig || []).forEach(cat => {
             if (cat.name && cat.kind !== 'shoutout-history' && cat.kind !== 'authenticated-user') {
                 const sel = cat.name === (titleTagConfig.collabCategoryName || '') ? 'selected' : '';
@@ -8891,7 +8986,7 @@ function renderTitleTagModalRows() {
     const container = document.getElementById('title-tag-list-container');
     if (!container) return;
     if (!titleTagConfig.customTags || titleTagConfig.customTags.length === 0) {
-        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">(登録されているカスタム識別タグはありません)</div>';
+        container.innerHTML = `<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">${raidSoEscape(uiText('extended.tagNoCustomTags'))}</div>`;
         return;
     }
     let html = '';
@@ -8904,7 +8999,7 @@ function renderTitleTagModalRows() {
             <div style="flex:2;">
                 <input type="text" class="cd-input-field tag-row-val" data-idx="${idx}" value="${raidSoEscape(tag.value || '')}" placeholder="${raidSoEscape(uiText('extended.tagValPlaceholder') || '置換内容 (例: 【初見歓迎】)')}" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
-            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">削除</button>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomTitleTagRow(${idx})" style="padding:4px 8px; font-size:11px;">${raidSoEscape(langMap[currentLang]?.delete || langMap.ja.delete)}</button>
         </div>`;
     });
     container.innerHTML = html;
@@ -8948,7 +9043,7 @@ function renderCategoryMapModalRows() {
     if (!container) return;
 
     if (!titleTagConfig.categoryMap || titleTagConfig.categoryMap.length === 0) {
-        container.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">(登録されているカテゴリ変換ルールはありません)</div>';
+        container.innerHTML = `<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:8px;">${raidSoEscape(uiText('extended.tagNoCategoryRules'))}</div>`;
         return;
     }
 
@@ -8962,13 +9057,13 @@ function renderCategoryMapModalRows() {
             optionsList.unshift(currentFrom);
         }
 
-        let selectOptionsHtml = '<option value="">登録カテゴリを選択...</option>';
+        let selectOptionsHtml = `<option value="">${raidSoEscape(uiText('extended.tagSelectRegisteredCategory'))}</option>`;
         optionsList.forEach(g => {
             const sel = (g.toLowerCase() === currentFrom.toLowerCase() && !item.isCustomFrom) ? 'selected' : '';
             selectOptionsHtml += `<option value="${raidSoEscape(g)}" ${sel}>${raidSoEscape(g)}</option>`;
         });
         const customSel = item.isCustomFrom ? 'selected' : '';
-        selectOptionsHtml += `<option value="__custom__" ${customSel}>✏️ 直接入力 (その他)...</option>`;
+        selectOptionsHtml += `<option value="__custom__" ${customSel}>${raidSoEscape(uiText('extended.tagDirectInputOption'))}</option>`;
 
         const isCustom = item.isCustomFrom;
 
@@ -8984,7 +9079,7 @@ function renderCategoryMapModalRows() {
             <div style="flex:1.2;">
                 <input type="text" class="cd-input-field cat-map-row-to" data-idx="${idx}" value="${raidSoEscape(item.to || '')}" placeholder="${raidSoEscape(uiText('extended.tagToPlaceholder') || '手動変換後 (例: 雑談)')}" style="width:100%; padding:4px 6px; font-size:11px; box-sizing:border-box;">
             </div>
-            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">削除</button>
+            <button type="button" class="btn-danger-soft" onclick="deleteCustomCategoryMappingRow(${idx})" style="padding:4px 8px; font-size:11px; flex-shrink:0;">${raidSoEscape(langMap[currentLang]?.delete || langMap.ja.delete)}</button>
         </div>`;
     });
     container.innerHTML = html;

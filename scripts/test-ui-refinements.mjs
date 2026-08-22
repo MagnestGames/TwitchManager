@@ -51,6 +51,14 @@ const addFriendDialogSource = ui.slice(ui.indexOf('async function showAddFriendD
 assert.match(addFriendDialogSource, /onOpen: \(\{ resolveWith \}\) =>/, 'The add-friend dialog must bind controls when its queued dialog is actually shown.');
 assert.doesNotMatch(addFriendDialogSource, /setTimeout\(/, 'The add-friend dialog must not rely on fixed-delay dialog binding.');
 assert.match(ui, /BACKUP_AUTH_KEYS = new Set\(\['token', 'userId', 'userLogin', 'clientId', 'redirectUri'\]\)/, 'Backups must not import account-bound Twitch authentication fields.');
+assert.match(ui, /title="\$\{raidSoEscape\(cpCopy\('bulkEditTitle'\)\)\}" aria-label="\$\{raidSoEscape\(cpCopy\('bulkEditTitle'\)\)\}"/, 'CP group bulk edit labels must follow the selected language.');
+assert.doesNotMatch(ui, /data-i18n-title="cpTab\.bulkEditTitle" title="一括編集" aria-label="一括編集"/, 'CP group actions must not retain fixed Japanese accessibility labels.');
+const titleTagRowsSource = ui.slice(ui.indexOf('function renderTitleTagModalRows'), ui.indexOf('function addCustomCategoryMappingRow'));
+assert.match(titleTagRowsSource, /extended\.tagNoCustomTags/, 'The empty custom-tag state must be localized.');
+assert.match(titleTagRowsSource, /extended\.tagNoCategoryRules/, 'The empty category-map state must be localized.');
+assert.match(titleTagRowsSource, /extended\.tagSelectRegisteredCategory/, 'The registered-category prompt must be localized.');
+assert.match(titleTagRowsSource, /extended\.tagDirectInputOption/, 'The direct-input option must be localized.');
+assert.doesNotMatch(titleTagRowsSource, />削除<\/button>/, 'Dynamic tag-setting delete buttons must not remain fixed in Japanese.');
 assert.match(storage, /if \(normalizedToken\)[\s\S]*stopAllTwitchConnectionsForAuthClear\(\);[\s\S]*clearLocalTwitchAuth\(\);/, 'Clearing the saved token must stop Twitch connections and clear account identity.');
 
 for (const conciseJapaneseLabel of ['重複IDを統合', 'すべての項目', 'グループ', '報酬一覧']) {
@@ -70,7 +78,7 @@ const introBoxPosition = ui.indexOf('${raidSoIntroActionsBoxHtml(r)}');
 const raidSettingsPosition = ui.indexOf('id="raidso-box-open-settings"');
 assert.ok(introBoxPosition >= 0 && raidSettingsPosition > introBoxPosition, 'Raid settings must appear second in Notification & Shoutout.');
 
-for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle', 'changes']) {
+for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle', 'changes', 'tagNoCustomTags', 'tagNoCategoryRules', 'tagSelectRegisteredCategory', 'tagDirectInputOption', 'tagCollabAllMembers']) {
   assert.equal((locales.match(new RegExp(`"${key}"`, 'g')) || []).length, 3, `${key} must be translated in all three languages.`);
 }
 for (const formatLabel of ['対応形式: JSON / TXT', 'Formats: JSON / TXT', '支持格式：JSON / TXT']) {
