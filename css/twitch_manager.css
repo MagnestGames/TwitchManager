@@ -7556,10 +7556,17 @@ body.del-mode .category-name {
     box-sizing: border-box !important;
 }
 
-.friends-toolbar-top-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.friends-toolbar .friends-sort-label {
+    flex-shrink: 0 !important;
+}
+
+.friends-toolbar #friends-sort-select {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.friends-toolbar .friends-dedup-btn {
+    flex-shrink: 0 !important;
 }
 
 #friends-container .record-card {
@@ -7574,30 +7581,35 @@ body.del-mode .category-name {
 }
 
 @media (max-width: 480px) {
-    /* 1. Friends Toolbar 2-row layout: Top row (Label + Dedup btn), Bottom row (Dropdown full-width) */
+    /* On narrow viewports: Top row = Label (left) + Dedup (right), Bottom row = Dropdown (100% width) */
     .friends-toolbar {
-        flex-direction: column !important;
-        align-items: stretch !important;
+        display: grid !important;
+        grid-template-columns: auto 1fr !important;
+        grid-template-areas:
+            "sortLabel dedupBtn"
+            "sortSelect sortSelect" !important;
         gap: 6px !important;
         padding: 8px 10px !important;
     }
-    .friends-toolbar-top-row {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100% !important;
+    .friends-toolbar .friends-sort-label {
+        grid-area: sortLabel !important;
+        align-self: center !important;
     }
-    #friends-sort-select {
+    .friends-toolbar .friends-dedup-btn {
+        grid-area: dedupBtn !important;
+        justify-self: end !important;
+    }
+    .friends-toolbar #friends-sort-select {
+        grid-area: sortSelect !important;
         width: 100% !important;
-        flex: 1 1 100% !important;
     }
 
-    /* 2. Hide calendar icon on narrow screens so date inputs have full width to show date string */
+    /* Hide calendar icon on narrow screens so date inputs have full width to show date string */
     .id-mini-date-btn {
         display: none !important;
     }
 
-    /* 3. Eliminate unnecessary empty height in ID cards */
+    /* Eliminate unnecessary empty height in ID cards */
     #friends-container .record-card {
         margin-bottom: 8px !important;
         min-height: 0 !important;

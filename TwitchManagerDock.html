@@ -455,13 +455,19 @@
 
         <!-- Sort & Filter Toolbar -->
         <div class="friends-toolbar">
-              <div class="friends-toolbar-top-row">
-                  <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
-                  <button type="button" class="btn-secondary friends-dedup-btn" onclick="checkAndConsolidateDuplicateIds()" style="height: 28px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" data-i18n-title="extended.idDeduplicateBtnTip" title="IDリストの重複IDを検出・統合します">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                      <span data-i18n="extended.idDeduplicateBtn">重複IDを統合</span>
-                  </button>
-              </div>
+              <span class="friends-sort-label" style="font-size: 12px; color: var(--text-muted); font-weight: bold;" data-i18n="idList.sortBy">表示順:</span>
+              <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; font-size: 12px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; cursor: pointer; outline: none;">
+                  <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
+                  <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
+                  <option value="recent-so" data-i18n="idList.sortRecentSo">直近の紹介</option>
+                  <option value="so-count" data-i18n="idList.sortSoCount">紹介回数順</option>
+                  <option value="birthday" data-i18n="idList.sortBirthday">誕生日が近い順</option>
+              </select>
+              <button type="button" class="btn-secondary friends-dedup-btn" onclick="checkAndConsolidateDuplicateIds()" style="height: 28px; padding: 0 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" data-i18n-title="extended.idDeduplicateBtnTip" title="IDリストの重複IDを検出・統合します">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  <span data-i18n="extended.idDeduplicateBtn">重複IDを統合</span>
+              </button>
+          </div>
               <select id="friends-sort-select" onchange="changeFriendsSortOrder(this.value)" data-i18n-aria="idList.sortBy" aria-label="表示順" style="flex: 1; font-size: 12px; background: var(--bg-base); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; cursor: pointer; outline: none;">
                   <option value="name" data-i18n="idList.sortName" selected>名前順 (A-Z)</option>
                   <option value="group" data-i18n="idList.sortGroup">グループ別 (手動)</option>
