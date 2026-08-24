@@ -2122,7 +2122,6 @@ function updateTodayDateDisplay() {
         </div>`;
 
         if (todayMatches.length > 0) {
-            html += `<div class="birthday-popover-section-label" style="font-size:10px; font-weight:bold; color:var(--twitch-purple); margin-bottom:4px;">今日のお祝い</div>`;
             todayMatches.forEach(m => {
                 const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
                 html += `
@@ -2135,24 +2134,24 @@ function updateTodayDateDisplay() {
                 </div>`;
             });
         } else {
-            html += `<div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0; text-align:center; line-height:1.4; word-break:keep-all; overflow-wrap:break-word;">${raidSoEscape(I.noCelebrantsToday)}</div>`;
+            html += `<div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0; text-align:center; line-height:1.4;">${raidSoEscape(I.noCelebrantsToday)}</div>`;
         }
 
-        html += `<div style="font-weight:bold; font-size:11px; margin:10px 0 6px 0; color:var(--text-muted); border-top:1px dashed var(--border-color); padding-top:6px; word-break:keep-all; overflow-wrap:break-word;">${raidSoEscape(I.upcomingSchedule)}</div>`;
+        html += `<div style="font-weight:bold; font-size:11px; margin:10px 0 6px 0; color:var(--text-muted); border-top:1px dashed var(--border-color); padding-top:6px;">${raidSoEscape(I.upcomingSchedule)}</div>`;
 
         const upcoming = allEvents.filter(e => e.daysLeft > 0).slice(0, 3);
         if (upcoming.length > 0) {
             upcoming.forEach(m => {
                 const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
                 html += `
-                <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:6px 8px; margin-bottom:4px; display:flex; flex-direction:column; gap:3px; font-size:11px; cursor:pointer; border-radius:6px; background:var(--bg-panel); border:1px solid var(--border-subtle); transition:0.15s;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                        <span style="font-weight:bold; color:var(--text-main); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
-                        <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size:8.5px; padding:1px 5px; border-radius:3px; flex-shrink:0;">${raidSoEscape(label)}</span>
+                <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})">
+                    <div class="birthday-popover-left">
+                        <span class="birthday-popover-name" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
+                        <span class="birthday-popover-date">${m.month}/${m.day}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px;">
-                        <span style="color:var(--text-muted);">${m.month}/${m.day}</span>
-                        <span style="color:var(--twitch-purple); font-weight:bold;">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                    <div class="birthday-popover-right">
+                        <span class="birthday-popover-days">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                        <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} birthday-popover-badge" style="font-size:8.5px; padding:1px 5px; border-radius:3px; flex-shrink:0;">${raidSoEscape(label)}</span>
                     </div>
                 </div>`;
             });
@@ -2480,13 +2479,13 @@ function updateTodayDateDisplay() {
             const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
             html += `
             <div class="calendar-list-card" onclick="navigateToFriendCard(${m.ci}, ${m.fi})">
-                <div class="calendar-list-card-top">
+                <div class="calendar-list-card-left">
                     <span class="calendar-list-name" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
-                    <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} calendar-list-badge">${raidSoEscape(typeLabel)}</span>
-                </div>
-                <div class="calendar-list-card-bottom">
                     <span class="calendar-list-date">${m.month}/${m.day}</span>
+                </div>
+                <div class="calendar-list-card-right">
                     <span class="calendar-list-days">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                    <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} calendar-list-badge">${raidSoEscape(typeLabel)}</span>
                 </div>
             </div>`;
         });

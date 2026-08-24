@@ -7665,7 +7665,7 @@ body.light-theme .cmd-time-control {
 }
 
 
-/* Birthday / Anniversary Popover Professional UI/UX Polish */
+/* Birthday / Anniversary Popover & Modal: Original 1-Row layout on wide, adaptive on narrow */
 .birthday-popover {
     width: min(280px, calc(100vw - 16px)) !important;
     box-sizing: border-box !important;
@@ -7673,23 +7673,75 @@ body.light-theme .cmd-time-control {
     border-radius: var(--radius-md) !important;
 }
 
-.birthday-popover-item:hover {
-    border-color: var(--twitch-purple) !important;
-    background: rgba(145, 70, 255, 0.08) !important;
+.birthday-popover-item,
+.calendar-list-card {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 4px !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    background: transparent !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: background 0.15s !important;
+    box-sizing: border-box !important;
 }
 
-@media (max-width: 480px) {
-    .birthday-popover {
-        width: min(260px, calc(100vw - 12px)) !important;
-        padding: 10px 10px !important;
-    }
+.birthday-popover-item:hover,
+.calendar-list-card:hover {
+    background: var(--bg-item) !important;
 }
 
+.birthday-popover-left,
+.calendar-list-card-left {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    margin-right: 8px !important;
+    text-align: left !important;
+}
 
-/* ==========================================================================
-   Professional Responsive Design: Birthday & Anniversary Calendar Modal
-   ========================================================================== */
+.birthday-popover-name,
+.calendar-list-name {
+    font-weight: bold !important;
+    color: var(--text-main) !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
 
+.birthday-popover-date,
+.calendar-list-date {
+    color: var(--text-muted) !important;
+    font-size: 10px !important;
+    margin-top: 1px !important;
+}
+
+.birthday-popover-right,
+.calendar-list-card-right {
+    display: flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+}
+
+.birthday-popover-days,
+.calendar-list-days {
+    color: var(--twitch-purple) !important;
+    font-weight: bold !important;
+    font-size: 11px !important;
+}
+
+.calendar-list-badge {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Modal Shell */
 .calendar-modal-content {
     width: min(480px, calc(100vw - 16px)) !important;
     max-height: calc(100vh - 24px) !important;
@@ -7727,69 +7779,6 @@ body.light-theme .cmd-time-control {
     flex-shrink: 0 !important;
 }
 
-/* 2-Row List View Cards (Zero Character Overlap) */
-.calendar-list-card {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
-    padding: 8px 10px !important;
-    margin-bottom: 6px !important;
-    background: var(--bg-panel) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
-    cursor: pointer !important;
-    transition: background 0.15s, border-color 0.15s !important;
-    box-sizing: border-box !important;
-}
-
-.calendar-list-card:hover {
-    background: var(--bg-card) !important;
-    border-color: var(--twitch-purple) !important;
-}
-
-.calendar-list-card-top {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 6px !important;
-}
-
-.calendar-list-name {
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    color: var(--text-main) !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-}
-
-.calendar-list-badge {
-    font-size: 9px !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    flex-shrink: 0 !important;
-}
-
-.calendar-list-card-bottom {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    font-size: 11px !important;
-}
-
-.calendar-list-date {
-    color: var(--text-muted) !important;
-    font-weight: 500 !important;
-}
-
-.calendar-list-days {
-    color: var(--twitch-purple) !important;
-    font-weight: 700 !important;
-}
-
-/* Responsive Grid & Calendar Header */
 #calendar-month-title {
     white-space: nowrap !important;
     font-size: 13px !important;
@@ -7823,50 +7812,14 @@ body.light-theme .cmd-time-control {
     box-sizing: border-box !important;
 }
 
-@media (max-width: 480px) {
-    .calendar-modal-content {
-        padding: 10px 10px !important;
-        width: calc(100vw - 8px) !important;
-        max-width: calc(100vw - 8px) !important;
+@media (max-width: 320px) {
+    /* Only on ultra-narrow viewports (<= 320px): stack date and days smoothly */
+    .birthday-popover-item,
+    .calendar-list-card {
+        padding: 5px 4px !important;
     }
-
-    .calendar-modal-header {
-        padding-bottom: 6px !important;
-        margin-bottom: 8px !important;
-    }
-
-    #ui-calendar-modal-title {
-        font-size: 13px !important;
-    }
-
-    #btn-calendar-today {
-        padding: 2px 6px !important;
-        font-size: 10.5px !important;
-        height: 24px !important;
-    }
-
-    #btn-calendar-tab-list,
-    #btn-calendar-tab-grid {
-        padding: 6px 2px !important;
-        font-size: 11px !important;
-        white-space: nowrap !important;
-    }
-
-    #calendar-month-title {
-        font-size: 11.5px !important;
-        padding: 2px 2px !important;
-    }
-
-    #calendar-modal-list-view {
-        max-height: calc(75vh - 120px) !important;
-    }
-
-    #calendar-modal-grid-view {
-        max-height: calc(75vh - 120px) !important;
-        overflow-y: auto !important;
-    }
-
-    .calendar-day-cell {
-        font-size: 9px !important;
+    .birthday-popover-days,
+    .calendar-list-days {
+        font-size: 10px !important;
     }
 }
