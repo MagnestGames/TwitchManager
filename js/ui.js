@@ -1367,7 +1367,14 @@ window.copyCommonTag = copyCommonTag;
             }
             config.forEach((cat, ci) => {
                 const d = document.createElement('div'); d.className = "category-box" + (cat.isClosed ? " closed" : ""); d.setAttribute('data-idx', ci);
-                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})"><span>${raidSoEscape(cat.name)}</span><button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button><button class="btn-secondary btn-add-item" onclick="event.stopPropagation(); addRecord(${ci})">＋</button></div><div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
+                d.innerHTML = `<div class="category-name" onclick="toggleCategory(this, ${ci})">
+                    <span class="category-title-text">${raidSoEscape(cat.name)}</span>
+                    <div class="category-actions">
+                        <button class="btn-delete-cat" onclick="event.stopPropagation(); deleteCategory(${ci})">${raidSoEscape(T.delete)}</button>
+                        <button class="btn-secondary btn-add-item category-add-btn" onclick="event.stopPropagation(); addRecord(${ci})">＋</button>
+                    </div>
+                </div>
+                    <div class="category-records sortable-items" data-cat-idx="${ci}"></div>`;
                 const records = cat.records || [];
                 if (!records.length) {
                     d.querySelector('.category-records').innerHTML = emptyStateHtml(T.empty?.titleRecords || '');
