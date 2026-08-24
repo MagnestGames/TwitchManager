@@ -2207,9 +2207,9 @@
         }
 
         .record-header > div:first-child {
-            min-width: 0;
-            flex: 1 1 150px;
-        }
+    min-width: 0;
+    flex: 0 0 auto;
+}
 
         .record-body {
             display: none;
@@ -7632,4 +7632,30 @@ body.del-mode .category-name {
         min-height: 0 !important;
         height: auto !important;
     }
+}
+
+
+/* Eliminate flex-basis vertical gap bug on record-header column layout */
+.record-header > div:first-child {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+.record-header {
+    gap: 6px !important;
+    justify-content: flex-start !important;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+#friends-container .record-header {
+    gap: 6px !important;
+    padding: 8px 10px !important;
+}
+
+#friends-container .record-card {
+    margin-bottom: 6px !important;
+    min-height: 0 !important;
+    height: auto !important;
 }
