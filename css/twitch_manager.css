@@ -7495,3 +7495,12 @@ body.light-theme .cmd-time-control {
     font-size: 11.5px !important;
     white-space: nowrap !important;
 }
+
+
+/* Stack Backup & Restore Cards vertically on Narrow Viewports */
+@media (max-width: 480px) {
+    .misc-backup-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+}
