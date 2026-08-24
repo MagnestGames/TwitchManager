@@ -7603,7 +7603,7 @@ body.light-theme .cmd-time-control {
 }
 
 
-/* Display Settings Items: Stack title top and toggle switch bottom on narrow viewports with compact toggle */
+/* Display Settings Items: Stack title top and toggle switch centered on bottom on narrow viewports */
 .display-settings-item .tw-toggle {
     width: 36px !important;
     min-width: 36px !important;
@@ -7655,10 +7655,11 @@ body.light-theme .cmd-time-control {
         line-height: 1.35 !important;
         word-break: normal !important;
         overflow-wrap: break-word !important;
+        text-align: left !important;
     }
 
     .display-settings-item .tw-toggle {
-        align-self: flex-end !important;
-        margin-top: 2px !important;
+        align-self: center !important;
+        margin: 4px auto 0 auto !important;
     }
 }
