@@ -681,6 +681,14 @@ window.copyCommonTag = copyCommonTag;
             }
 
             // 描画更新
+            const initialTagSection = document.getElementById('common-tag-bar-section');
+            if (initialTagSection) {
+                if (window.innerWidth <= 480) {
+                    initialTagSection.open = false;
+                } else {
+                    initialTagSection.open = true;
+                }
+            }
             render(); renderFriends(); renderMemo(); if (typeof loadCpGroupsFromStorage === 'function') loadCpGroupsFromStorage(); if (typeof renderCpTab === 'function') renderCpTab(); updateCpBulkActionBar();
             if (cleanRaidSoToken() && cpState.rewards.length === 0 && !cpState.isLoading && typeof fetchTwitchCustomRewards === 'function') {
                 fetchTwitchCustomRewards();
@@ -957,7 +965,13 @@ window.copyCommonTag = copyCommonTag;
                 tabButton.classList.add('active');
                 tabButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
-            if (id === 'main-tab' && typeof render === 'function') render();
+            if (id === 'main-tab') {
+                const tagSection = document.getElementById('common-tag-bar-section');
+                if (tagSection && window.innerWidth <= 480) {
+                    tagSection.open = false;
+                }
+                if (typeof render === 'function') render();
+            }
             if (id === 'id-tab' && typeof renderFriends === 'function') renderFriends();
             if (id === 'memo-tab' && typeof renderMemo === 'function') {
                 renderMemo();
