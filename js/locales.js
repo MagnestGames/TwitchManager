@@ -454,7 +454,8 @@ const I18N_DATA = {
                 "memoAllToggleTip": "すべてのメモのプレビュー/編集を一括切り替え",
                 "memoAllEditTip": "すべてのメモを編集モードに切り替え",
                 "memoAllPreviewTip": "すべてのメモをプレビューモードに切り替え",
-                "memoBold": "太字 (**text**)",
+                
+                "memoToolbarTitle": "装飾ツール","memoBold": "太字 (**text**)",
                 "memoH1": "大見出し (# Header)",
                 "memoH2": "中見出し (## Header)",
                 "memoList": "箇条書き (- Item)",
@@ -2044,7 +2045,8 @@ const I18N_DATA = {
                 "memoAllToggleTip": "Toggle all memos between Preview and Edit",
                 "memoAllEditTip": "Switch all memos to Edit mode",
                 "memoAllPreviewTip": "Switch all memos to Preview mode",
-                "memoBold": "Bold (**text**)",
+                
+                "memoToolbarTitle": "Formatting Tools","memoBold": "Bold (**text**)",
                 "memoH1": "Heading 1 (# Header)",
                 "memoH2": "Heading 2 (## Header)",
                 "memoList": "Bullet List (- Item)",
@@ -3634,7 +3636,8 @@ const I18N_DATA = {
                 "memoAllToggleTip": "一键切换所有备忘录的预览/编辑状态",
                 "memoAllEditTip": "将所有备忘录切换为编辑模式",
                 "memoAllPreviewTip": "将所有备忘录切换为预览模式",
-                "memoBold": "粗体 (**text**)",
+                
+                "memoToolbarTitle": "格式化工具","memoBold": "粗体 (**text**)",
                 "memoH1": "大标题 (# Header)",
                 "memoH2": "中标题 (## Header)",
                 "memoList": "无序列表 (- Item)",
