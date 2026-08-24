@@ -7049,3 +7049,72 @@ body.light-theme .count-step-btn:hover {
         font-size: 11px !important;
     }
 }
+
+
+/* Memo Mode Toggle Buttons Iconization for Narrow Viewports */
+@media (max-width: 480px) {
+    /* 1. Memo Category Toggle Button -> Icon only */
+    .memo-mode-toggle-btn .mode-btn-text {
+        display: none !important;
+    }
+    .memo-mode-toggle-btn {
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        flex: 0 0 28px !important;
+    }
+    .memo-mode-toggle-btn svg {
+        margin: 0 !important;
+    }
+
+    /* 2. Global Toggle All Memos Button -> Icon only */
+    #ui-toggle-all-memos .mode-btn-text {
+        display: none !important;
+    }
+    #ui-toggle-all-memos {
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        flex: 0 0 28px !important;
+    }
+    #ui-toggle-all-memos svg {
+        margin: 0 !important;
+    }
+
+    /* 3. Global Add Memo Button -> Icon only */
+    #ui-add-memo span {
+        display: none !important;
+    }
+    #ui-add-memo {
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 28px !important;
+    }
+    #ui-add-memo svg {
+        margin: 0 !important;
+    }
+
+    /* 4. Memo Toolbar Buttons -> Compact icon/symbol only */
+    .memo-toolbar-btn span {
+        display: none !important;
+    }
+    .memo-toolbar-btn {
+        padding: 2px 5px !important;
+        font-size: 11px !important;
+    }
+}
