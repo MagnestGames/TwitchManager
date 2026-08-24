@@ -7503,3 +7503,41 @@ body.del-mode .category-name {
     visibility: visible !important;
     pointer-events: none !important;
 }
+
+
+/* Header 2-row wrap for ultra narrow dock (<= 300px) so logo/clock/star are never covered */
+@media (max-width: 300px) {
+    .app-header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+    }
+    .app-header-controls {
+        order: 1 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 3px !important;
+    }
+    .app-header-controls .btn-head-purple {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        font-size: 12px !important;
+        padding: 0 !important;
+    }
+    .app-title-row {
+        order: 2 !important;
+        width: 100% !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding-top: 2px !important;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08) !important;
+    }
+    body.light-theme .app-title-row {
+        border-top-color: rgba(0, 0, 0, 0.08) !important;
+    }
+}
