@@ -1365,17 +1365,17 @@ window.copyCommonTag = copyCommonTag;
                 <div class="record-header" onclick="toggleRecordOpen(${ci}, ${ri})">
                     <div class="record-title-area">
                         <span id="record-label-${ci}-${ri}" class="record-title-text">● ${raidSoEscape(getRecordDisplayLabel(r, A.newLabel))}</span>
-                        <button class="icon-btn record-edit-btn" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})">
+                        <button class="icon-btn record-edit-btn" onclick="event.stopPropagation(); renameRecord(${ci}, ${ri})" title="${raidSoEscape(A.renameLabel || '名前を変更')}">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
                     </div>
                     <div class="record-actions">
-                        <div class="record-count-control" onclick="event.stopPropagation();">
-                            <button type="button" class="icon-btn count-step-btn count-step-down" onclick="stepRecordCount(${ci}, ${ri}, -1)">
+                        <div class="record-count-control" style="display:inline-flex; flex-direction:row; align-items:center; gap:2px; margin-right:6px; height:30px; box-sizing:border-box; flex-shrink:0;" onclick="event.stopPropagation();" title="配信第 ${r.count || 1} 回の設定値">
+                            <button type="button" class="icon-btn count-step-btn" onclick="stepRecordCount(${ci}, ${ri}, -1)" style="height:24px; width:20px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" title="配信回数を-1">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                             </button>
-                            <input type="number" id="record-count-input-${ci}-${ri}" class="record-count-input" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" onwheel="handleCountInputWheel(event, ${ci}, ${ri}, this)">
-                            <button type="button" class="icon-btn count-step-btn count-step-up" onclick="stepRecordCount(${ci}, ${ri}, 1)">
+                            <input type="number" id="record-count-input-${ci}-${ri}" class="record-count-input" min="1" value="${(r.count !== undefined && r.count !== null && r.count !== '') ? parseInt(r.count, 10) : 1}" onchange="updateRecordCount(${ci}, ${ri}, this.value)" onwheel="handleCountInputWheel(event, ${ci}, ${ri}, this)" style="height:24px; width:38px; min-width:38px; max-width:44px; padding:0 2px; font-size:11px; background:var(--bg-base); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; text-align:center; box-sizing:border-box; margin:0; line-height:24px; vertical-align:middle;">
+                            <button type="button" class="icon-btn count-step-btn" onclick="stepRecordCount(${ci}, ${ri}, 1)" style="height:24px; width:20px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:none; color:var(--text-muted); cursor:pointer;" title="配信回数を+1">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </button>
                         </div>

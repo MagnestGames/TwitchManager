@@ -6706,17 +6706,18 @@ body.light-theme .count-step-btn:hover {
 
 
 
+
 /* ==========================================================================
-   Comprehensive Responsive Overrides (Issue: Medium & Narrow Viewport Polish)
+   Comprehensive Responsive Overrides (PC, Tablet & Ultra-Narrow Viewports)
    ========================================================================== */
 
-/* Base Title Card & Tag Bar rules */
+/* Universal rules for record count & title area */
 .record-title-area {
     display: flex;
     align-items: center;
     gap: 8px;
     min-width: 0;
-    flex: 1 1 150px;
+    flex: 1 1 auto;
     position: relative;
 }
 
@@ -6727,7 +6728,33 @@ body.light-theme .count-step-btn:hover {
     word-break: break-word;
 }
 
+.record-count-control {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 2px !important;
+    height: 30px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+}
+
 .record-count-input {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 44px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 2px !important;
+    font-size: 11px !important;
+    background: var(--bg-base);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    vertical-align: middle;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -6744,7 +6771,7 @@ body.light-theme .count-step-btn:hover {
     display: inline;
 }
 
-/* 1. Medium & Narrow Widths (<= 520px) -> Switch Title Card to 2-row layout unconditionally */
+/* 1. Medium Width (<= 520px) -> Switch to 2-row layout without breaking button sizes */
 @media (max-width: 520px) {
     .app-header {
         gap: 6px;
@@ -6758,7 +6785,6 @@ body.light-theme .count-step-btn:hover {
         min-width: 30px;
     }
 
-    /* 2-row card layout (Title top / Actions bottom) */
     .record-card {
         margin-bottom: 8px !important;
     }
@@ -6793,7 +6819,6 @@ body.light-theme .count-step-btn:hover {
         word-break: break-word !important;
     }
 
-    /* Pin rename pencil button to top-right of title area */
     .record-edit-btn {
         position: absolute !important;
         right: 0 !important;
@@ -6807,7 +6832,6 @@ body.light-theme .count-step-btn:hover {
         flex-shrink: 0 !important;
     }
 
-    /* Actions row: Centered horizontally in card */
     .record-actions {
         width: 100% !important;
         margin: 4px 0 0 0 !important;
@@ -6820,27 +6844,10 @@ body.light-theme .count-step-btn:hover {
         flex: 0 0 auto !important;
         position: relative !important;
     }
-
-    .record-count-control {
-        margin-right: 0 !important;
-        height: auto !important;
-        flex: 0 0 auto !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 2px !important;
-    }
-    .record-count-input {
-        width: 38px !important;
-        min-width: 38px !important;
-        max-width: 44px !important;
-        height: 30px !important;
-        line-height: 30px !important;
-    }
 }
 
-/* 2. Narrow Dock Width (<= 380px) -> Iconize SYNC/PUSH & Shorten Tag text */
+/* 2. Narrow Dock Width (<= 380px) -> Iconize SYNC/PUSH & Hide < > */
 @media (max-width: 380px) {
-    /* Header Clock -> SVG Icon with Tooltip */
     .today-date-text {
         display: none !important;
     }
@@ -6860,7 +6867,6 @@ body.light-theme .count-step-btn:hover {
         cursor: pointer;
     }
 
-    /* Common Tag Bar compact single-line */
     .common-tag-title-full {
         display: none !important;
     }
@@ -6893,9 +6899,11 @@ body.light-theme .count-step-btn:hover {
         white-space: nowrap !important;
     }
 
-    /* Count numbers only (< > hidden) */
     .count-step-btn {
         display: none !important;
+    }
+    .record-count-control {
+        margin-right: 0 !important;
     }
     .record-count-input {
         width: 38px !important;
@@ -6904,12 +6912,8 @@ body.light-theme .count-step-btn:hover {
         font-size: 12px !important;
         font-weight: bold !important;
         border-radius: 6px !important;
-        text-align: center !important;
-        padding: 0 2px !important;
-        margin: 0 !important;
     }
 
-    /* SYNC & PUSH -> 32px square icon buttons */
     .twitch-action-btn {
         min-width: 32px !important;
         width: 32px !important;
@@ -6939,7 +6943,6 @@ body.light-theme .count-step-btn:hover {
         margin-left: 4px !important;
     }
 
-    /* Tab navigation */
     .tab-nav {
         gap: 4px;
         padding-bottom: 5px;
@@ -6950,7 +6953,6 @@ body.light-theme .count-step-btn:hover {
         min-width: 54px;
     }
 
-    /* Sticky Footer */
     .sticky-footer-wrapper {
         padding: 6px 6px !important;
         gap: 5px !important;
