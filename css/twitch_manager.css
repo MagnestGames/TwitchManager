@@ -7350,17 +7350,35 @@ body.del-mode .category-name {
 }
 
 
-/* Raid Settings Link Buttons Auto-wrapping for Narrow Viewports */
+/* Raid Settings Link Buttons: Side-by-side normal, Column on narrow */
 .raidso-link-row {
     display: flex !important;
-    gap: 6px !important;
+    gap: 8px !important;
     width: 100% !important;
-    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
 }
 
-@media (max-width: 380px) {
+.raidso-link-row .raidso-external-link {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 420px) {
+    .raidso-link-row {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
     .raidso-link-row .raidso-external-link {
         width: 100% !important;
-        flex: 1 1 100% !important;
+        flex: 0 0 auto !important;
     }
 }
