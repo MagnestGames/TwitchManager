@@ -7406,3 +7406,65 @@ body.del-mode .category-name {
         gap: 6px !important;
     }
 }
+
+
+/* Narrow Viewport Polish: Numeric Input Wrap, Role Checkbox Wrap, Font 1px Down & Emoji Refinement */
+@media (max-width: 480px) {
+    /* 1. Time & Number Input Rows: Stack label on top, input on bottom */
+    .raidso-auto-intro-wait {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+    .raidso-auto-intro-wait .field-label {
+        width: 100% !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+    }
+    .raidso-auto-intro-wait .tw-time-control {
+        align-self: flex-start !important;
+        margin-top: 2px !important;
+    }
+
+    /* 2. Permission Checkboxes: Stack in 1 column so items never wrap into vertical characters */
+    .raidso-role-grid {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+        font-size: 11.5px !important;
+    }
+    .raidso-role-grid label {
+        padding: 6px 10px !important;
+        font-size: 11.5px !important;
+        white-space: nowrap !important;
+    }
+
+    /* 3. Global Text 1px Smaller on Narrow Viewports */
+    body {
+        font-size: 12px !important;
+    }
+    .field-label,
+    .dialog-guide-label,
+    .settings-help,
+    .raidso-status,
+    .tab-help-body,
+    .empty-state {
+        font-size: 11px !important;
+    }
+    button,
+    .btn-secondary,
+    .btn-primary,
+    .btn-outline {
+        font-size: 11px !important;
+    }
+}
+
+/* Hide or shrink decorative emojis on ultra-narrow viewports */
+@media (max-width: 380px) {
+    .btn-head-purple,
+    .btn-outline,
+    .raidso-external-link,
+    .supporter-reset-card {
+        font-size: 10.5px !important;
+    }
+}
