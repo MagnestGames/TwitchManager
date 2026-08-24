@@ -7450,30 +7450,48 @@ body.del-mode .category-name {
 }
 
 
-/* Center Alignment for Time Controls in Command & Twitch Cards */
+/* Time Controls in Command & Twitch Cards: Full-width set capsule with centered content */
 .tw-time-control,
 .cmd-time-control {
-    display: inline-grid !important;
-    grid-template-columns: minmax(42px, 54px) auto !important;
+    display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    justify-self: center !important;
-    align-self: center !important;
-    margin: 4px auto 0 auto !important;
-    gap: 6px !important;
-    width: fit-content !important;
-    padding: 3px 8px !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+    padding: 4px 10px !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
     box-sizing: border-box !important;
+}
+
+body.light-theme .tw-time-control,
+body.light-theme .cmd-time-control {
+    background: rgba(0, 0, 0, 0.035) !important;
+    border-color: var(--border-color) !important;
 }
 
 .tw-time-control input,
 .cmd-time-control input {
+    width: 54px !important;
+    min-width: 44px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    padding: 1px 4px !important;
+    font-size: 12px !important;
     text-align: center !important;
+    background: var(--bg-base) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    border-radius: 4px !important;
+    outline: none !important;
 }
 
 .tw-time-control span,
 .cmd-time-control span {
-    text-align: left !important;
-    font-size: 11px !important;
     color: var(--text-muted) !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
 }
