@@ -6477,7 +6477,31 @@ body.light-theme .count-step-btn:hover {
     word-break: break-word;
 }
 
+.record-count-control {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+}
+
 .record-count-input {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 44px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    padding: 0 2px !important;
+    font-size: 11px !important;
+    background: var(--bg-base);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    vertical-align: middle;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -6803,6 +6827,14 @@ body.light-theme .count-step-btn:hover {
         flex: 0 0 auto !important;
         display: inline-flex !important;
         align-items: center !important;
+        gap: 2px !important;
+    }
+    .record-count-input {
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 44px !important;
+        height: 30px !important;
+        line-height: 30px !important;
     }
 }
 
