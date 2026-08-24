@@ -2208,7 +2208,7 @@
 
         .record-header > div:first-child {
     min-width: 0;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
 }
 
         .record-body {
@@ -7635,27 +7635,33 @@ body.del-mode .category-name {
 }
 
 
-/* Eliminate flex-basis vertical gap bug on record-header column layout */
-.record-header > div:first-child {
-    flex: 0 0 auto !important;
-    min-height: 0 !important;
-    height: auto !important;
-}
 
+/* Record Header: Proper wide (space-between) and narrow (compact column) scoping */
 .record-header {
-    gap: 6px !important;
-    justify-content: flex-start !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     min-height: 0 !important;
     height: auto !important;
 }
 
-#friends-container .record-header {
-    gap: 6px !important;
-    padding: 8px 10px !important;
+.record-header > div:first-child {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
 
-#friends-container .record-card {
-    margin-bottom: 6px !important;
-    min-height: 0 !important;
-    height: auto !important;
+@media (max-width: 480px) {
+    .record-header {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+    }
+    .record-header > div:first-child {
+        flex: 0 0 auto !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
 }
