@@ -6681,11 +6681,38 @@ body.light-theme .count-step-btn:hover {
 }
 
 
+
 /* ==========================================================================
-   Ultra-Narrow Responsive Overrides (Issue: Narrow Viewport Layout Refinements)
+   Comprehensive Responsive Overrides (Issue: Medium & Narrow Viewport Polish)
    ========================================================================== */
 
-/* Common Tag Bar base */
+/* Base Title Card & Tag Bar rules */
+.record-title-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 150px;
+    position: relative;
+}
+
+.record-title-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+.record-count-input {
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.record-count-input:focus {
+    border-color: var(--twitch-purple) !important;
+    box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.25) !important;
+    outline: none !important;
+}
+
 .common-tag-title-short {
     display: none;
 }
@@ -6693,61 +6720,21 @@ body.light-theme .count-step-btn:hover {
     display: inline;
 }
 
-@media (max-width: 340px) {
-    /* 1. Header Clock -> SVG Icon with Tooltip */
-    .today-date-text {
-        display: none !important;
+/* 1. Medium & Narrow Widths (<= 520px) -> Switch Title Card to 2-row layout unconditionally */
+@media (max-width: 520px) {
+    .app-header {
+        gap: 6px;
     }
-    .today-clock-icon {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        cursor: help;
-        padding: 4px;
-        border-radius: 4px;
-        transition: color var(--transition-fast);
+    .app-header-controls {
+        gap: 4px;
     }
-    .today-clock-icon:hover {
-        color: var(--twitch-purple) !important;
-    }
-    .today-date-wrapper {
-        cursor: pointer;
+    .app-header-controls .btn-head-purple {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px;
     }
 
-    /* 2. Common Tag Bar (Summary compact single-line) */
-    .common-tag-title-full {
-        display: none !important;
-    }
-    .common-tag-title-short {
-        display: inline !important;
-        font-size: 11px !important;
-        font-weight: bold !important;
-        white-space: nowrap !important;
-    }
-    .common-tag-summary {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 6px !important;
-    }
-    .common-tag-manage-btn {
-        margin-left: auto !important;
-        padding: 2px 6px !important;
-        font-size: 10px !important;
-        flex-shrink: 0 !important;
-    }
-    .tag-chip-bar {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 4px !important;
-    }
-    .tag-chip {
-        font-size: 10px !important;
-        padding: 3px 6px !important;
-        white-space: nowrap !important;
-    }
-
-    /* 3. Title Preset Card 2-row layout & zero vertical stretch */
+    /* 2-row card layout (Title top / Actions bottom) */
     .record-card {
         margin-bottom: 8px !important;
     }
@@ -6782,7 +6769,7 @@ body.light-theme .count-step-btn:hover {
         word-break: break-word !important;
     }
 
-    /* Rename Pencil Button -> Pin to top-right of title area */
+    /* Pin rename pencil button to top-right of title area */
     .record-edit-btn {
         position: absolute !important;
         right: 0 !important;
@@ -6803,17 +6790,13 @@ body.light-theme .count-step-btn:hover {
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important; /* Centered in card */
+        justify-content: center !important;
         gap: 8px !important;
         flex-wrap: nowrap !important;
         flex: 0 0 auto !important;
         position: relative !important;
     }
 
-    /* Count numbers only (< > hidden, compact input) */
-    .count-step-btn {
-        display: none !important;
-    }
     .record-count-control {
         margin-right: 0 !important;
         height: auto !important;
@@ -6821,10 +6804,71 @@ body.light-theme .count-step-btn:hover {
         display: inline-flex !important;
         align-items: center !important;
     }
+}
+
+/* 2. Narrow Dock Width (<= 380px) -> Iconize SYNC/PUSH & Shorten Tag text */
+@media (max-width: 380px) {
+    /* Header Clock -> SVG Icon with Tooltip */
+    .today-date-text {
+        display: none !important;
+    }
+    .today-clock-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color var(--transition-fast);
+    }
+    .today-clock-icon:hover {
+        color: var(--twitch-purple) !important;
+    }
+    .today-date-wrapper {
+        cursor: pointer;
+    }
+
+    /* Common Tag Bar compact single-line */
+    .common-tag-title-full {
+        display: none !important;
+    }
+    .common-tag-title-short {
+        display: inline !important;
+        font-size: 11px !important;
+        font-weight: bold !important;
+        white-space: nowrap !important;
+    }
+    .common-tag-summary {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+    }
+    .common-tag-manage-btn {
+        margin-left: auto !important;
+        padding: 2px 6px !important;
+        font-size: 10px !important;
+        flex-shrink: 0 !important;
+    }
+    .tag-chip-bar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+    .tag-chip {
+        font-size: 10px !important;
+        padding: 3px 6px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Count numbers only (< > hidden) */
+    .count-step-btn {
+        display: none !important;
+    }
     .record-count-input {
         width: 38px !important;
-        height: 30px !important;
-        line-height: 30px !important;
+        height: 32px !important;
+        line-height: 32px !important;
         font-size: 12px !important;
         font-weight: bold !important;
         border-radius: 6px !important;
@@ -6833,13 +6877,13 @@ body.light-theme .count-step-btn:hover {
         margin: 0 !important;
     }
 
-    /* SYNC & PUSH -> Compact 30px square icon buttons */
+    /* SYNC & PUSH -> 32px square icon buttons */
     .twitch-action-btn {
-        min-width: 30px !important;
-        width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        flex: 0 0 30px !important;
+        min-width: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        flex: 0 0 32px !important;
         padding: 0 !important;
         border-radius: 6px !important;
         display: inline-flex !important;
@@ -6851,19 +6895,19 @@ body.light-theme .count-step-btn:hover {
         display: none !important;
     }
     .twitch-action-btn svg {
-        width: 14px !important;
-        height: 14px !important;
+        width: 15px !important;
+        height: 15px !important;
     }
 
     .btn-delete-item {
-        height: 30px !important;
-        min-height: 30px !important;
+        height: 32px !important;
+        min-height: 32px !important;
         width: 24px !important;
         padding: 0 !important;
         margin-left: 4px !important;
     }
 
-    /* Tab navigation auto-fit */
+    /* Tab navigation */
     .tab-nav {
         gap: 4px;
         padding-bottom: 5px;
@@ -6874,7 +6918,7 @@ body.light-theme .count-step-btn:hover {
         min-width: 54px;
     }
 
-    /* Sticky Footer Buttons */
+    /* Sticky Footer */
     .sticky-footer-wrapper {
         padding: 6px 6px !important;
         gap: 5px !important;
@@ -6887,6 +6931,7 @@ body.light-theme .count-step-btn:hover {
     }
 }
 
+/* 3. Ultra-Compact Width (<= 240px) */
 @media (max-width: 240px) {
     .record-header {
         padding: 6px 6px !important;
@@ -6916,4 +6961,12 @@ body.light-theme .count-step-btn:hover {
         min-height: 28px !important;
         width: 20px !important;
     }
+}
+
+.lang-toggle-btn.active,
+.theme-toggle-btn.active {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-bg) !important;
+    box-shadow: 0 2px 6px rgba(145, 70, 255, 0.3) !important;
 }
