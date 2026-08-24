@@ -7581,7 +7581,7 @@ body.del-mode .category-name {
 }
 
 @media (max-width: 480px) {
-    /* On narrow viewports: Top row = Label (left) + Dedup (right), Bottom row = Dropdown (100% width) */
+    /* On narrow viewports: Top row = Label (left) + Dedup Icon (pinned top-right), Bottom row = Dropdown (100% width) */
     .friends-toolbar {
         display: grid !important;
         grid-template-columns: auto 1fr !important;
@@ -7594,14 +7594,25 @@ body.del-mode .category-name {
     .friends-toolbar .friends-sort-label {
         grid-area: sortLabel !important;
         align-self: center !important;
+        font-size: 11.5px !important;
     }
     .friends-toolbar .friends-dedup-btn {
         grid-area: dedupBtn !important;
         justify-self: end !important;
+        width: 26px !important;
+        min-width: 26px !important;
+        height: 26px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        border-radius: 4px !important;
+    }
+    .friends-toolbar .friends-dedup-text {
+        display: none !important;
     }
     .friends-toolbar #friends-sort-select {
         grid-area: sortSelect !important;
         width: 100% !important;
+        font-size: 11.5px !important;
     }
 
     /* Hide calendar icon on narrow screens so date inputs have full width to show date string */
