@@ -7603,7 +7603,7 @@ body.light-theme .cmd-time-control {
 }
 
 
-/* Display Settings Items: Stack title top and toggle switch centered on bottom on narrow viewports */
+/* Display Settings Items: Stack title top and toggle switch on bottom-right on narrow viewports */
 .display-settings-item .tw-toggle {
     width: 36px !important;
     min-width: 36px !important;
@@ -7659,7 +7659,7 @@ body.light-theme .cmd-time-control {
     }
 
     .display-settings-item .tw-toggle {
-        align-self: center !important;
-        margin: 4px auto 0 auto !important;
+        align-self: flex-end !important;
+        margin: 4px 0 0 auto !important;
     }
 }
