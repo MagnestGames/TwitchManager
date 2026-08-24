@@ -1147,7 +1147,16 @@ window.copyCommonTag = copyCommonTag;
             });
         }
 
-        function updateTodayDateDisplay() {
+        function handleTodayDateClick(event) {
+    if (event) event.stopPropagation();
+    const now = new Date();
+    const time = now.toLocaleTimeString(undefined, { hour12: false });
+    const fullStr = `${formatDateToken(now, settings.dateFormat || 'MM/DD')} ${time}`;
+    showToast(`📅 ${fullStr}`, 'info');
+}
+window.handleTodayDateClick = handleTodayDateClick;
+
+function updateTodayDateDisplay() {
         const el = document.getElementById('today-date');
         if (!el) return;
         const now = new Date();
