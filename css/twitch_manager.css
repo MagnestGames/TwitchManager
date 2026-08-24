@@ -7348,3 +7348,19 @@ body.del-mode .category-name {
         justify-content: center !important;
     }
 }
+
+
+/* Raid Settings Link Buttons Auto-wrapping for Narrow Viewports */
+.raidso-link-row {
+    display: flex !important;
+    gap: 6px !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+}
+
+@media (max-width: 380px) {
+    .raidso-link-row .raidso-external-link {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+}
