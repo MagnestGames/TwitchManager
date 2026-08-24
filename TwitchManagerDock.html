@@ -765,25 +765,43 @@
                     <button type="button" class="btn-outline btn-revoke" id="ui-settings-revoke-auth-btn" onclick="revokeTwitchAuth()" data-i18n="settingsUi.revokeAuth">Twitch認証を解除</button>
                 </div>
             </div>
+
+            <!-- 言語・色モード設定パネル (認証の下に配置) -->
+            <div style="background:var(--bg-panel); padding:16px 20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple); display:flex; flex-direction:column; gap:12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <!-- 言語切替ボタン -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span class="field-label" style="margin-bottom: 0; min-width: 60px; font-weight: bold;" data-i18n="settingsUi.languageLabel">表示言語</span>
+                        <div class="lang-btn-group" style="display: inline-flex; gap: 4px;">
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="ja" onclick="chooseLanguage('ja')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">日本語</button>
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="en" onclick="chooseLanguage('en')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">English</button>
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="zh" onclick="chooseLanguage('zh')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">繁體中文</button>
+                        </div>
+                    </div>
+
+                    <!-- 色モード切替ボタン -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span class="field-label" style="margin-bottom: 0; min-width: 60px; font-weight: bold;" data-i18n="settingsUi.themeLabel">外観テーマ</span>
+                        <div class="theme-btn-group" style="display: inline-flex; gap: 4px;">
+                            <button type="button" id="theme-btn-dark" class="btn-secondary theme-toggle-btn" onclick="applyTheme('dark')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                                <span data-i18n="settingsUi.themeDark">ダーク</span>
+                            </button>
+                            <button type="button" id="theme-btn-light" class="btn-secondary theme-toggle-btn" onclick="applyTheme('light')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                                <span data-i18n="settingsUi.themeLight">ライト</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
-                <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-                    <div>
-                        <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">外観テーマ</span>
-                        <select id="settings_theme_select" onchange="applyTheme(this.value)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;">
-                            <option value="dark" data-i18n="settingsUi.themeDark">ダークモード</option>
-                            <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
-                        </select>
-                    </div>
+                <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">表示設定</div>
                     <div>
                         <span class="field-label" id="ui-settings-language-label" data-i18n="settingsUi.languageLabel">表示言語</span>
-                        <select id="settings_language_select" onchange="chooseLanguage(this.value)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;">
-                            <option data-lang-option="ja" value="ja">日本語</option>
-                            <option data-lang-option="en" value="en">English</option>
-                            <option data-lang-option="zh" value="zh">繁體中文</option>
-                        </select>
-                    </div>
+                        
                 </div>表示設定</div>
                 <span class="field-label" id="ui-settings-date-format-label" data-i18n="settingsUi.dateFormatLabelExtended">日付の表示形式 ({date}用) ※自由にカスタマイズできます</span>
                 <input type="text" id="date_format" list="date_format_presets" aria-labelledby="ui-settings-date-format-label"

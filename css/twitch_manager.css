@@ -6552,3 +6552,11 @@ body.light-theme .count-step-btn:hover {
         font-size: 9px !important;
     }
 }
+
+.lang-toggle-btn.active,
+.theme-toggle-btn.active {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-bg) !important;
+    box-shadow: 0 2px 6px rgba(145, 70, 255, 0.3) !important;
+}
