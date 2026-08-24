@@ -8,6 +8,8 @@ const I18N_DATA = {
         "ui": {
             "titleTagModalTitle": "配信タイトルの識別タグ・言葉セット (単語帳)",
             "commonTagBarTitle": "共通タグ（クリックでコピー → タイトルに貼り付け）",
+            "commonTagBarTitleShort": "共通タグ",
+            "commonTagBarTitleTip": "クリックでコピー → タイトルに貼り付け",
             "rawIdListCopyBtn": "@ID一覧",
             "titleTagGuide": "タイトル内に {識別} や {カテゴリ} などのタグを記述すると、事前に設定した言葉や配信情報が自動で置換・反映されます。",
             "titleTagAddBtn": "＋ 新しい識別タグを追加",
@@ -1596,6 +1598,8 @@ const I18N_DATA = {
         "ui": {
             "titleTagModalTitle": "Stream Title Placeholder & Word Set Manager",
             "commonTagBarTitle": "Common Tags (Click to copy → Paste to title)",
+            "commonTagBarTitleShort": "Common Tags",
+            "commonTagBarTitleTip": "Click to copy → Paste to title",
             "rawIdListCopyBtn": "@ID List",
             "titleTagGuide": "Insert tags like {識別} or {カテゴリ} into titles to automatically resolve saved phrases or stream metadata.",
             "titleTagAddBtn": "＋ Add New Tag",
@@ -3184,6 +3188,8 @@ const I18N_DATA = {
         "ui": {
             "titleTagModalTitle": "直播标题标识标签与词汇集设置",
             "commonTagBarTitle": "常用标签（点击复制 → 粘贴至标题）",
+            "commonTagBarTitleShort": "常用標籤",
+            "commonTagBarTitleTip": "點擊複製 → 貼上至標題",
             "rawIdListCopyBtn": "@ID 列表",
             "titleTagGuide": "在标题中加入 {識別} 或 {カテゴリ} 等标签，系统将自动替换为预设词汇或直播数据。",
             "titleTagAddBtn": "＋ 添加新标识标签",

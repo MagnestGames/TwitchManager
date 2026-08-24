@@ -86,12 +86,15 @@
         </details>
 
         <!-- 共通タグバー (ヘルプの真下, 全タイトル共通・開閉対応) -->
-        <details id="common-tag-bar-section" class="tab-help" style="margin-bottom: 8px;" open>
-            <summary class="tab-help-summary">
-                <span data-i18n="commonTagBarTitle">共通タグ（クリックでコピー → タイトルに貼り付け）</span>
-                <button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTitleTagModal()" style="margin-left: auto; font-size: 10px; padding: 2px 7px; display: inline-flex; align-items: center; gap: 3px;" data-i18n-title="titleTagConfig.modalTitle" title="単語セット・タグ設定">
+        <details id="common-tag-bar-section" class="tab-help common-tag-section" style="margin-bottom: 8px;" open>
+            <summary class="tab-help-summary common-tag-summary">
+                <span class="common-tag-title-wrap has-tooltip" data-i18n-tooltip="commonTagBarTitleTip">
+                    <span class="common-tag-title-full" data-i18n="commonTagBarTitle">共通タグ (クリックでコピー → タイトルに貼り付け)</span>
+                    <span class="common-tag-title-short" data-i18n="commonTagBarTitleShort">共通タグ</span>
+                </span>
+                <button type="button" class="btn-secondary common-tag-manage-btn" onclick="event.stopPropagation(); openTitleTagModal()" data-i18n-title="titleTagConfig.modalTitle" title="プリセット・タグ設定">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    <span data-i18n="titleTagManageBtn">設定</span>
+                    <span class="common-tag-btn-text" data-i18n="titleTagManageBtn">設定</span>
                 </button>
             </summary>
             <div id="common-tag-chip-bar" class="tag-chip-bar" style="margin-top: 4px;"></div>
