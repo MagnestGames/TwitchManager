@@ -7601,3 +7601,30 @@ body.light-theme .cmd-time-control {
         font-size: 11.5px !important;
     }
 }
+
+
+/* Display Settings Items: Stack title top and toggle switch bottom on narrow viewports */
+@media (max-width: 480px) {
+    .display-settings-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+
+    .display-settings-item-name {
+        width: 100% !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+    }
+
+    .display-settings-item .ui-switch {
+        align-self: flex-end !important;
+        margin-top: 2px !important;
+    }
+}
