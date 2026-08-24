@@ -7315,3 +7315,36 @@ body.del-mode .category-name {
         font-size: 13.5px !important;
     }
 }
+
+
+/* Common Tag Manage Button Subtle & Compact Styling */
+.common-tag-manage-btn {
+    font-size: 10.5px !important;
+    padding: 2px 6px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    color: var(--text-muted) !important;
+    border-radius: 4px !important;
+    opacity: 0.85;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.common-tag-manage-btn:hover {
+    opacity: 1;
+    color: var(--text-main) !important;
+}
+
+@media (max-width: 380px) {
+    .common-tag-manage-btn .common-tag-btn-text {
+        display: none !important;
+    }
+    .common-tag-manage-btn {
+        width: 22px !important;
+        min-width: 22px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+    }
+}
