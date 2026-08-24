@@ -7065,3 +7065,127 @@ body.light-theme .count-step-btn:hover {
         top: -2px !important;
     }
 }
+
+
+/* Memo Category Header Right-Pinned Square Icon Buttons */
+.memo-category-name {
+    display: block !important;
+    position: relative !important;
+    padding-right: 60px !important;
+    margin-bottom: 12px !important;
+    min-height: 28px !important;
+    cursor: grab;
+}
+
+.memo-title-area {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+}
+
+.memo-title-text {
+    font-size: 15px !important;
+    font-weight: bold !important;
+    color: var(--command-accent) !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    line-height: 1.35 !important;
+    display: inline-block !important;
+}
+
+.memo-preview {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    opacity: 0.7 !important;
+    word-break: break-word !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+    flex: 1 1 80px !important;
+}
+
+.memo-actions {
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Force square icon on memo mode toggle button across responsive viewports */
+@media (max-width: 520px) {
+    .memo-category-name {
+        padding-right: 56px !important;
+    }
+    .memo-actions {
+        top: 0 !important;
+    }
+    .memo-mode-toggle-btn .mode-btn-text {
+        display: none !important;
+    }
+    .memo-mode-toggle-btn {
+        min-width: 26px !important;
+        width: 26px !important;
+        height: 26px !important;
+        min-height: 26px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        flex: 0 0 26px !important;
+        border-radius: 4px !important;
+    }
+    .memo-mode-toggle-btn svg {
+        width: 13px !important;
+        height: 13px !important;
+        margin: 0 !important;
+    }
+    .memo-actions .btn-delete-item {
+        height: 26px !important;
+        min-height: 26px !important;
+        width: 22px !important;
+        padding: 0 !important;
+    }
+
+    #ui-toggle-all-memos .mode-btn-text {
+        display: none !important;
+    }
+    #ui-toggle-all-memos {
+        min-width: 26px !important;
+        width: 26px !important;
+        height: 26px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        flex: 0 0 26px !important;
+    }
+    #ui-toggle-all-memos svg {
+        margin: 0 !important;
+    }
+
+    #ui-add-memo span {
+        display: none !important;
+    }
+    #ui-add-memo {
+        min-width: 26px !important;
+        width: 26px !important;
+        height: 26px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 0 0 26px !important;
+    }
+    #ui-add-memo svg {
+        margin: 0 !important;
+    }
+}
