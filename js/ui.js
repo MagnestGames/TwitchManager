@@ -3312,7 +3312,7 @@ window.copyCommonTag = copyCommonTag;
                         ${modeBtnHtml}
                         <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">×</button>
                     </div>
-                </div>`
+                </div>
                 <div class="tw-body memo-body" style="padding-top:8px;">
                     ${mode === 'preview' ? previewHtml : editorHtml}
                 </div>`;
