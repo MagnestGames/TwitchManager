@@ -7541,3 +7541,72 @@ body.del-mode .category-name {
         border-top-color: rgba(0, 0, 0, 0.08) !important;
     }
 }
+
+
+/* Friends Toolbar & ID List Narrow Responsive Polish */
+.friends-toolbar {
+    display: flex !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+    align-items: center !important;
+    background: var(--bg-header) !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+}
+
+.friends-toolbar-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#friends-container .record-card {
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+#friends-container .record-header {
+    min-height: 0 !important;
+    height: auto !important;
+    justify-content: flex-start !important;
+}
+
+@media (max-width: 480px) {
+    /* 1. Friends Toolbar 2-row layout: Top row (Label + Dedup btn), Bottom row (Dropdown full-width) */
+    .friends-toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        padding: 8px 10px !important;
+    }
+    .friends-toolbar-top-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    #friends-sort-select {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* 2. Hide calendar icon on narrow screens so date inputs have full width to show date string */
+    .id-mini-date-btn {
+        display: none !important;
+    }
+
+    /* 3. Eliminate unnecessary empty height in ID cards */
+    #friends-container .record-card {
+        margin-bottom: 8px !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+    #friends-container .record-header {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+}
