@@ -7665,3 +7665,37 @@ body.del-mode .category-name {
         height: auto !important;
     }
 }
+
+
+/* Pin Friend Card Edit Action Button to Top-Right on Narrow Viewports */
+@media (max-width: 480px) {
+    #friends-container .record-header {
+        position: relative !important;
+        padding: 8px 36px 8px 10px !important;
+    }
+
+    body.del-mode #friends-container .record-header {
+        padding-right: 68px !important;
+    }
+
+    #friends-container .id-edit-action {
+        position: absolute !important;
+        right: 8px !important;
+        top: 8px !important;
+        width: 26px !important;
+        min-width: 26px !important;
+        height: 26px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        border-radius: 4px !important;
+        z-index: 2 !important;
+    }
+
+    #friends-container .friend-display-name {
+        word-break: break-word !important;
+        white-space: normal !important;
+        line-height: 1.35 !important;
+    }
+}
