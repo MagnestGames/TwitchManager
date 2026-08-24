@@ -2070,100 +2070,105 @@ function updateTodayDateDisplay() {
         window.toggleBirthdayPopover = toggleBirthdayPopover;
 
         function renderBirthdayPopoverContent() {
-            const popover = document.getElementById('birthday-popover');
-            if (!popover) return;
+        const popover = document.getElementById('birthday-popover');
+        if (!popover) return;
 
-            const I = (langMap[currentLang] || langMap.ja).idList;
-            const titleText = I.birthdayTitle;
-            const birthdayLabel = I.birthday;
-            const anniversaryLabel = I.anniversary;
-            
-            const today = new Date();
-            const tM = today.getMonth() + 1;
-            const tD = today.getDate();
+        const I = (langMap[currentLang] || langMap.ja).idList;
+        const titleText = I.birthdayTitle;
+        const birthdayLabel = I.birthday;
+        const anniversaryLabel = I.anniversary;
+        
+        const today = new Date();
+        const tM = today.getMonth() + 1;
+        const tD = today.getDate();
 
-            const todayMatches = [];
-            const allEvents = [];
+        const todayMatches = [];
+        const allEvents = [];
 
-            (friendsConfig || []).forEach((cat, ci) => {
-                const friends = cat.friends || [];
-                friends.forEach((f, fi) => {
-                    const nickname = String(f.name || '').trim();
-                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
-                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+        (friendsConfig || []).forEach((cat, ci) => {
+            const friends = cat.friends || [];
+            friends.forEach((f, fi) => {
+                const nickname = String(f.name || '').trim();
+                const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
 
-                    const bday = parseMdDate(f.birthday);
-                    if (bday) {
-                        const daysLeft = getDaysUntil(bday.month, bday.day);
-                        const eventObj = { name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi };
-                        allEvents.push(eventObj);
-                        if (bday.month === tM && bday.day === tD) {
-                            todayMatches.push(eventObj);
-                        }
+                const bday = parseMdDate(f.birthday);
+                if (bday) {
+                    const daysLeft = getDaysUntil(bday.month, bday.day);
+                    const eventObj = { name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi };
+                    allEvents.push(eventObj);
+                    if (bday.month === tM && bday.day === tD) {
+                        todayMatches.push(eventObj);
                     }
+                }
 
-                    const anniv = parseMdDate(f.anniversary);
-                    if (anniv) {
-                        const daysLeft = getDaysUntil(anniv.month, anniv.day);
-                        const eventObj = { name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi };
-                        allEvents.push(eventObj);
-                        if (anniv.month === tM && anniv.day === tD) {
-                            todayMatches.push(eventObj);
-                        }
+                const anniv = parseMdDate(f.anniversary);
+                if (anniv) {
+                    const daysLeft = getDaysUntil(anniv.month, anniv.day);
+                    const eventObj = { name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi };
+                    allEvents.push(eventObj);
+                    if (anniv.month === tM && anniv.day === tD) {
+                        todayMatches.push(eventObj);
                     }
-                });
+                }
             });
+        });
 
-            allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
+        allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
 
-            let html = `<div class="birthday-popover-title" style="font-weight:bold;font-size:13px;border-bottom:1px solid var(--border-color);padding-bottom:6px;margin-bottom:8px;color:var(--twitch-purple);">${titleText}</div>`;
+        let html = `<div class="birthday-popover-title" style="font-weight:bold; font-size:13px; border-bottom:1px solid var(--border-color); padding-bottom:6px; margin-bottom:8px; color:var(--twitch-purple); display:flex; align-items:center; justify-content:space-between;">
+            <span>${titleText}</span>
+            <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${tM}/${tD}</span>
+        </div>`;
 
-            if (todayMatches.length > 0) {
-                todayMatches.forEach(m => {
-                    const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
-                    const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
-                    html += `
-                    <div class="birthday-popover-item today-event" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:4px;transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
-                        <span style="font-weight:bold;color:var(--twitch-purple);font-size:12px;">🎂 ${raidSoEscape(m.name)}</span>
-                        <span style="font-size:10px;padding:1px 5px;background:rgba(145,70,255,0.15);color:var(--twitch-purple);border-radius:4px;">${raidSoEscape(label)}</span>
-                    </div>`;
-                });
-            } else {
-                html += `<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;text-align:center;">${raidSoEscape(I.noCelebrantsToday)}</div>`;
-            }
-
-            html += `<div style="font-weight:bold;font-size:11px;margin:12px 0 6px 0;color:var(--text-muted);border-top:1px dashed var(--border-color);padding-top:8px;">${raidSoEscape(I.upcomingSchedule)}</div>`;
-
-            const upcoming = allEvents.filter(e => e.daysLeft > 0).slice(0, 3);
-            if (upcoming.length > 0) {
-                upcoming.forEach(m => {
-                    const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
-                    const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
-                    html += `
-                    <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:4px;display:flex;justify-content:space-between;align-items:center;font-size:11px;cursor:pointer;border-radius:4px;transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
-                        <div style="display:flex;flex-direction:column;min-width:0;margin-right:8px;">
-                            <span style="font-weight:bold;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
-                            <span style="color:var(--text-muted);font-size:9px;">${m.month}/${m.day}</span>
-                        </div>
-                        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;white-space:nowrap;">
-                            <span style="color:var(--twitch-purple);font-weight:bold;">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
-                            <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size:8px;padding:1px 4px;border-radius:3px;flex-shrink:0;">${raidSoEscape(label)}</span>
-                        </div>
-                    </div>`;
-                });
-            } else {
-                html += `<div style="font-size:10px;color:var(--text-muted);text-align:center;">${raidSoEscape(I.noSchedule)}</div>`;
-            }
-
-            // 下部ナビゲーションボタンエリア
-            html += `
-            <div style="display:flex; gap:6px; border-top:1px solid var(--border-color); padding-top:8px; margin-top:8px;">
-                <button onclick="openCalendarWithTab('list')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">${raidSoEscape(I.listView)}</button>
-                <button onclick="openCalendarWithTab('calendar')" class="btn-secondary" style="flex:1; padding:4px 0; font-size:10px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; text-align:center;">${raidSoEscape(I.calendarView)}</button>
-            </div>`;
-
-            popover.innerHTML = html;
+        if (todayMatches.length > 0) {
+            html += `<div class="birthday-popover-section-label" style="font-size:10px; font-weight:bold; color:var(--twitch-purple); margin-bottom:4px;">今日のお祝い</div>`;
+            todayMatches.forEach(m => {
+                const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                html += `
+                <div class="birthday-popover-item today-event" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:6px 8px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-radius:6px; background:rgba(145, 70, 255, 0.1); border:1px solid rgba(145, 70, 255, 0.3); transition:0.15s;">
+                    <div style="display:flex; align-items:center; gap:5px; min-width:0;">
+                        <span style="color:var(--twitch-purple); font-size:13px;">🎉</span>
+                        <span style="font-weight:bold; color:var(--text-main); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
+                    </div>
+                    <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size:9px; padding:2px 6px; border-radius:4px; flex-shrink:0;">${raidSoEscape(label)}</span>
+                </div>`;
+            });
+        } else {
+            html += `<div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0; text-align:center; line-height:1.4; word-break:keep-all; overflow-wrap:break-word;">${raidSoEscape(I.noCelebrantsToday)}</div>`;
         }
+
+        html += `<div style="font-weight:bold; font-size:11px; margin:10px 0 6px 0; color:var(--text-muted); border-top:1px dashed var(--border-color); padding-top:6px; word-break:keep-all; overflow-wrap:break-word;">${raidSoEscape(I.upcomingSchedule)}</div>`;
+
+        const upcoming = allEvents.filter(e => e.daysLeft > 0).slice(0, 3);
+        if (upcoming.length > 0) {
+            upcoming.forEach(m => {
+                const label = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+                html += `
+                <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:6px 8px; margin-bottom:4px; display:flex; flex-direction:column; gap:3px; font-size:11px; cursor:pointer; border-radius:6px; background:var(--bg-panel); border:1px solid var(--border-subtle); transition:0.15s;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                        <span style="font-weight:bold; color:var(--text-main); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
+                        <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size:8.5px; padding:1px 5px; border-radius:3px; flex-shrink:0;">${raidSoEscape(label)}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px;">
+                        <span style="color:var(--text-muted);">${m.month}/${m.day}</span>
+                        <span style="color:var(--twitch-purple); font-weight:bold;">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                    </div>
+                </div>`;
+            });
+        } else {
+            html += `<div style="font-size:10.5px; color:var(--text-muted); text-align:center; padding:4px 0;">${raidSoEscape(I.noSchedule)}</div>`;
+        }
+
+        // ナビゲーションボタンエリア
+        html += `
+        <div style="display:flex; gap:6px; border-top:1px solid var(--border-color); padding-top:8px; margin-top:8px;">
+            <button type="button" onclick="openCalendarWithTab('list')" class="btn-secondary" style="flex:1 1 0; min-width:0; padding:6px 4px; font-size:11px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:6px; text-align:center; white-space:nowrap;">${raidSoEscape(I.listView)}</button>
+            <button type="button" onclick="openCalendarWithTab('calendar')" class="btn-secondary" style="flex:1 1 0; min-width:0; padding:6px 4px; font-size:11px; font-weight:bold; cursor:pointer; background:var(--bg-item); border:1px solid var(--border-color); color:var(--text-main); border-radius:6px; text-align:center; white-space:nowrap;">${raidSoEscape(I.calendarView)}</button>
+        </div>`;
+
+        popover.innerHTML = html;
+    }
         window.renderBirthdayPopoverContent = renderBirthdayPopoverContent;
 
         function openCalendarWithTab(tabType) {
@@ -2433,61 +2438,61 @@ function updateTodayDateDisplay() {
         window.switchCalendarModalTab = switchCalendarModalTab;
 
         function renderCalendarModalListView() {
-            const c = document.getElementById('calendar-modal-list-view');
-            if (!c) return;
+        const c = document.getElementById('calendar-modal-list-view');
+        if (!c) return;
 
-            const I = (langMap[currentLang] || langMap.ja).idList;
-            const birthdayLabel = I.birthday;
-            const anniversaryLabel = I.anniversary;
+        const I = (langMap[currentLang] || langMap.ja).idList;
+        const birthdayLabel = I.birthday;
+        const anniversaryLabel = I.anniversary;
 
-            const allEvents = [];
+        const allEvents = [];
 
-            (friendsConfig || []).forEach((cat, ci) => {
-                const friends = cat.friends || [];
-                friends.forEach((f, fi) => {
-                    const nickname = String(f.name || '').trim();
-                    const cleanTwitch = normalizeFriendTwitch(f.twitch);
-                    const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
+        (friendsConfig || []).forEach((cat, ci) => {
+            const friends = cat.friends || [];
+            friends.forEach((f, fi) => {
+                const nickname = String(f.name || '').trim();
+                const cleanTwitch = normalizeFriendTwitch(f.twitch);
+                const name = nickname || f.displayName || cleanTwitch || f.twitch || 'No Name';
 
-                    const bday = parseMdDate(f.birthday);
-                    if (bday) {
-                        const daysLeft = getDaysUntil(bday.month, bday.day);
-                        allEvents.push({ name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi });
-                    }
+                const bday = parseMdDate(f.birthday);
+                if (bday) {
+                    const daysLeft = getDaysUntil(bday.month, bday.day);
+                    allEvents.push({ name, type: 'birthday', month: bday.month, day: bday.day, daysLeft, ci, fi });
+                }
 
-                    const anniv = parseMdDate(f.anniversary);
-                    if (anniv) {
-                        const daysLeft = getDaysUntil(anniv.month, anniv.day);
-                        allEvents.push({ name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi });
-                    }
-                });
+                const anniv = parseMdDate(f.anniversary);
+                if (anniv) {
+                    const daysLeft = getDaysUntil(anniv.month, anniv.day);
+                    allEvents.push({ name, type: 'anniversary', month: anniv.month, day: anniv.day, daysLeft, ci, fi });
+                }
             });
+        });
 
-            allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
+        allEvents.sort((a, b) => a.daysLeft - b.daysLeft);
 
-            if (allEvents.length === 0) {
-                c.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size:12px;">${raidSoEscape(I.noAnniversaries)}</div>`;
-                return;
-            }
-
-            let html = '';
-            allEvents.forEach(m => {
-                const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
-                const typeClass = m.type === 'birthday' ? 'is-birthday' : 'is-anniversary';
-                html += `
-                <div class="birthday-popover-item" onclick="navigateToFriendCard(${m.ci}, ${m.fi})" style="padding:8px 6px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-radius:6px; transition:0.15s;" onmouseover="this.style.background='var(--bg-item)'" onmouseout="this.style.background='transparent'">
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="font-size: 13px; font-weight:bold; color:var(--text-main);">${raidSoEscape(m.name)}</span>
-                        <span style="font-size: 11px; color:var(--text-muted);">${m.month}/${m.day}</span>
-                    </div>
-                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
-                        <span style="font-size: 11px; font-weight:bold; color:var(--twitch-purple);">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
-                        <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'}" style="font-size: 9px; padding:1px 5px; border-radius:4px;">${raidSoEscape(typeLabel)}</span>
-                    </div>
-                </div>`;
-            });
-            c.innerHTML = html;
+        if (allEvents.length === 0) {
+            c.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size:12px;">${raidSoEscape(I.noAnniversaries)}</div>`;
+            return;
         }
+
+        let html = '';
+        allEvents.forEach(m => {
+            const typeLabel = m.type === 'birthday' ? birthdayLabel : anniversaryLabel;
+            html += `
+            <div class="calendar-list-card" onclick="navigateToFriendCard(${m.ci}, ${m.fi})">
+                <div class="calendar-list-card-top">
+                    <span class="calendar-list-name" title="${raidSoEscape(m.name)}">${raidSoEscape(m.name)}</span>
+                    <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} calendar-list-badge">${raidSoEscape(typeLabel)}</span>
+                </div>
+                <div class="calendar-list-card-bottom">
+                    <span class="calendar-list-date">${m.month}/${m.day}</span>
+                    <span class="calendar-list-days">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
+                </div>
+            </div>`;
+        });
+
+        c.innerHTML = html;
+    }
         window.renderCalendarModalListView = renderCalendarModalListView;
 
 
