@@ -767,42 +767,37 @@
             </div>
 
             <!-- 言語・色モード設定パネル (認証の下に配置) -->
-            <div style="background:var(--bg-panel); padding:16px 20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple); display:flex; flex-direction:column; gap:12px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                    <!-- 言語切替ボタン -->
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span class="field-label" style="margin-bottom: 0; min-width: 60px; font-weight: bold;" data-i18n="settingsUi.languageLabel">表示言語</span>
-                        <div class="lang-btn-group" style="display: inline-flex; gap: 4px;">
-                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="ja" onclick="chooseLanguage('ja')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">日本語</button>
-                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="en" onclick="chooseLanguage('en')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">English</button>
-                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="zh" onclick="chooseLanguage('zh')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; border-radius: 6px;">繁體中文</button>
+            <div class="settings-appearance-panel" style="background:var(--bg-panel); padding:16px 20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--twitch-purple);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                    <!-- 表示言語切替 -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span class="field-label" style="margin-bottom: 0; font-weight: bold;" data-i18n="settingsUi.languageLabel">表示言語</span>
+                        <div class="lang-btn-group" style="display: flex; gap: 6px; width: 100%;">
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="ja" onclick="chooseLanguage('ja')" style="flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 12px; font-weight: bold; border-radius: 6px; text-align: center; justify-content: center; white-space: nowrap;">日本語</button>
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="en" onclick="chooseLanguage('en')" style="flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 12px; font-weight: bold; border-radius: 6px; text-align: center; justify-content: center; white-space: nowrap;">English</button>
+                            <button type="button" class="btn-secondary lang-toggle-btn" data-lang-option="zh" onclick="chooseLanguage('zh')" style="flex: 1 1 0; min-width: 0; padding: 7px 6px; font-size: 12px; font-weight: bold; border-radius: 6px; text-align: center; justify-content: center; white-space: nowrap;">繁體中文</button>
                         </div>
                     </div>
 
-                    <!-- 色モード切替ボタン -->
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span class="field-label" style="margin-bottom: 0; min-width: 60px; font-weight: bold;" data-i18n="settingsUi.themeLabel">外観テーマ</span>
-                        <div class="theme-btn-group" style="display: inline-flex; gap: 4px;">
-                            <button type="button" id="theme-btn-dark" class="btn-secondary theme-toggle-btn" onclick="applyTheme('dark')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                                <span data-i18n="settingsUi.themeDark">ダーク</span>
+                    <!-- 外観テーマ切替 -->
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <span class="field-label" style="margin-bottom: 0; font-weight: bold;" data-i18n="settingsUi.themeLabel">外観テーマ</span>
+                        <div class="theme-btn-group" style="display: flex; gap: 6px; width: 100%;">
+                            <button type="button" id="theme-btn-dark" class="btn-secondary theme-toggle-btn" onclick="applyTheme('dark')" style="flex: 1 1 0; min-width: 0; padding: 7px 8px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 6px; white-space: nowrap;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                                <span data-i18n="settingsUi.themeDark" style="overflow:hidden; text-overflow:ellipsis;">ダーク</span>
                             </button>
-                            <button type="button" id="theme-btn-light" class="btn-secondary theme-toggle-btn" onclick="applyTheme('light')" style="padding: 6px 12px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-radius: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                                <span data-i18n="settingsUi.themeLight">ライト</span>
+                            <button type="button" id="theme-btn-light" class="btn-secondary theme-toggle-btn" onclick="applyTheme('light')" style="flex: 1 1 0; min-width: 0; padding: 7px 8px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 6px; white-space: nowrap;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                                <span data-i18n="settingsUi.themeLight" style="overflow:hidden; text-overflow:ellipsis;">ライト</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
                 <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">表示設定</div>
-                    <div>
-                        <span class="field-label" id="ui-settings-language-label" data-i18n="settingsUi.languageLabel">表示言語</span>
-                        
-                </div>表示設定</div>
                 <span class="field-label" id="ui-settings-date-format-label" data-i18n="settingsUi.dateFormatLabelExtended">日付の表示形式 ({date}用) ※自由にカスタマイズできます</span>
                 <input type="text" id="date_format" list="date_format_presets" aria-labelledby="ui-settings-date-format-label"
                     oninput="handleDateFormatPreview(this.value)" onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}"
