@@ -7004,3 +7004,48 @@ body.light-theme .count-step-btn:hover {
     border-color: var(--button-primary-bg) !important;
     box-shadow: 0 2px 6px rgba(145, 70, 255, 0.3) !important;
 }
+
+
+/* Memo Category Name Responsive Wrapping */
+.memo-category-name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.memo-title-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 120px;
+}
+
+.memo-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .memo-category-name {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+    }
+    .memo-title-area {
+        width: 100% !important;
+        flex: 0 0 auto !important;
+    }
+    .memo-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+    }
+    .memo-actions .memo-mode-toggle-btn {
+        padding: 3px 8px !important;
+        font-size: 11px !important;
+    }
+}

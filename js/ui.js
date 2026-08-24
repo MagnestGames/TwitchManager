@@ -3303,12 +3303,12 @@ window.copyCommonTag = copyCommonTag;
                     </div>
                 `;
 
-                d.innerHTML = `<div class="category-name" onclick="toggleMemoCategory(this, ${i})">
-                    <div style="display:flex; align-items:center; flex:1; gap:10px; overflow:hidden;">
-                        <span style="white-space:nowrap;">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
+                d.innerHTML = `<div class="category-name memo-category-name" onclick="toggleMemoCategory(this, ${i})">
+                    <div class="memo-title-area" style="display:flex; align-items:center; gap:8px; overflow:hidden; min-width:0;">
+                        <span class="memo-title-text" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${raidSoEscape(m.title || (langMap[currentLang].memoTitleDefault || 'メモ'))}</span>
                         <small class="memo-preview" style="font-size: 11px; color: var(--text-muted); opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top:2px;">${raidSoEscape(previewText)}</small>
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
+                    <div class="memo-actions" style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                         ${modeBtnHtml}
                         <button class="btn-delete-item btn-secondary" onclick="event.stopPropagation(); deleteMemo(${i})">✕</button>
                     </div>
