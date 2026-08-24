@@ -6456,12 +6456,11 @@ body.light-theme .count-step-btn:hover {
 
 
 
-
 /* ==========================================================================
    Ultra-Narrow Viewport / Vertical OBS Dock Responsive Overrides
    ========================================================================== */
 
-/* Base Title Card layout rules */
+/* Title card base enhancements */
 .record-title-area {
     display: flex;
     align-items: center;
@@ -6488,14 +6487,6 @@ body.light-theme .count-step-btn:hover {
     outline: none !important;
 }
 
-/* Common Tag Bar base */
-.common-tag-title-short {
-    display: none;
-}
-.common-tag-title-full {
-    display: inline;
-}
-
 /* Medium Narrow Dock Width (<= 400px) */
 @media (max-width: 400px) {
     .app-header {
@@ -6512,6 +6503,196 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* Narrow & Ultra-Narrow Dock Width (<= 340px) */
+@media (max-width: 340px) {
+    /* 1. Header Clock -> SVG Icon with Tooltip */
+    .today-date-text {
+        display: none !important;
+    }
+    .today-clock-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color var(--transition-fast);
+    }
+    .today-clock-icon:hover {
+        color: var(--twitch-purple) !important;
+    }
+    .today-date-wrapper {
+        cursor: pointer;
+    }
+
+    /* 2. Title Preset Card 2-row layout & zero unnecessary gap */
+    .record-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 4px !important;
+        padding: 8px 10px !important;
+        position: relative !important;
+    }
+
+    .record-title-area {
+        width: 100% !important;
+        padding-right: 26px !important;
+        position: relative !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+
+    .record-title-text {
+        display: block !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+
+    /* 3. Rename Pencil Button -> Pin to top-right of card */
+    .record-edit-btn {
+        position: absolute !important;
+        right: 0 !important;
+        top: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* 4. Actions row (bottom line of header) */
+    .record-actions {
+        width: 100% !important;
+        margin-top: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* 5. Count numbers only (< > hidden, larger wheel/focus touch area) */
+    .count-step-btn {
+        display: none !important;
+    }
+    .record-count-control {
+        margin-right: 0 !important;
+        height: auto !important;
+        flex-shrink: 0 !important;
+    }
+    .record-count-input {
+        width: 38px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+        border-radius: 6px !important;
+        text-align: center !important;
+    }
+
+    /* 6. SYNC & PUSH -> Compact 32px square icon buttons */
+    .twitch-action-btn {
+        min-width: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        flex: 0 0 32px !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .twitch-action-btn .action-text {
+        display: none !important;
+    }
+    .twitch-action-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .btn-delete-item {
+        height: 32px !important;
+        min-height: 32px !important;
+        width: 24px !important;
+        padding: 0 !important;
+        margin-left: auto;
+    }
+
+    /* 7. Tab navigation auto-fit */
+    .tab-nav {
+        gap: 4px;
+        padding-bottom: 5px;
+    }
+    .tab-btn {
+        padding: 6px 4px;
+        font-size: 11px;
+        min-width: 54px;
+    }
+
+    /* 8. Sticky Footer Buttons */
+    .sticky-footer-wrapper {
+        padding: 6px 6px !important;
+        gap: 5px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+    }
+    .sticky-footer-wrapper > button {
+        padding: 6px 4px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* Ultra-Compact Dock Width (<= 240px) */
+@media (max-width: 240px) {
+    .record-header {
+        padding: 6px 6px !important;
+    }
+    .record-count-input {
+        width: 32px !important;
+        height: 30px !important;
+        font-size: 11px !important;
+    }
+    .twitch-action-btn {
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        flex: 0 0 28px !important;
+    }
+    .twitch-action-btn svg {
+        width: 13px !important;
+        height: 13px !important;
+    }
+    .btn-delete-item {
+        height: 28px !important;
+        min-height: 28px !important;
+        width: 22px !important;
+    }
+}
+
+.lang-toggle-btn.active,
+.theme-toggle-btn.active {
+    background: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-bg) !important;
+    box-shadow: 0 2px 6px rgba(145, 70, 255, 0.3) !important;
+}
+
+
+/* ==========================================================================
+   Ultra-Narrow Responsive Overrides (Issue: Narrow Viewport Layout Refinements)
+   ========================================================================== */
+
+/* Common Tag Bar base */
+.common-tag-title-short {
+    display: none;
+}
+.common-tag-title-full {
+    display: inline;
+}
+
 @media (max-width: 340px) {
     /* 1. Header Clock -> SVG Icon with Tooltip */
     .today-date-text {
@@ -6615,17 +6796,18 @@ body.light-theme .count-step-btn:hover {
         flex-shrink: 0 !important;
     }
 
-    /* Actions row (bottom line of header - attached directly below title) */
+    /* Actions row: Centered horizontally in card */
     .record-actions {
         width: 100% !important;
-        margin: 0 !important;
+        margin: 4px 0 0 0 !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 6px !important;
+        justify-content: center !important; /* Centered in card */
+        gap: 8px !important;
         flex-wrap: nowrap !important;
         flex: 0 0 auto !important;
+        position: relative !important;
     }
 
     /* Count numbers only (< > hidden, compact input) */
@@ -6678,7 +6860,7 @@ body.light-theme .count-step-btn:hover {
         min-height: 30px !important;
         width: 24px !important;
         padding: 0 !important;
-        margin-left: auto !important;
+        margin-left: 4px !important;
     }
 
     /* Tab navigation auto-fit */
@@ -6705,11 +6887,13 @@ body.light-theme .count-step-btn:hover {
     }
 }
 
-/* Ultra-Compact Dock Width (<= 240px) */
 @media (max-width: 240px) {
     .record-header {
         padding: 6px 6px !important;
         gap: 4px !important;
+    }
+    .record-actions {
+        gap: 6px !important;
     }
     .record-count-input {
         width: 32px !important;
@@ -6732,12 +6916,4 @@ body.light-theme .count-step-btn:hover {
         min-height: 28px !important;
         width: 20px !important;
     }
-}
-
-.lang-toggle-btn.active,
-.theme-toggle-btn.active {
-    background: var(--button-primary-bg) !important;
-    color: var(--button-primary-text) !important;
-    border-color: var(--button-primary-bg) !important;
-    box-shadow: 0 2px 6px rgba(145, 70, 255, 0.3) !important;
 }
