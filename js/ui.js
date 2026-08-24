@@ -2150,6 +2150,7 @@ function updateTodayDateDisplay() {
                         <span class="birthday-popover-date">${m.month}/${m.day}</span>
                     </div>
                     <div class="birthday-popover-right">
+                        <span class="birthday-popover-date-inline">${m.month}/${m.day}</span>
                         <span class="birthday-popover-days">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
                         <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} birthday-popover-badge" style="font-size:8.5px; padding:1px 5px; border-radius:3px; flex-shrink:0;">${raidSoEscape(label)}</span>
                     </div>
@@ -2484,6 +2485,7 @@ function updateTodayDateDisplay() {
                     <span class="calendar-list-date">${m.month}/${m.day}</span>
                 </div>
                 <div class="calendar-list-card-right">
+                    <span class="calendar-list-date-inline">${m.month}/${m.day}</span>
                     <span class="calendar-list-days">${raidSoEscape(uiText('idList.daysRemaining', { count: m.daysLeft }))}</span>
                     <span class="calendar-event-type-${m.type === 'birthday' ? 'birthday' : 'anniversary'} calendar-list-badge">${raidSoEscape(typeLabel)}</span>
                 </div>

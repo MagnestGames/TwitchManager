@@ -7718,6 +7718,11 @@ body.light-theme .cmd-time-control {
     margin-top: 1px !important;
 }
 
+.birthday-popover-date-inline,
+.calendar-list-date-inline {
+    display: none !important;
+}
+
 .birthday-popover-right,
 .calendar-list-card-right {
     display: flex !important;
@@ -7734,7 +7739,8 @@ body.light-theme .cmd-time-control {
     font-size: 11px !important;
 }
 
-.calendar-list-badge {
+.calendar-list-badge,
+.birthday-popover-badge {
     font-size: 9px !important;
     padding: 2px 6px !important;
     border-radius: 4px !important;
@@ -7812,14 +7818,58 @@ body.light-theme .cmd-time-control {
     box-sizing: border-box !important;
 }
 
-@media (max-width: 320px) {
-    /* Only on ultra-narrow viewports (<= 320px): stack date and days smoothly */
+/* Narrow Viewport Mode (<= 480px): Stack name on top (full width), anniversary details below */
+@media (max-width: 480px) {
     .birthday-popover-item,
     .calendar-list-card {
-        padding: 5px 4px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 3px !important;
+        padding: 6px 4px !important;
     }
+
+    .birthday-popover-left,
+    .calendar-list-card-left {
+        width: 100% !important;
+        margin-right: 0 !important;
+    }
+
+    .birthday-popover-name,
+    .calendar-list-name {
+        width: 100% !important;
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .birthday-popover-date,
+    .calendar-list-date {
+        display: none !important;
+    }
+
+    .birthday-popover-right,
+    .calendar-list-card-right {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 4px !important;
+    }
+
+    .birthday-popover-date-inline,
+    .calendar-list-date-inline {
+        display: inline !important;
+        color: var(--text-muted) !important;
+        font-size: 10px !important;
+    }
+
     .birthday-popover-days,
     .calendar-list-days {
-        font-size: 10px !important;
+        font-size: 10.5px !important;
+        margin-left: auto !important;
+        margin-right: 4px !important;
     }
 }
