@@ -485,6 +485,8 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function setLanguage(lang, shouldSave = true) {
+        const langSelect = document.getElementById('settings_language_select');
+        if (langSelect && langSelect.value !== lang) langSelect.value = lang;
             if (!langMap[lang]) return;
             const currentActiveTab = document.querySelector('.tab-content.active')?.id || 'main-tab';
             const at = currentActiveTab;
@@ -1275,6 +1277,8 @@ window.copyCommonTag = copyCommonTag;
         }
 
         function applyTheme(theme) {
+        const themeSelect = document.getElementById('settings_theme_select');
+        if (themeSelect && themeSelect.value !== theme) themeSelect.value = theme;
             const isLight = theme === 'light';
             document.body.classList.toggle('light-theme', isLight);
             const btn = document.getElementById('theme-btn');

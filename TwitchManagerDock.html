@@ -59,20 +59,8 @@
                     onclick="openActiveCategorySettings()" aria-label="表示設定">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="11" cy="18" r="2"></circle></svg>
                 </button>
-                <div class="language-picker">
-                    <button id="ui-btn-language" class="btn-head-purple" onclick="toggleLanguageMenu(event)"
-                        data-i18n-tooltip="extended.language" data-i18n-aria="extended.language" aria-label="言語" aria-haspopup="true" aria-expanded="false"
-                        style="font-size: 10px; font-weight: bold;">JP</button>
-                    <div id="language-menu" class="language-menu" role="menu" aria-label="言語を選択" data-i18n-aria="extended.languageMenuLabel">
-                        <button type="button" class="language-option" data-lang-option="ja" onclick="chooseLanguage('ja')" role="menuitem">日本語</button>
-                        <button type="button" class="language-option" data-lang-option="en" onclick="chooseLanguage('en')" role="menuitem">English</button>
-                        <button type="button" class="language-option" data-lang-option="zh" onclick="chooseLanguage('zh')" role="menuitem">简体中文</button>
-                    </div>
-                </div>
                 <button id="lock-btn" class="btn-head-purple" data-i18n-tooltip="extended.unlockSort" data-i18n-aria="extended.unlockSort" aria-label="並び替え解除"
                     onclick="toggleSortLock()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></button>
-                <button id="theme-btn" class="btn-head-purple" data-i18n-tooltip="extended.themeToggle" data-i18n-aria="extended.themeToggle" aria-label="テーマを切り替え"
-                    onclick="toggleTheme()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
                 <button class="btn-head-purple" id="ui-btn-guide" data-i18n-tooltip="extended.guide" data-i18n-aria="extended.guide" aria-label="ヘルプ"
                     onclick="openModal('guideModal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></button>
                 <button class="btn-head-purple" id="ui-btn-settings" data-i18n-tooltip="extended.settings" data-i18n-aria="extended.settings" aria-label="設定"
@@ -779,7 +767,24 @@
             </div>
             <div
                 style="background:var(--bg-panel); padding:20px; border-radius:12px; margin-bottom:20px; border-left:4px solid var(--border-color);">
-                <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">表示設定</div>
+                <div class="category-subtitle" id="ui-settings-display-title" style="margin-bottom:8px;" data-i18n="settingsUi.displayTitle">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
+                    <div>
+                        <span class="field-label" id="ui-settings-theme-label" data-i18n="settingsUi.themeLabel">外観テーマ</span>
+                        <select id="settings_theme_select" onchange="applyTheme(this.value)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;">
+                            <option value="dark" data-i18n="settingsUi.themeDark">ダークモード</option>
+                            <option value="light" data-i18n="settingsUi.themeLight">ライトモード</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="field-label" id="ui-settings-language-label" data-i18n="settingsUi.languageLabel">表示言語</span>
+                        <select id="settings_language_select" onchange="chooseLanguage(this.value)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;">
+                            <option data-lang-option="ja" value="ja">日本語</option>
+                            <option data-lang-option="en" value="en">English</option>
+                            <option data-lang-option="zh" value="zh">繁體中文</option>
+                        </select>
+                    </div>
+                </div>表示設定</div>
                 <span class="field-label" id="ui-settings-date-format-label" data-i18n="settingsUi.dateFormatLabelExtended">日付の表示形式 ({date}用) ※自由にカスタマイズできます</span>
                 <input type="text" id="date_format" list="date_format_presets" aria-labelledby="ui-settings-date-format-label"
                     oninput="handleDateFormatPreview(this.value)" onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}"

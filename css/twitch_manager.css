@@ -6453,3 +6453,102 @@ body.light-theme .count-step-btn:hover {
     vertical-align: middle;
     box-sizing: border-box;
 }
+
+
+/* ==========================================================================
+   Narrow Viewport / Vertical OBS Dock Responsive Overrides
+   ========================================================================== */
+
+@media (max-width: 360px) {
+    .app-header {
+        gap: 6px;
+    }
+    .app-header-controls {
+        gap: 4px;
+    }
+    .app-header-controls .btn-head-purple {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px;
+    }
+}
+
+@media (max-width: 340px) {
+    /* Title Preset Card 2-row layout */
+    .record-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+    }
+    .record-header > div:first-child {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .record-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+    .record-count-control {
+        margin-right: 0 !important;
+        flex-shrink: 0;
+    }
+    .twitch-action-btn {
+        min-width: 0 !important;
+        flex: 1 1 auto;
+        padding: 4px 6px !important;
+        min-height: 34px !important;
+    }
+    .twitch-action-btn svg {
+        width: 11px;
+        height: 11px;
+    }
+    .twitch-action-btn .action-main {
+        font-size: 8px !important;
+    }
+    .twitch-action-btn .action-sub {
+        font-size: 10px !important;
+    }
+
+    /* Tab navigation auto-fit */
+    .tab-nav {
+        gap: 4px;
+        padding-bottom: 5px;
+    }
+    .tab-btn {
+        padding: 6px 4px;
+        font-size: 11px;
+        min-width: 56px;
+    }
+
+    /* Sticky Footer Buttons */
+    .sticky-footer-wrapper {
+        padding: 6px 6px !important;
+        gap: 5px !important;
+        min-height: 48px !important;
+        max-height: 48px !important;
+    }
+    .sticky-footer-wrapper > button {
+        padding: 6px 4px !important;
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 280px) {
+    .record-actions {
+        gap: 4px;
+    }
+    .twitch-action-btn {
+        padding: 3px 4px !important;
+    }
+    .twitch-action-btn .action-sub {
+        font-size: 9px !important;
+    }
+}
