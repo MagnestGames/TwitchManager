@@ -6455,11 +6455,40 @@ body.light-theme .count-step-btn:hover {
 }
 
 
+
 /* ==========================================================================
-   Narrow Viewport / Vertical OBS Dock Responsive Overrides
+   Ultra-Narrow Viewport / Vertical OBS Dock Responsive Overrides
    ========================================================================== */
 
-@media (max-width: 360px) {
+/* Title card base enhancements */
+.record-title-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 150px;
+    position: relative;
+}
+
+.record-title-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+.record-count-input {
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.record-count-input:focus {
+    border-color: var(--twitch-purple) !important;
+    box-shadow: 0 0 0 2px rgba(145, 70, 255, 0.25) !important;
+    outline: none !important;
+}
+
+/* Medium Narrow Dock Width (<= 400px) */
+@media (max-width: 400px) {
     .app-header {
         gap: 6px;
     }
@@ -6473,51 +6502,125 @@ body.light-theme .count-step-btn:hover {
     }
 }
 
+/* Narrow & Ultra-Narrow Dock Width (<= 340px) */
 @media (max-width: 340px) {
-    /* Title Preset Card 2-row layout */
+    /* 1. Header Clock -> SVG Icon with Tooltip */
+    .today-date-text {
+        display: none !important;
+    }
+    .today-clock-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color var(--transition-fast);
+    }
+    .today-clock-icon:hover {
+        color: var(--twitch-purple) !important;
+    }
+    .today-date-wrapper {
+        cursor: pointer;
+    }
+
+    /* 2. Title Preset Card 2-row layout & zero unnecessary gap */
     .record-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 4px !important;
+        padding: 8px 10px !important;
+        position: relative !important;
     }
-    .record-header > div:first-child {
-        width: 100%;
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+
+    .record-title-area {
+        width: 100% !important;
+        padding-right: 26px !important;
+        position: relative !important;
+        margin: 0 !important;
+        display: block !important;
     }
+
+    .record-title-text {
+        display: block !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+    }
+
+    /* 3. Rename Pencil Button -> Pin to top-right of card */
+    .record-edit-btn {
+        position: absolute !important;
+        right: 0 !important;
+        top: 0 !important;
+        width: 22px !important;
+        height: 22px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* 4. Actions row (bottom line of header) */
     .record-actions {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 6px;
-        flex-wrap: nowrap;
+        width: 100% !important;
+        margin-top: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* 5. Count numbers only (< > hidden, larger wheel/focus touch area) */
+    .count-step-btn {
+        display: none !important;
     }
     .record-count-control {
         margin-right: 0 !important;
-        flex-shrink: 0;
+        height: auto !important;
+        flex-shrink: 0 !important;
     }
-    .twitch-action-btn {
-        min-width: 0 !important;
-        flex: 1 1 auto;
-        padding: 4px 6px !important;
-        min-height: 34px !important;
-    }
-    .twitch-action-btn svg {
-        width: 11px;
-        height: 11px;
-    }
-    .twitch-action-btn .action-main {
-        font-size: 8px !important;
-    }
-    .twitch-action-btn .action-sub {
-        font-size: 10px !important;
+    .record-count-input {
+        width: 38px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+        border-radius: 6px !important;
+        text-align: center !important;
     }
 
-    /* Tab navigation auto-fit */
+    /* 6. SYNC & PUSH -> Compact 32px square icon buttons */
+    .twitch-action-btn {
+        min-width: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        flex: 0 0 32px !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .twitch-action-btn .action-text {
+        display: none !important;
+    }
+    .twitch-action-btn svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .btn-delete-item {
+        height: 32px !important;
+        min-height: 32px !important;
+        width: 24px !important;
+        padding: 0 !important;
+        margin-left: auto;
+    }
+
+    /* 7. Tab navigation auto-fit */
     .tab-nav {
         gap: 4px;
         padding-bottom: 5px;
@@ -6525,15 +6628,15 @@ body.light-theme .count-step-btn:hover {
     .tab-btn {
         padding: 6px 4px;
         font-size: 11px;
-        min-width: 56px;
+        min-width: 54px;
     }
 
-    /* Sticky Footer Buttons */
+    /* 8. Sticky Footer Buttons */
     .sticky-footer-wrapper {
         padding: 6px 6px !important;
         gap: 5px !important;
-        min-height: 48px !important;
-        max-height: 48px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
     }
     .sticky-footer-wrapper > button {
         padding: 6px 4px !important;
@@ -6541,15 +6644,31 @@ body.light-theme .count-step-btn:hover {
     }
 }
 
-@media (max-width: 280px) {
-    .record-actions {
-        gap: 4px;
+/* Ultra-Compact Dock Width (<= 240px) */
+@media (max-width: 240px) {
+    .record-header {
+        padding: 6px 6px !important;
+    }
+    .record-count-input {
+        width: 32px !important;
+        height: 30px !important;
+        font-size: 11px !important;
     }
     .twitch-action-btn {
-        padding: 3px 4px !important;
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        flex: 0 0 28px !important;
     }
-    .twitch-action-btn .action-sub {
-        font-size: 9px !important;
+    .twitch-action-btn svg {
+        width: 13px !important;
+        height: 13px !important;
+    }
+    .btn-delete-item {
+        height: 28px !important;
+        min-height: 28px !important;
+        width: 22px !important;
     }
 }
 

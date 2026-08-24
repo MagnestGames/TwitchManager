@@ -35,8 +35,12 @@
 
     <div class="sticky-top-wrapper">
         <div class="app-header">
-            <h1 class="app-title app-title-row">◆ <span id="today-date"
-                    style="margin-left: 8px; color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
+            <h1 class="app-title app-title-row">◆ <span id="today-date-wrap" class="today-date-wrapper has-tooltip" style="margin-left: 6px; display: inline-flex; align-items: center;">
+                    <span id="today-date" class="today-date-text" style="color: var(--text-muted); font-weight: normal; font-size: 11px;"></span>
+                    <span class="today-clock-icon" aria-hidden="true" style="display: none; color: var(--text-muted);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </span>
+                </span>
                 <div id="stream-time-stats-container" style="position: relative; display: inline-flex; align-items: center;">
                     <button type="button" id="stream-time-stats-btn" class="btn-head-purple inactive" style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; margin-left: 2px; font-size: 12px; cursor: pointer; border-radius: 4px;" onclick="toggleStreamTimeStatsPopover(event)" onmouseenter="showStreamTimeStatsPopover(event)" onmouseleave="hideStreamTimeStatsPopover(event)" data-i18n-tooltip="streamStats.tooltipBtn" data-i18n-aria="streamStats.tooltipBtn" aria-label="配信時間の統計">
                         ★
