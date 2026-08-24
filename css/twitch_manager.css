@@ -7006,132 +7006,62 @@ body.light-theme .count-step-btn:hover {
 }
 
 
-/* Memo Category Name Responsive Wrapping */
+/* Memo Category Name Right-Pinned Actions & Auto-wrapping Title */
 .memo-category-name {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: block !important;
+    position: relative !important;
+    padding-right: 64px !important;
+    margin-bottom: 12px !important;
+    min-height: 28px !important;
+    cursor: grab;
 }
 
 .memo-title-area {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    flex: 1 1 120px;
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+}
+
+.memo-title-text {
+    font-size: 15px !important;
+    font-weight: bold !important;
+    color: var(--command-accent) !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    line-height: 1.35 !important;
+    display: inline-block !important;
+}
+
+.memo-preview {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    opacity: 0.7 !important;
+    word-break: break-word !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+    flex: 1 1 80px !important;
 }
 
 .memo-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
 }
 
 @media (max-width: 480px) {
     .memo-category-name {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 6px !important;
-    }
-    .memo-title-area {
-        width: 100% !important;
-        flex: 0 0 auto !important;
+        padding-right: 58px !important;
     }
     .memo-actions {
-        width: 100% !important;
-        justify-content: flex-end !important;
+        top: -2px !important;
     }
-    .memo-actions .memo-mode-toggle-btn {
-        padding: 3px 8px !important;
-        font-size: 11px !important;
-    }
-}
-
-
-/* Memo Mode Toggle Buttons Iconization for Narrow Viewports */
-@media (max-width: 480px) {
-    /* 1. Memo Category Toggle Button -> Icon only */
-    .memo-mode-toggle-btn .mode-btn-text {
-        display: none !important;
-    }
-    .memo-mode-toggle-btn {
-        min-width: 28px !important;
-        width: 28px !important;
-        height: 28px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        flex: 0 0 28px !important;
-    }
-    .memo-mode-toggle-btn svg {
-        margin: 0 !important;
-    }
-
-    /* 2. Global Toggle All Memos Button -> Icon only */
-    #ui-toggle-all-memos .mode-btn-text {
-        display: none !important;
-    }
-    #ui-toggle-all-memos {
-        min-width: 28px !important;
-        width: 28px !important;
-        height: 28px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        flex: 0 0 28px !important;
-    }
-    #ui-toggle-all-memos svg {
-        margin: 0 !important;
-    }
-
-    /* 3. Global Add Memo Button -> Icon only */
-    #ui-add-memo span {
-        display: none !important;
-    }
-    #ui-add-memo {
-        min-width: 28px !important;
-        width: 28px !important;
-        height: 28px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex: 0 0 28px !important;
-    }
-    #ui-add-memo svg {
-        margin: 0 !important;
-    }
-
-    /* 4. Memo Toolbar Buttons -> Compact icon/symbol only */
-    .memo-toolbar-btn span {
-        display: none !important;
-    }
-    .memo-toolbar-btn {
-        padding: 2px 5px !important;
-        font-size: 11px !important;
-    }
-}
-
-
-/* Memo Markdown Toolbar Buttons Compact Icon Style */
-.memo-toolbar-btn {
-    width: 26px !important;
-    min-width: 26px !important;
-    height: 26px !important;
-    min-height: 26px !important;
-    padding: 0 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 11px !important;
-    border-radius: 4px !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
 }
