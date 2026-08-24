@@ -2369,10 +2369,10 @@
         }
 
         .raidso-intro-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-        }
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
 
         .raidso-intro-buttons button {
             width: 100%;
@@ -7380,5 +7380,29 @@ body.del-mode .category-name {
     .raidso-link-row .raidso-external-link {
         width: 100% !important;
         flex: 0 0 auto !important;
+    }
+}
+
+
+/* RaidSO Intro Buttons: 3-column normal, 1-column on narrow */
+.raidso-intro-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+}
+
+.raidso-intro-buttons button {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 7px 4px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+@media (max-width: 420px) {
+    .raidso-intro-buttons {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
     }
 }
