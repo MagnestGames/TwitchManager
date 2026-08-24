@@ -12,7 +12,7 @@ const [html, ui, css, locales, storage] = await Promise.all([
 
 assert.match(html, /<details class="cp-notice">[\s\S]*<summary[^>]*data-i18n="cpTab\.noticeTitle"/, 'The CP limitation notice must be collapsible.');
 assert.match(html, /class="cp-rewards-table"/, 'The CP reward list must use the responsive table layout.');
-assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.cp-reward-row\s*\{[\s\S]*grid-template-areas:/, 'CP rewards must switch to cards on narrow screens.');
+assert.match(css, /@media \(max-width: 480px\)[\s\S]*\.cp-reward-row\s*\{[\s\S]*grid-template-areas:/, 'CP rewards must switch to cards on narrow screens.');
 assert.match(css, /\.cp-reward-icon-button\s*\{[^}]*width:\s*28px;[^}]*height:\s*28px;/, 'Edit and delete buttons must have matching dimensions.');
 assert.match(css, /\.cp-toolbar\s*\{[^}]*background:\s*var\(--bg-base\);/, 'The CP toolbar must follow both dark and light theme backgrounds.');
 assert.match(ui, /class="cp-group-actions"/, 'CP group actions must use the shared aligned layout.');

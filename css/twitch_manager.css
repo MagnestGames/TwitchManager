@@ -1771,7 +1771,7 @@
             }
         }
 
-        @media (max-width: 420px) {
+        @media (max-width: 480px) {
             .command-grid,
             .command-grid.three,
             .cmd-service-options {
@@ -2749,7 +2749,7 @@
             line-height: 1.5;
         }
 
-        @media (max-width: 430px) {
+        @media (max-width: 480px) {
             .raidso-template-row,
             .raidso-template-actions,
             .raidso-token-grid {
@@ -3003,7 +3003,7 @@
             min-width: 0;
         }
 
-        @media (max-width: 420px) {
+        @media (max-width: 480px) {
             .modal-overlay {
                 padding: 10px;
             }
@@ -4611,7 +4611,7 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
 .raidso-listener-preview { width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
 .raidso-listener-remove { width: 30px; min-width: 30px; height: 30px; padding: 0; }
 
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .raidso-listener-add { grid-template-columns: 1fr; }
     .raidso-listener-row { grid-template-columns: minmax(80px, 1fr) 30px; }
     .raidso-listener-person { grid-column: 1; }
@@ -4645,7 +4645,7 @@ body.light-theme .btn-secondary:hover { color: #1f1f23 !important; }
     .cp-source-badge { max-width: 76px; }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .cp-toolbar-row { align-items: flex-start; }
     .cp-toolbar-actions { width: 100%; }
     .cp-toolbar-select { flex: 1 1 120px; max-width: none; }
@@ -6512,7 +6512,7 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* Medium Narrow Dock Width (<= 400px) */
-@media (max-width: 400px) {
+@media (max-width: 480px) {
     .app-header {
         gap: 6px;
     }
@@ -6527,7 +6527,7 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* Narrow & Ultra-Narrow Dock Width (<= 340px) */
-@media (max-width: 340px) {
+@media (max-width: 360px) {
     /* 1. Header Clock -> SVG Icon with Tooltip */
     .today-date-text {
         display: none !important;
@@ -6772,7 +6772,7 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* 1. Medium Width (<= 520px) -> Switch to 2-row layout without breaking button sizes */
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .app-header {
         gap: 6px;
     }
@@ -6847,7 +6847,7 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* 2. Narrow Dock Width (<= 380px) -> Iconize SYNC/PUSH & Hide < > */
-@media (max-width: 380px) {
+@media (max-width: 360px) {
     .today-date-text {
         display: none !important;
     }
@@ -7119,7 +7119,7 @@ body.light-theme .count-step-btn:hover {
 }
 
 /* Force square icon on memo mode toggle button across responsive viewports */
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .memo-category-name {
         padding-right: 56px !important;
     }
@@ -7192,7 +7192,7 @@ body.light-theme .count-step-btn:hover {
 
 
 /* Tight Category Box & Memo Header Padding for Narrow Viewports */
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .category-box {
         padding: 8px 10px 10px !important;
         margin-bottom: 8px !important;
@@ -7303,7 +7303,7 @@ body.del-mode .category-name {
     margin-bottom: 0 !important;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 480px) {
     .category-name {
         padding-right: 32px !important;
         margin-bottom: 8px !important;
@@ -7337,7 +7337,7 @@ body.del-mode .category-name {
     color: var(--text-main) !important;
 }
 
-@media (max-width: 380px) {
+@media (max-width: 360px) {
     .common-tag-manage-btn .common-tag-btn-text {
         display: none !important;
     }
@@ -7372,7 +7372,7 @@ body.del-mode .category-name {
     box-sizing: border-box !important;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .raidso-link-row {
         flex-direction: column !important;
         gap: 6px !important;
@@ -7400,7 +7400,7 @@ body.del-mode .category-name {
     box-sizing: border-box !important;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .raidso-intro-buttons {
         grid-template-columns: 1fr !important;
         gap: 6px !important;
@@ -7460,7 +7460,7 @@ body.del-mode .category-name {
 }
 
 /* Hide or shrink decorative emojis on ultra-narrow viewports */
-@media (max-width: 380px) {
+@media (max-width: 360px) {
     .btn-head-purple,
     .btn-outline,
     .raidso-external-link,
