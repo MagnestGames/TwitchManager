@@ -6101,83 +6101,53 @@ body.light-theme .stream-stats-popover {
 }
 
 
-/* Title preview collapsible details & box (Single-line direct preview) */
-.title-preview-details {
-    margin-top: 4px;
-    margin-bottom: 10px;
+/* Title preview box (Always visible direct preview) */
+.record-body textarea[id^="record-title-input-"] {
+    margin-bottom: 3px !important;
+}
+
+.title-preview-box {
+    margin-top: 0;
+    margin-bottom: calc(10px * var(--line-height-adjust, 1.5) / 1.5);
     background: rgba(145, 70, 255, 0.12);
     border: 1px solid rgba(145, 70, 255, 0.25);
     border-radius: var(--radius-sm, 6px);
-    overflow: hidden;
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 1.45;
+    word-break: break-all;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
     transition: all 0.2s ease;
 }
 
-.title-preview-details summary {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    padding: 4px 8px;
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: flex-start;
-    gap: 4px;
-    list-style: none;
-    line-height: 1.45;
-    word-break: break-all;
-}
-
-.title-preview-details summary::-webkit-details-marker {
-    display: none;
-}
-
-/* 閉じた時：▶ */
-.title-preview-details summary::before {
-    content: "▶ ";
-    font-size: 8.5px;
+.title-preview-box .title-preview-label {
+    font-size: 10px;
+    font-weight: 600;
     color: var(--command-accent, #9146ff);
-    display: inline-block;
     flex-shrink: 0;
-    margin-top: 1px;
-    transform: none !important;
-}
-
-/* 開いた時：▼ */
-.title-preview-details[open] summary::before {
-    content: "▼ " !important;
-    transform: none !important;
-}
-
-/* 閉じた時：ラベル表示、テキスト非表示 */
-.title-preview-details .title-preview-collapsed-label {
-    display: inline;
-    font-weight: 500;
-}
-.title-preview-details .title-preview-content {
-    display: none;
-}
-
-/* 開いた時：ラベル非表示、プレビューテキストを1段で直接表示 */
-.title-preview-details[open] .title-preview-collapsed-label {
-    display: none;
-}
-.title-preview-details[open] .title-preview-content {
-    display: inline;
-    color: var(--text-main);
+    user-select: none;
     opacity: 0.9;
 }
 
-.title-preview-details summary:hover {
-    background: rgba(145, 70, 255, 0.18);
+.title-preview-box .title-preview-label::after {
+    content: ":";
+    margin-left: 1px;
 }
 
-body.light-theme .title-preview-details {
+.title-preview-box .title-preview-content {
+    color: var(--text-main);
+    opacity: 0.95;
+    flex: 1;
+    min-width: 0;
+}
+
+body.light-theme .title-preview-box {
     background: rgba(145, 70, 255, 0.05);
     border-color: rgba(145, 70, 255, 0.18);
 }
 
-body.light-theme .title-preview-details summary:hover {
-    background: rgba(145, 70, 255, 0.09);
-}
 /* Count step button hover style */
 .count-step-btn {
     transition: color 0.15s ease, background 0.15s ease;

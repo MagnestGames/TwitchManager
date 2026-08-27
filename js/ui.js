@@ -3,14 +3,6 @@ function updateRecordTitleValue(ci, ri, val) {
     config[ci].records[ri].title = val;
     saveAllLocal(false);
     
-    // Update card header label if auto
-    if (!config[ci].records[ri].isCustomLabel) {
-        const lbl = document.getElementById(`record-label-${ci}-${ri}`);
-        if (lbl) {
-            const newLabel = langMap[currentLang]?.titleActions?.newLabel || langMap.ja.titleActions.newLabel;
-            lbl.textContent = '● ' + (val.trim() || newLabel);
-        }
-    }
     // Update inline header tag badges
     const headerTagsEl = document.getElementById(`record-header-tags-${ci}-${ri}`);
     if (headerTagsEl) {
@@ -1353,16 +1345,10 @@ function updateTodayDateDisplay() {
 
 
         function getRecordDisplayLabel(r, defaultLabel) {
-            if (r.isCustomLabel && r.label && r.label.trim()) {
+            if (r.label && r.label.trim()) {
                 return r.label.trim();
             }
-            if (r.label && r.label.trim() && r.label !== 'NEW' && r.label !== (defaultLabel || 'NEW') && r.isCustomLabel !== false) {
-                return r.label.trim();
-            }
-            if (r.title && r.title.trim()) {
-                return r.title.trim();
-            }
-            return (r.label && r.label.trim()) || defaultLabel || 'NEW';
+            return defaultLabel || 'NEW';
         }
         function render() {
             const c = document.getElementById('main-container'); if (!c) return; c.innerHTML = "";
@@ -1422,16 +1408,14 @@ function updateTodayDateDisplay() {
                 </div>
                 <div class="record-body">
                     <span class="field-label">${L.game}</span>
-                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false)">
+                    <input type="text" value="${raidSoEscape(r.game || '')}" oninput="config[${ci}].records[${ri}].game=this.value; saveAllLocal(false); updateRecordTitleValue(${ci}, ${ri}, config[${ci}].records[${ri}].title || '');">
                     
                     <span class="field-label">${L.title}</span>
                     <textarea id="record-title-input-${ci}-${ri}" oninput="updateRecordTitleValue(${ci}, ${ri}, this.value)">${raidSoEscape(r.title || '')}</textarea>
-                    <details class="title-preview-details">
-                        <summary>
-                            <span class="title-preview-collapsed-label" data-i18n="titlePreviewSummary">反映プレビュー</span>
-                            <span id="record-title-preview-${ci}-${ri}" class="title-preview-content">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</span>
-                        </summary>
-                    </details>
+                    <div class="title-preview-box">
+                        <span class="title-preview-label" data-i18n="titlePreviewSummary">反映プレビュー</span>
+                        <span id="record-title-preview-${ci}-${ri}" class="title-preview-content">${raidSoEscape(resolveStreamTitleTemplate(r.title || '', { game: r.game || '', count: r.count })) || '<span style="color:var(--text-muted);">(未入力)</span>'}</span>
+                    </div>
 
                     <span class="field-label" style="display:flex; align-items:center;">${L.notif}<span style="font-size:10px; color:var(--text-muted); margin-left:8px; font-weight:normal;">${I18N_DATA[currentLang]?.ui?.jsMsgs?.manualMemo || langMap.ja.jsMsgs.manualMemo}</span></span>
                     <textarea onchange="config[${ci}].records[${ri}].notif=this.value; saveAllLocal(false)">${raidSoEscape(r.notif || '')}</textarea>
