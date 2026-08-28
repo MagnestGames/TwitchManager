@@ -9,6 +9,7 @@ const [html, ui, css, locales, storage] = await Promise.all([
   read('js/locales.js'),
   read('js/storage.js')
 ]);
+const eventsub = await read('js/eventsub.js');
 
 assert.match(html, /<details class="cp-notice">[\s\S]*<summary[^>]*data-i18n="cpTab\.noticeTitle"/, 'The CP limitation notice must be collapsible.');
 assert.match(html, /class="cp-rewards-table"/, 'The CP reward list must use the responsive table layout.');
@@ -78,9 +79,12 @@ const introBoxPosition = ui.indexOf('${raidSoIntroActionsBoxHtml(r)}');
 const raidSettingsPosition = ui.indexOf('id="raidso-box-open-settings"');
 assert.ok(introBoxPosition >= 0 && raidSettingsPosition > introBoxPosition, 'Raid settings must appear second in Notification & Shoutout.');
 
-for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle', 'changes', 'tagNoCustomTags', 'tagNoCategoryRules', 'tagSelectRegisteredCategory', 'tagDirectInputOption', 'tagCollabAllMembers']) {
+for (const key of ['listenerPlayNote', 'listenerPrivacyNote', 'copyRaidSettingsUrl', 'raidSettingsCopyHint', 'raidSettingsUrlCopied', 'noticeTitle', 'changes', 'tagNoCustomTags', 'tagNoCategoryRules', 'tagSelectRegisteredCategory', 'tagDirectInputOption', 'tagCollabAllMembers', 'outboundRaidStartFailed', 'outboundRaidUrlFailed', 'outboundRaid', 'unknown']) {
   assert.equal((locales.match(new RegExp(`"${key}"`, 'g')) || []).length, 3, `${key} must be translated in all three languages.`);
 }
+assert.match(ui, /return hit \? uiText\(`apiErrors\.\$\{hit\[1\]\}`\) : uiText\('apiErrors\.unknown'\)/, 'Unknown Twitch API errors must use the selected-language fallback.');
+assert.doesNotMatch(eventsub, /Outbound Raid to \$\{ev\.to_broadcaster_user_name\}/, 'Outbound raid logs must not remain fixed in English.');
+assert.match(eventsub, /uiText\('runtime\.supporter\.outboundRaid'/, 'Outbound raid logs must use the selected-language string.');
 for (const formatLabel of ['対応形式: JSON / TXT', 'Formats: JSON / TXT', '支持格式：JSON / TXT']) {
   assert.match(locales, new RegExp(formatLabel), `${formatLabel} must be localized.`);
 }

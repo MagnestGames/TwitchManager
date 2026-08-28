@@ -323,7 +323,7 @@
                     else if (subtype === 'channel.raid') {
                         const isOutbound = ev.from_broadcaster_user_id === settings.userId;
                         if (isOutbound) {
-                            logMsg = `🚀 Outbound Raid to ${ev.to_broadcaster_user_name} with ${ev.viewers} viewers!`;
+                            logMsg = `🚀 ${uiText('runtime.supporter.outboundRaid', { user: ev.to_broadcaster_user_name, viewers: ev.viewers })}`;
                             if (typeof handleRaidSoOutboundRaidEvent === 'function') {
                                 handleRaidSoOutboundRaidEvent(ev);
                             }

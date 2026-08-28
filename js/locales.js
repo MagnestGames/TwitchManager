@@ -894,7 +894,8 @@ const I18N_DATA = {
                 "shoutoutUnavailable": "このチャンネルには現在、公式 /shoutout を実行できません。",
                 "shoutoutRateLimit": "公式 /shoutout の実行回数制限に達しています。少し時間を置いてください。",
                 "unauthorized": "アクセストークンが無効、または期限切れです。Twitch Token Generatorで再取得してください。",
-                "userNotFound": "指定したTwitchユーザーが見つかりません。IDを確認してください。"
+                "userNotFound": "指定したTwitchユーザーが見つかりません。IDを確認してください。",
+                "unknown": "Twitch APIでエラーが発生しました。設定、権限、配信状態を確認してから再試行してください。"
             },
             "authInstructions": {
                 "opened": "<strong>Twitch Token GeneratorのURLをコピーしました。</strong><br><br>1. 普段使っているブラウザのアドレスバーに貼り付けて開きます。<br>2. <strong>Custom Scope Token</strong> を選び、必要な権限にチェックを入れてGenerate Tokenします。<br>3. 表示された <strong>ACCESS TOKEN</strong> を、この設定画面のアクセストークン欄へ貼り付けて保存します。<br><br>必要な権限: <code>{scopes}</code><br><br>詳しい手順がわからない場合は、右上のヘルプから画像付きガイドを確認してください。",
@@ -1062,6 +1063,7 @@ const I18N_DATA = {
                     "follow": "{user} がフォロー！",
                     "followDetail": "{user}",
                     "raid": "{user} がレイド！({viewers}人)",
+                    "outboundRaid": "{user} へのアウトバウンドレイド（{viewers}人）",
                     "raidDetail": "{user} ({viewers}人){url}",
                     "hypeStart": "ハイプトレイン開始！ Lv.{level}",
                     "hypeEnd": "ハイプトレイン終了！ 最終Lv.{level}",
@@ -2485,7 +2487,8 @@ const I18N_DATA = {
                 "shoutoutUnavailable": "Twitch currently does not allow an official /shoutout to that channel.",
                 "shoutoutRateLimit": "The official /shoutout rate limit was reached. Please wait a bit.",
                 "unauthorized": "The Access Token is invalid or expired. Generate a new token with Twitch Token Generator.",
-                "userNotFound": "The specified Twitch user was not found. Check the ID."
+                "userNotFound": "The specified Twitch user was not found. Check the ID.",
+                "unknown": "A Twitch API error occurred. Check your settings, permissions, and stream status, then try again."
             },
             "authInstructions": {
                 "opened": "<strong>Twitch Token Generator URL copied.</strong><br><br>1. Paste it into the address bar of your regular browser and open it.<br>2. Select <strong>Custom Scope Token</strong>, choose the required scopes, and generate the token.<br>3. Paste the displayed <strong>ACCESS TOKEN</strong> into the Access Token field in this Settings window and save it.<br><br>Required scopes: <code>{scopes}</code><br><br>If the steps are unclear, open Help in the top right and read the illustrated guide.",
@@ -2653,6 +2656,7 @@ const I18N_DATA = {
                     "follow": "{user} followed!",
                     "followDetail": "{user}",
                     "raid": "{user} raided! ({viewers} viewers)",
+                    "outboundRaid": "Outbound raid to {user} ({viewers} viewers)",
                     "raidDetail": "{user} ({viewers} viewers){url}",
                     "hypeStart": "Hype Train started! Lv.{level}",
                     "hypeEnd": "Hype Train ended! Final Lv.{level}",
@@ -4076,7 +4080,8 @@ const I18N_DATA = {
                 "shoutoutUnavailable": "Twitch 当前不允许对该频道执行官方 /shoutout。",
                 "shoutoutRateLimit": "官方 /shoutout 已达到次数限制。请稍后再试。",
                 "unauthorized": "Access Token 无效或已过期。请通过 Twitch Token Generator 重新获取。",
-                "userNotFound": "找不到指定的 Twitch 用户。请确认 ID。"
+                "userNotFound": "找不到指定的 Twitch 用户。请确认 ID。",
+                "unknown": "Twitch API 发生错误。请检查设置、权限和直播状态后重试。"
             },
             "authInstructions": {
                 "opened": "<strong>已复制 Twitch Token Generator URL。</strong><br><br>1. 粘贴到常用浏览器的地址栏并打开。<br>2. 选择 <strong>Custom Scope Token</strong>，勾选所需权限并生成 Token。<br>3. 将显示的 <strong>ACCESS TOKEN</strong> 粘贴到此设置画面的 Access Token 栏并保存。<br><br>所需权限: <code>{scopes}</code><br><br>如果不清楚详细步骤，请从右上角的帮助查看带图片的指南。",
@@ -4244,6 +4249,7 @@ const I18N_DATA = {
                     "follow": "{user} 已关注！",
                     "followDetail": "{user}",
                     "raid": "{user} 发起 Raid！（{viewers}人）",
+                    "outboundRaid": "向 {user} 发起 Raid（{viewers}人）",
                     "raidDetail": "{user}（{viewers}人）{url}",
                     "hypeStart": "Hype Train 开始！Lv.{level}",
                     "hypeEnd": "Hype Train 结束！最终 Lv.{level}",

@@ -1188,7 +1188,7 @@ function updateTodayDateDisplay() {
         function localizeRaidSoError(error) {
             const raw = [error?.message, error?.data?.message, error?.data?.error].filter(Boolean).join(' ').trim() || String(error || '').trim();
             const hit = raidSoErrorRules.find(([pattern]) => pattern.test(raw));
-            return hit ? uiText(`apiErrors.${hit[1]}`) : raw;
+            return hit ? uiText(`apiErrors.${hit[1]}`) : uiText('apiErrors.unknown');
         }
 
         async function sendCommandToChat(message, logKey, vars = {}) {
