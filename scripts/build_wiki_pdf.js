@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const WIKI_DIR = path.join(__dirname, '../docs/wiki-mock');
 const OUTPUT_HTML = path.join(__dirname, '../docs/wiki_combined.html');
@@ -14,6 +14,7 @@ const issueDate = new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'lo
 const PAGES = [
     { file: 'Home.md', title: 'ホーム' },
     { file: 'Release-History.md', title: '更新履歴' },
+    { file: 'Release-1.0.3.md', title: '1.0.3リリース案内' },
     { file: 'Getting-Started.md', title: 'インストールとOBSへの追加' },
     { file: 'Authentication.md', title: 'Twitch認証' },
     { file: 'Feature-Overview.md', title: '機能一覧' },
@@ -33,30 +34,33 @@ function toLocalImageUrl(src, baseImgDir) {
     if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('file:') || src.startsWith('data:')) {
         return src;
     }
-    const absolutePath = path.resolve(baseImgDir, src).replace(/\\/g, '/');
-    return `file:///${absolutePath}`;
+    const absolutePath = path.resolve(baseImgDir, src);
+    return path.relative(path.dirname(OUTPUT_HTML), absolutePath).replace(/\\/g, '/');
+}
+
+function toSectionId(fileName) {
+    return fileName.replace(/\.md$/i, '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
 }
 
 function toDocumentHref(href) {
     if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('#')) {
         return href;
     }
-    const pageName = href.split('#')[0].replace(/\.md$/i, '');
-    const pageId = pageName.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const pageId = toSectionId(href.split('#')[0]);
     return `#section-${pageId}`;
 }
 
 // 簡易マークダウンパース関数
 function parseMarkdown(md, baseImgDir) {
+    // Wikiで幅指定に使うHTML画像も、PDFではローカルファイルを参照する。
+    md = md.replace(/(<img\b[^>]*\bsrc=["'])([^"']+)(["'][^>]*>)/gi, (match, before, src, after) => {
+        return `${before}${toLocalImageUrl(src, baseImgDir)}${after}`;
+    });
+
     // Markdown画像を通常リンクより先に変換する。
     md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
         const imgPath = toLocalImageUrl(src, baseImgDir);
         return `<div class="img-container"><img src="${imgPath}" alt="${alt}" /><span class="img-caption">${alt}</span></div>`;
-    });
-
-    // Wikiで幅指定に使うHTML画像も、PDFではローカルファイルを参照する。
-    md = md.replace(/(<img\b[^>]*\bsrc=["'])([^"']+)(["'][^>]*>)/gi, (match, before, src, after) => {
-        return `${before}${toLocalImageUrl(src, baseImgDir)}${after}`;
     });
 
     // ページ間リンクを統合PDF内の章アンカーへ変換する。
@@ -213,7 +217,7 @@ function generateFullHTML() {
             return;
         }
         const content = fs.readFileSync(filePath, 'utf8');
-        const sectionId = pg.file.replace('.md', '').toLowerCase();
+        const sectionId = toSectionId(pg.file);
         
         tocListHTML += `<li><a href="#section-${sectionId}"><span class="toc-num">${index + 1}.</span> ${pg.title}</a></li>\n`;
 
@@ -572,7 +576,15 @@ function generateFullHTML() {
 generateFullHTML();
 
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-const cmd = `"${edgePath}" --headless=new --disable-gpu --no-first-run --user-data-dir="${EDGE_PROFILE_DIR}" --print-to-pdf="${OUTPUT_PDF}" --no-pdf-header-footer "file:///${OUTPUT_HTML.replace(/\\/g, '/')}"`;
+const edgeArgs = [
+    '--headless=new',
+    '--disable-gpu',
+    '--no-first-run',
+    `--user-data-dir=${EDGE_PROFILE_DIR}`,
+    `--print-to-pdf=${OUTPUT_PDF}`,
+    '--no-pdf-header-footer',
+    `file:///${OUTPUT_HTML.replace(/\\/g, '/')}`
+];
 
 console.log('Generating PDF via Edge Headless...');
 async function renderPdf() {
@@ -593,7 +605,7 @@ async function renderPdf() {
             await browser.close();
         }
     } else {
-        execSync(cmd);
+        execFileSync(edgePath, edgeArgs, { stdio: 'inherit' });
         const deadline = Date.now() + 30000;
         while (!fs.existsSync(OUTPUT_PDF) && Date.now() < deadline) {
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 200);
