@@ -5,6 +5,7 @@
 
 - [ホーム](Home)
 - [更新履歴](Release-History)
+- [1.0.3リリース案内](Release-1.0.3)
 - [インストールとOBSへの追加](Getting-Started)
 - [Twitch認証](Authentication)
 - [機能一覧](Feature-Overview)
